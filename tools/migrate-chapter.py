@@ -36,6 +36,21 @@ def sha(path: pathlib.Path) -> str:
     return hashlib.sha1(path.read_bytes()).hexdigest()
 
 
+
+def same_but_for_imports(a: pathlib.Path, b: pathlib.Path) -> bool:
+    """Whether two files differ only in where they import from.
+
+    The package copies carry monorepo specifiers (`@simple-todo/...`) where the
+    chapter still says `./utils.js`. Comparing raw bytes would call that a
+    decision and leave a duplicate behind in every chapter.
+    """
+    def body(path: pathlib.Path) -> list[str]:
+        return [line for line in path.read_text(encoding="utf-8").splitlines()
+                if not line.lstrip().startswith("import ")]
+
+    return body(a) == body(b)
+
+
 def package_index() -> dict[str, list[pathlib.Path]]:
     index: dict[str, list[pathlib.Path]] = {}
     for root in ("packages", "tools"):
@@ -108,6 +123,7 @@ def main() -> int:
         if not candidates:
             continue
         if (any(sha(c) == sha(f) for c in candidates)
+                or any(same_but_for_imports(c, f) for c in candidates)
                 or f.name in ADAPTED_IN_PACKAGE
                 or rel.startswith(ALWAYS_PACKAGE_DIRS)):
             f.unlink()

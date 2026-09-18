@@ -1,0 +1,25 @@
+{
+  "name": "acl01",
+  "aleph": {
+    "site": "simple-todo-acl01",
+    "domain": "acl01.le-space.de",
+    "deployer": "@le-space/node@0.6.22"
+  },
+  "ports": {
+    "preview": 4175,
+    "relayHttp": 49120,
+    "relayTcp": 49121,
+    "relayWs": 49122,
+    "relayWebrtc": 49123,
+    "relayWebrtcDirect": 49126
+  },
+  "ci": {
+    "specs": [
+      "e2e/acl-permissions.spec.js",
+      "e2e/consent-screen.spec.js",
+      "e2e/list-registry.spec.js",
+      "e2e/private-list-visibility.spec.js"
+    ]
+  },
+  "title": "Who may write is decided per DID"
+}
