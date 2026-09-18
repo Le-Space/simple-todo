@@ -57,6 +57,17 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
+      - name: The deploy key is there before anything is built
+        env:
+          ALEPH_PRIVATE_KEY: ${{ secrets.ALEPH_PRIVATE_KEY }}
+        run: |
+          n=${#ALEPH_PRIVATE_KEY}
+          echo "ALEPH_PRIVATE_KEY: $n characters"
+          if [ "$n" -lt 32 ]; then
+            echo "::error::ALEPH_PRIVATE_KEY is empty or too short ($n characters). Set it with: gh secret set ALEPH_PRIVATE_KEY -R Le-Space/simple-todo"
+            exit 1
+          fi
+
       - name: Read the chapter's deploy settings
         id: chapter
         run: node .github/read-chapter.mjs apps/${{ matrix.app }}/chapter.json
