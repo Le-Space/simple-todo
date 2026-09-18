@@ -18,11 +18,16 @@
  * sentence somebody needs rather than with a diff.
  */
 import { readdir, readFile } from 'node:fs/promises';
-import { dirname, join, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { basename, dirname, join, relative } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const e2eDir = dirname(fileURLToPath(import.meta.url));
-const rootDir = join(e2eDir, '..');
+// The guard lives in the shared kit and is run from a chapter: the specs and
+// the config it has to judge are the chapter's, in the working directory. Its
+// own modules are checked too, because they are the ones allowed to say a port
+// and a regression there would silence the guard everywhere at once.
+const kitDir = dirname(fileURLToPath(import.meta.url));
+const appDir = process.cwd();
+const scanDirs = [join(appDir, 'e2e'), kitDir];
 
 /**
  * The three places a port literal is the answer rather than the bug.
@@ -31,11 +36,11 @@ const rootDir = join(e2eDir, '..');
  * Everything else should be asking one of them.
  */
 const MAY_SAY_A_PORT = new Set([
-	'e2e/preview-origin.mjs',
-	'e2e/start-e2e-server.mjs',
+	'preview-origin.mjs',
+	'start-e2e-server.mjs',
 	'playwright.config.js',
 	// This file, which has to name the port twice to prove the env reaches it.
-	'e2e/check-preview-origin.mjs'
+	'check-preview-origin.mjs'
 ]);
 
 /**
@@ -61,10 +66,11 @@ async function* sourceFiles (dir) {
 
 const found = [];
 
-for await (const file of sourceFiles(e2eDir)) {
-	const name = relative(rootDir, file);
+for await (const dir of scanDirs) {
+for await (const file of sourceFiles(dir)) {
+	const name = relative(appDir, file);
 
-	if (MAY_SAY_A_PORT.has(name)) continue;
+	if (MAY_SAY_A_PORT.has(basename(file))) continue;
 
 	const text = await readFile(file, 'utf8');
 
@@ -77,6 +83,7 @@ for await (const file of sourceFiles(e2eDir)) {
 			found.push(`${name}:${index + 1}  ${hit}`);
 		}
 	}
+}
 }
 
 // The env has to reach the origin, which is the other half of the same
@@ -97,7 +104,9 @@ if (PREVIEW_ORIGIN !== 'http://localhost:4271') {
 // first. On `collab01` `playwright.config.js` hardcoded both `webServer.port`
 // and `baseURL` - so the preview moved, and Playwright waited for and browsed
 // to 4173 regardless. A guard that only reads the specs calls that healthy.
-const { default: config } = await import(`../playwright.config.js?probe=${Date.now()}`);
+const { default: config } = await import(
+	`${pathToFileURL(join(appDir, 'playwright.config.js')).href}?probe=${Date.now()}`
+);
 
 const configSays = [
 	['webServer.port', config.webServer?.port, 4271],
