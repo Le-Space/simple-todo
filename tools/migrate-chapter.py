@@ -29,6 +29,7 @@ ADAPTED_IN_PACKAGE = {
     "providers.mjs", "run-main.mjs", "aleph-playwright-provider.spec.js",
 }
 KEEP_IN_CHAPTER = {"agent.mjs"}          # knows the chapter's own UI
+WORKERS_NOTE = """\t// One worker: every spec drives two browsers that have to meet through\n\t// the single relay this suite starts, and eight at once do not. Measured on\n\t// acl01: 2 of 4 runs red on the frozen branch, 3 of 4 here, green with one\n\t// worker. Chapters run in parallel through the matrix instead.\n\tworkers: 1,\n"""
 ALWAYS_PACKAGE_DIRS = ("scripts/", "static/")
 
 
@@ -44,11 +45,17 @@ def same_but_for_imports(a: pathlib.Path, b: pathlib.Path) -> bool:
     chapter still says `./utils.js`. Comparing raw bytes would call that a
     decision and leave a duplicate behind in every chapter.
     """
+    if a.suffix not in (".js", ".mjs", ".svelte", ".ts"):
+        return False
+
     def body(path: pathlib.Path) -> list[str]:
         return [line for line in path.read_text(encoding="utf-8").splitlines()
                 if not line.lstrip().startswith("import ")]
 
-    return body(a) == body(b)
+    try:
+        return body(a) == body(b)
+    except UnicodeDecodeError:
+        return False
 
 
 def package_index() -> dict[str, list[pathlib.Path]]:
@@ -185,7 +192,10 @@ def main() -> int:
     text = play.read_text()
     text = text.replace("command: 'node e2e/start-e2e-server.mjs'",
                         "command: 'node ../../packages/e2e-kit/src/start-e2e-server.mjs'")
-    if "PREVIEW_PORT" not in text:
+    # Not `"PREVIEW_PORT" not in text`: the file already says
+    # E2E_PREVIEW_PORT, so that test never fired and two chapters kept
+    # waiting on 4173 while their servers listened elsewhere.
+    if "@simple-todo/e2e-kit/preview-origin.mjs" not in text:
         text = re.sub(r"const previewPort = Number\([^)]*\);", "const previewPort = PREVIEW_PORT;", text)
         text = text.replace(
             "import { defineConfig, devices } from '@playwright/test';",
@@ -193,6 +203,10 @@ def main() -> int:
             "// The chapter's own ports, so two chapters can run their suites at once.\n"
             "import { PREVIEW_PORT } from '@simple-todo/e2e-kit/preview-origin.mjs';",
         )
+    if "workers:" not in text:
+        text = text.replace(
+            "export default defineConfig({",
+            "export default defineConfig({\n" + WORKERS_NOTE, 1)
     play.write_text(text)
 
     (app / "chapter.json").write_text(json.dumps({

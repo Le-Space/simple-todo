@@ -9,6 +9,13 @@ import { defineConfig, devices } from '@playwright/test';
 const previewPort = Number(process.env.E2E_PREVIEW_PORT || 4173);
 
 export default defineConfig({
+	// One worker, deliberately. Every spec in a chapter drives two browsers that
+	// have to find each other through the one relay this suite starts, and eight
+	// of them at once do not: measured on acl01, the suite failed 2 of 4 runs on
+	// the frozen branch and 3 of 4 here, always on an open-by-address step, and
+	// passed with a single worker. Parallelism across chapters is the matrix's
+	// job — each app has its own ports.
+	workers: 1,
 	webServer: {
 		command: 'node ../../packages/e2e-kit/src/start-e2e-server.mjs',
 		port: previewPort,
