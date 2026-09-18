@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { appendFile, mkdir, writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
-import { sanitizeAlephApiHosts } from '../e2e/remote/aleph-provider-contract.mjs';
+import { sanitizeAlephApiHosts } from '@simple-todo/e2e-kit/remote/aleph-provider-contract.mjs';
 
 const outputPath = 'test-results/remote-main/aleph-cleanup.json';
 await mkdir('test-results/remote-main', { recursive: true });

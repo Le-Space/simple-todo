@@ -354,7 +354,47 @@ importers:
         specifier: ^5.0.0
         version: 5.37.2
 
-  tools/aleph: {}
+  tools/aleph:
+    dependencies:
+      '@chainsafe/libp2p-noise':
+        specifier: ^17.0.0
+        version: 17.0.0
+      '@chainsafe/libp2p-yamux':
+        specifier: ^8.0.1
+        version: 8.0.1
+      '@le-space/core':
+        specifier: 0.7.0
+        version: 0.7.0(typescript@5.9.2)
+      '@le-space/node':
+        specifier: 0.7.0
+        version: 0.7.0(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))(typescript@5.9.2)
+      '@le-space/playwright':
+        specifier: 0.7.0
+        version: 0.7.0(@playwright/test@1.61.1)(typescript@5.9.2)
+      '@libp2p/ping':
+        specifier: ^3.1.9
+        version: 3.1.9
+      '@libp2p/webrtc':
+        specifier: ^6.0.27
+        version: 6.0.27(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+      '@libp2p/websockets':
+        specifier: ^10.1.17
+        version: 10.1.17
+      '@multiformats/multiaddr':
+        specifier: ^13.0.3
+        version: 13.0.3
+      '@simple-todo/e2e-kit':
+        specifier: workspace:*
+        version: link:../../packages/e2e-kit
+      '@simple-todo/net':
+        specifier: workspace:*
+        version: link:../../packages/net
+      libp2p:
+        specifier: ^3.3.6
+        version: 3.3.6
+      viem:
+        specifier: 2.53.1
+        version: 2.53.1(typescript@5.9.2)
 
 packages:
 

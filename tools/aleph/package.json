@@ -7,5 +7,20 @@
     "resolve-aleph-bootstrap": "./resolve-aleph-bootstrap.mjs",
     "check-rootfs-manifest": "./check-rootfs-manifest.mjs",
     "write-relay-e2e-summary": "./write-relay-e2e-summary.mjs"
+  },
+  "dependencies": {
+    "@chainsafe/libp2p-noise": "^17.0.0",
+    "@chainsafe/libp2p-yamux": "^8.0.1",
+    "@le-space/core": "0.7.0",
+    "@le-space/node": "0.7.0",
+    "@le-space/playwright": "0.7.0",
+    "@libp2p/ping": "^3.1.9",
+    "@libp2p/webrtc": "^6.0.27",
+    "@libp2p/websockets": "^10.1.17",
+    "@multiformats/multiaddr": "^13.0.3",
+    "@simple-todo/e2e-kit": "workspace:*",
+    "@simple-todo/net": "workspace:*",
+    "libp2p": "^3.3.6",
+    "viem": "2.53.1"
   }
 }

@@ -1,5 +1,5 @@
 import { pathToFileURL } from 'node:url';
-import { sanitizeAlephApiHosts } from '../e2e/remote/aleph-provider-contract.mjs';
+import { sanitizeAlephApiHosts } from '@simple-todo/e2e-kit/remote/aleph-provider-contract.mjs';
 
 const modulePath = process.env.LE_SPACE_NODE_MODULE_PATH;
 if (!modulePath) throw new Error('LE_SPACE_NODE_MODULE_PATH is required.');

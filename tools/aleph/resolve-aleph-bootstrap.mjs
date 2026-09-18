@@ -1,13 +1,13 @@
 import { appendFile } from 'node:fs/promises';
 import { noise } from '@chainsafe/libp2p-noise';
 import { yamux } from '@chainsafe/libp2p-yamux';
-import { discoverScopedBootstrapMultiaddrs } from '../src/lib/aleph-bootstrap-discovery.js';
+import { discoverScopedBootstrapMultiaddrs } from '@simple-todo/net/aleph-bootstrap-discovery.js';
 import { ping } from '@libp2p/ping';
 import { webRTCDirect } from '@libp2p/webrtc';
 import { webSockets } from '@libp2p/websockets';
 import { multiaddr } from '@multiformats/multiaddr';
 import { createLibp2p } from 'libp2p';
-import { resolveBootstrapMultiaddrs } from '../src/lib/bootstrap-multiaddrs.js';
+import { resolveBootstrapMultiaddrs } from '@simple-todo/net/bootstrap-multiaddrs.js';
 
 const PROBE_TIMEOUT_MS = Number(process.env.RELAY_BOOTSTRAP_PROBE_TIMEOUT_MS || 10_000);
 

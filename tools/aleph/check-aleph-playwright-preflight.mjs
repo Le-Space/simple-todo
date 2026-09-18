@@ -1,5 +1,5 @@
 import { privateKeyToAccount } from 'viem/accounts';
-import { sanitizeAlephApiHosts } from '../e2e/remote/aleph-provider-contract.mjs';
+import { sanitizeAlephApiHosts } from '@simple-todo/e2e-kit/remote/aleph-provider-contract.mjs';
 
 const rawKey = process.env.ALEPH_VM_PRIVATE_KEY?.trim();
 if (!rawKey) throw new Error('ALEPH_VM_PRIVATE_KEY is required for the Aleph provider.');
