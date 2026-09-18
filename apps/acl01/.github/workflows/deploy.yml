@@ -1,0 +1,187 @@
+name: Build & Deploy to Aleph IPFS
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      relay_bootstrap_addr:
+        description: >-
+          Override relay bootstrap multiaddr(s) for production build.
+          Comma-separated. Leave empty to use the default from .env.example.
+        required: false
+        default: ''
+      domain:
+        description: >-
+          Aleph custom domain to link (e.g. simple-todo.le-space.de).
+          Leave empty to skip domain linking.
+        required: false
+        default: ''
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
+    timeout-minutes: 15
+    steps:
+      - name: Checkout simple-todo
+        uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Run default database collaboration E2E
+        id: default-database-e2e
+        run: >-
+          pnpm exec playwright test
+          e2e/default-database-collaboration.spec.js
+          e2e/manual-multiaddr-connection.spec.js
+          e2e/shared-list-mnemonic.spec.js
+          --project=chromium
+
+      - name: Summarize main E2E
+        if: always()
+        env:
+          E2E_OUTCOME: ${{ steps.default-database-e2e.outcome }}
+        run: |
+          {
+            echo '## main end-to-end test'
+            echo
+            if [ "${E2E_OUTCOME}" = 'success' ]; then
+              echo '**Result:** ✅ passed'
+            else
+              echo "**Result:** ❌ ${E2E_OUTCOME}"
+            fi
+            echo
+            echo 'The Chromium test starts a local OrbitDB relay and two isolated browser peers using the shared default todo database.'
+            echo
+            echo '| Verified behavior | Result |'
+            echo '| --- | --- |'
+            echo "| Alice and Bob open the same three-word mnemonic database | ${E2E_OUTCOME} |"
+            echo "| Alice creates three todos and Bob creates three todos | ${E2E_OUTCOME} |"
+            echo "| Both browsers display all six replicated todos | ${E2E_OUTCOME} |"
+            echo "| Relay discovery and browser-to-browser OrbitDB synchronization | ${E2E_OUTCOME} |"
+            echo "| Copy a browser-dialable own multiaddress and connect a second browser with it | ${E2E_OUTCOME} |"
+            echo "| A copied mnemonic joins the same list while another mnemonic remains isolated | ${E2E_OUTCOME} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  build-and-deploy:
+    needs: e2e
+    runs-on: ubuntu-latest
+    outputs:
+      ipfs_cid: ${{ steps.publish.outputs.ipfs_cid }}
+      ipfs_cid_v0: ${{ steps.publish.outputs.ipfs_cid_v0 }}
+      ipfs_cid_v1: ${{ steps.publish.outputs.ipfs_cid_v1 }}
+      item_hash: ${{ steps.publish.outputs.item_hash }}
+      store_status: ${{ steps.publish.outputs.store_status }}
+      store_processed: ${{ steps.publish.outputs.store_processed }}
+      url: ${{ steps.publish.outputs.url }}
+    steps:
+      - name: Checkout simple-todo
+        uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Resolve production bootstrap snapshot
+        env:
+          # Normal deployments discover the current Aleph relays. Only an explicit
+          # workflow-dispatch input may override that snapshot.
+          RELAY_BOOTSTRAP_OVERRIDE: ${{ inputs.relay_bootstrap_addr || '' }}
+        run: node scripts/resolve-aleph-bootstrap.mjs
+
+      - name: Build
+        env:
+          VITE_NODE_ENV: production
+          VITE_APP_BRANCH: main
+        run: pnpm build
+
+      - name: Install isolated Aleph deploy tooling
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: npm install --prefix /tmp/le-space-deployer @le-space/node@0.6.22 --ignore-scripts
+
+      - name: Publish to Aleph IPFS
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        id: publish
+        env:
+          ALEPH_VM_MODE: site-publish
+          ALEPH_SITE_DIRECTORY: ${{ github.workspace }}/build
+          ALEPH_SITE_PIN: 'true'
+          ALEPH_SITE_NAME: simple-todo
+          ALEPH_SITE_CHANNEL: ALEPH-CLOUDSOLUTIONS
+          ALEPH_PRIVATE_KEY: ${{ secrets.ALEPH_PRIVATE_KEY }}
+        run: |
+          for attempt in 1 2 3; do
+            if node --input-type=module -e "import('/tmp/le-space-deployer/node_modules/@le-space/node/index.js').then((m) => m.runSiteMode())"; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              exit 1
+            fi
+            echo "Aleph publish attempt $attempt failed; retrying..."
+            sleep $((attempt * 15))
+          done
+
+  link-domain:
+    needs: build-and-deploy
+    if: >-
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      needs.build-and-deploy.outputs.item_hash != '' &&
+      needs.build-and-deploy.outputs.store_processed == 'true'
+    runs-on: ubuntu-latest
+    env:
+      ALEPH_MAIN_SITE_DOMAIN: simple-todo.le-space.de
+    steps:
+      - name: Checkout simple-todo
+        uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install isolated Aleph deploy tooling
+        run: npm install --prefix /tmp/le-space-deployer @le-space/node@0.6.22 --ignore-scripts
+
+      - name: Link custom domain
+        if: inputs.domain != '' || env.ALEPH_MAIN_SITE_DOMAIN != ''
+        id: domain
+        env:
+          ALEPH_VM_MODE: site-domain-link
+          ALEPH_SITE_ITEM_HASH: ${{ needs.build-and-deploy.outputs.item_hash }}
+          ALEPH_SITE_IPFS_CID: ${{ needs.build-and-deploy.outputs.ipfs_cid }}
+          ALEPH_SITE_IPFS_CID_V0: ${{ needs.build-and-deploy.outputs.ipfs_cid_v0 }}
+          ALEPH_SITE_DOMAIN: ${{ inputs.domain || env.ALEPH_MAIN_SITE_DOMAIN }}
+          ALEPH_SITE_DOMAIN_CATCH_ALL_PATH: /index.html
+          ALEPH_PRIVATE_KEY: ${{ secrets.ALEPH_PRIVATE_KEY }}
+        run: node --input-type=module -e "import('/tmp/le-space-deployer/node_modules/@le-space/node/index.js').then((m) => m.runSiteMode())"
