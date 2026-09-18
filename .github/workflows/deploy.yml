@@ -7,9 +7,9 @@ name: Deploy
 permissions:
   contents: read
 
+# The push trigger goes in once a deploy from here has been seen to land on the
+# live domain — until then this runs only when somebody asks for it.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       apps:

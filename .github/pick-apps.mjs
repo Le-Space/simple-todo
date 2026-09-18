@@ -20,7 +20,7 @@ const chosen = (() => {
 
 	const base = process.env.BASE_SHA;
 	const head = process.env.HEAD_SHA;
-	if (!base || !head) return all;
+	if (!base || !head || /^0+$/.test(base)) return all;
 
 	const changed = execFileSync('git', ['diff', '--name-only', `${base}...${head}`], {
 		encoding: 'utf8'
