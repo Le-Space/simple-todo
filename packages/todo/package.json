@@ -1,0 +1,15 @@
+{
+  "name": "@simple-todo/todo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "vitest": "^3.2.3"
+  }
+}

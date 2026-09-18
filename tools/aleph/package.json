@@ -1,0 +1,11 @@
+{
+  "name": "@simple-todo/aleph-tools",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "resolve-aleph-bootstrap": "./resolve-aleph-bootstrap.mjs",
+    "check-rootfs-manifest": "./check-rootfs-manifest.mjs",
+    "write-relay-e2e-summary": "./write-relay-e2e-summary.mjs"
+  }
+}

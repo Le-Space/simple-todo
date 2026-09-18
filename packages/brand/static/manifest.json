@@ -1,0 +1,32 @@
+{
+  "name": "Simple-Todo",
+  "short_name": "Simple-Todo",
+  "description": "A local-first peer-to-peer todo list using OrbitDB, IPFS and libp2p. No servers, no accounts, no passwords.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0E15",
+  "theme_color": "#0B0E15",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+name: CI
+
+# One workflow for every chapter. Which apps run is decided by what the change
+# touched: an app's own folder, or anything shared, which means all of them.
+# The nine chapter branches each carried their own copy of this and got it
+# wrong in 32 places — a filter naming a branch that the file did not live on.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      apps:
+        description: 'Apps to run, space separated; empty means all'
+        required: false
+        default: ''
+
+concurrency:
+  group: ci-${{ github.head_ref || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.pick.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - id: pick
+        run: node .github/pick-apps.mjs
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          APPS_INPUT: ${{ inputs.apps }}
+
+  test:
+    needs: discover
+    if: needs.discover.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.discover.outputs.apps) }}
+    defaults:
+      run:
+        working-directory: apps/${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+        working-directory: .
+      - name: No preview origin is written down by hand
+        run: pnpm run check:preview-origin
+      - name: Unit tests
+        run: pnpm run test:unit
+      - name: Browser specs
+        run: pnpm exec playwright test $(node -e "console.log(require('./chapter.json').ci.specs.join(' '))") --project=chromium

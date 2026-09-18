@@ -1,0 +1,110 @@
+name: Deploy
+
+# Every chapter publishes its own Aleph site under its own domain, as before —
+# but from one file, with the site name and domain read from the app's
+# chapter.json instead of being pasted into a ninth copy of this workflow.
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      apps:
+        description: 'Apps to deploy, space separated; empty means all'
+        required: false
+        default: ''
+
+concurrency:
+  group: deploy-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.pick.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - id: pick
+        run: node .github/pick-apps.mjs
+        env:
+          BASE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+          APPS_INPUT: ${{ inputs.apps }}
+
+  publish:
+    needs: discover
+    if: needs.discover.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        app: ${{ fromJson(needs.discover.outputs.apps) }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Read the chapter's deploy settings
+        id: chapter
+        run: node .github/read-chapter.mjs apps/${{ matrix.app }}/chapter.json
+
+      - name: Resolve production bootstrap snapshot
+        working-directory: apps/${{ matrix.app }}
+        run: node ../../tools/aleph/resolve-aleph-bootstrap.mjs
+
+      - name: Build
+        working-directory: apps/${{ matrix.app }}
+        env:
+          VITE_NODE_ENV: production
+          VITE_APP_BRANCH: ${{ matrix.app }}
+          VITE_BUDGET_SERVICE: ${{ vars.VITE_BUDGET_SERVICE }}
+          VITE_BUNDLER_URL: ${{ vars.VITE_BUNDLER_URL }}
+          VITE_BUNDLER_AUTH_HEADER: ${{ secrets.VITE_BUNDLER_AUTH_HEADER }}
+          VITE_OPENFORT_POLICY_ID: ${{ vars.VITE_OPENFORT_POLICY_ID }}
+          VITE_SEPOLIA_RPC_URL: ${{ vars.VITE_SEPOLIA_RPC_URL }}
+        run: pnpm run build
+
+      - name: Install isolated Aleph deploy tooling
+        run: npm install --prefix /tmp/le-space-deployer ${{ steps.chapter.outputs.deployer }} --ignore-scripts
+
+      - name: Publish to Aleph IPFS
+        id: publish
+        env:
+          ALEPH_VM_MODE: site-publish
+          ALEPH_SITE_DIRECTORY: ${{ github.workspace }}/apps/${{ matrix.app }}/build
+          ALEPH_SITE_PIN: 'true'
+          ALEPH_SITE_NAME: ${{ steps.chapter.outputs.site }}
+          ALEPH_SITE_CHANNEL: ALEPH-CLOUDSOLUTIONS
+          ALEPH_PRIVATE_KEY: ${{ secrets.ALEPH_PRIVATE_KEY }}
+        run: |
+          for attempt in 1 2 3; do
+            if node --input-type=module -e "import('/tmp/le-space-deployer/node_modules/@le-space/node/index.js').then((m) => m.runSiteMode())"; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 3 ]; then exit 1; fi
+            sleep $((attempt * 15))
+          done
+
+      - name: Link the domain
+        if: steps.publish.outputs.item_hash != '' && steps.publish.outputs.store_processed == 'true'
+        env:
+          ALEPH_VM_MODE: site-domain-link
+          ALEPH_SITE_NAME: ${{ steps.chapter.outputs.site }}
+          ALEPH_SITE_DOMAIN: ${{ steps.chapter.outputs.domain }}
+          ALEPH_SITE_DOMAIN_CATCH_ALL_PATH: /index.html
+          ALEPH_SITE_CHANNEL: ALEPH-CLOUDSOLUTIONS
+          ALEPH_PRIVATE_KEY: ${{ secrets.ALEPH_PRIVATE_KEY }}
+        run: node --input-type=module -e "import('/tmp/le-space-deployer/node_modules/@le-space/node/index.js').then((m) => m.runSiteMode())"

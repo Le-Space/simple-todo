@@ -1,0 +1,40 @@
+{
+  "name": "@simple-todo/monorepo",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm -r --filter './apps/*' build",
+    "test:unit": "pnpm -r --filter './apps/*' test:unit",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "prettier-plugin-svelte": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.11"
+  },
+  "pnpm": {
+    "overrides": {
+      "@le-space/orbitdb-identity-provider-webauthn-did": "0.5.4",
+      "orbitdb-relay>@orbitdb/core": "4.0.0",
+      "react": "19.2.6",
+      "react-dom": "19.2.6",
+      "@ipshipyard/node-datachannel": "npm:node-datachannel@0.29.0",
+      "@libp2p/gossipsub": "16.1.0"
+    },
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "@le-space/orbitdb-access-controller-delegated-todo>@le-space/orbitdb-identity-provider-webauthn-did": "0.5.4",
+        "@le-space/orbitdb-access-controller-delegated-todo>@orbitdb/core": "4.0.0"
+      }
+    },
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "node-datachannel"
+    ]
+  }
+}
