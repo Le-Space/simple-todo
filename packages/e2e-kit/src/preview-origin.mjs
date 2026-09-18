@@ -1,3 +1,4 @@
+import { chapterPorts } from './chapter-ports.mjs';
 /**
  * Where the preview server is, in one place.
  *
@@ -16,6 +17,6 @@
  * between.
  */
 
-export const PREVIEW_PORT = Number(process.env.E2E_PREVIEW_PORT || 4173);
+export const PREVIEW_PORT = Number(chapterPorts().preview);
 
 export const PREVIEW_ORIGIN = `http://localhost:${PREVIEW_PORT}`;

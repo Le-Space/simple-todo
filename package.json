@@ -19,12 +19,13 @@
   },
   "pnpm": {
     "overrides": {
+      "@ipshipyard/node-datachannel": "npm:node-datachannel@0.29.0",
       "@le-space/orbitdb-identity-provider-webauthn-did": "0.5.4",
+      "@libp2p/gossipsub": "16.1.0",
+      "@simple-todo/escrow01>@le-space/orbitdb-identity-provider-webauthn-did": "file:./apps/escrow01/vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz",
       "orbitdb-relay>@orbitdb/core": "4.0.0",
       "react": "19.2.6",
-      "react-dom": "19.2.6",
-      "@ipshipyard/node-datachannel": "npm:node-datachannel@0.29.0",
-      "@libp2p/gossipsub": "16.1.0"
+      "react-dom": "19.2.6"
     },
     "peerDependencyRules": {
       "allowedVersions": {

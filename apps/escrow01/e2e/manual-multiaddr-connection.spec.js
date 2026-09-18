@@ -1,0 +1,121 @@
+import { test, expect } from '@playwright/test';
+import { passConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import { openSection } from './sections.mjs';
+import { pinTechnicalView } from './technical-view.mjs';
+
+const testUrl = '/';
+const connectionTimeout = 90000;
+const sharedMnemonic = 'sol-camino-verde';
+
+test.describe('Manual browser connection using a copied own multiaddress', () => {
+	test('Browser B connects with a multiaddress copied from Browser A', async ({ browser }) => {
+		test.setTimeout(connectionTimeout * 2);
+
+		const aliceContext = await browser.newContext({
+			permissions: ['clipboard-read', 'clipboard-write']
+		});
+		const bobContext = await browser.newContext();
+		const alice = await aliceContext.newPage();
+		const bob = await bobContext.newPage();
+
+		try {
+			await alice.setViewportSize({ width: 390, height: 844 });
+			await openReadyApp(alice);
+			const alicePeerId = await getPeerId(alice);
+			await openNetworkDetails(alice);
+
+			const addressList = alice.getByTestId('own-multiaddr-list');
+			await expect(addressList).toBeVisible({ timeout: connectionTimeout });
+			await expect
+				.poll(() => alice.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+				.toBe(true);
+			const listBounds = await addressList.boundingBox();
+			expect(listBounds?.x ?? 0).toBeGreaterThanOrEqual(0);
+			expect((listBounds?.x ?? 0) + (listBounds?.width ?? 0)).toBeLessThanOrEqual(390);
+			await expect
+				.poll(() => addressList.evaluate((element) => getComputedStyle(element).overflowY))
+				.toBe('auto');
+
+			const copyButtons = alice.getByTestId('copy-own-multiaddr');
+			await expect(copyButtons.first()).toBeVisible({ timeout: connectionTimeout });
+			const ownAddresses = await copyButtons.evaluateAll((buttons) =>
+				buttons.map((button) => button.getAttribute('data-multiaddr') ?? '')
+			);
+			const addressIndex = ownAddresses.findIndex(
+				(address) =>
+					address.includes('/ws') &&
+					address.includes('/p2p-circuit') &&
+					!address.includes('/webrtc') &&
+					address.endsWith(`/p2p/${alicePeerId}`)
+			);
+			expect(
+				addressIndex,
+				`Expected a relay circuit address in ${ownAddresses.join(', ')}`
+			).toBeGreaterThanOrEqual(0);
+
+			await copyButtons.nth(addressIndex).click();
+			await expect(copyButtons.nth(addressIndex)).toHaveAttribute('title', 'Copied!');
+			const copiedAddress = await alice.evaluate(() => navigator.clipboard.readText());
+			expect(copiedAddress).toBe(ownAddresses[addressIndex]);
+
+			await openReadyApp(bob);
+			await openNetworkDetails(bob);
+			await bob.getByLabel('Use a custom multiaddress').check();
+			await bob
+				.getByPlaceholder('/dns4/example.com/tcp/443/wss/p2p/12D3KooW...')
+				.fill(copiedAddress);
+			await bob.getByRole('button', { name: 'Connect', exact: true }).click();
+
+			await expect(bob.getByText('Connection stable', { exact: true })).toBeVisible({
+				timeout: connectionTimeout
+			});
+			await expect
+				.poll(
+					() =>
+						bob.evaluate(
+							(peerId) =>
+								window.__simpleTodoE2E
+									?.getConnections?.()
+									.some((connection) => connection.remotePeer === peerId) ?? false,
+							alicePeerId
+						),
+					{ timeout: connectionTimeout }
+				)
+				.toBe(true);
+		} finally {
+			await bobContext.close();
+			await aliceContext.close();
+		}
+	});
+});
+
+/** @param {import('@playwright/test').Page} page */
+async function openReadyApp(page) {
+	// Own multiaddrs and the manual connect form are the technical view's.
+	await pinTechnicalView(page);
+	await page.goto(testUrl);
+	await passConsent(page, { mnemonic: sharedMnemonic });
+	await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({
+		timeout: connectionTimeout
+	});
+}
+
+/** @param {import('@playwright/test').Page} page */
+async function openNetworkDetails(page) {
+	await openSection(page, 'netzwerk');
+	const networkDetails = page.getByTestId('network-details');
+	if ((await networkDetails.getAttribute('open')) === null) {
+		await networkDetails.getByText('Network details', { exact: true }).click();
+	}
+	await expect(networkDetails).toHaveAttribute('open', '');
+}
+
+/** @param {import('@playwright/test').Page} page */
+async function getPeerId(page) {
+	await expect
+		.poll(() => page.evaluate(() => window.__simpleTodoE2E?.getPeerId?.() ?? null), {
+			timeout: connectionTimeout
+		})
+		.toBeTruthy();
+	return page.evaluate(() => window.__simpleTodoE2E.getPeerId());
+}

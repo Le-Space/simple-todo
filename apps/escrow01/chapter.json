@@ -1,0 +1,27 @@
+{
+  "name": "escrow01",
+  "title": "Confidential budgets on Sepolia with Zama FHE",
+  "aleph": {
+    "site": "simple-todo-escrow01",
+    "domain": "escrow01.le-space.de",
+    "deployer": "@le-space/node@0.6.22"
+  },
+  "ports": {
+    "preview": 4174,
+    "relayHttp": 49110,
+    "relayTcp": 49111,
+    "relayWs": 49112,
+    "relayWebrtc": 49113,
+    "relayWebrtcDirect": 49116
+  },
+  "ci": {
+    "specs": [
+      "e2e/sections.spec.js",
+      "e2e/delegation.spec.js",
+      "e2e/acl-permissions.spec.js",
+      "e2e/consent-screen.spec.js",
+      "e2e/list-registry.spec.js",
+      "e2e/private-list-visibility.spec.js"
+    ]
+  }
+}

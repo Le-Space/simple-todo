@@ -46,7 +46,7 @@ export default defineConfig({
 		// The modules that moved into packages/ keep their specs next to them, and
 		// they run here until a second app arrives and a root test workspace earns
 		// its keep.
-		include: ['src/**/*.spec.js', '@simple-todo/net/aleph-playwright-provider.spec.js'],
+		include: ['src/**/*.spec.js', '../../packages/*/src/**/*.spec.js'],
 		browser: {
 			enabled: true,
 			headless: true,

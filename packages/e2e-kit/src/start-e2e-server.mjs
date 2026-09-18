@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { chapterPorts } from './chapter-ports.mjs';
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
@@ -6,14 +7,15 @@ import process from 'node:process';
 
 const rootDir = process.cwd();
 const relayMode = (process.env.E2E_RELAY_MODE || 'local').trim().toLowerCase();
+const ports = chapterPorts();
+const previewPort = String(ports.preview);
 const relayPorts = {
-	http: process.env.E2E_RELAY_HTTP_PORT || '49100',
-	tcp: process.env.E2E_RELAY_TCP_PORT || '49101',
-	ws: process.env.E2E_RELAY_WS_PORT || '49102',
-	webrtc: process.env.E2E_RELAY_WEBRTC_PORT || '49103',
-	webrtcDirect: process.env.E2E_RELAY_WEBRTC_DIRECT_PORT || '49106'
+	http: ports.relayHttp,
+	tcp: ports.relayTcp,
+	ws: ports.relayWs,
+	webrtc: ports.relayWebrtc,
+	webrtcDirect: ports.relayWebrtcDirect
 };
-const previewPort = process.env.E2E_PREVIEW_PORT || '4173';
 const relayDatastorePath = path.join(rootDir, 'relay', 'e2e-relay-datastore');
 const relayInfoPath = path.join(rootDir, 'e2e', 'relay-info.json');
 const relayLogPath = path.join(rootDir, 'e2e', 'relay.log');

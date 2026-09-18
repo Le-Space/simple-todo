@@ -1,0 +1,553 @@
+{
+	"app": {
+		"title": "Simple-Todo"
+	},
+	"language": {
+		"de": "Deutsch",
+		"en": "English"
+	},
+	"header": {
+		"backToTodos": "Back to the todos",
+		"tagline": "A local-first peer-to-peer PWA"
+	},
+	"sections": {
+		"label": "Sections",
+		"tab": {
+			"tasks": "Todos",
+			"lists": "Lists",
+			"account": "Account",
+			"network": "Network"
+		},
+		"lists": {
+			"waiting": "Your lists appear here once the app has started."
+		},
+		"account": {
+			"passkey": "Your passkey",
+			"passkeyHint": "Others need this DID to let you write to their list, or to delegate a todo to you.",
+			"noPasskey": "This session was started without a passkey, so it has no DID.",
+			"balanceWaiting": "Your balance shows here once a budget from this list has been paid out to you.",
+			"chain": "Chain",
+			"auditor": "Auditor",
+			"auditorHint": "See the escrow records the way the auditor sees them.",
+			"auditorOpen": "Open the auditor view",
+			"chainAccount": "Account on Sepolia",
+			"accountCreating": "Being set up. Openfort pays the fee; no passkey confirmation is needed for this.",
+			"accountHint": "Your passkey is this account's admin key. Its first lock adds 1,000.00 test cUSDT.",
+			"accountFailed": "Setting it up failed: {reason}",
+			"accountRetry": "Try again",
+			"viewOnEtherscan": "View on Etherscan",
+			"balanceAfterAccount": "Your balance shows here once your account is set up."
+		},
+		"network": {
+			"app": "App",
+			"theme": "Appearance",
+			"links": "Project",
+			"version": "Version"
+		},
+		"status": {
+			"starting": "Starting…",
+			"connecting": "Connecting…",
+			"relay": "Connected",
+			"direct": "Connected directly",
+			"failed": "Start failed",
+			"details": "Details in the Network tab."
+		},
+		"list": {
+			"switch": "Switch list"
+		}
+	},
+	"theme": {
+		"toLight": "Switch to light mode",
+		"toDark": "Switch to dark mode",
+		"light": "Light mode",
+		"dark": "Dark mode"
+	},
+	"technical": {
+		"tag": "Technical",
+		"documentedIn": "Documented in",
+		"simulated": "Describes the flow on Sepolia; the demo without a chain does not run it.",
+		"newTab": "opens in a new tab"
+	},
+	"alert": {
+		"dismiss": "Dismiss",
+		"errorPrefix": "Error:"
+	},
+	"identity": {
+		"passkeyDid": "Passkey DID",
+		"copy": "Copy",
+		"copied": "Copied ✓"
+	},
+	"auth": {
+		"awaiting": "Confirm passkey…",
+		"awaitingTitle": "Confirm with your passkey to continue.",
+		"delegatedWriteSigned": "Delegated write signed",
+		"lockConfirmed": "Lock confirmed",
+		"releaseConfirmed": "Release confirmed",
+		"readKeyRenewed": "Read access renewed",
+		"failed": "Passkey confirmation failed"
+	},
+	"onboarding": {
+		"heading": "One passkey for everything",
+		"intro": "Your passkey signs you in, signs your entries and confirms payments. You need no password, no seed phrase and no separate wallet.",
+		"signInTitle": "Sign in",
+		"signInText": "On this device, with Touch ID for example.",
+		"signTitle": "Sign",
+		"signText": "Every change carries your DID.",
+		"payTitle": "Pay",
+		"payText": "Budgets in confidential tokens, confirmed with the same passkey. The account for them is set up quietly in the background.",
+		"storedHeading": "What is stored",
+		"storedDid": "Your public key and your DID",
+		"storedListsPersistent": "Your lists, in this browser",
+		"storedListsMemory": "Your lists, in this browser's memory until the page reloads",
+		"storedBudgetsChain": "Budgets, encrypted, on the Sepolia testnet",
+		"storedBudgetsDemo": "Budgets only as a demo, in this browser's memory: nothing is encrypted and nothing reaches a chain",
+		"storedKeys": "Keys for signing and for reading amounts, in this browser",
+		"storedPasskey": "The passkey itself never leaves your device"
+	},
+	"todo": {
+		"form": {
+			"heading": "Add New TODO",
+			"placeholder": "What needs to be done?",
+			"submit": "Add TODO",
+			"submitWithBudget": "Add TODO and lock budget",
+			"delegateToggle": "Delegate this todo to another DID",
+			"delegateDid": "Delegate DID",
+			"delegateDidPlaceholder": "did:key:… of the person who may complete it",
+			"expiry": "Delegation expires at",
+			"optional": "(optional)",
+			"delegateHint": "The delegate does not get write access to the list. They may only complete or rename this one todo, and you can revoke that at any time."
+		},
+		"item": {
+			"toggle": "Toggle completion",
+			"toggleNotAllowed": "Only the owner or the delegate of this todo can complete it",
+			"save": "Save",
+			"cancel": "Cancel",
+			"assignedTo": "Assigned to:",
+			"unassigned": "Unassigned",
+			"createdBy": "Created by:",
+			"delegatedTo": "Delegated to {did}",
+			"delegatedToYou": "Delegated to you by {did}",
+			"completedBy": "Completed by {did}",
+			"lastChangedBy": "Last changed by delegate: {did}",
+			"until": "until {date}",
+			"status": {
+				"active": "active",
+				"revoked": "revoked",
+				"expired": "expired"
+			},
+			"rename": "Rename",
+			"delegate": "Delegate",
+			"redelegate": "Re-delegate",
+			"revoke": "Revoke",
+			"delete": "Delete",
+			"delegatePlaceholder": "did:key:… of the delegate",
+			"expiryTitle": "Expires at (optional)",
+			"replication": {
+				"label": "Relay replication:",
+				"pending": "Waiting for this OrbitDB entry to be replicated by the relay.",
+				"pinned": "The relay confirmed that this exact OrbitDB entry was replicated and stored locally.",
+				"unavailable": "No exact relay replication proof is currently available for this entry.",
+				"unknown": "Relay replication status was not observed for this existing entry."
+			}
+		},
+		"list": {
+			"title": "TODO Items",
+			"empty": "No TODOs yet. Add one above!"
+		},
+		"toast": {
+			"added": "✅ Todo added successfully!",
+			"addedDelegated": "✅ Todo added and delegated!",
+			"addFailed": "Failed to add todo",
+			"deleted": "🗑️ Todo deleted successfully!",
+			"deleteFailed": "❌ Failed to delete todo",
+			"statusUpdated": "✅ Todo status updated!",
+			"updateFailed": "Failed to update todo",
+			"renamed": "✅ Todo renamed!",
+			"renameFailed": "Failed to rename todo",
+			"delegated": "🤝 Todo delegated!",
+			"delegateFailed": "Failed to delegate todo",
+			"revoked": "↩️ Delegation revoked",
+			"revokeFailed": "Failed to revoke delegation"
+		}
+	},
+	"budget": {
+		"network": {
+			"demo": "Demo without a chain",
+			"demoTitle": "Budgets run against a stand-in in this browser's memory. Nothing is encrypted and nothing is sent.",
+			"sepolia": "Sepolia testnet"
+		},
+		"demoNotice": "Demo without a chain: amounts stay unencrypted in this browser's memory, and nothing is sent.",
+		"form": {
+			"label": "Budget",
+			"confidential": "(confidential)",
+			"hint": "The amount is encrypted on this device before it is sent. Only you, the delegate and the auditor can read it.",
+			"invalidAmount": "Enter an amount greater than 0, with at most {decimals} decimal places.",
+			"needsDelegate": "A budget needs the DID it is for.",
+			"refundHint": "If the budget is still locked after the deadline, you can take it back. This app has no button for that yet."
+		},
+		"status": {
+			"locking": "being locked",
+			"funded": "locked",
+			"releasing": "being released",
+			"released": "paid out",
+			"failed": "not locked",
+			"underfunded": "not funded"
+		},
+		"chip": {
+			"hidden": "This browser cannot read the amount.",
+			"decrypting": "Decrypting the amount…",
+			"expired": "Read access expired."
+		},
+		"item": {
+			"release": "Release budget",
+			"reopen": "Reopen",
+			"awaitingRelease": "awaiting release"
+		},
+		"note": {
+			"visibleParty": "Only you, {party} and the auditor can see the amount.",
+			"visibleOther": "Only the two parties and the auditor can see the amount.",
+			"releaseOffered": "When you release the budget, the escrow pays the amount to {party}. Only you can do that.",
+			"releasedOwner": "Paid out to {party}. Only the two of you and the auditor can still see the amount.",
+			"releasedBeneficiary": "Paid into your confidential balance. Only you, {party} and the auditor can still see the amount.",
+			"releasedOther": "Paid out. Only the two parties and the auditor can see the amount.",
+			"underfunded": "The lock holds an encrypted 0 because the balance was not enough.",
+			"cancelled": "Cancelled: nothing was signed and nothing was sent."
+		},
+		"notice": {
+			"confirmLock": "Confirm with your passkey, with Touch ID for example. Letting the escrow take the amount and locking it go out in one step.",
+			"lockFailedTitle": "Budget not locked.",
+			"underfundedTitle": "Budget not funded.",
+			"insufficient": "Your confidential balance was not enough. The lock still went through: the fee was paid, and an encrypted 0 was transferred.",
+			"lockFailed": "Locking did not go through. Check the details and try again.",
+			"noAccount": "The delegate has no account for budgets yet. Once they have opened the app with their passkey, the budget can be locked.",
+			"releaseFailedTitle": "Budget not released.",
+			"releaseFailed": "The amount stays locked. Try again.",
+			"decrypting": "Decrypting the amount. This takes a few seconds.",
+			"expiredTitle": "Read access expired.",
+			"expired": "Confirm with your passkey to see the amounts again.",
+			"renew": "Renew with passkey",
+			"cancelledTitle": "Passkey confirmation cancelled.",
+			"cancelled": "Nothing was signed and nothing was sent.",
+			"retry": "Confirm again"
+		},
+		"balance": {
+			"heading": "Confidential balance",
+			"note": "Decrypted on this device. The chain holds only an encrypted value.",
+			"hidden": "This browser cannot read the balance."
+		},
+		"toast": {
+			"received": "{amount} {token} received from {from}",
+			"receivedHidden": "Budget from {from} paid out"
+		},
+		"auditor": {
+			"title": "Auditor view",
+			"escrow": "Escrow",
+			"role": "Auditor",
+			"banner": "You see these amounts because the escrow lists your address as its auditor. They are decrypted on your device. Nothing is in plain text on the chain.",
+			"heading": "Escrow transactions",
+			"reference": "Reference",
+			"from": "From",
+			"to": "To",
+			"amount": "Amount",
+			"status": "Status",
+			"locked": "locked",
+			"released": "paid out",
+			"refunded": "refunded",
+			"footnote": "You do not see the todos themselves, only reference, parties and amount.",
+			"empty": "No escrow transactions yet.",
+			"error": "The escrow transactions could not be loaded."
+		}
+	},
+	"consent": {
+		"warningHeading": "Early days",
+		"warningBody": "This is a working demonstration rather than a finished product. It does what it says, and the format may still change - so keep anything you would be sorry to lose somewhere else as well.",
+		"accept": "I have read this and accept it",
+		"proceed": "Open shared list",
+		"proceedDisabled": "Enter three Spanish words to continue",
+		"proceedNeedsAccept": "Confirm the notice first",
+		"remember": "Don't show this again on this device",
+		"technical": "Technical",
+		"simple": "Simple",
+		"clause": {
+			"noServer": "We run no server, and no copy of your lists exists anywhere we control.",
+			"gateway": "The app itself is delivered through a public IPFS gateway, which sees that you loaded it. Your own Kubo node, or the IPFS Companion extension, fetches it from the network instead.",
+			"relay": "Relay nodes introduce devices to each other and may keep a copy of a list so another device can collect it later.",
+			"sharedList": "The list named by the three Spanish words is open: anyone who has those words can read it and write to it. Treat the words as a way to meet, not as a password.",
+			"privateList": "A list you create yourself decides who may write to it - you, and anyone you let in. It does not decide who may read it.",
+			"readingIsOpen": "Nothing here is encrypted. Anyone who has a list's address can read everything in it, including the relay that stores it. Do not put anything private in a todo.",
+			"identityPasskey": "Your passkey identifies you to the other devices. Nobody else can write as you.",
+			"identityAnonymous": "You are using a random identity that exists only in this browser. Close it and it is gone.",
+			"cookies": "No tracking cookies are used. If you tick \"don't show this again\", that choice is the only thing saved on this device.",
+			"delegation": "You decide who may write to a list, and you can take a grant back later — unlike a key you handed out, because nothing here is encrypted.",
+			"storageMemory": "You chose \"in memory only\": nothing is written to this device, and this browser starts over when the page reloads.",
+			"storagePersistent": "You chose \"keep them in this browser\": the todos survive a reload. They sit unencrypted in this browser’s storage, and clearing it loses them."
+		},
+		"errorNoPasskey": "No passkey is stored in this browser, and your authenticator did not hand one over. Create a new one, or continue without one.",
+		"errorNeedsLabel": "Please give the new passkey a name.",
+		"errorStart": "Startup failed: {reason}",
+		"existingNeedsTap": "Your passkey asks for a tap on every start. That is why this dialog is back — nothing went wrong.",
+		"identityExistingFound": "A passkey from an earlier session is stored on this device.",
+		"identityExistingNone": "Nothing is stored in this browser. We will ask your authenticator, which only works if the passkey carries its own details.",
+		"prfMissing": "This authenticator cannot carry your identity to a second device (no PRF). The same passkey produces a separate identity there.",
+		"mnemonicLabel": "Shared list mnemonic",
+		"mnemonicHelp": "Share these three Spanish words to join the same public writable OrbitDB list. This is a share code, not a password or encryption key.",
+		"mnemonicPlaceholder": "luna-camino-verde",
+		"mnemonicSrError": "Enter exactly three valid Spanish words.",
+		"mnemonicGenerate": "Generate new",
+		"mnemonicCopy": "Copy",
+		"mnemonicCopied": "Copied!",
+		"mnemonicError": {
+			"empty": "Enter a three-word Spanish share code.",
+			"repeatedSeparator": "Do not use empty words or repeated separators.",
+			"wordCount": "The share code must contain exactly three Spanish words.",
+			"unknownWord": "Unknown Spanish share-code word: {word}"
+		},
+		"identityLegend": "Your identity",
+		"identityCreate": "Create a passkey",
+		"identityCreateHint": "Register a new WebAuthn passkey and derive your OrbitDB identity (DID) from it.",
+		"identityCreateHintAnother": "Register another WebAuthn passkey — a second identity alongside the one already on this device.",
+		"identityExisting": "Use an existing passkey",
+		"identityAnonymous": "Continue without a passkey",
+		"identityAnonymousHint": "Use a random per-browser identity, exactly like the previous chapter.",
+		"identityLabelPlaceholder": "name for this passkey (e.g. Alice)",
+		"identityLabelHint": "Only a label for the passkey picker. Your identity comes from the key, not from this name — two people on this device may use the same one.",
+		"element": {
+			"checkHeading": "This browser, on this network",
+			"checking": "Checking what this network allows…",
+			"ok": "A direct connection off this network looks possible.",
+			"unreliable": "This network maps a new port per destination and offers no IPv6, so a direct connection usually works only to someone on this same network.",
+			"none": "No path off this network was found. You can still connect to someone on this same network.",
+			"sameNetwork": "Two devices on the same Wi-Fi connect regardless of any of this.",
+			"details": "Show the addresses this check found",
+			"detailsHint": "What a peer would be offered as a route to this device. Turn a VPN on or off and check again - if anything changed, it changed here.",
+			"detailsDecides": "Only the \"seen from outside\" rows decide the verdict above. The rest are this device’s own addresses, which exist whether or not anything gets out.",
+			"recheck": "Check again",
+			"detailsEmpty": "No candidates were gathered.",
+			"candidateHost": "this device",
+			"candidateSrflx": "seen from outside",
+			"candidateRelay": "via a relay",
+			"candidatePrflx": "discovered mid-connection",
+			"candidateMdns": "Addresses ending in .local are stand-ins the browser substitutes for this device’s own address, so a web page cannot read it. They are not a fault and they are not the VPN.",
+			"candidateNew": "new",
+			"candidateGone": "gone",
+			"technicalHeading": "Worth knowing",
+			"waysHeading": "How the other device gets in",
+			"wayQr": "By camera: you hold up a code, they scan it. Nothing leaves this network.",
+			"relayLabel": "Connect through a relay",
+			"relayHint": "For when the other device cannot scan your code - over a messenger, for instance. Off unless you ask for it.",
+			"relayChecking": "Looking for a relay that answers…",
+			"relayNone": "No relay answered. Scanning a code still works.",
+			"privacyHeading": "What this means for your data",
+			"privacyEmpty": "The choices above decide what goes here.",
+			"privacyAccept": "I have read this and accept it",
+			"technical": [
+				"A phone closes a waiting invite within seconds of you leaving the app. Only DuckDuckGo and Safari have been seen to hold one for about ten.",
+				"Chrome on Android reports no IPv6 where Firefox and DuckDuckGo on the same phone and the same Wi-Fi report one. A verdict describes this browser, not the network.",
+				"On mobile data, carrier NAT usually blocks a direct connection to anyone outside that network.",
+				"A VPN moves both ends somewhere else, which can fix a blocked network or break a working one."
+			]
+		},
+		"relayReachable": "{count} known relays answered. No directory was queried.",
+		"relayDiscovered": "{count} relays found in the directory - the ones shipped with this app stayed silent.",
+		"showNotice": "Show the notice",
+		"storageLegend": "Where your todos are stored",
+		"storageMemoryLabel": "In memory only",
+		"storageMemoryHint": "Nothing is written to this device. Reload the page and this browser starts over — the lists come back only from another device or the relay.",
+		"storagePersistentLabel": "Keep them in this browser",
+		"storagePersistentHint": "Todos are stored in the browser's IndexedDB and survive a restart. They are not encrypted there, so anyone who can read this browser's storage can read them."
+	},
+	"lists": {
+		"create": {
+			"heading": "Create a private list",
+			"hint": "Only your identity can write to it. Share its address and grant other DIDs below.",
+			"namePlaceholder": "list name (optional)",
+			"submit": "Create private list",
+			"busy": "Creating…",
+			"created": "Created {name} — you are now writing to it.",
+			"share": "Share this address so others can open the list. They can read it right away; writing needs a grant below.",
+			"copy": "Copy",
+			"copied": "Copied"
+		},
+		"switcher": {
+			"heading": "Your lists",
+			"hint": "Kept in your own OrbitDB registry, so they come back after a reload and follow your passkey to another device.",
+			"unnamed": "unnamed list",
+			"role": {
+				"owner": "owner",
+				"guest": "guest"
+			},
+			"open": "open",
+			"forget": "Forget",
+			"forgetTitle": "Remove from this list of lists; the database itself is untouched"
+		},
+		"open": {
+			"heading": "Open a shared list by address",
+			"hint": "Paste the full OrbitDB address someone shared with you. You can read it right away — writing needs a permission grant from the owner.",
+			"submit": "Open list",
+			"busy": "Opening…"
+		},
+		"permissions": {
+			"heading": "Write permissions",
+			"hint": "DIDs allowed to write to this list. Only list admins (the creator) can grant or revoke.",
+			"you": "(you)",
+			"remove": "Remove",
+			"placeholder": "did:key:… of the identity to allow",
+			"add": "Add DID",
+			"grantFailed": "Grant failed: {reason}",
+			"revokeFailed": "Revoke failed: {reason}"
+		},
+		"active": {
+			"shared": "Shared list",
+			"private": "Private list",
+			"guest": "Opened list",
+			"writingTo": "You are writing to {name}. The mnemonic below still refers to the public shared list.",
+			"mnemonicLabel": "Public mnemonic / OrbitDB database name",
+			"copy": "Copy",
+			"copied": "Copied!",
+			"addressLabel": "OrbitDB address",
+			"anyone": "Anyone who knows this share code can open the same public database and edit it once connected.",
+			"replication": "The mnemonic selects the same database. Live replication also requires a connection to another browser peer.",
+			"openAnother": "Open another shared list"
+		}
+	},
+	"network": {
+		"navLabel": "P2P initialization and connection status",
+		"simple": {
+			"starting": "Starting…",
+			"connecting": "Ready. Connecting to a relay…",
+			"relay": "Ready and connected to a relay",
+			"direct": "Ready and connected directly to another browser",
+			"failed": "The app could not start."
+		},
+		"status": {
+			"ready": "P2P network ready",
+			"connectingRelay": "Connecting to relay",
+			"waitingWebrtc": "Waiting for WebRTC connection",
+			"failed": "Failed to initialize {step}",
+			"initializing": "Initializing {step}",
+			"preparing": "Preparing P2P network"
+		},
+		"step": {
+			"networkConfig": {
+				"label": "Network config",
+				"description": "Validates the configured browser-reachable relay addresses and prepares the libp2p transports and services."
+			},
+			"libp2p": {
+				"label": "libp2p",
+				"description": "Creates and starts the libp2p node, including its peer identity, discovery, relay, WebSocket and WebRTC support."
+			},
+			"helia": {
+				"label": "Helia",
+				"description": "Starts the Helia IPFS node on top of libp2p and enables block exchange and HTTP retrieval."
+			},
+			"orbitdb": {
+				"label": "OrbitDB",
+				"description": "Loads or creates the persistent OrbitDB identity and initializes OrbitDB using the Helia node."
+			},
+			"databaseSync": {
+				"label": "Database + sync",
+				"description": "Opens the shared todo database, loads its local operation log and starts OrbitDB pubsub synchronization."
+			},
+			"localTodos": {
+				"label": "Local todos",
+				"description": "Connects the local todo store and starts hydrating it from OrbitDB in the background without blocking the application."
+			},
+			"relayConnected": {
+				"label": "Relay connected",
+				"description": "A live WebSocket connection to a relay/bootstrap peer is available for discovery, pubsub and circuit relay traffic.",
+				"none": "No relay is connected yet.",
+				"noOrigin": "No HTTPS health URL can be derived from the connected relay address.",
+				"loading": "Reading the OrbitDB relay version from {origin}/health…",
+				"verifiedVersion": "OrbitDB relay version {version}; health and peer ID verified at {origin}/health.",
+				"verified": "Health and peer ID verified at {origin}/health. This relay does not expose its OrbitDB relay version.",
+				"unverified": "{origin}/health could not be verified, so its OrbitDB relay version is unavailable."
+			},
+			"webrtcConnected": {
+				"label": "WebRTC connected",
+				"description": "A live libp2p connection using WebRTC is available. This normally appears after another browser peer has been discovered."
+			}
+		},
+		"details": "Network details",
+		"peerCount": "{count, plural, one {# peer} other {# peers}}",
+		"connect": {
+			"heading": "Connect to relay",
+			"hint": "Choose a current browser-reachable relay discovered through Aleph.",
+			"discovering": "Discovering and pinging Aleph relays…",
+			"noAddresses": "No relay addresses discovered",
+			"loading": "Loading…",
+			"refresh": "Refresh",
+			"custom": "Use a custom multiaddress",
+			"discoveryFailed": "Aleph relay discovery failed: {reason}",
+			"discoveryUnavailable": "Relay discovery unavailable",
+			"nonePinged": "None of the {count} discovered relay addresses answered a libp2p ping.",
+			"noDialable": "No current browser-dialable relays were found.",
+			"refreshOrCustom": "Refresh or enter a custom multiaddress.",
+			"enterAddress": "Enter a multiaddress to connect to a peer.",
+			"mustStartWithSlash": "A multiaddress must start with \"/\".",
+			"invalid": "Invalid multiaddress: {reason}",
+			"needsPeerId": "The multiaddress must include a peer id, for example ending with \"/p2p/<peer-id>\".",
+			"webrtcDisabled": "WebRTC is disabled. Use a relay circuit multiaddress instead.",
+			"notInitialized": "P2P is not initialized yet.",
+			"dialing": "Dialing peer",
+			"handshake": "Opening the websocket and completing the libp2p handshake...",
+			"stable": "Connection stable",
+			"stableDetail": "Connection stayed open for {seconds} seconds.",
+			"dropped": "Connection dropped",
+			"droppedDetail": "Handshake succeeded, but the remote peer closed the connection during relay or protocol setup.",
+			"nodeGone": "P2P node is no longer available.",
+			"connecting": "Connecting...",
+			"connect": "Connect",
+			"toastConnected": "🔗 Connected to {peer}",
+			"toastDropped": "⚠️ {peer} closed the connection shortly after connect"
+		},
+		"peers": {
+			"title": "Connected Peers",
+			"empty": "No peers connected yet.",
+			"online": "Online",
+			"disconnect": "Disconnect peer"
+		},
+		"peerId": {
+			"title": "My Peer ID",
+			"description": "Share this ID with others to assign TODOs to you.",
+			"loading": "Loading..."
+		},
+		"multiaddrs": {
+			"title": "My Multiaddresses",
+			"hint": "Copy an address to connect another browser directly.",
+			"copyLabel": "Copy multiaddress {index}",
+			"copiedLive": "Multiaddress copied to clipboard.",
+			"waiting": "Waiting for a dialable address…"
+		},
+		"copy": {
+			"title": "Copy to clipboard",
+			"copied": "Copied!",
+			"copiedToClipboard": "Copied to clipboard!"
+		}
+	},
+	"errors": {
+		"orbitdbNotReady": "OrbitDB is not initialized yet.",
+		"enterAddress": "Enter an OrbitDB database address.",
+		"addressPrefix": "The database address must start with \"/orbitdb/\".",
+		"loadFailed": "Failed to load Todo DB: {reason}",
+		"databaseNotReady": "Database is not ready yet.",
+		"emptyText": "Todo text cannot be empty.",
+		"listCannotDelegate": "This list does not support delegation. Create a private list to delegate todos.",
+		"budgetNeedsDelegate": "A budget needs a delegate to pay.",
+		"noWritePermission": "Your identity has no write permission for this list. Ask the owner to add your DID.",
+		"addFailed": "Failed to add todo: {reason}",
+		"todoNotFound": "Todo not found.",
+		"passkeyCancelled": "Passkey confirmation was cancelled; nothing was written.",
+		"notAllowed": "Only the owner of this todo, or the DID it was delegated to, can change it.",
+		"updateFailed": "Failed to update todo: {reason}",
+		"renameFailed": "Failed to rename todo: {reason}",
+		"enterDelegateDid": "Enter the DID to delegate to.",
+		"noDelegation": "This list does not support delegation.",
+		"onlyOwnerDelegates": "Only the owner of a todo can delegate it.",
+		"alreadyOwner": "You already own this todo; delegate it to someone else.",
+		"delegateFailed": "Failed to delegate todo: {reason}",
+		"onlyOwnerBudget": "Only the owner of a todo can change its budget.",
+		"notDelegated": "This todo is not delegated.",
+		"onlyOwnerRevokes": "Only the owner of a todo can revoke its delegation.",
+		"revokeFailed": "Failed to revoke delegation: {reason}"
+	}
+}

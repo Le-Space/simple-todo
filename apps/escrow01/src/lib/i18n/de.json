@@ -1,0 +1,553 @@
+{
+	"app": {
+		"title": "Simple-Todo"
+	},
+	"language": {
+		"de": "Deutsch",
+		"en": "English"
+	},
+	"header": {
+		"backToTodos": "Zurück zu den Aufgaben",
+		"tagline": "Eine Peer-to-Peer-PWA nach dem Local-first-Prinzip"
+	},
+	"sections": {
+		"label": "Bereiche",
+		"tab": {
+			"tasks": "Aufgaben",
+			"lists": "Listen",
+			"account": "Konto",
+			"network": "Netzwerk"
+		},
+		"lists": {
+			"waiting": "Ihre Listen erscheinen hier, sobald die App gestartet ist."
+		},
+		"account": {
+			"passkey": "Ihr Passkey",
+			"passkeyHint": "Andere brauchen diese DID, um Ihnen Schreibrechte zu geben oder eine Aufgabe an Sie zu delegieren.",
+			"noPasskey": "Diese Sitzung wurde ohne Passkey gestartet und hat deshalb keine DID.",
+			"balanceWaiting": "Ihr Guthaben erscheint hier, sobald Ihnen aus dieser Liste ein Budget ausgezahlt wurde.",
+			"chain": "Chain",
+			"auditor": "Prüfstelle",
+			"auditorHint": "Die Treuhand-Vorgänge so ansehen, wie die Prüfstelle sie sieht.",
+			"auditorOpen": "Prüfansicht öffnen",
+			"chainAccount": "Konto auf Sepolia",
+			"accountCreating": "Wird eingerichtet. Openfort zahlt die Gebühr, eine Passkey-Bestätigung ist dafür nicht nötig.",
+			"accountHint": "Ihr Passkey ist der Admin-Schlüssel dieses Kontos. Mit dem ersten Sperren kommen 1.000,00 Test-cUSDT darauf.",
+			"accountFailed": "Die Einrichtung ist fehlgeschlagen: {reason}",
+			"accountRetry": "Erneut versuchen",
+			"viewOnEtherscan": "Auf Etherscan ansehen",
+			"balanceAfterAccount": "Ihr Guthaben erscheint hier, sobald Ihr Konto eingerichtet ist."
+		},
+		"network": {
+			"app": "App",
+			"theme": "Darstellung",
+			"links": "Projekt",
+			"version": "Version"
+		},
+		"status": {
+			"starting": "Startet …",
+			"connecting": "Verbindet …",
+			"relay": "Verbunden",
+			"direct": "Direkt verbunden",
+			"failed": "Startfehler",
+			"details": "Details im Tab Netzwerk."
+		},
+		"list": {
+			"switch": "Liste wechseln"
+		}
+	},
+	"theme": {
+		"toLight": "Zum hellen Design wechseln",
+		"toDark": "Zum dunklen Design wechseln",
+		"light": "Helles Design",
+		"dark": "Dunkles Design"
+	},
+	"technical": {
+		"tag": "Technisch",
+		"documentedIn": "Belegt in",
+		"simulated": "Beschreibt den Ablauf auf Sepolia; die Demo ohne Chain führt ihn nicht aus.",
+		"newTab": "öffnet in einem neuen Tab"
+	},
+	"alert": {
+		"dismiss": "Schließen",
+		"errorPrefix": "Fehler:"
+	},
+	"identity": {
+		"passkeyDid": "Passkey-DID",
+		"copy": "Kopieren",
+		"copied": "Kopiert ✓"
+	},
+	"auth": {
+		"awaiting": "Passkey bestätigen …",
+		"awaitingTitle": "Bestätigen Sie mit Ihrem Passkey, um fortzufahren.",
+		"delegatedWriteSigned": "Änderung unterschrieben",
+		"lockConfirmed": "Sperren bestätigt",
+		"releaseConfirmed": "Freigabe bestätigt",
+		"readKeyRenewed": "Lesezugriff verlängert",
+		"failed": "Passkey-Bestätigung fehlgeschlagen"
+	},
+	"onboarding": {
+		"heading": "Ein Passkey für alles",
+		"intro": "Ihr Passkey meldet Sie an, unterschreibt Ihre Einträge und bestätigt Zahlungen. Sie brauchen kein Passwort, keine Seed-Phrase und keine separate Wallet.",
+		"signInTitle": "Anmelden",
+		"signInText": "Auf diesem Gerät, zum Beispiel mit Touch ID.",
+		"signTitle": "Unterschreiben",
+		"signText": "Jede Änderung trägt Ihre DID.",
+		"payTitle": "Bezahlen",
+		"payText": "Budgets in vertraulichen Token, bestätigt mit demselben Passkey. Ihr Konto dafür entsteht still im Hintergrund.",
+		"storedHeading": "Was gespeichert wird",
+		"storedDid": "Ihr öffentlicher Schlüssel und Ihre DID",
+		"storedListsPersistent": "Ihre Listen in diesem Browser",
+		"storedListsMemory": "Ihre Listen im Arbeitsspeicher dieses Browsers, bis Sie neu laden",
+		"storedBudgetsChain": "Budgets verschlüsselt im Sepolia-Testnetz",
+		"storedBudgetsDemo": "Budgets nur zur Vorführung im Arbeitsspeicher dieses Browsers: Nichts wird verschlüsselt, nichts erreicht eine Chain",
+		"storedKeys": "Schlüssel zum Unterschreiben und zum Lesen der Beträge, in diesem Browser",
+		"storedPasskey": "Der Passkey selbst verlässt Ihr Gerät nie"
+	},
+	"todo": {
+		"form": {
+			"heading": "Neue Aufgabe",
+			"placeholder": "Was ist zu tun?",
+			"submit": "Aufgabe anlegen",
+			"submitWithBudget": "Aufgabe anlegen und Budget sperren",
+			"delegateToggle": "An eine andere DID delegieren",
+			"delegateDid": "DID des Delegierten",
+			"delegateDidPlaceholder": "did:key:… der Person, die die Aufgabe erledigen darf",
+			"expiry": "Frist",
+			"optional": "(optional)",
+			"delegateHint": "Die delegierte Person bekommt keinen Schreibzugriff auf die Liste. Sie darf nur diese eine Aufgabe erledigen oder umbenennen, und Sie können das jederzeit zurücknehmen."
+		},
+		"item": {
+			"toggle": "Als erledigt markieren oder wieder öffnen",
+			"toggleNotAllowed": "Erledigen kann diese Aufgabe nur, wer sie angelegt hat oder an wen sie delegiert ist",
+			"save": "Speichern",
+			"cancel": "Abbrechen",
+			"assignedTo": "Zugewiesen an:",
+			"unassigned": "Nicht zugewiesen",
+			"createdBy": "Angelegt von:",
+			"delegatedTo": "Delegiert an {did}",
+			"delegatedToYou": "Von {did} an Sie delegiert",
+			"completedBy": "Erledigt von {did}",
+			"lastChangedBy": "Zuletzt geändert von der delegierten DID: {did}",
+			"until": "Frist {date}",
+			"status": {
+				"active": "aktiv",
+				"revoked": "zurückgenommen",
+				"expired": "abgelaufen"
+			},
+			"rename": "Umbenennen",
+			"delegate": "Delegieren",
+			"redelegate": "Neu delegieren",
+			"revoke": "Zurücknehmen",
+			"delete": "Löschen",
+			"delegatePlaceholder": "did:key:… der delegierten Person",
+			"expiryTitle": "Frist (optional)",
+			"replication": {
+				"label": "Replikation auf dem Relay:",
+				"pending": "Wartet darauf, dass der Relay diesen OrbitDB-Eintrag repliziert.",
+				"pinned": "Der Relay hat bestätigt, dass er genau diesen OrbitDB-Eintrag repliziert und bei sich gespeichert hat.",
+				"unavailable": "Für diesen Eintrag liegt derzeit kein genauer Nachweis vor, dass der Relay ihn repliziert hat.",
+				"unknown": "Für diesen bestehenden Eintrag wurde nicht beobachtet, ob der Relay ihn repliziert hat."
+			}
+		},
+		"list": {
+			"title": "Aufgaben",
+			"empty": "Noch keine Aufgaben. Legen Sie oben eine an."
+		},
+		"toast": {
+			"added": "✅ Aufgabe angelegt",
+			"addedDelegated": "✅ Aufgabe angelegt und delegiert",
+			"addFailed": "Die Aufgabe konnte nicht angelegt werden",
+			"deleted": "🗑️ Aufgabe gelöscht",
+			"deleteFailed": "❌ Die Aufgabe konnte nicht gelöscht werden",
+			"statusUpdated": "✅ Status der Aufgabe geändert",
+			"updateFailed": "Die Aufgabe konnte nicht geändert werden",
+			"renamed": "✅ Aufgabe umbenannt",
+			"renameFailed": "Die Aufgabe konnte nicht umbenannt werden",
+			"delegated": "🤝 Aufgabe delegiert",
+			"delegateFailed": "Die Aufgabe konnte nicht delegiert werden",
+			"revoked": "↩️ Delegation zurückgenommen",
+			"revokeFailed": "Die Delegation konnte nicht zurückgenommen werden"
+		}
+	},
+	"budget": {
+		"network": {
+			"demo": "Demo ohne Chain",
+			"demoTitle": "Budgets laufen gegen eine Attrappe im Arbeitsspeicher dieses Browsers. Nichts wird verschlüsselt, nichts gesendet.",
+			"sepolia": "Sepolia-Testnetz"
+		},
+		"demoNotice": "Vorführung ohne Chain: Beträge bleiben unverschlüsselt im Arbeitsspeicher dieses Browsers, und gesendet wird nichts.",
+		"form": {
+			"label": "Budget",
+			"confidential": "(vertraulich)",
+			"hint": "Der Betrag wird auf diesem Gerät verschlüsselt, bevor er gesendet wird. Lesen können ihn nur Sie, die delegierte Person und die Prüfstelle.",
+			"invalidAmount": "Geben Sie einen Betrag über 0 ein, mit höchstens {decimals} Nachkommastellen.",
+			"needsDelegate": "Für ein Budget braucht die Aufgabe eine delegierte DID.",
+			"refundHint": "Ist das Budget nach der Frist noch gesperrt, können Sie es zurückholen. Eine Schaltfläche dafür hat diese App noch nicht."
+		},
+		"status": {
+			"locking": "wird gesperrt",
+			"funded": "gesperrt",
+			"releasing": "wird freigegeben",
+			"released": "ausgezahlt",
+			"failed": "nicht gesperrt",
+			"underfunded": "ungedeckt"
+		},
+		"chip": {
+			"hidden": "Diesen Betrag kann dieser Browser nicht lesen.",
+			"decrypting": "Betrag wird entschlüsselt …",
+			"expired": "Lesezugriff abgelaufen."
+		},
+		"item": {
+			"release": "Budget freigeben",
+			"reopen": "Wieder öffnen",
+			"awaitingRelease": "wartet auf Freigabe"
+		},
+		"note": {
+			"visibleParty": "Den Betrag sehen nur Sie, {party} und die Prüfstelle.",
+			"visibleOther": "Den Betrag sehen nur die beiden Beteiligten und die Prüfstelle.",
+			"releaseOffered": "Geben Sie das Budget frei, zahlt die Treuhand den Betrag an {party} aus. Das können nur Sie.",
+			"releasedOwner": "Ausgezahlt an {party}. Den Betrag sehen weiterhin nur Sie beide und die Prüfstelle.",
+			"releasedBeneficiary": "In Ihr vertrauliches Guthaben ausgezahlt. Den Betrag sehen weiterhin nur Sie, {party} und die Prüfstelle.",
+			"releasedOther": "Ausgezahlt. Den Betrag sehen nur die beiden Beteiligten und die Prüfstelle.",
+			"underfunded": "Die Sperre hält eine verschlüsselte 0, weil das Guthaben nicht reichte.",
+			"cancelled": "Abgebrochen: Es wurde nichts signiert und nichts gesendet."
+		},
+		"notice": {
+			"confirmLock": "Bestätigen Sie mit Ihrem Passkey, zum Beispiel mit Touch ID. Die Abbuchungserlaubnis für die Treuhand und das Sperren gehen in einem Schritt raus.",
+			"lockFailedTitle": "Budget nicht gesperrt.",
+			"underfundedTitle": "Budget nicht gedeckt.",
+			"insufficient": "Ihr vertrauliches Guthaben reichte nicht. Die Sperre ging trotzdem durch: Die Gebühr ist bezahlt, und überwiesen wurde eine verschlüsselte 0.",
+			"lockFailed": "Das Sperren ist nicht gelungen. Prüfen Sie die Angaben und versuchen Sie es erneut.",
+			"noAccount": "Die delegierte Person hat noch kein Konto für Budgets. Sie muss die App einmal mit ihrem Passkey öffnen, danach lässt sich das Budget sperren.",
+			"releaseFailedTitle": "Budget nicht freigegeben.",
+			"releaseFailed": "Der Betrag bleibt gesperrt. Versuchen Sie es erneut.",
+			"decrypting": "Betrag wird entschlüsselt. Das dauert einige Sekunden.",
+			"expiredTitle": "Lesezugriff abgelaufen.",
+			"expired": "Bestätigen Sie mit Ihrem Passkey, um die Beträge wieder zu sehen.",
+			"renew": "Mit Passkey verlängern",
+			"cancelledTitle": "Passkey-Bestätigung abgebrochen.",
+			"cancelled": "Es wurde nichts signiert und nichts gesendet.",
+			"retry": "Erneut bestätigen"
+		},
+		"balance": {
+			"heading": "Vertrauliches Guthaben",
+			"note": "Entschlüsselt auf diesem Gerät. Auf der Chain steht nur ein verschlüsselter Wert.",
+			"hidden": "Das Guthaben kann dieser Browser nicht lesen."
+		},
+		"toast": {
+			"received": "{amount} {token} von {from} erhalten",
+			"receivedHidden": "Budget von {from} ausgezahlt"
+		},
+		"auditor": {
+			"title": "Prüfansicht",
+			"escrow": "Treuhand",
+			"role": "Prüfstelle",
+			"banner": "Sie sehen diese Beträge, weil die Treuhand Ihre Adresse als Prüfstelle eingetragen hat. Entschlüsselt wird auf Ihrem Gerät. Im Klartext steht nichts auf der Chain.",
+			"heading": "Treuhand-Vorgänge",
+			"reference": "Referenz",
+			"from": "Von",
+			"to": "An",
+			"amount": "Betrag",
+			"status": "Status",
+			"locked": "gesperrt",
+			"released": "ausgezahlt",
+			"refunded": "zurückgezahlt",
+			"footnote": "Die Aufgaben selbst sehen Sie nicht, nur Referenz, Beteiligte und Betrag.",
+			"empty": "Noch keine Treuhand-Vorgänge.",
+			"error": "Die Treuhand-Vorgänge ließen sich nicht laden."
+		}
+	},
+	"consent": {
+		"warningHeading": "Noch früh",
+		"warningBody": "Dies ist eine lauffähige Demonstration, kein fertiges Produkt. Es tut, was es sagt, und das Format kann sich noch ändern - bewahren Sie alles, um das es Ihnen leidtäte, also auch woanders auf.",
+		"accept": "Ich habe das gelesen und bin einverstanden",
+		"proceed": "Geteilte Liste öffnen",
+		"proceedDisabled": "Drei spanische Wörter eingeben, um fortzufahren",
+		"proceedNeedsAccept": "Zuerst den Hinweis bestätigen",
+		"remember": "Auf diesem Gerät nicht mehr anzeigen",
+		"technical": "Technisch",
+		"simple": "Einfach",
+		"clause": {
+			"noServer": "Wir betreiben keinen Server, und nirgends bei uns liegt eine Kopie Ihrer Listen.",
+			"gateway": "Die App selbst kommt über ein öffentliches IPFS-Gateway, das sieht, dass Sie sie geladen haben. Mit einem eigenen Kubo-Knoten oder der IPFS-Companion-Erweiterung holen Sie sie stattdessen direkt aus dem Netz.",
+			"relay": "Relay-Knoten machen Geräte miteinander bekannt und behalten unter Umständen eine Kopie einer Liste, damit ein anderes Gerät sie später abholen kann.",
+			"sharedList": "Die Liste hinter den drei spanischen Wörtern ist offen: Wer die Wörter hat, kann sie lesen und beschreiben. Die Wörter sind ein Weg, sich zu treffen - kein Passwort.",
+			"privateList": "Eine Liste, die Sie selbst anlegen, bestimmt, wer hineinschreiben darf - Sie und wen Sie hineinlassen. Sie bestimmt nicht, wer sie lesen darf.",
+			"readingIsOpen": "Hier ist nichts verschlüsselt. Wer die Adresse einer Liste hat, kann alles darin lesen, auch der Relay, der sie aufbewahrt. Schreiben Sie nichts Privates in ein Todo.",
+			"identityPasskey": "Ihr Passkey weist Sie gegenüber den anderen Geräten aus. Niemand sonst kann in Ihrem Namen schreiben.",
+			"identityAnonymous": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Schließen Sie ihn, ist sie weg.",
+			"cookies": "Es werden keine Tracking-Cookies verwendet. Wenn Sie \"nicht mehr anzeigen\" ankreuzen, ist diese Entscheidung das Einzige, was auf diesem Gerät gespeichert wird.",
+			"delegation": "Wer in eine Liste schreiben darf, entscheiden Sie. Eine Freigabe können Sie später wieder zurücknehmen — anders als ein herausgegebener Schlüssel, denn hier wird nichts verschlüsselt.",
+			"storageMemory": "Sie haben „nur im Arbeitsspeicher\" gewählt: Auf diesem Gerät wird nichts abgelegt, und beim Neuladen fängt dieser Browser von vorn an.",
+			"storagePersistent": "Sie haben „in diesem Browser behalten\" gewählt: Die Todos bleiben nach dem Neuladen da. Sie liegen unverschlüsselt im Speicher dieses Browsers, und wer ihn löscht, verliert sie."
+		},
+		"errorNoPasskey": "In diesem Browser ist kein Passkey hinterlegt, und Ihr Authenticator hat keinen herausgegeben. Legen Sie einen neuen an oder fahren Sie ohne fort.",
+		"errorNeedsLabel": "Bitte geben Sie dem neuen Passkey einen Namen.",
+		"errorStart": "Der Start ist fehlgeschlagen: {reason}",
+		"existingNeedsTap": "Ihr Passkey verlangt bei jedem Start eine Bestätigung. Deshalb ist dieser Dialog wieder da — es ist nichts schiefgegangen.",
+		"identityExistingFound": "Auf diesem Gerät liegt ein Passkey aus einer früheren Sitzung.",
+		"identityExistingNone": "In diesem Browser ist nichts gespeichert. Wir fragen Ihren Authenticator — das gelingt nur, wenn der Passkey seine Angaben selbst mitführt.",
+		"prfMissing": "Dieser Authenticator kann Ihre Identität nicht auf ein zweites Gerät tragen (kein PRF). Mit demselben Passkey entsteht dort eine eigene Identität.",
+		"mnemonicLabel": "Merkwörter der geteilten Liste",
+		"mnemonicHelp": "Geben Sie diese drei spanischen Wörter weiter, um dieselbe öffentlich beschreibbare OrbitDB-Liste zu öffnen. Das ist ein Zugangscode, kein Passwort und kein Schlüssel.",
+		"mnemonicPlaceholder": "luna-camino-verde",
+		"mnemonicSrError": "Bitte genau drei gültige spanische Wörter eingeben.",
+		"mnemonicGenerate": "Neue erzeugen",
+		"mnemonicCopy": "Kopieren",
+		"mnemonicCopied": "Kopiert!",
+		"mnemonicError": {
+			"empty": "Geben Sie die drei spanischen Merkwörter ein.",
+			"repeatedSeparator": "Verwenden Sie keine leeren Wörter und keine doppelten Trennzeichen.",
+			"wordCount": "Es müssen genau drei spanische Wörter sein.",
+			"unknownWord": "„{word}“ ist kein gültiges spanisches Merkwort."
+		},
+		"identityLegend": "Ihre Identität",
+		"identityCreate": "Passkey anlegen",
+		"identityCreateHint": "Einen neuen WebAuthn-Passkey registrieren und Ihre OrbitDB-Identität (DID) daraus ableiten.",
+		"identityCreateHintAnother": "Einen weiteren WebAuthn-Passkey registrieren — eine zweite Identität neben der, die auf diesem Gerät schon liegt.",
+		"identityExisting": "Vorhandenen Passkey verwenden",
+		"identityAnonymous": "Ohne Passkey fortfahren",
+		"identityAnonymousHint": "Eine zufällige Identität nur für diesen Browser, genau wie im vorigen Kapitel.",
+		"identityLabelPlaceholder": "Name für diesen Passkey (z. B. Alice)",
+		"identityLabelHint": "Nur eine Bezeichnung für die Passkey-Auswahl. Ihre Identität ergibt sich aus dem Schlüssel, nicht aus diesem Namen. Zwei Personen auf diesem Gerät dürfen denselben Namen verwenden.",
+		"element": {
+			"checkHeading": "Dieser Browser, in diesem Netz",
+			"checking": "Prüfe, was dieses Netz zulässt…",
+			"ok": "Eine direkte Verbindung aus diesem Netz heraus sieht möglich aus.",
+			"unreliable": "Dieses Netz vergibt pro Ziel einen neuen Port und bietet kein IPv6. Eine direkte Verbindung gelingt deshalb meist nur zu jemandem im selben Netz.",
+			"none": "Aus diesem Netz heraus wurde kein Weg gefunden. Zu jemandem im selben Netz können Sie sich trotzdem verbinden.",
+			"sameNetwork": "Zwei Geräte im selben WLAN verbinden sich unabhängig von alldem.",
+			"details": "Die Adressen zeigen, die diese Prüfung gefunden hat",
+			"detailsHint": "Was einem Gegenüber als Weg zu diesem Gerät angeboten würde. Schalten Sie ein VPN ein oder aus und prüfen Sie erneut — was sich ändert, ändert sich hier.",
+			"detailsDecides": "Nur die Zeilen „von außen gesehen“ entscheiden über das Urteil oben. Der Rest sind die eigenen Adressen dieses Geräts; die gibt es, ob etwas hinausgelangt oder nicht.",
+			"recheck": "Erneut prüfen",
+			"detailsEmpty": "Es wurden keine Kandidaten gesammelt.",
+			"candidateHost": "dieses Gerät",
+			"candidateSrflx": "von außen gesehen",
+			"candidateRelay": "über einen Relay",
+			"candidatePrflx": "während der Verbindung entdeckt",
+			"candidateMdns": "Adressen, die auf .local enden, sind Platzhalter, die der Browser anstelle der echten Adresse dieses Geräts einsetzt, damit eine Webseite sie nicht lesen kann. Sie sind kein Fehler und nicht das VPN.",
+			"candidateNew": "neu",
+			"candidateGone": "weg",
+			"technicalHeading": "Gut zu wissen",
+			"waysHeading": "Wie das andere Gerät hereinkommt",
+			"wayQr": "Per Kamera: Sie halten einen Code hin, das andere Gerät scannt ihn. Dabei verlässt nichts dieses Netz.",
+			"relayLabel": "Über einen Relay verbinden",
+			"relayHint": "Für den Fall, dass das andere Gerät Ihren Code nicht scannen kann — über einen Messenger etwa. Aus, solange Sie es nicht verlangen.",
+			"relayChecking": "Suche einen Relay, der antwortet…",
+			"relayNone": "Kein Relay hat geantwortet. Einen Code zu scannen geht weiterhin.",
+			"privacyHeading": "Was das für Ihre Daten bedeutet",
+			"privacyEmpty": "Was hier steht, entscheiden die Angaben oben.",
+			"privacyAccept": "Ich habe das gelesen und bin einverstanden",
+			"technical": [
+				"Ein Telefon schließt eine wartende Einladung wenige Sekunden nachdem Sie die App verlassen. Nur DuckDuckGo und Safari halten sie beobachtet etwa zehn.",
+				"Chrome auf Android meldet kein IPv6, wo Firefox und DuckDuckGo auf demselben Telefon im selben WLAN eines melden. Ein Urteil beschreibt diesen Browser, nicht das Netz.",
+				"Im Mobilfunk blockiert das Carrier-NAT eine direkte Verbindung nach außen meist.",
+				"Ein VPN verlegt beide Enden woandershin. Das kann ein blockiertes Netz retten und ein funktionierendes zerstören."
+			]
+		},
+		"relayReachable": "{count} bekannte Relays haben geantwortet. Es wurde kein Verzeichnis abgefragt.",
+		"relayDiscovered": "{count} Relays im Verzeichnis gefunden — die mit dieser App ausgelieferten blieben stumm.",
+		"showNotice": "Hinweis anzeigen",
+		"storageLegend": "Wo Ihre Todos liegen",
+		"storageMemoryLabel": "Nur im Arbeitsspeicher",
+		"storageMemoryHint": "Auf diesem Gerät wird nichts abgelegt. Beim Neuladen fängt dieser Browser von vorn an — die Listen kommen dann nur von einem anderen Gerät oder vom Relay zurück.",
+		"storagePersistentLabel": "In diesem Browser behalten",
+		"storagePersistentHint": "Die Todos liegen in der IndexedDB des Browsers und überstehen einen Neustart. Verschlüsselt sind sie dort nicht: Wer den Speicher dieses Browsers lesen kann, liest sie mit."
+	},
+	"lists": {
+		"create": {
+			"heading": "Private Liste anlegen",
+			"hint": "In die neue Liste darf nur Ihre Identität schreiben. Geben Sie deren Adresse weiter und erteilen Sie anderen DIDs weiter unten Schreibrechte.",
+			"namePlaceholder": "Name der Liste (optional)",
+			"submit": "Private Liste anlegen",
+			"busy": "Wird angelegt …",
+			"created": "Die Liste {name} ist angelegt, und Sie schreiben jetzt hinein.",
+			"share": "Geben Sie diese Adresse weiter, damit andere die Liste öffnen können. Lesen können sie sofort, schreiben erst mit Schreibrechten, die Sie weiter unten erteilen.",
+			"copy": "Kopieren",
+			"copied": "Kopiert"
+		},
+		"switcher": {
+			"heading": "Ihre Listen",
+			"hint": "Sie liegen in Ihrer eigenen OrbitDB-Registry. Deshalb sind sie nach dem Neuladen wieder da und folgen Ihrem Passkey auf ein anderes Gerät.",
+			"unnamed": "Liste ohne Namen",
+			"role": {
+				"owner": "Eigentümer",
+				"guest": "Gast"
+			},
+			"open": "geöffnet",
+			"forget": "Vergessen",
+			"forgetTitle": "Nur aus dieser Übersicht entfernen; die Datenbank selbst bleibt unverändert"
+		},
+		"open": {
+			"heading": "Geteilte Liste über ihre Adresse öffnen",
+			"hint": "Fügen Sie die vollständige OrbitDB-Adresse ein, die Ihnen jemand geschickt hat. Lesen können Sie die Liste sofort. Schreiben können Sie erst, wenn die Person, die sie angelegt hat, Ihnen Schreibrechte erteilt.",
+			"submit": "Liste öffnen",
+			"busy": "Wird geöffnet …"
+		},
+		"permissions": {
+			"heading": "Schreibrechte",
+			"hint": "Diese DIDs dürfen in die Liste schreiben. Schreibrechte erteilen oder entziehen kann nur, wer die Liste verwaltet, also wer sie angelegt hat.",
+			"you": "(Sie)",
+			"remove": "Entfernen",
+			"placeholder": "did:key:… der Identität, die schreiben darf",
+			"add": "DID hinzufügen",
+			"grantFailed": "Die Schreibrechte ließen sich nicht erteilen: {reason}",
+			"revokeFailed": "Die Schreibrechte ließen sich nicht entziehen: {reason}"
+		},
+		"active": {
+			"shared": "Geteilte Liste",
+			"private": "Private Liste",
+			"guest": "Geöffnete Liste",
+			"writingTo": "Sie schreiben in die Liste {name}. Die Merkwörter unten gehören weiterhin zur öffentlichen geteilten Liste.",
+			"mnemonicLabel": "Öffentliche Merkwörter / Name der OrbitDB-Datenbank",
+			"copy": "Kopieren",
+			"copied": "Kopiert!",
+			"addressLabel": "OrbitDB-Adresse",
+			"anyone": "Wer diese Merkwörter kennt, kann dieselbe öffentliche Datenbank öffnen und darin schreiben, sobald eine Verbindung besteht.",
+			"replication": "Die Merkwörter wählen dieselbe Datenbank aus. Damit Änderungen sofort ankommen, braucht es außerdem eine Verbindung zu einem anderen Browser.",
+			"openAnother": "Andere geteilte Liste öffnen"
+		}
+	},
+	"network": {
+		"navLabel": "P2P-Start und Verbindungsstatus",
+		"simple": {
+			"starting": "Wird gestartet …",
+			"connecting": "Bereit. Verbindung zu einem Relay wird aufgebaut …",
+			"relay": "Bereit und mit einem Relay verbunden",
+			"direct": "Bereit und direkt mit einem anderen Browser verbunden",
+			"failed": "Die App konnte nicht starten."
+		},
+		"status": {
+			"ready": "P2P-Netzwerk bereit",
+			"connectingRelay": "Verbindung zum Relay wird aufgebaut",
+			"waitingWebrtc": "Warte auf eine WebRTC-Verbindung",
+			"failed": "{step} ließ sich nicht starten",
+			"initializing": "{step} wird gestartet",
+			"preparing": "P2P-Netzwerk wird vorbereitet"
+		},
+		"step": {
+			"networkConfig": {
+				"label": "Netzwerkkonfiguration",
+				"description": "Prüft die konfigurierten, vom Browser erreichbaren Relay-Adressen und bereitet die libp2p-Transporte und -Dienste vor."
+			},
+			"libp2p": {
+				"label": "libp2p",
+				"description": "Erzeugt und startet den libp2p-Knoten samt Peer-Identität, Peer-Erkennung sowie Relay-, WebSocket- und WebRTC-Unterstützung."
+			},
+			"helia": {
+				"label": "Helia",
+				"description": "Startet den Helia-IPFS-Knoten auf libp2p und aktiviert den Blockaustausch und den Abruf über HTTP."
+			},
+			"orbitdb": {
+				"label": "OrbitDB",
+				"description": "Lädt oder erzeugt die dauerhafte OrbitDB-Identität und initialisiert OrbitDB mit dem Helia-Knoten."
+			},
+			"databaseSync": {
+				"label": "Datenbank + Sync",
+				"description": "Öffnet die geteilte Aufgaben-Datenbank, lädt ihr lokales Operations-Log und startet die Synchronisierung über OrbitDB-Pubsub."
+			},
+			"localTodos": {
+				"label": "Lokale Aufgaben",
+				"description": "Verbindet den lokalen Aufgabenspeicher und füllt ihn im Hintergrund aus OrbitDB, ohne die App zu blockieren."
+			},
+			"relayConnected": {
+				"label": "Relay verbunden",
+				"description": "Eine WebSocket-Verbindung zu einem Relay- oder Bootstrap-Peer steht für Peer-Erkennung, Pubsub und Circuit-Relay-Verkehr bereit.",
+				"none": "Noch ist kein Relay verbunden.",
+				"noOrigin": "Aus der Adresse des verbundenen Relays lässt sich keine HTTPS-Health-URL ableiten.",
+				"loading": "Lese die OrbitDB-Relay-Version von {origin}/health …",
+				"verifiedVersion": "OrbitDB-Relay-Version {version}; Health und Peer-ID unter {origin}/health bestätigt.",
+				"verified": "Health und Peer-ID unter {origin}/health bestätigt. Dieser Relay gibt seine OrbitDB-Relay-Version nicht an.",
+				"unverified": "{origin}/health ließ sich nicht prüfen, deshalb ist die OrbitDB-Relay-Version unbekannt."
+			},
+			"webrtcConnected": {
+				"label": "WebRTC verbunden",
+				"description": "Eine libp2p-Verbindung über WebRTC steht. Sie entsteht normalerweise, nachdem ein anderer Browser als Peer gefunden wurde."
+			}
+		},
+		"details": "Netzwerkdetails",
+		"peerCount": "{count, plural, one {# Peer} other {# Peers}}",
+		"connect": {
+			"heading": "Mit einem Relay verbinden",
+			"hint": "Wählen Sie einen aktuellen, vom Browser erreichbaren Relay, der über Aleph gefunden wurde.",
+			"discovering": "Suche Aleph-Relays und prüfe sie per Ping …",
+			"noAddresses": "Keine Relay-Adressen gefunden",
+			"loading": "Lädt …",
+			"refresh": "Aktualisieren",
+			"custom": "Eigene Multiadresse verwenden",
+			"discoveryFailed": "Die Relay-Suche über Aleph ist fehlgeschlagen: {reason}",
+			"discoveryUnavailable": "Relay-Suche nicht verfügbar",
+			"nonePinged": "Keine der {count} gefundenen Relay-Adressen hat auf einen libp2p-Ping geantwortet.",
+			"noDialable": "Es wurden keine aktuellen, vom Browser erreichbaren Relays gefunden.",
+			"refreshOrCustom": "Aktualisieren Sie die Suche oder geben Sie eine eigene Multiadresse ein.",
+			"enterAddress": "Geben Sie eine Multiadresse ein, um sich mit einem Peer zu verbinden.",
+			"mustStartWithSlash": "Eine Multiadresse muss mit „/“ beginnen.",
+			"invalid": "Ungültige Multiadresse: {reason}",
+			"needsPeerId": "Die Multiadresse muss eine Peer-ID enthalten, zum Beispiel am Ende „/p2p/<peer-id>“.",
+			"webrtcDisabled": "WebRTC ist ausgeschaltet. Verwenden Sie stattdessen eine Circuit-Relay-Multiadresse.",
+			"notInitialized": "P2P ist noch nicht gestartet.",
+			"dialing": "Peer wird angewählt",
+			"handshake": "WebSocket wird geöffnet und der libp2p-Handshake abgeschlossen …",
+			"stable": "Verbindung stabil",
+			"stableDetail": "Die Verbindung blieb {seconds} Sekunden offen.",
+			"dropped": "Verbindung abgebrochen",
+			"droppedDetail": "Der Handshake gelang, aber die Gegenseite hat die Verbindung beim Einrichten von Relay oder Protokoll geschlossen.",
+			"nodeGone": "Der P2P-Knoten ist nicht mehr verfügbar.",
+			"connecting": "Verbinde …",
+			"connect": "Verbinden",
+			"toastConnected": "🔗 Verbunden mit {peer}",
+			"toastDropped": "⚠️ {peer} hat die Verbindung kurz nach dem Aufbau geschlossen"
+		},
+		"peers": {
+			"title": "Verbundene Peers",
+			"empty": "Noch keine Peers verbunden.",
+			"online": "Online",
+			"disconnect": "Verbindung zu diesem Peer trennen"
+		},
+		"peerId": {
+			"title": "Meine Peer-ID",
+			"description": "Geben Sie diese ID weiter, damit andere Ihnen Aufgaben zuweisen können.",
+			"loading": "Wird geladen …"
+		},
+		"multiaddrs": {
+			"title": "Meine Multiadressen",
+			"hint": "Kopieren Sie eine Adresse, um einen anderen Browser direkt zu verbinden.",
+			"copyLabel": "Multiadresse {index} kopieren",
+			"copiedLive": "Multiadresse in die Zwischenablage kopiert.",
+			"waiting": "Warte auf eine erreichbare Adresse …"
+		},
+		"copy": {
+			"title": "In die Zwischenablage kopieren",
+			"copied": "Kopiert!",
+			"copiedToClipboard": "In die Zwischenablage kopiert!"
+		}
+	},
+	"errors": {
+		"orbitdbNotReady": "OrbitDB ist noch nicht gestartet.",
+		"enterAddress": "Geben Sie die Adresse einer OrbitDB-Datenbank ein.",
+		"addressPrefix": "Die Adresse der Datenbank muss mit „/orbitdb/“ beginnen.",
+		"loadFailed": "Die Liste ließ sich nicht laden: {reason}",
+		"databaseNotReady": "Die Datenbank ist noch nicht bereit.",
+		"emptyText": "Die Aufgabe braucht einen Text.",
+		"listCannotDelegate": "Diese Liste unterstützt keine Delegation. Legen Sie eine private Liste an, um Aufgaben zu delegieren.",
+		"budgetNeedsDelegate": "Ein Budget braucht eine delegierte Person, an die es ausgezahlt wird.",
+		"noWritePermission": "Ihre Identität hat keine Schreibrechte für diese Liste. Bitten Sie die Person, die sie angelegt hat, Ihre DID hinzuzufügen.",
+		"addFailed": "Die Aufgabe konnte nicht angelegt werden: {reason}",
+		"todoNotFound": "Die Aufgabe wurde nicht gefunden.",
+		"passkeyCancelled": "Die Passkey-Bestätigung wurde abgebrochen. Es wurde nichts geschrieben.",
+		"notAllowed": "Ändern kann diese Aufgabe nur, wer sie angelegt hat oder an wen sie delegiert ist.",
+		"updateFailed": "Die Aufgabe konnte nicht geändert werden: {reason}",
+		"renameFailed": "Die Aufgabe konnte nicht umbenannt werden: {reason}",
+		"enterDelegateDid": "Geben Sie die DID ein, an die Sie delegieren möchten.",
+		"noDelegation": "Diese Liste unterstützt keine Delegation.",
+		"onlyOwnerDelegates": "Delegieren kann eine Aufgabe nur, wer sie angelegt hat.",
+		"alreadyOwner": "Diese Aufgabe gehört bereits Ihnen. Delegieren Sie sie an eine andere DID.",
+		"delegateFailed": "Die Aufgabe konnte nicht delegiert werden: {reason}",
+		"onlyOwnerBudget": "Das Budget einer Aufgabe kann nur ändern, wer sie angelegt hat.",
+		"notDelegated": "Diese Aufgabe ist nicht delegiert.",
+		"onlyOwnerRevokes": "Die Delegation zurücknehmen kann nur, wer die Aufgabe angelegt hat.",
+		"revokeFailed": "Die Delegation konnte nicht zurückgenommen werden: {reason}"
+	}
+}
