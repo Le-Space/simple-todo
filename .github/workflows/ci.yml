@@ -55,9 +55,9 @@ jobs:
         working-directory: apps/${{ matrix.app }}
     steps:
       - uses: actions/checkout@v6
+      # The version comes from packageManager in the root manifest; naming it
+      # here as well makes the action refuse with ERR_PNPM_BAD_PM_VERSION.
       - uses: pnpm/action-setup@v6
-        with:
-          version: 9
       - uses: actions/setup-node@v6
         with:
           node-version: '24.x'
