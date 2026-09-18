@@ -114,6 +114,11 @@ jobs:
         env:
           ALEPH_VM_MODE: site-domain-link
           ALEPH_SITE_NAME: ${{ steps.chapter.outputs.site }}
+          # What was just published. Without these the linker has no message to
+          # point the domain at and stops on ALEPH_SITE_ITEM_HASH.
+          ALEPH_SITE_ITEM_HASH: ${{ steps.publish.outputs.item_hash }}
+          ALEPH_SITE_IPFS_CID: ${{ steps.publish.outputs.ipfs_cid }}
+          ALEPH_SITE_IPFS_CID_V0: ${{ steps.publish.outputs.ipfs_cid_v0 }}
           ALEPH_SITE_DOMAIN: ${{ steps.chapter.outputs.domain }}
           ALEPH_SITE_DOMAIN_CATCH_ALL_PATH: /index.html
           ALEPH_SITE_CHANNEL: ALEPH-CLOUDSOLUTIONS
