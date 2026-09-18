@@ -9,3 +9,14 @@ apps/*/relay/
 .env
 .env.*
 !.env.example
+
+# Runtime state from a local run — OrbitDB keystores and the E2E relay's data.
+# The identities in there are throwaway, but they are keys, and they are not
+# repository content.
+apps/*/orbitdb/
+apps/*/relay/
+apps/*/e2e/relay-info.json
+apps/*/e2e/relay.log
+
+# A chapter's own workflows do not travel: GitHub reads .github at the root.
+apps/*/.github/

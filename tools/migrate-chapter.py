@@ -31,6 +31,9 @@ ADAPTED_IN_PACKAGE = {
 KEEP_IN_CHAPTER = {"agent.mjs"}          # knows the chapter's own UI
 WORKERS_NOTE = """\t// One worker: every spec drives two browsers that have to meet through\n\t// the single relay this suite starts, and eight at once do not. Measured on\n\t// acl01: 2 of 4 runs red on the frozen branch, 3 of 4 here, green with one\n\t// worker. Chapters run in parallel through the matrix instead.\n\tworkers: 1,\n"""
 ALWAYS_PACKAGE_DIRS = ("scripts/", "static/")
+# A chapter's own workflows are dead here — GitHub reads .github at the root —
+# and its runtime state (OrbitDB keystores, the relay's datastore) is not content.
+DROP_FROM_CHAPTER = (".github/", "orbitdb/", "relay/", "test-results/")
 
 
 def sha(path: pathlib.Path) -> str:
@@ -124,6 +127,10 @@ def main() -> int:
         if not f.is_file():
             continue
         rel = str(f.relative_to(app))
+        if rel.startswith(DROP_FROM_CHAPTER):
+            f.unlink()
+            dropped += 1
+            continue
         if f.name == "package.json" or rel.startswith("contracts/") or f.name in KEEP_IN_CHAPTER:
             continue
         candidates = index.get(f.name, [])
