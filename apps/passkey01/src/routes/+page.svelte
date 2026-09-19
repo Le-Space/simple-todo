@@ -25,6 +25,8 @@
 	import ConnectedPeers from '@simple-todo/ui/ConnectedPeers.svelte';
 	import PeerIdCard from '@simple-todo/ui/PeerIdCard.svelte';
 	import OwnMultiaddrs from '@simple-todo/ui/OwnMultiaddrs.svelte';
+	import StorageModeSelector from '@simple-todo/ui/StorageModeSelector.svelte';
+	import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
 	import SharedListSelector from '$lib/SharedListSelector.svelte';
 	import SharedListDetails from '$lib/SharedListDetails.svelte';
 	import {
@@ -58,6 +60,11 @@
 	/** @type {string | null} */
 	let myPeerId = null;
 	let selectedMnemonic = '';
+
+	// Read before the dialog renders and written by the selector itself, because
+	// the choice has to be settled before Helia and OrbitDB are built -- changing
+	// it afterwards would mean tearing the node down.
+	let storageMode = getPersistentStorageEnabled() ? 'indexeddb' : 'memory';
 	let activeMnemonic = '';
 	$: mnemonicValid = isValidSpanishMnemonic(selectedMnemonic);
 
@@ -332,6 +339,7 @@
 		on:proceed={handleModalClose}
 	>
 		<svelte:fragment slot="before-confirmation">
+			<StorageModeSelector bind:mode={storageMode} />
 			<SharedListSelector bind:value={selectedMnemonic} />
 			<PasskeyOnboarding bind:mode={identityMode} bind:label={passkeyLabel} />
 		</svelte:fragment>

@@ -21,6 +21,7 @@
 // which is a better position than checking a signature and hoping the check
 // is right.
 
+import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import { IPFSAccessController } from '@orbitdb/core';
 
 import { unwrapKey, wrapKey } from './key-wrapping.js';
@@ -43,7 +44,10 @@ export async function openSharedKeys(orbitdb) {
 		type: 'keyvalue',
 		create: true,
 		sync: true,
-		AccessController: IPFSAccessController({ write: ['*'] })
+		AccessController: IPFSAccessController({ write: ['*'] }),
+		// Memory-only when that is what was chosen; this database is no more
+		// exempt than the lists it serves.
+		...(await createLogStorages())
 	});
 }
 

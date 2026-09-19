@@ -22,6 +22,7 @@
 // somebody else's list under a key its owner does not have — a broken list
 // rather than a private one. Inventing happens only where a list is created.
 
+import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import { canRememberKeys, rememberDatabaseKey, storedDatabaseKey } from './database-keys.js';
 import { newKey } from './db-encryption.js';
 import { payloadEncryption } from './entry-encryption.js';
@@ -44,6 +45,12 @@ const isAddress = (target) => target.trim().startsWith('/orbitdb/');
  */
 export async function openEncrypted(orbitdb, target, options = {}, deps = {}) {
 	const create = deps.newKey ?? newKey;
+
+	// Memory-only when that is what was chosen, folded in once: every path below
+	// hands `options` to `orbitdb.open` unchanged, and `Database` would otherwise
+	// default both log storages to LevelStorage -- which browser-level puts in
+	// IndexedDB, sealed entries and all.
+	options = { ...options, ...(await createLogStorages()) };
 
 	if (isAddress(target)) {
 		// Only a key that is already here. Inventing one for an address would
