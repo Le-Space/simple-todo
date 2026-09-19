@@ -169,6 +169,11 @@ def main() -> int:
     ):
         if key in scripts:
             scripts[key] = scripts[key].replace(old, new)
+    # qr01 and passkey01 never had the guard against a hardcoded preview origin,
+    # which is exactly how a suite ends up reporting on an app it never built.
+    scripts.setdefault("check:preview-origin",
+                       "node ../../packages/e2e-kit/src/check-preview-origin.mjs")
+    pkg["scripts"] = dict(sorted(scripts.items()))
     pkg["dependencies"] = dict(sorted(deps.items()))
     pkg["devDependencies"] = dict(sorted(dev.items()))
     manifest.write_text(json.dumps(pkg, indent=2) + "\n")

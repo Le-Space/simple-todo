@@ -1,0 +1,281 @@
+<script>
+	import { createEventDispatcher } from 'svelte';
+	import ErrorAlert from '@simple-todo/ui/ErrorAlert.svelte';
+	// Imported where they are used, not at module scope: `p2p.js` carries
+	// libp2p/Helia/OrbitDB, and this form renders on the page — a static
+	// import would put all of it back into the bundle the consent dialog
+	// waits for. Both call sites are user actions.
+	import { probeRelayAddresses } from '@simple-todo/net/relay-probe.js';
+	import {
+		describeBootstrapMultiaddr,
+		parseBootstrapMultiaddrs,
+		selectValidBrowserBootstrapMultiaddrs
+	} from '@simple-todo/net/bootstrap-multiaddrs.js';
+
+	export let disabled = false;
+	export let compact = false;
+
+	let selectedMultiaddr = '';
+	let customMultiaddr = '';
+	let useCustomMultiaddr = false;
+	/** @type {string[]} */
+	let discoveredMultiaddrs = [];
+	let isDiscovering = true;
+	let discoveredAddressCount = 0;
+	let addressesPingVerified = false;
+	/** @type {string | null} */
+	let discoveryError = null;
+	let isConnecting = false;
+	/** @type {string | null} */
+	let errorMessage = null;
+	/** @type {{ tone: 'success' | 'warning' | 'info', title: string, detail: string } | null} */
+	let statusMessage = null;
+	let hasStartedInitialDiscovery = false;
+
+	const dispatch = createEventDispatcher();
+
+	/** @typedef {{ status: 'stable' | 'dropped', detail: string, remotePeer: string | null, remoteAddr: string }} ManualConnectResult */
+
+	$: if (!disabled && !hasStartedInitialDiscovery) {
+		hasStartedInitialDiscovery = true;
+		void refreshBootstrapMultiaddrs();
+	}
+
+	async function refreshBootstrapMultiaddrs() {
+		isDiscovering = true;
+		discoveryError = null;
+		try {
+			if (import.meta.env.VITE_ALEPH_BOOTSTRAP_DISCOVERY === 'false') {
+				const configured =
+					import.meta.env.VITE_RELAY_BOOTSTRAP_ADDR_DEV ||
+					import.meta.env.VITE_RELAY_BOOTSTRAP_ADDR_PROD ||
+					'';
+				discoveredMultiaddrs = selectValidBrowserBootstrapMultiaddrs(
+					parseBootstrapMultiaddrs(configured)
+				);
+				discoveredAddressCount = discoveredMultiaddrs.length;
+				addressesPingVerified = false;
+				selectedMultiaddr = discoveredMultiaddrs[0] ?? '';
+				return;
+			}
+
+			const { discoverScopedBootstrapMultiaddrs } = await import('@simple-todo/net/aleph-bootstrap-discovery.js');
+			// Scope discovery to our relay profile AND our production registration.
+			// The Aleph channel is shared with other profiles (e.g.
+			// universal-connectivity's `uc-go-peer`), and orphaned registrations
+			// of erased E2E relays (`simple-todo-e2e-*`) otherwise flood the probe
+			// wave with dead addresses (issue #84).
+			const discovered = await discoverScopedBootstrapMultiaddrs({
+				profile: import.meta.env.VITE_RELAY_BOOTSTRAP_PROFILE || 'orbitdb-relay',
+				registrationId:
+					import.meta.env.VITE_RELAY_BOOTSTRAP_REGISTRATION_ID ||
+					'relay:orbitdb-relay:orbitdb-relay'
+			});
+			const candidates = selectValidBrowserBootstrapMultiaddrs(discovered);
+			discoveredAddressCount = candidates.length;
+			// Grouped by peer, not flat. Several of these addresses belong to the
+			// same relay — `…libp2p.direct` and `…2n6.me`, each as dns4 and dns6 — and
+			// libp2p muxes them onto one connection, where the ping service permits a
+			// single outbound stream. Probing them together made the second ping fail
+			// with TooManyOutboundProtocolStreamsError and the address was written off
+			// as unreachable; here it discarded every address of the only live relay,
+			// leaving both browsers with nothing to dial (run 31717535131).
+			discoveredMultiaddrs = await probeRelayAddresses(candidates, {
+				ping: async (/** @type {any} */ addr) => {
+					const { pingMultiaddr } = await import('./p2p.js');
+					return pingMultiaddr(addr);
+				},
+				onUnreachable: (address, error) =>
+					console.warn(`Ignoring unreachable Aleph relay address ${address}:`, error)
+			});
+			addressesPingVerified = true;
+			if (
+				discoveredMultiaddrs.length > 0 &&
+				(!selectedMultiaddr || !discoveredMultiaddrs.includes(selectedMultiaddr))
+			) {
+				selectedMultiaddr = discoveredMultiaddrs[0];
+			}
+		} catch (error) {
+			discoveredMultiaddrs = [];
+			discoveredAddressCount = 0;
+			addressesPingVerified = false;
+			discoveryError = error instanceof Error ? error.message : String(error);
+		} finally {
+			isDiscovering = false;
+		}
+	}
+
+	async function handleConnect() {
+		const address = (useCustomMultiaddr ? customMultiaddr : selectedMultiaddr).trim();
+
+		if (!address) {
+			errorMessage = 'Enter a multiaddress to connect to a peer.';
+			statusMessage = null;
+			return;
+		}
+
+		if (!address.startsWith('/')) {
+			errorMessage = 'A multiaddress must start with "/".';
+			statusMessage = null;
+			return;
+		}
+
+		errorMessage = null;
+		statusMessage = {
+			tone: 'info',
+			title: 'Dialing peer',
+			detail: 'Opening the websocket and completing the libp2p handshake...'
+		};
+		isConnecting = true;
+
+		try {
+			const { connectToMultiaddr } = await import('./p2p.js');
+			/** @type {ManualConnectResult} */
+			const result = await connectToMultiaddr(address);
+			statusMessage =
+				result.status === 'stable'
+					? {
+							tone: 'success',
+							title: 'Connection stable',
+							detail: result.detail
+						}
+					: {
+							tone: 'warning',
+							title: 'Connection dropped',
+							detail: result.detail
+						};
+			dispatch('connected', result);
+			if (result.status === 'stable') {
+				customMultiaddr = '';
+			}
+		} catch (error) {
+			errorMessage = error instanceof Error ? error.message : String(error);
+			statusMessage = null;
+		} finally {
+			isConnecting = false;
+		}
+	}
+
+	/**
+	 * @param {KeyboardEvent} event
+	 */
+	function handleKeydown(event) {
+		if (event.key === 'Enter') {
+			handleConnect();
+		}
+	}
+</script>
+
+<div
+	class:rounded-lg={!compact}
+	class:bg-surface={!compact}
+	class:p-6={!compact}
+	class:shadow-md={!compact}
+>
+	<div class:mb-4={!compact} class:mb-2={compact} class="flex items-start justify-between gap-4">
+		<div>
+			<h2 class:text-xl={!compact} class:text-sm={compact} class="font-semibold">
+				Connect to relay
+			</h2>
+			<p class="mt-1 text-xs text-faint">
+				Choose a current browser-reachable relay discovered through Aleph.
+			</p>
+		</div>
+	</div>
+
+	<div class:space-y-4={!compact} class:space-y-2={compact}>
+		<div class="flex gap-2">
+			<select
+				data-testid="reachable-relay-select"
+				bind:value={selectedMultiaddr}
+				disabled={disabled || isConnecting || isDiscovering || discoveredMultiaddrs.length === 0}
+				class="min-w-0 flex-1 rounded-md border border-border px-2 py-1.5 text-xs focus:border-transparent focus:ring-2 focus:ring-cyan-500 disabled:cursor-not-allowed disabled:bg-surface-2"
+			>
+				{#if isDiscovering}
+					<option value="">Discovering and pinging Aleph relays…</option>
+				{:else if discoveredMultiaddrs.length === 0}
+					<option value="">No relay addresses discovered</option>
+				{:else}
+					{#each discoveredMultiaddrs as address}
+						<option value={address} data-ping-verified={addressesPingVerified ? 'true' : undefined}
+							>{describeBootstrapMultiaddr(address)}</option
+						>
+					{/each}
+				{/if}
+			</select>
+			<button
+				type="button"
+				on:click={refreshBootstrapMultiaddrs}
+				disabled={disabled || isConnecting || isDiscovering}
+				class="rounded-md border border-border px-2 py-1.5 text-xs font-medium text-text hover:bg-surface disabled:cursor-not-allowed disabled:bg-surface-2"
+			>
+				{isDiscovering ? 'Loading…' : 'Refresh'}
+			</button>
+		</div>
+
+		<label class="flex items-center gap-2 text-xs text-text">
+			<input
+				type="checkbox"
+				bind:checked={useCustomMultiaddr}
+				disabled={disabled || isConnecting}
+			/>
+			Use a custom multiaddress
+		</label>
+
+		{#if useCustomMultiaddr}
+			<input
+				type="text"
+				bind:value={customMultiaddr}
+				placeholder="/dns4/example.com/tcp/443/wss/p2p/12D3KooW..."
+				disabled={disabled || isConnecting}
+				class="w-full rounded-md border border-border px-2 py-1.5 font-mono text-xs focus:border-transparent focus:ring-2 focus:ring-cyan-500 disabled:cursor-not-allowed disabled:bg-surface-2"
+				on:keydown={handleKeydown}
+			/>
+		{/if}
+
+		{#if discoveryError}
+			<ErrorAlert
+				error={`Aleph relay discovery failed: ${discoveryError}`}
+				type="warning"
+				title="Relay discovery unavailable"
+				{compact}
+			/>
+		{:else if !isDiscovering && discoveredMultiaddrs.length === 0}
+			<p class="text-sm text-data-700">
+				{discoveredAddressCount > 0
+					? `None of the ${discoveredAddressCount} discovered relay addresses answered a libp2p ping.`
+					: 'No current browser-dialable relays were found.'}
+				Refresh or enter a custom multiaddress.
+			</p>
+		{/if}
+
+		{#if errorMessage}
+			<ErrorAlert error={errorMessage} {compact} />
+		{/if}
+
+		{#if statusMessage}
+			<ErrorAlert
+				error={statusMessage.detail}
+				type={statusMessage.tone === 'success'
+					? 'info'
+					: statusMessage.tone === 'warning'
+						? 'warning'
+						: 'info'}
+				title={statusMessage.title}
+				{compact}
+			/>
+		{/if}
+
+		<div class="flex gap-2">
+			<button
+				on:click={handleConnect}
+				disabled={disabled ||
+					isConnecting ||
+					!(useCustomMultiaddr ? customMultiaddr.trim() : selectedMultiaddr)}
+				class="rounded-md bg-code px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-code disabled:cursor-not-allowed disabled:bg-faint"
+			>
+				{isConnecting ? 'Connecting...' : 'Connect'}
+			</button>
+		</div>
+	</div>
+</div>
