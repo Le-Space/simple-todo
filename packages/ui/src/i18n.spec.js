@@ -45,6 +45,16 @@ describe('the translator registry', () => {
 		expect(get(t)('a.key', 'fallback')).toBe('de:a.key');
 	});
 
+	it('drops the previous translator instead of leaving it subscribed', () => {
+		const first = writable((/** @type {string} */ key) => `first:${key}`);
+		setTranslator(first);
+		setTranslator(readable((/** @type {string} */ key) => `second:${key}`));
+
+		// The old store is still there and can still change; it must not be heard.
+		first.set((/** @type {string} */ key) => `first-again:${key}`);
+		expect(get(t)('a.key', 'fallback')).toBe('second:a.key');
+	});
+
 	it('unregisters when handed nothing', () => {
 		setTranslator(readable((/** @type {string} */ key) => `translated:${key}`));
 		setTranslator(null);

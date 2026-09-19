@@ -27,23 +27,36 @@ import { derived, writable } from 'svelte/store';
 /** @type {import('svelte/store').Writable<((key: string) => string) | null>} */
 const format = writable(null);
 
+/** @type {(() => void) | null} */
+let unsubscribe = null;
+
 /**
  * Register the chapter's translator.
  *
  * Takes svelte-i18n's `_` as it is: a store whose value is the format function,
- * which changes when the locale does. The subscription lives as long as the
- * page, which is the intended lifetime — call this once, at startup.
+ * which changes when the locale does. A chapter calls this once at startup, so
+ * the subscription lives as long as the page.
  *
- * Passing nothing unregisters, which is what a test wants between cases.
+ * The previous registration is dropped first. Without that, two translators
+ * would both stay subscribed, and a locale change on the *old* one would
+ * quietly put its wording back — rare in an app, ordinary in a test that
+ * registers a second one.
+ *
+ * Passing nothing unregisters.
  *
  * @param {{ subscribe: (run: (value: any) => void) => unknown } | null} [store]
  */
 export function setTranslator(store) {
+	unsubscribe?.();
+	unsubscribe = null;
+
 	if (!store || typeof store.subscribe !== 'function') {
 		format.set(null);
 		return;
 	}
-	store.subscribe((value) => format.set(typeof value === 'function' ? value : null));
+
+	const stop = store.subscribe((value) => format.set(typeof value === 'function' ? value : null));
+	unsubscribe = typeof stop === 'function' ? stop : null;
 }
 
 /**
