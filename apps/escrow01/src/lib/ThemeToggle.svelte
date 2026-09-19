@@ -4,6 +4,7 @@
 	 * choice to localStorage, and keeps the browser <meta name="theme-color"> in
 	 * sync. Initial state is set before paint by the no-flash script in app.html.
 	 */
+	import { remember } from '@simple-todo/todo/browser-memory.js';
 	import { onMount } from 'svelte';
 	import { _ } from '$lib/i18n/index.js';
 
@@ -18,7 +19,7 @@
 		dark = next;
 		document.documentElement.classList.toggle('dark', next);
 		try {
-			localStorage.setItem('theme', next ? 'dark' : 'light');
+			remember('theme', next ? 'dark' : 'light');
 		} catch {
 			/* storage unavailable — session-only toggle */
 		}

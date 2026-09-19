@@ -20,6 +20,9 @@ import * as json from 'multiformats/codecs/json';
 import { sha512 } from 'multiformats/hashes/sha2';
 import { multiaddr } from '@multiformats/multiaddr';
 import { createLibp2pConfig } from '@simple-todo/net/libp2p-config.js';
+import { createMemoryIdentities } from '@simple-todo/todo/memory-identities.js';
+import { keepLogsWhereTheChoiceSays } from '@simple-todo/todo/keep-logs-in-memory.js';
+import { forgetByPrefix, recall, remember } from '@simple-todo/todo/browser-memory.js';
 import {
 	createLogStorages,
 	getPersistentStorageEnabled,
@@ -337,7 +340,19 @@ async function openInitialTodoDatabase(address, databaseName) {
 async function createOrbitDBInstance(heliaNode) {
 	if (!activePasskeyCredential) {
 		ownDidStore.set(null);
-		return createOrbitDB({ ipfs: heliaNode, id: getOrCreateOrbitDBIdentityId() });
+		return keepLogsWhereTheChoiceSays(
+			await createOrbitDB({
+				ipfs: heliaNode,
+				id: getOrCreateOrbitDBIdentityId(),
+				// Without identities of our own, `createOrbitDB` builds a keystore
+				// under `./orbitdb/keystore`, which browser-level writes to
+				// IndexedDB -- the signing key, on a device that was promised
+				// nothing would be kept.
+				...(getPersistentStorageEnabled()
+					? { directory: PERSISTENT_STORAGE_PATHS.orbitdb }
+					: { identities: await createMemoryIdentities(heliaNode) })
+			})
+		);
 	}
 
 	// Register the provider type once so Identities can verify webauthn
@@ -366,9 +381,15 @@ async function createOrbitDBInstance(heliaNode) {
 			signingKeyType: 'Ed25519'
 		})
 	});
+	// The provider files a proof under `webauthn-identity-proof:…` in
+	// localStorage as well as in its own Map, with no way to hand it another
+	// store. In memory mode that is a trace the reader asked us not to leave, so
+	// it goes -- the Map still answers for this session (#9).
+	if (!getPersistentStorageEnabled()) forgetByPrefix('webauthn-identity-proof:');
+
 	ownDidStore.set(identity.id);
 	console.log(`✅ Passkey identity ready: ${identity.id}`);
-	return createOrbitDB({ ipfs: heliaNode, identities, identity });
+	return keepLogsWhereTheChoiceSays(await createOrbitDB({ ipfs: heliaNode, identities, identity }));
 }
 
 /**
@@ -380,13 +401,15 @@ function getOrCreateOrbitDBIdentityId() {
 		return createOrbitDBIdentityId();
 	}
 
-	const existingIdentityId = localStorage.getItem(ORBITDB_IDENTITY_STORAGE_KEY);
+	const existingIdentityId = recall(ORBITDB_IDENTITY_STORAGE_KEY);
 	if (existingIdentityId) {
 		return existingIdentityId;
 	}
 
 	const identityId = createOrbitDBIdentityId();
-	localStorage.setItem(ORBITDB_IDENTITY_STORAGE_KEY, identityId);
+	// Through the facade: in memory mode this stays in the tab, so a reload
+	// starts a new identity rather than leaving the old one on the device.
+	remember(ORBITDB_IDENTITY_STORAGE_KEY, identityId);
 	return identityId;
 }
 

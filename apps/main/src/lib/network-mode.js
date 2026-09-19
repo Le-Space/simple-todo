@@ -1,3 +1,4 @@
+import { recall, remember } from '@simple-todo/todo/browser-memory.js';
 import { isQrTransportMode } from './qr-transport.js';
 
 /**
@@ -23,7 +24,7 @@ export function getRelayNetworkEnabled() {
 	}
 
 	try {
-		return localStorage.getItem(STORAGE_KEY) !== 'false';
+		return recall(STORAGE_KEY) !== 'false';
 	} catch {
 		// Private browsing modes can throw on access rather than return null.
 		return true;
@@ -39,7 +40,7 @@ export function setRelayNetworkEnabled(enabled) {
 	}
 
 	try {
-		localStorage.setItem(STORAGE_KEY, enabled ? 'true' : 'false');
+		remember(STORAGE_KEY, enabled ? 'true' : 'false');
 	} catch {
 		// Not being able to remember the choice is survivable; the session still
 		// honours it because the caller passes it on directly.

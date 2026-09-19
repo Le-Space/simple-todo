@@ -26,6 +26,7 @@
  * the relay does with a delegate's entries is a separate matter, covered in
  * the README.
  */
+import { accessControllerKeepingLogsInMemory } from '@simple-todo/todo/keep-logs-in-memory.js';
 import { useAccessController } from '@orbitdb/core';
 import DelegatedTodoAccessController from '@le-space/orbitdb-access-controller-delegated-todo';
 
@@ -36,7 +37,12 @@ export const DELEGATION_ACCESS_TYPE = 'todo-delegation';
  * @param {{ write?: string[] }} [options]
  */
 export const DelegatedListAccessController = ({ write } = {}) =>
-	DelegatedTodoAccessController({ write, verbose: import.meta.env?.DEV === true });
+	// The controller keeps its write set in a database it opens itself, through
+	// an object OrbitDB builds for it -- so the storage choice has to be folded
+	// in here or an in-memory session leaves its log behind (#9).
+	accessControllerKeepingLogsInMemory(
+		DelegatedTodoAccessController({ write, verbose: import.meta.env?.DEV === true })
+	);
 
 // Registered under the base type on purpose — see the module comment.
 DelegatedListAccessController.type = 'orbitdb';

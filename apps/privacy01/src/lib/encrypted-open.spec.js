@@ -1,3 +1,5 @@
+import { setPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
+import { remember } from '@simple-todo/todo/browser-memory.js';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { forgetDatabaseKey, keyForDatabase } from './database-keys.js';
@@ -24,6 +26,10 @@ const sealsEntries = (options) => typeof options?.encryption?.data?.encrypt === 
 
 describe('encrypted-open', () => {
 	beforeEach(() => {
+		// Sealing needs a key that outlives the page, so these cases choose the
+		// storage that keeps one. In memory mode the module opens in the clear on
+		// purpose -- see the case that proves it below (#9).
+		setPersistentStorageEnabled(true);
 		forgetDatabaseKey(ADDRESS);
 		forgetDatabaseKey('/orbitdb/zdpuSomeOtherList');
 	});

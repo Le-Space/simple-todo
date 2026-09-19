@@ -1,3 +1,4 @@
+import { accessControllerKeepingLogsInMemory } from '@simple-todo/todo/keep-logs-in-memory.js';
 import { writable, derived, get } from 'svelte/store';
 import { OrbitDBAccessController } from '@orbitdb/core';
 import { peerIdStore } from './p2p-stores.js';
@@ -343,7 +344,9 @@ export async function createPrivateTodoList(name = 'private-todos') {
 		type: 'keyvalue',
 		create: true,
 		sync: true,
-		AccessController: OrbitDBAccessController({ write: [orbitdb.identity.id] })
+		AccessController: accessControllerKeepingLogsInMemory(
+			OrbitDBAccessController({ write: [orbitdb.identity.id] })
+		)
 	});
 
 	const listName = name.trim() || 'private-todos';

@@ -17,6 +17,8 @@
 // plainly: it is no better protected than the database keys it unwraps.
 // Binding it to the passkey is phase 1.5 and is a different change.
 
+import { forget, recall, remember } from '@simple-todo/todo/browser-memory.js';
+
 const STORAGE_PREFIX = 'privacy01.deviceKey.';
 const CURVE = { name: 'ECDH', namedCurve: 'P-256' };
 
@@ -84,7 +86,7 @@ export async function importDeviceKey(value) {
 export function forgetDeviceKeys(identityId) {
 	cache.delete(identityId);
 	try {
-		localStorage.removeItem(storageKeyFor(identityId));
+		forget(storageKeyFor(identityId));
 	} catch {
 		// Nothing to clean up without storage.
 	}
@@ -106,7 +108,7 @@ function decode(value) {
  */
 function read(identityId) {
 	try {
-		const raw = localStorage.getItem(storageKeyFor(identityId));
+		const raw = recall(storageKeyFor(identityId));
 		return raw ? JSON.parse(raw) : null;
 	} catch {
 		// Storage denied, or something else wrote here. A new pair is made
@@ -123,7 +125,7 @@ function read(identityId) {
  */
 function write(identityId, pair) {
 	try {
-		localStorage.setItem(storageKeyFor(identityId), JSON.stringify(pair));
+		remember(storageKeyFor(identityId), JSON.stringify(pair));
 	} catch {
 		// The pair still works for this page load; the next one makes another.
 	}

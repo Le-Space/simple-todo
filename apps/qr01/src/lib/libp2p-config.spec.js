@@ -1,3 +1,4 @@
+import { remember } from '@simple-todo/todo/browser-memory.js';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
@@ -98,7 +99,7 @@ describe('a build with no relay address, once somebody asks for one', () => {
 	// blind to each other.
 
 	beforeEach(() => {
-		localStorage.setItem(RELAY_OPT_IN_STORAGE_KEY, 'true');
+		remember(RELAY_OPT_IN_STORAGE_KEY, 'true');
 	});
 
 	afterEach(() => {

@@ -1,4 +1,5 @@
 import { MemoryStorage } from '@orbitdb/core';
+import { forgetSession } from './session-store.js';
 
 /**
  * Where this browser keeps the todo data it holds.
@@ -45,6 +46,14 @@ export function getPersistentStorageEnabled() {
 }
 
 /**
+ * Written only when the answer is "keep it".
+ *
+ * Choosing "in memory only" writes nothing at all -- the key is removed
+ * instead. Remembering that somebody asked for nothing to be kept would be the
+ * one thing kept, and the consent screen would be making an exception for
+ * itself. The cost is that the dialog asks again on the next visit, which is
+ * the honest consequence: a browser that stored nothing cannot know.
+ *
  * @param {boolean} enabled
  */
 export function setPersistentStorageEnabled(enabled) {
@@ -53,7 +62,8 @@ export function setPersistentStorageEnabled(enabled) {
 	}
 
 	try {
-		localStorage.setItem(STORAGE_KEY, enabled ? 'true' : 'false');
+		if (enabled) localStorage.setItem(STORAGE_KEY, 'true');
+		else localStorage.removeItem(STORAGE_KEY);
 	} catch {
 		// Not being able to remember the choice is survivable; the session still
 		// honours it because the caller passes it on directly.
@@ -172,6 +182,21 @@ export async function wipePersistentStorage() {
 	} catch {
 		// Enumeration itself can fail in private modes.
 	}
+
+	// And what this app put in `localStorage`: the mnemonic naming the list, the
+	// identity id, the passkey link, database keys, the language. `clear()`
+	// rather than a list of prefixes, because the app is alone on its origin and
+	// a list is exactly the thing that goes stale -- #9 was a name filter that
+	// had fallen behind what the app wrote.
+	try {
+		localStorage.clear();
+	} catch {
+		// Private modes throw on access; nothing was reachable to begin with.
+	}
+
+	// And what this session is holding in memory, so "delete what was written"
+	// means the same thing on both sides of the choice.
+	forgetSession();
 
 	return { deleted, enumerable: true };
 }

@@ -1,3 +1,4 @@
+import { remember } from '@simple-todo/todo/browser-memory.js';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { RELAY_OPT_IN_STORAGE_KEY, readStoredRelayOptIn } from './relay-availability.js';
@@ -22,10 +23,10 @@ describe('the stored choice', () => {
 		// `<qr-intro>` owns the writing now. If these two ever disagreed about the
 		// key or the encoding, a remembered yes would leave the checkbox ticked
 		// and the node relay-less — the two halves of one promise, silently apart.
-		localStorage.setItem(RELAY_OPT_IN_STORAGE_KEY, 'true');
+		remember(RELAY_OPT_IN_STORAGE_KEY, 'true');
 		expect(readStoredRelayOptIn()).toBe(true);
 
-		localStorage.setItem(RELAY_OPT_IN_STORAGE_KEY, 'false');
+		remember(RELAY_OPT_IN_STORAGE_KEY, 'false');
 		expect(readStoredRelayOptIn()).toBe(false);
 	});
 });

@@ -11,6 +11,8 @@
 // module is the seam that will change: callers ask for the key of a database,
 // not for local storage.
 
+import { canOutlivePage, forget, recall, remember } from '@simple-todo/todo/browser-memory.js';
+
 const STORAGE_PREFIX = 'privacy01.dbKey.';
 
 /** @param {string} databaseKey how this database is identified locally */
@@ -49,7 +51,7 @@ export function keyForDatabase(databaseKey, deps = {}) {
 
 	let stored = null;
 	try {
-		stored = localStorage.getItem(storageKeyFor(databaseKey));
+		stored = recall(storageKeyFor(databaseKey));
 	} catch {
 		return null;
 	}
@@ -68,7 +70,7 @@ export function keyForDatabase(databaseKey, deps = {}) {
 
 	const fresh = create();
 	try {
-		localStorage.setItem(storageKeyFor(databaseKey), toBase64(fresh));
+		remember(storageKeyFor(databaseKey), toBase64(fresh));
 	} catch {
 		return null;
 	}
@@ -89,7 +91,7 @@ export function keyForDatabase(databaseKey, deps = {}) {
 export function storedDatabaseKey(databaseKey) {
 	let stored = null;
 	try {
-		stored = localStorage.getItem(storageKeyFor(databaseKey));
+		stored = recall(storageKeyFor(databaseKey));
 	} catch {
 		return null;
 	}
@@ -115,14 +117,12 @@ export function storedDatabaseKey(databaseKey) {
  * @returns {boolean}
  */
 export function canRememberKeys() {
-	const probe = `${STORAGE_PREFIX}probe`;
-	try {
-		localStorage.setItem(probe, 'probe');
-		localStorage.removeItem(probe);
-		return true;
-	} catch {
-		return false;
-	}
+	// The question is whether a key can outlive this page, not whether something
+	// will accept a write: in memory mode the facade keeps it in the tab, and
+	// sealing entries under a key that dies with the tab is exactly what this
+	// module refuses to do -- peers keep the sealed copies, and nothing could
+	// ever open them again.
+	return canOutlivePage();
 }
 
 /**
@@ -137,7 +137,7 @@ export function canRememberKeys() {
  */
 export function rememberDatabaseKey(databaseKey, key) {
 	try {
-		localStorage.setItem(storageKeyFor(databaseKey), toBase64(key));
+		remember(storageKeyFor(databaseKey), toBase64(key));
 		return true;
 	} catch {
 		return false;
@@ -147,7 +147,7 @@ export function rememberDatabaseKey(databaseKey, key) {
 /** @param {string} databaseKey */
 export function forgetDatabaseKey(databaseKey) {
 	try {
-		localStorage.removeItem(storageKeyFor(databaseKey));
+		forget(storageKeyFor(databaseKey));
 	} catch {
 		// Nothing to forget without storage.
 	}

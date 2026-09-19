@@ -53,7 +53,7 @@ const MAY_SAY_A_PORT = new Set([
  */
 const HARDCODED = /(?:localhost|127\.0\.0\.1|\[::1\]):4173/g;
 
-async function* sourceFiles (dir) {
+async function* sourceFiles(dir) {
 	for (const entry of await readdir(dir, { withFileTypes: true })) {
 		if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
 
@@ -67,23 +67,23 @@ async function* sourceFiles (dir) {
 const found = [];
 
 for await (const dir of scanDirs) {
-for await (const file of sourceFiles(dir)) {
-	const name = relative(appDir, file);
+	for await (const file of sourceFiles(dir)) {
+		const name = relative(appDir, file);
 
-	if (MAY_SAY_A_PORT.has(basename(file))) continue;
+		if (MAY_SAY_A_PORT.has(basename(file))) continue;
 
-	const text = await readFile(file, 'utf8');
+		const text = await readFile(file, 'utf8');
 
-	for (const [index, line] of text.split('\n').entries()) {
-		// A line that is only a comment is describing the problem, not causing
-		// it - this file and several others would otherwise report themselves.
-		if (/^\s*(\/\/|\*|\/\*)/.test(line)) continue;
+		for (const [index, line] of text.split('\n').entries()) {
+			// A line that is only a comment is describing the problem, not causing
+			// it - this file and several others would otherwise report themselves.
+			if (/^\s*(\/\/|\*|\/\*)/.test(line)) continue;
 
-		for (const hit of line.match(HARDCODED) ?? []) {
-			found.push(`${name}:${index + 1}  ${hit}`);
+			for (const hit of line.match(HARDCODED) ?? []) {
+				found.push(`${name}:${index + 1}  ${hit}`);
+			}
 		}
 	}
-}
 }
 
 // The env has to reach the origin, which is the other half of the same
@@ -128,7 +128,7 @@ for (const [name, actual, wanted] of configSays) {
 if (found.length > 0) {
 	console.error(
 		'❌ A preview origin is written down by hand:\n\n' +
-			found.map(f => `   ${f}`).join('\n') +
+			found.map((f) => `   ${f}`).join('\n') +
 			'\n\n   Import PREVIEW_ORIGIN from ./preview-origin.mjs instead.\n' +
 			'   A hardcoded port makes the spec browse to whatever is already on it,\n' +
 			'   so it can pass or fail against a build nobody asked it to test.\n'

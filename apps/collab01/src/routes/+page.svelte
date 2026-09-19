@@ -1,4 +1,5 @@
 <script>
+	import { recall, remember } from '@simple-todo/todo/browser-memory.js';
 	import { onMount } from 'svelte';
 	import { peerIdStore, initializationStore } from '$lib/p2p-stores.js';
 	import {
@@ -65,9 +66,9 @@
 		const canonicalMnemonic = normalizeSpanishMnemonic(selectedMnemonic);
 		selectedMnemonic = canonicalMnemonic;
 		try {
-			localStorage.setItem(SPANISH_MNEMONIC_STORAGE_KEY, canonicalMnemonic);
+			remember(SPANISH_MNEMONIC_STORAGE_KEY, canonicalMnemonic);
 			if (rememberDecision) {
-				localStorage.setItem(CONSENT_KEY, 'true');
+				remember(CONSENT_KEY, 'true');
 			}
 		} catch {
 			// ignore storage errors
@@ -114,7 +115,7 @@
 	onMount(async () => {
 		try {
 			selectedMnemonic = loadOrGenerateMnemonic();
-			if (localStorage.getItem(CONSENT_KEY) === 'true') {
+			if (recall(CONSENT_KEY) === 'true') {
 				showModal = false;
 				activeMnemonic = normalizeSpanishMnemonic(selectedMnemonic);
 				await startP2P({ todoDbName: activeMnemonic });
@@ -126,14 +127,14 @@
 
 	function loadOrGenerateMnemonic() {
 		try {
-			const saved = localStorage.getItem(SPANISH_MNEMONIC_STORAGE_KEY);
+			const saved = recall(SPANISH_MNEMONIC_STORAGE_KEY);
 			if (saved && isValidSpanishMnemonic(saved)) return normalizeSpanishMnemonic(saved);
 		} catch {
 			// Continue with an in-memory mnemonic when browser storage is unavailable.
 		}
 		const generated = generateSpanishMnemonic();
 		try {
-			localStorage.setItem(SPANISH_MNEMONIC_STORAGE_KEY, generated);
+			remember(SPANISH_MNEMONIC_STORAGE_KEY, generated);
 		} catch {
 			// The generated value remains usable for this session.
 		}

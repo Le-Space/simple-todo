@@ -34,12 +34,17 @@ function walk(dir, keep) {
 const exported = new Map();
 for (const file of walk(kitSrc, (p) => p.endsWith('.mjs'))) {
 	const source = readFileSync(file, 'utf8');
-	const names = new Set([
-		...source.matchAll(/^export\s+(?:async\s+)?(?:function|class|const|let|var)\s+(\w+)/gm)
-	].map((match) => match[1]));
+	const names = new Set(
+		[...source.matchAll(/^export\s+(?:async\s+)?(?:function|class|const|let|var)\s+(\w+)/gm)].map(
+			(match) => match[1]
+		)
+	);
 	for (const group of source.matchAll(/^export\s*\{([^}]*)\}/gm)) {
 		for (const name of group[1].split(',')) {
-			const alias = name.split(/\sas\s/).pop()?.trim();
+			const alias = name
+				.split(/\sas\s/)
+				.pop()
+				?.trim();
 			if (alias) names.add(alias);
 		}
 	}
@@ -57,7 +62,12 @@ for (const spec of walk(appsDir, (p) => p.endsWith('.spec.js') || p.endsWith('.m
 			problems.push(`${relative(appsDir, spec)}: there is no kit module ${module}`);
 			continue;
 		}
-		for (const name of imported.split(',').map((n) => n.trim().split(/\sas\s/)[0].trim())) {
+		for (const name of imported.split(',').map((n) =>
+			n
+				.trim()
+				.split(/\sas\s/)[0]
+				.trim()
+		)) {
 			if (name && !known.has(name)) {
 				problems.push(`${relative(appsDir, spec)}: ${module} exports no ${name}`);
 			}

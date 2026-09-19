@@ -128,9 +128,15 @@ export async function passConsent(
 		await page.getByTestId('passkey-label').fill(label);
 	}
 	if (persistent !== undefined) {
-		await page
-			.getByTestId(persistent ? 'consent-storage-indexeddb' : 'consent-storage-memory')
-			.check();
+		// Two names for one control: `main` still has the fieldset inline in its
+		// consent dialog (`consent-storage-…`), everyone else renders the shared
+		// `StorageModeSelector` (`storage-mode-…`). Asking for both keeps the
+		// specs out of that difference until main adopts the component.
+		const shared = page.getByTestId(persistent ? 'storage-mode-indexeddb' : 'storage-mode-memory');
+		const inline = page.getByTestId(
+			persistent ? 'consent-storage-indexeddb' : 'consent-storage-memory'
+		);
+		await ((await shared.count()) > 0 ? shared : inline).check();
 	}
 	if (relay !== undefined) {
 		const box = page.getByTestId('consent-relay-network');

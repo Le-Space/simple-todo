@@ -1,3 +1,4 @@
+import { recall, remember } from '@simple-todo/todo/browser-memory.js';
 import { get } from 'svelte/store';
 import {
 	_ as formatter,
@@ -44,7 +45,7 @@ const STORAGE_KEY = 'simpleTodo.locale';
  */
 export function initialLocale() {
 	try {
-		const stored = localStorage.getItem(STORAGE_KEY);
+		const stored = recall(STORAGE_KEY);
 		if (stored === 'de' || stored === 'en') return stored;
 	} catch {
 		// Storage blocked; fall through to the browser's setting.
@@ -58,7 +59,7 @@ export function initialLocale() {
 export function setLocale(next) {
 	i18nLocale.set(next);
 	try {
-		localStorage.setItem(STORAGE_KEY, next);
+		remember(STORAGE_KEY, next);
 	} catch {
 		// Storage blocked: the choice holds for this session and no longer.
 	}

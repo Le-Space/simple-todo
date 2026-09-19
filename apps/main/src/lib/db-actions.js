@@ -1,7 +1,7 @@
 import { writable, derived, get } from 'svelte/store';
 import { peerIdStore } from './p2p-stores.js';
 import { relayHttpStatusStore } from '@simple-todo/net/relay-status.js';
-import { createLogStorages } from './storage-mode.js';
+import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import {
 	decideProofOutcome,
 	nextProofDelayMs,

@@ -11,6 +11,8 @@
 // module is the seam that will change: callers ask for the key of a database,
 // not for local storage.
 
+import { forget, recall, remember } from '@simple-todo/todo/browser-memory.js';
+
 const STORAGE_PREFIX = 'privacy01.dbKey.';
 
 /** @param {string} databaseKey how this database is identified locally */
@@ -49,7 +51,7 @@ export function keyForDatabase(databaseKey, deps = {}) {
 
 	let stored = null;
 	try {
-		stored = localStorage.getItem(storageKeyFor(databaseKey));
+		stored = recall(storageKeyFor(databaseKey));
 	} catch {
 		return null;
 	}
@@ -68,7 +70,7 @@ export function keyForDatabase(databaseKey, deps = {}) {
 
 	const fresh = create();
 	try {
-		localStorage.setItem(storageKeyFor(databaseKey), toBase64(fresh));
+		remember(storageKeyFor(databaseKey), toBase64(fresh));
 	} catch {
 		return null;
 	}
@@ -78,7 +80,7 @@ export function keyForDatabase(databaseKey, deps = {}) {
 /** @param {string} databaseKey */
 export function forgetDatabaseKey(databaseKey) {
 	try {
-		localStorage.removeItem(storageKeyFor(databaseKey));
+		forget(storageKeyFor(databaseKey));
 	} catch {
 		// Nothing to forget without storage.
 	}
