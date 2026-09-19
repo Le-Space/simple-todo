@@ -2,6 +2,9 @@ import { get } from 'svelte/store';
 import { libp2pStore, peerIdStore, ownDidStore, initializationStore } from './p2p-stores.js';
 
 import { createLibp2p } from 'libp2p';
+import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
+import { createMemoryIdentities } from '@simple-todo/todo/memory-identities.js';
+import { keepLogsWhereTheChoiceSays } from '@simple-todo/todo/keep-logs-in-memory.js';
 import { createHeliaLight } from 'helia';
 import { IDBBlockstore } from 'blockstore-idb';
 import { IDBDatastore } from 'datastore-idb';
@@ -9,8 +12,8 @@ import { withBitswap } from '@helia/bitswap';
 import { withLibp2p } from '@helia/libp2p';
 import {
 	createOrbitDB,
-	IPFSAccessController,
 	Identities,
+	IPFSAccessController,
 	useIdentityProvider
 } from '@orbitdb/core';
 import { OrbitDBWebAuthnIdentityProviderFunction } from '@le-space/orbitdb-identity-provider-webauthn-did';
@@ -151,9 +154,20 @@ let discoveryDialRetryInterval = null;
  * @returns {Promise<any>}
  */
 async function createHeliaWithLibp2p(libp2pNode) {
-	const blockstore = new IDBBlockstore('qr01/blocks');
-	const datastore = new IDBDatastore('qr01/data');
-	await Promise.all([blockstore.open(), datastore.open()]);
+	// This chapter keeps things by default, unlike the others: it is the offline
+	// one -- no relay, a peer met by scanning a code, and a list that has to be
+	// there when the phone comes back into signal. A reader who says otherwise
+	// gets memory, and then helia falls back to its own memory stores.
+	const stores = getPersistentStorageEnabled()
+		? await (async () => {
+				const blockstore = new IDBBlockstore('qr01/blocks');
+				const datastore = new IDBDatastore('qr01/data');
+				// Both must be opened before Helia touches them; it does not do it,
+				// and the failure surfaces late as "Datastore needs to be opened".
+				await Promise.all([blockstore.open(), datastore.open()]);
+				return { blockstore, datastore };
+			})()
+		: {};
 
 	return withBitswap(
 		withLibp2p(
@@ -163,8 +177,7 @@ async function createHeliaWithLibp2p(libp2pNode) {
 			// written in a browser, so the request can only fail while announcing
 			// the CID to three strangers.
 			createHeliaLight({
-				blockstore,
-				datastore,
+				...stores,
 				codecs: [dagCbor, dagJson, json],
 				hashers: [sha512]
 			}),
@@ -440,7 +453,18 @@ async function openInitialTodoDatabase(address, databaseName) {
 async function createOrbitDBInstance(heliaNode) {
 	if (!activePasskeyCredential) {
 		ownDidStore.set(null);
-		return createOrbitDB({ ipfs: heliaNode, id: getOrCreateOrbitDBIdentityId() });
+		return keepLogsWhereTheChoiceSays(
+			await createOrbitDB({
+				ipfs: heliaNode,
+				id: getOrCreateOrbitDBIdentityId(),
+				// Without identities of our own, `createOrbitDB` builds a keystore in
+				// IndexedDB -- the signing key, on a device that was told nothing
+				// would be kept (#9).
+				...(getPersistentStorageEnabled()
+					? {}
+					: { identities: await createMemoryIdentities(heliaNode) })
+			})
+		);
 	}
 
 	// Register the provider type once so Identities can verify webauthn
@@ -461,7 +485,16 @@ async function createOrbitDBInstance(heliaNode) {
 	// browser's IndexedDB, and later sessions sign with it without asking for
 	// the passkey. An `encryptKeystore: true` used to sit here: the provider
 	// reads it only together with `useKeystoreDID`, so it encrypted nothing.
-	const identities = await Identities({ ipfs: heliaNode });
+	// The key stays in memory: the provider derives it from the passkey's PRF
+	// output, so the same passkey yields the same identity in every session.
+	// The keystore follows the storage choice: a reader who keeps things keeps
+	// the signing key too, and the list registry -- whose name is derived from a
+	// signature -- still points at the same place after a reload. In memory mode
+	// the key goes with the tab, and with PRF the passkey derives the same one
+	// again anyway (#9).
+	const identities = getPersistentStorageEnabled()
+		? await Identities({ ipfs: heliaNode })
+		: await createMemoryIdentities(heliaNode);
 	const identity = await identities.createIdentity({
 		provider: OrbitDBWebAuthnIdentityProviderFunction({
 			webauthnCredential: activePasskeyCredential
@@ -473,7 +506,7 @@ async function createOrbitDBInstance(heliaNode) {
 	// `@param {module:Identities} [params.identities]` and the destructuring in
 	// `@orbitdb/core/src/orbitdb.js`. Only the bundled declaration omits it.
 	// @ts-expect-error incomplete upstream types, not a wrong call
-	return createOrbitDB({ ipfs: heliaNode, identities, identity });
+	return keepLogsWhereTheChoiceSays(await createOrbitDB({ ipfs: heliaNode, identities, identity }));
 }
 
 /**

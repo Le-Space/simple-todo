@@ -1,3 +1,4 @@
+import { forgetSession, remember } from '@simple-todo/todo/browser-memory.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -11,6 +12,7 @@ const STORAGE_KEY = 'simpleTodo.relayNetworkEnabled';
 describe('relay network preference', () => {
 	beforeEach(() => {
 		localStorage.clear();
+		forgetSession();
 	});
 
 	afterEach(() => {
@@ -34,10 +36,10 @@ describe('relay network preference', () => {
 	it('treats only an explicit "false" as off', () => {
 		// Anything else — absent, empty, garbage from an older build — must not
 		// silently strand a browser with no way to reach a peer.
-		localStorage.setItem(STORAGE_KEY, 'nonsense');
+		remember(STORAGE_KEY, 'nonsense');
 		expect(getRelayNetworkEnabled()).toBe(true);
 
-		localStorage.setItem(STORAGE_KEY, 'false');
+		remember(STORAGE_KEY, 'false');
 		expect(getRelayNetworkEnabled()).toBe(false);
 	});
 
@@ -61,6 +63,7 @@ describe('relay network preference', () => {
 describe('isRelayNetworkMode', () => {
 	beforeEach(() => {
 		localStorage.clear();
+		forgetSession();
 		window.history.replaceState({}, '', '/');
 	});
 

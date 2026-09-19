@@ -28,6 +28,7 @@
     "@libp2p/webrtc": "^6.0.27",
     "@libp2p/websockets": "^10.1.17",
     "@multiformats/multiaddr": "^13.0.3",
+    "@simple-todo/todo": "workspace:*",
     "svelte": "^5.0.0",
     "uint8arrays": "^5.1.0",
     "vitest": "^3.2.3"

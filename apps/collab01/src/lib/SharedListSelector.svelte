@@ -1,5 +1,8 @@
 <script>
-	import { generateSpanishMnemonic, normalizeSpanishMnemonic } from '@simple-todo/todo/spanish-mnemonic.js';
+	import {
+		generateSpanishMnemonic,
+		normalizeSpanishMnemonic
+	} from '@simple-todo/todo/spanish-mnemonic.js';
 
 	export let value = '';
 	export let disabled = false;
@@ -57,7 +60,9 @@
 		placeholder="luna-camino-verde"
 	/>
 	{#if validation.error && touched}
-		<p id="shared-list-error" role="alert" class="mt-1 text-xs text-danger-700 dark:text-danger">{validation.error}</p>
+		<p id="shared-list-error" role="alert" class="mt-1 text-xs text-danger-700 dark:text-danger">
+			{validation.error}
+		</p>
 	{:else}
 		<p id="shared-list-error" class="sr-only">Enter exactly three valid Spanish words.</p>
 	{/if}

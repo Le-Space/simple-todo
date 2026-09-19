@@ -59,7 +59,9 @@
 				return;
 			}
 
-			const { discoverScopedBootstrapMultiaddrs } = await import('@simple-todo/net/aleph-bootstrap-discovery.js');
+			const { discoverScopedBootstrapMultiaddrs } = await import(
+				'@simple-todo/net/aleph-bootstrap-discovery.js'
+			);
 			// Scope discovery to our relay profile AND our production registration.
 			// The Aleph channel is shared with other profiles (e.g.
 			// universal-connectivity's `uc-go-peer`), and orphaned registrations

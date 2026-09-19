@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { remember } from '@simple-todo/todo/browser-memory.js';
 import { forgetDatabaseKey, keyForDatabase } from './database-keys.js';
 
 const NAME = 'luna-camino-verde';
@@ -25,7 +26,9 @@ describe('database-keys', () => {
 
 	it('refuses a stored key that is not readable rather than replacing it', () => {
 		keyForDatabase(NAME);
-		localStorage.setItem(`privacy01.dbKey.${NAME}`, 'not base64 ***');
+		// Seeded the way the module stores it: in memory mode the key never
+		// reaches `localStorage`, so writing there would seed nothing.
+		remember(`privacy01.dbKey.${NAME}`, 'not base64 ***');
 
 		// Replacing it would seal new entries under a key that cannot open the
 		// old ones — silently, and only noticed once something is unreadable.

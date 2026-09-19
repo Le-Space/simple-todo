@@ -257,7 +257,10 @@ test.describe('Consent screen', () => {
 
 	test('remembers the decision when asked to', async ({ page }) => {
 		await page.goto('/');
-		await passConsent(page, { remember: true });
+		// Remembering is itself something kept, so it needs the choice that keeps
+		// things. In memory mode nothing survives the reload by design -- not the
+		// mnemonic, not this decision (#9).
+		await passConsent(page, { remember: true, persistent: true });
 
 		const savedMnemonic = await page.evaluate(() =>
 			localStorage.getItem('simpleTodo.sharedListMnemonic.v1')

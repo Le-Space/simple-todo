@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { takeStorageInventory } from '@simple-todo/e2e-kit/storage-inventory.mjs';
 
 const timeout = 90000;
 
@@ -118,5 +119,25 @@ test.describe('Where your todos are stored', () => {
 
 		const logs = await recordsUnder(page, ['level-js-orbitdb/orbitdb/']);
 		expect(logs.filter((database) => database.records > 0)).toEqual([]);
+	});
+
+	test('in memory only: the device is left as it was found', async ({ page }) => {
+		test.setTimeout(timeout * 4);
+		await openWith(page, 'memory');
+
+		await page.getByPlaceholder('What needs to be done?').fill(`trace-${Date.now().toString(36)}`);
+		await page.getByRole('button', { name: 'Add TODO' }).click();
+		// Long enough for the keystore, the registry and the log to have been
+		// written if anything still writes them.
+		await page.waitForTimeout(3000);
+
+		// The whole device, not the databases whose names we thought to filter
+		// for: that filter is what let `level-js-orbitdb/keystore` hold a signing
+		// key while a test called this clean (#9).
+		const left = await takeStorageInventory(page);
+		expect(
+			{ databases: left.indexedDB, local: left.localStorage, session: left.sessionStorage },
+			`caches (the app shell, which may stay): ${JSON.stringify(left.caches)}`
+		).toEqual({ databases: [], local: [], session: [] });
 	});
 });

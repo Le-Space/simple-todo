@@ -1,3 +1,5 @@
+import { accessControllerKeepingLogsInMemory } from '@simple-todo/todo/keep-logs-in-memory.js';
+import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import { writable, get } from 'svelte/store';
 import { OrbitDBAccessController } from '@orbitdb/core';
 
@@ -90,7 +92,12 @@ export async function openListRegistry(orbitdb) {
 			type: 'keyvalue',
 			create: true,
 			sync: true,
-			AccessController: OrbitDBAccessController({ write: [orbitdb.identity.id] })
+			AccessController: accessControllerKeepingLogsInMemory(
+				OrbitDBAccessController({ write: [orbitdb.identity.id] })
+			),
+			// Memory-only when that is what was chosen: the registry is a database
+			// like any other, and its log defaults to LevelStorage.
+			...(await createLogStorages())
 		});
 		registryDB = db;
 		db.events.on('update', () => {

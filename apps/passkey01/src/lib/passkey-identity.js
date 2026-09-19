@@ -26,6 +26,26 @@ import {
 const CREDENTIAL_STORAGE_KEY = 'simpleTodo.webauthnCredential';
 
 /**
+ * The credential, written down so a later visit finds the same identity.
+ *
+ * This is the one thing memory mode still leaves on the device, and it is
+ * deliberate for now: with provider 0.5.4 an assertion proves possession but
+ * does not carry the public key back, so without this (or a largeBlob the
+ * authenticator may not have) the identity cannot return -- a reader would
+ * come back to a new DID and no access to their own private list.
+ *
+ * Provider 0.6.0 removes the reason: `restoreIdentityFromAuthenticator()`
+ * touches the same passkey twice and derives the DID and the signing key from
+ * the two signatures, with nothing stored. Once the chapters are on it, this
+ * write goes away in memory mode (#9).
+ *
+ * @param {any} credential
+ */
+function rememberCredential(credential) {
+	storeWebAuthnCredential(credential, CREDENTIAL_STORAGE_KEY);
+}
+
+/**
  * Register a brand-new passkey and persist its identity metadata for later
  * recovery (largeBlob first, localStorage always).
  *
@@ -39,7 +59,7 @@ export async function createPasskeyCredential({ userId, displayName }) {
 	});
 
 	// localStorage fallback first — it never fails for platform reasons.
-	storeWebAuthnCredential(credential, CREDENTIAL_STORAGE_KEY);
+	rememberCredential(credential);
 
 	// Best effort: put the metadata into the authenticator's largeBlob so the
 	// identity survives a cleared browser profile. Costs one extra WebAuthn
@@ -70,7 +90,7 @@ export async function recoverPasskeyCredential() {
 			const credential = payload?.credential ?? payload;
 			if (credential?.did) {
 				// Refresh the local fallback so the next recovery works offline of largeBlob.
-				storeWebAuthnCredential(credential, CREDENTIAL_STORAGE_KEY);
+				rememberCredential(credential);
 				return credential;
 			}
 		}

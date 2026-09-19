@@ -25,6 +25,17 @@ describe('persistent storage preference', () => {
 		expect(getPersistentStorageEnabled()).toBe(false);
 	});
 
+	it('writes nothing at all for the in-memory choice', () => {
+		// The asymmetry is the point: remembering "keep nothing" would be the one
+		// thing kept, so the key is removed rather than set to 'false'.
+		setPersistentStorageEnabled(true);
+		expect(localStorage.getItem('simpleTodo.persistentStorageEnabled')).toBe('true');
+
+		setPersistentStorageEnabled(false);
+		expect(localStorage.getItem('simpleTodo.persistentStorageEnabled')).toBeNull();
+		expect(getPersistentStorageEnabled()).toBe(false);
+	});
+
 	it('treats anything but the exact string as off', () => {
 		// Opt-in must be explicit — a stray value cannot switch persistence on.
 		for (const value of ['TRUE', '1', 'yes', '', 'false']) {

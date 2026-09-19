@@ -59,7 +59,9 @@
 				return;
 			}
 
-			const { discoverScopedBootstrapMultiaddrs } = await import('@simple-todo/net/aleph-bootstrap-discovery.js');
+			const { discoverScopedBootstrapMultiaddrs } = await import(
+				'@simple-todo/net/aleph-bootstrap-discovery.js'
+			);
 			// Scope discovery to our relay profile AND our production registration.
 			// The Aleph channel is shared with other profiles (e.g.
 			// universal-connectivity's `uc-go-peer`), and orphaned registrations
@@ -177,7 +179,7 @@
 			<h2 class:text-xl={!compact} class:text-sm={compact} class="font-semibold">
 				Connect to relay
 			</h2>
-			<p class="mt-1 text-xs text-faint">
+			<p class="text-faint mt-1 text-xs">
 				Choose a current browser-reachable relay discovered through Aleph.
 			</p>
 		</div>
@@ -189,7 +191,7 @@
 				data-testid="reachable-relay-select"
 				bind:value={selectedMultiaddr}
 				disabled={disabled || isConnecting || isDiscovering || discoveredMultiaddrs.length === 0}
-				class="min-w-0 flex-1 rounded-md border border-border px-2 py-1.5 text-xs focus:border-transparent focus:ring-2 focus:ring-cyan-500 disabled:cursor-not-allowed disabled:bg-surface-2"
+				class="border-border disabled:bg-surface-2 min-w-0 flex-1 rounded-md border px-2 py-1.5 text-xs focus:border-transparent focus:ring-2 focus:ring-cyan-500 disabled:cursor-not-allowed"
 			>
 				{#if isDiscovering}
 					<option value="">Discovering and pinging Aleph relays…</option>
@@ -207,13 +209,13 @@
 				type="button"
 				on:click={refreshBootstrapMultiaddrs}
 				disabled={disabled || isConnecting || isDiscovering}
-				class="rounded-md border border-border px-2 py-1.5 text-xs font-medium text-text hover:bg-surface disabled:cursor-not-allowed disabled:bg-surface-2"
+				class="border-border text-text hover:bg-surface disabled:bg-surface-2 rounded-md border px-2 py-1.5 text-xs font-medium disabled:cursor-not-allowed"
 			>
 				{isDiscovering ? 'Loading…' : 'Refresh'}
 			</button>
 		</div>
 
-		<label class="flex items-center gap-2 text-xs text-text">
+		<label class="text-text flex items-center gap-2 text-xs">
 			<input
 				type="checkbox"
 				bind:checked={useCustomMultiaddr}
@@ -228,7 +230,7 @@
 				bind:value={customMultiaddr}
 				placeholder="/dns4/example.com/tcp/443/wss/p2p/12D3KooW..."
 				disabled={disabled || isConnecting}
-				class="w-full rounded-md border border-border px-2 py-1.5 font-mono text-xs focus:border-transparent focus:ring-2 focus:ring-cyan-500 disabled:cursor-not-allowed disabled:bg-surface-2"
+				class="border-border disabled:bg-surface-2 w-full rounded-md border px-2 py-1.5 font-mono text-xs focus:border-transparent focus:ring-2 focus:ring-cyan-500 disabled:cursor-not-allowed"
 				on:keydown={handleKeydown}
 			/>
 		{/if}
@@ -241,7 +243,7 @@
 				{compact}
 			/>
 		{:else if !isDiscovering && discoveredMultiaddrs.length === 0}
-			<p class="text-sm text-data-700">
+			<p class="text-data-700 text-sm">
 				{discoveredAddressCount > 0
 					? `None of the ${discoveredAddressCount} discovered relay addresses answered a libp2p ping.`
 					: 'No current browser-dialable relays were found.'}
@@ -272,7 +274,7 @@
 				disabled={disabled ||
 					isConnecting ||
 					!(useCustomMultiaddr ? customMultiaddr.trim() : selectedMultiaddr)}
-				class="rounded-md bg-code px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-code disabled:cursor-not-allowed disabled:bg-faint"
+				class="bg-code hover:bg-code disabled:bg-faint rounded-md px-3 py-1.5 text-xs font-medium text-white transition-colors disabled:cursor-not-allowed"
 			>
 				{isConnecting ? 'Connecting...' : 'Connect'}
 			</button>

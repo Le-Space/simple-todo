@@ -1,4 +1,5 @@
 <script>
+	import { remember } from '@simple-todo/todo/browser-memory.js';
 	import { _ } from '$lib/i18n/index.js';
 	/**
 	 * Light/dark theme toggle. Flips a `.dark` class on <html>, persists the
@@ -18,7 +19,7 @@
 		dark = next;
 		document.documentElement.classList.toggle('dark', next);
 		try {
-			localStorage.setItem('theme', next ? 'dark' : 'light');
+			remember('theme', next ? 'dark' : 'light');
 		} catch {
 			/* storage unavailable — session-only toggle */
 		}

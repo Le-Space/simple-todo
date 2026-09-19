@@ -45,8 +45,8 @@
 		data-testid="list-switcher"
 		data-registry-name={$listRegistryNameStore}
 	>
-		<h2 class="text-lg font-semibold text-heading">Your lists</h2>
-		<p class="mt-1 text-xs text-faint">
+		<h2 class="text-heading text-lg font-semibold">Your lists</h2>
+		<p class="text-faint mt-1 text-xs">
 			Kept in your own OrbitDB registry, so they come back after a reload and follow your passkey to
 			another device.
 		</p>
@@ -67,10 +67,10 @@
 							? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-950'
 							: 'border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800'}"
 					>
-						<span class="font-medium text-heading">{entry.name || 'unnamed list'}</span>
-						<span class="ml-1 text-faint">· {entry.role}</span>
+						<span class="text-heading font-medium">{entry.name || 'unnamed list'}</span>
+						<span class="text-faint ml-1">· {entry.role}</span>
 						{#if active}<span class="ml-1 text-emerald-700 dark:text-emerald-400">· open</span>{/if}
-						<code class="mt-0.5 block truncate font-mono text-[10px] text-faint"
+						<code class="text-faint mt-0.5 block truncate font-mono text-[10px]"
 							>{entry.address}</code
 						>
 					</button>

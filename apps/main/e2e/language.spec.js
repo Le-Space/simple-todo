@@ -17,6 +17,10 @@ import { consentModal, privacyClauses, passConsent } from '@simple-todo/e2e-kit/
 const germanFirst = async (page) => {
 	await page.addInitScript(() => {
 		try {
+			// Seeded on the device, so the app has to be in the mode that reads the
+			// device: in memory mode a setting lives in the tab and a fresh page
+			// knows nothing about it (#9).
+			localStorage.setItem('simpleTodo.persistentStorageEnabled', 'true');
 			localStorage.setItem('simpleTodo.locale', 'de');
 		} catch {
 			/* storage blocked: the test below will say so plainly */
@@ -47,6 +51,16 @@ test.describe('German', () => {
 	});
 
 	test('the flag switches the language without a reload, and it survives one', async ({ page }) => {
+		// Surviving a reload is something kept, so the browser is in the mode that
+		// keeps things. main writes that choice when the dialog is proceeded
+		// through, and this test never leaves the dialog -- hence the seed (#9).
+		await page.addInitScript(() => {
+			try {
+				localStorage.setItem('simpleTodo.persistentStorageEnabled', 'true');
+			} catch {
+				/* storage blocked: the assertions below will say so */
+			}
+		});
 		await page.goto('/');
 
 		// English to begin with, since nothing is stored and the runner's browser
@@ -62,5 +76,15 @@ test.describe('German', () => {
 
 		await page.reload();
 		await expect(page.getByTestId('consent-technical')).toHaveText('Technisch');
+	});
+
+	test('in memory only, the language goes with the tab', async ({ page }) => {
+		await page.goto('/');
+		await consentModal(page).getByTestId('language-de').click();
+		await expect(page.getByTestId('consent-technical')).toHaveText('Technisch');
+
+		// The storage choice defaults to memory, so nothing was written down.
+		await page.reload();
+		await expect(page.getByTestId('consent-technical')).toHaveText('Technical');
 	});
 });

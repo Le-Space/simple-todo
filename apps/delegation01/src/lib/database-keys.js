@@ -1,7 +1,10 @@
 // Where a database key lives on this device.
 //
 // Phase 1 of #277 and deliberately the simplest thing that can be true: one
-// random key per database, kept in local storage, never leaving this browser.
+// random key per database, never leaving this browser -- and, since #9, only
+// reaching the device at all when the reader asked for that. In memory mode it
+// lives in the tab and dies with it, which is what sealing a list without
+// keeping anything has to mean.
 // That is enough for a single device to seal its own list and read it back
 // after a reload, and it is not enough for two devices to share one — they
 // would each invent a key and neither could read the other.
@@ -10,6 +13,8 @@
 // key and handed over with the QR code that already travels between them. This
 // module is the seam that will change: callers ask for the key of a database,
 // not for local storage.
+
+import { forget, recall, remember } from '@simple-todo/todo/browser-memory.js';
 
 const STORAGE_PREFIX = 'privacy01.dbKey.';
 
@@ -49,7 +54,7 @@ export function keyForDatabase(databaseKey, deps = {}) {
 
 	let stored = null;
 	try {
-		stored = localStorage.getItem(storageKeyFor(databaseKey));
+		stored = recall(storageKeyFor(databaseKey));
 	} catch {
 		return null;
 	}
@@ -68,7 +73,7 @@ export function keyForDatabase(databaseKey, deps = {}) {
 
 	const fresh = create();
 	try {
-		localStorage.setItem(storageKeyFor(databaseKey), toBase64(fresh));
+		remember(storageKeyFor(databaseKey), toBase64(fresh));
 	} catch {
 		return null;
 	}
@@ -78,7 +83,7 @@ export function keyForDatabase(databaseKey, deps = {}) {
 /** @param {string} databaseKey */
 export function forgetDatabaseKey(databaseKey) {
 	try {
-		localStorage.removeItem(storageKeyFor(databaseKey));
+		forget(storageKeyFor(databaseKey));
 	} catch {
 		// Nothing to forget without storage.
 	}

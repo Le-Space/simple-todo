@@ -1,3 +1,4 @@
+import { recall, remember } from '@simple-todo/todo/browser-memory.js';
 import { writable } from 'svelte/store';
 
 export const WEBRTC_ENABLED_STORAGE_KEY = 'simpleTodo.webrtcEnabled';
@@ -13,7 +14,7 @@ webrtcEnabledStore.subscribe((enabled) => {
 export function initializeWebRTCSetting() {
 	if (typeof localStorage === 'undefined') return;
 
-	const storedValue = localStorage.getItem(WEBRTC_ENABLED_STORAGE_KEY);
+	const storedValue = recall(WEBRTC_ENABLED_STORAGE_KEY);
 	if (storedValue == null) return;
 
 	setWebRTCEnabled(storedValue !== 'false');
@@ -29,7 +30,7 @@ export function setWebRTCEnabled(enabled) {
 	if (typeof localStorage === 'undefined') return;
 
 	try {
-		localStorage.setItem(WEBRTC_ENABLED_STORAGE_KEY, String(enabled));
+		remember(WEBRTC_ENABLED_STORAGE_KEY, String(enabled));
 	} catch {
 		// Ignore browsers or modes where localStorage is unavailable.
 	}

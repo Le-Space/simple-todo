@@ -27,6 +27,7 @@
  * the README.
  */
 import { useAccessController } from '@orbitdb/core';
+import { accessControllerKeepingLogsInMemory } from '@simple-todo/todo/keep-logs-in-memory.js';
 import DelegatedTodoAccessController from '@le-space/orbitdb-access-controller-delegated-todo';
 
 /** What `db.access.type` reads on a list that accepts delegation actions. */
@@ -36,7 +37,12 @@ export const DELEGATION_ACCESS_TYPE = 'todo-delegation';
  * @param {{ write?: string[] }} [options]
  */
 export const DelegatedListAccessController = ({ write } = {}) =>
-	DelegatedTodoAccessController({ write, verbose: import.meta.env?.DEV === true });
+	// The controller keeps its write set in a database it opens itself, through
+	// an object OrbitDB builds for it -- so the storage choice has to be folded
+	// in here or an in-memory session leaves its log behind (#9).
+	accessControllerKeepingLogsInMemory(
+		DelegatedTodoAccessController({ write, verbose: import.meta.env?.DEV === true })
+	);
 
 // Registered under the base type on purpose — see the module comment.
 DelegatedListAccessController.type = 'orbitdb';

@@ -142,22 +142,20 @@ async function expectWebRTCConnection(page, remotePeerId) {
 			() =>
 				page.evaluate(
 					(peerId) =>
-						window.__simpleTodoE2E
-							?.getConnections?.()
-							.some(
-								(connection) =>
-									connection.remotePeer === peerId &&
-									connection.remoteAddr?.includes('/webrtc') &&
-									// **`limited === false` is the half that matters.** The
-									// upgraded connection reads
-									// `/p2p-circuit/webrtc/p2p/…` - the circuit is still in
-									// the address, because that is where the two agreed on a
-									// moment - so the address alone cannot say whether the
-									// relay is still carrying this or merely introduced it.
-									// Without this line the assertion passed on a connection
-									// the relay was still metering at 128 KiB.
-									connection.limited === false
-							) ?? false,
+						window.__simpleTodoE2E?.getConnections?.().some(
+							(connection) =>
+								connection.remotePeer === peerId &&
+								connection.remoteAddr?.includes('/webrtc') &&
+								// **`limited === false` is the half that matters.** The
+								// upgraded connection reads
+								// `/p2p-circuit/webrtc/p2p/…` - the circuit is still in
+								// the address, because that is where the two agreed on a
+								// moment - so the address alone cannot say whether the
+								// relay is still carrying this or merely introduced it.
+								// Without this line the assertion passed on a connection
+								// the relay was still metering at 128 KiB.
+								connection.limited === false
+						) ?? false,
 					remotePeerId
 				),
 			{ timeout: collaborationTimeout }

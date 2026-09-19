@@ -93,7 +93,7 @@
 		"showNotice": "Hinweis anzeigen",
 		"storageLegend": "Wo Ihre Todos liegen",
 		"storageMemoryLabel": "Nur im Arbeitsspeicher",
-		"storageMemoryHint": "Auf diesem Gerät wird nichts abgelegt. Beim Neuladen fängt dieser Browser von vorn an — die Listen kommen dann nur von einem anderen Gerät oder vom Relay zurück.",
+		"storageMemoryHint": "Aufgaben und Schlüssel liegen nur im Arbeitsspeicher und sind beim Neuladen weg. Auf dem Gerät bleibt einzig die Verknüpfung zu Ihrem Passkey, damit Sie Ihre Identität wiederfinden.",
 		"storagePersistentLabel": "In diesem Browser behalten",
 		"storagePersistentHint": "Die Todos liegen in der IndexedDB des Browsers und überstehen einen Neustart. Verschlüsselt sind sie dort nicht: Wer den Speicher dieses Browsers lesen kann, liest sie mit."
 	}

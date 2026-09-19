@@ -81,6 +81,10 @@ test.describe('Consent Screen', () => {
 	test('should remember consent decision when checkbox is checked', async ({ page }) => {
 		await page.goto('/');
 
+		// Remembering is itself something kept, so it needs the choice that keeps
+		// things: in memory mode nothing survives the reload by design (#9).
+		await page.getByTestId('storage-mode-indexeddb').check();
+
 		// Check the "Don't show this again" checkbox
 		const rememberCheckbox = page
 			.locator('label')

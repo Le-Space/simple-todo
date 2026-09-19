@@ -40,8 +40,8 @@
 	class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
 	data-testid="new-private-list"
 >
-	<h2 class="text-lg font-semibold text-heading">Create a private list</h2>
-	<p class="mt-1 text-xs text-faint">
+	<h2 class="text-heading text-lg font-semibold">Create a private list</h2>
+	<p class="text-faint mt-1 text-xs">
 		Only your identity can write to it. Share its address and grant other DIDs below.
 	</p>
 	<div class="mt-3 flex gap-2">
@@ -71,17 +71,17 @@
 			class="mt-3 rounded-md border border-emerald-300 bg-emerald-50 p-2 dark:border-emerald-800 dark:bg-emerald-950"
 			data-testid="new-list-created"
 		>
-			<p class="text-xs text-heading">
+			<p class="text-heading text-xs">
 				Created <strong data-testid="new-list-created-name">{created.name}</strong> — you are now writing
 				to it.
 			</p>
-			<p class="mt-2 text-xs text-faint">
+			<p class="text-faint mt-2 text-xs">
 				Share this address so others can open the list. They can read it right away; writing needs a
 				grant below.
 			</p>
 			<div class="mt-1 flex items-center gap-2">
 				<code
-					class="min-w-0 flex-1 font-mono text-xs break-all"
+					class="min-w-0 flex-1 break-all font-mono text-xs"
 					data-testid="new-list-created-address">{created.address}</code
 				>
 				<button

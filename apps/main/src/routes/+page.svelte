@@ -1,4 +1,5 @@
 <script>
+	import { forget, recall, remember } from '@simple-todo/todo/browser-memory.js';
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 	import { getRelayBootstrapAddrs } from '@simple-todo/net/relay-bootstrap-addrs.js';
@@ -8,7 +9,13 @@
 		getPersistentStorageEnabled,
 		setPersistentStorageEnabled,
 		wipePersistentStorage
-	} from '$lib/storage-mode.js';
+	} from '@simple-todo/todo/storage-mode.js';
+	import { honourStorageChoice } from '@simple-todo/todo/browser-memory.js';
+
+	// This chapter offers the choice, so what the app writes follows it. Said
+	// once, at module scope, because the first `recall()` happens in `onMount`
+	// before anything renders.
+	honourStorageChoice();
 	import { formatBuildDate, formatCommitSha, formatVersions } from '$lib/build-info.js';
 	import { todosStore, addTodo, deleteTodo, toggleTodoComplete } from '$lib/db-actions.js';
 	import ConsentModal from '$lib/ConsentModal.svelte';
@@ -75,7 +82,7 @@
 			try {
 				// The author id belongs to the same promise; a stale one would outlive
 				// the data it signed.
-				localStorage.removeItem('simpleTodo.orbitdbIdentityId');
+				forget('simpleTodo.orbitdbIdentityId');
 			} catch {
 				// ignore storage errors
 			}
@@ -83,7 +90,7 @@
 		setPersistentStorageEnabled(persistentStorageEnabled);
 		try {
 			if (rememberDecision) {
-				localStorage.setItem(CONSENT_KEY, 'true');
+				remember(CONSENT_KEY, 'true');
 			}
 		} catch {
 			// ignore storage errors
@@ -163,7 +170,7 @@
 
 	onMount(async () => {
 		try {
-			if (localStorage.getItem(CONSENT_KEY) === 'true') {
+			if (recall(CONSENT_KEY) === 'true') {
 				showModal = false;
 				await startP2P();
 			}

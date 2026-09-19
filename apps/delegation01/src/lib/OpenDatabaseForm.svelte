@@ -27,8 +27,8 @@
 	class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
 	data-testid="open-database-form"
 >
-	<h2 class="text-lg font-semibold text-heading">Open a shared list by address</h2>
-	<p class="mt-1 text-xs text-faint">
+	<h2 class="text-heading text-lg font-semibold">Open a shared list by address</h2>
+	<p class="text-faint mt-1 text-xs">
 		Paste the full OrbitDB address someone shared with you. You can read it right away — writing
 		needs a permission grant from the owner.
 	</p>

@@ -194,7 +194,7 @@
 			type="button"
 			on:click={() => (technical = !technical)}
 			data-testid="consent-technical"
-			class="rounded-md border border-border px-2 py-1 text-xs text-faint hover:text-text"
+			class="border-border text-faint hover:text-text rounded-md border px-2 py-1 text-xs"
 		>
 			{technical ? $_('consent.simple') : $_('consent.technical')}
 		</button>
@@ -205,11 +205,11 @@
 		belongs where somebody goes looking for it.
 	-->
 	{#if technical}
-		<p class="text-xs text-faint" data-testid="consent-version">{version}</p>
+		<p class="text-faint text-xs" data-testid="consent-version">{version}</p>
 	{/if}
 
-	<div class="my-4 rounded-md border border-border p-3 text-sm" data-testid="consent-warning">
-		<span class="font-medium text-heading">{$_('consent.warningHeading')}</span>
+	<div class="border-border my-4 rounded-md border p-3 text-sm" data-testid="consent-warning">
+		<span class="text-heading font-medium">{$_('consent.warningHeading')}</span>
 		<span class="text-text">{$_('consent.warningBody')}</span>
 	</div>
 
@@ -225,7 +225,7 @@
 		{#if notice && !error}
 			<p
 				data-testid="consent-notice"
-				class="rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-text"
+				class="border-border bg-surface-2 text-text rounded-md border px-3 py-2 text-sm"
 			>
 				{notice}
 			</p>
@@ -234,7 +234,7 @@
 			<p
 				role="alert"
 				data-testid="consent-error"
-				class="rounded-md border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
+				class="border-danger/40 bg-danger/10 text-danger rounded-md border px-3 py-2 text-sm"
 			>
 				{error}
 			</p>
@@ -250,7 +250,7 @@
 					type="button"
 					on:click={revealAcceptance}
 					data-testid="consent-show-notice"
-					class="rounded-md px-2 py-1 text-sm text-text underline underline-offset-2 hover:text-heading"
+					class="text-text hover:text-heading rounded-md px-2 py-1 text-sm underline underline-offset-2"
 				>
 					{$_('consent.showNotice')}
 				</button>
@@ -260,7 +260,7 @@
 				disabled={!accepted || !canProceed}
 				on:click={() => introEl.close()}
 				data-testid="consent-proceed"
-				class="rounded-md bg-coral-700 px-6 py-3 font-medium text-white transition-colors hover:bg-coral-800 disabled:cursor-not-allowed disabled:opacity-50"
+				class="bg-coral-700 hover:bg-coral-800 rounded-md px-6 py-3 font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
 			>
 				{proceedLabel}
 			</button>

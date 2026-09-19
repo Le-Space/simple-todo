@@ -12,13 +12,20 @@ import * as json from 'multiformats/codecs/json';
 import { sha512 } from 'multiformats/hashes/sha2';
 import { multiaddr } from '@multiformats/multiaddr';
 import { createLibp2pConfig } from '@simple-todo/net/libp2p-config.js';
+import { createMemoryIdentities } from '@simple-todo/todo/memory-identities.js';
+import { keepLogsWhereTheChoiceSays } from '@simple-todo/todo/keep-logs-in-memory.js';
+import { recall, remember } from '@simple-todo/todo/browser-memory.js';
 import {
 	createLogStorages,
 	getPersistentStorageEnabled,
 	PERSISTENT_STORAGE_PATHS
 } from '@simple-todo/todo/storage-mode.js';
 import { initializeDatabase, todoDBAddressStore, todosStore } from './db-actions.js';
-import { getWebRTCEnabled, setWebRTCEnabled, webrtcEnabledStore } from '@simple-todo/net/webrtc-settings.js';
+import {
+	getWebRTCEnabled,
+	setWebRTCEnabled,
+	webrtcEnabledStore
+} from '@simple-todo/net/webrtc-settings.js';
 import { getTodoDatabaseName } from '@simple-todo/todo/default-todo-database.js';
 import { normalizeDiscoveredMultiaddrs } from '@simple-todo/net/multiaddr-utils.js';
 
@@ -197,7 +204,19 @@ export async function initializeP2P(
 		// Create OrbitDB instance
 		setInitializationProgress(3);
 		console.log('🛬 Creating OrbitDB instance...');
-		orbitdb = await createOrbitDB({ ipfs: helia, id: getOrCreateOrbitDBIdentityId() });
+		orbitdb = keepLogsWhereTheChoiceSays(
+			await createOrbitDB({
+				ipfs: helia,
+				id: getOrCreateOrbitDBIdentityId(),
+				// Without identities of our own, `createOrbitDB` builds a keystore
+				// under `./orbitdb/keystore`, which browser-level writes to
+				// IndexedDB -- the signing key, on a device that was promised
+				// nothing would be kept.
+				...(getPersistentStorageEnabled()
+					? { directory: PERSISTENT_STORAGE_PATHS.orbitdb }
+					: { identities: await createMemoryIdentities(helia) })
+			})
+		);
 		setInitializationProgress(4);
 		todoDB = await openInitialTodoDatabase(options.todoDbAddress, options.todoDbName);
 
@@ -315,13 +334,15 @@ function getOrCreateOrbitDBIdentityId() {
 		return createOrbitDBIdentityId();
 	}
 
-	const existingIdentityId = localStorage.getItem(ORBITDB_IDENTITY_STORAGE_KEY);
+	const existingIdentityId = recall(ORBITDB_IDENTITY_STORAGE_KEY);
 	if (existingIdentityId) {
 		return existingIdentityId;
 	}
 
 	const identityId = createOrbitDBIdentityId();
-	localStorage.setItem(ORBITDB_IDENTITY_STORAGE_KEY, identityId);
+	// Through the facade: in memory mode this stays in the tab, so a reload
+	// starts a new identity rather than leaving the old one on the device.
+	remember(ORBITDB_IDENTITY_STORAGE_KEY, identityId);
 	return identityId;
 }
 

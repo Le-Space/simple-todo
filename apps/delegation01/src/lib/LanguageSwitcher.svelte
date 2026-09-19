@@ -20,7 +20,7 @@
 			aria-label={option.label}
 			aria-pressed={$locale === option.code}
 			data-testid={`language-${option.code}`}
-			class="rounded-md px-1.5 py-1 text-lg leading-none transition hover:bg-surface-2 {$locale ===
+			class="hover:bg-surface-2 rounded-md px-1.5 py-1 text-lg leading-none transition {$locale ===
 			option.code
 				? 'opacity-100'
 				: 'opacity-40 hover:opacity-80'}"

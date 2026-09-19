@@ -1,3 +1,4 @@
+import { remember } from '@simple-todo/todo/browser-memory.js';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { forgetDatabaseKey, keyForDatabase } from './database-keys.js';
@@ -25,7 +26,7 @@ describe('database-keys', () => {
 
 	it('refuses a stored key that is not readable rather than replacing it', () => {
 		keyForDatabase(NAME);
-		localStorage.setItem(`privacy01.dbKey.${NAME}`, 'not base64 ***');
+		remember(`privacy01.dbKey.${NAME}`, 'not base64 ***');
 
 		// Replacing it would seal new entries under a key that cannot open the
 		// old ones — silently, and only noticed once something is unreadable.

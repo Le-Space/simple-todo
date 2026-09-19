@@ -42,7 +42,7 @@
 	data-testid="shared-list-details"
 >
 	<summary
-		class="flex cursor-pointer list-none items-center gap-2 rounded px-1 py-1 text-xs font-medium text-text outline-none hover:text-heading focus-visible:ring-2 focus-visible:ring-cyan-500 [&::-webkit-details-marker]:hidden"
+		class="text-text hover:text-heading flex cursor-pointer list-none items-center gap-2 rounded px-1 py-1 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 [&::-webkit-details-marker]:hidden"
 	>
 		<svg
 			class="h-3.5 w-3.5 transition-transform group-open:rotate-90"
@@ -59,44 +59,44 @@
 		<span data-testid="active-list-kind">{heading}</span>
 		{#if subtitle}
 			<code
-				class="hidden min-w-0 truncate font-mono font-normal text-faint sm:inline"
+				class="text-faint hidden min-w-0 truncate font-mono font-normal sm:inline"
 				data-testid="active-list-label">· {subtitle}</code
 			>
 		{/if}
 	</summary>
-	<div class="mt-3 border-t border-border pt-3">
+	<div class="border-border mt-3 border-t pt-3">
 		{#if activeList?.kind !== 'shared'}
-			<p class="mb-2 text-xs text-data-700" data-testid="active-list-note">
-				You are writing to <strong>{activeList.name}</strong>. The mnemonic below still refers to the
-				public shared list.
+			<p class="text-data-700 mb-2 text-xs" data-testid="active-list-note">
+				You are writing to <strong>{activeList.name}</strong>. The mnemonic below still refers to
+				the public shared list.
 			</p>
 		{/if}
-		<p class="text-xs text-faint">Public mnemonic / OrbitDB database name</p>
-		<div class="mt-1 flex items-center gap-2 rounded-md bg-cyan-50 p-2 dark:bg-cyan/10">
-			<code class="min-w-0 flex-1 font-mono text-xs break-all" data-testid="active-shared-list-name"
+		<p class="text-faint text-xs">Public mnemonic / OrbitDB database name</p>
+		<div class="dark:bg-cyan/10 mt-1 flex items-center gap-2 rounded-md bg-cyan-50 p-2">
+			<code class="min-w-0 flex-1 break-all font-mono text-xs" data-testid="active-shared-list-name"
 				>{mnemonic}</code
 			>
 			<button
 				type="button"
 				on:click={copyMnemonic}
-				class="rounded border border-cyan-200 bg-surface px-2 py-1 text-xs dark:border-cyan/30"
+				class="bg-surface dark:border-cyan/30 rounded border border-cyan-200 px-2 py-1 text-xs"
 			>
 				{copied ? 'Copied!' : 'Copy'}
 			</button>
 		</div>
 		{#if databaseAddress}
-			<p class="mt-2 text-xs text-faint">OrbitDB address</p>
+			<p class="text-faint mt-2 text-xs">OrbitDB address</p>
 			<code
-				class="mt-1 block font-mono text-[11px] break-all text-text"
+				class="text-text mt-1 block break-all font-mono text-[11px]"
 				data-testid="active-database-address">{databaseAddress}</code
 			>
 		{/if}
-		<p class="mt-2 text-xs text-data-700">
+		<p class="text-data-700 mt-2 text-xs">
 			Anyone who knows this share code can open the same public database and edit it once connected.
 		</p>
-		<p class="mt-1 text-xs text-faint">
-			The mnemonic selects the same database. Live replication also requires a connection to
-			another browser peer.
+		<p class="text-faint mt-1 text-xs">
+			The mnemonic selects the same database. Live replication also requires a connection to another
+			browser peer.
 		</p>
 		<button
 			type="button"

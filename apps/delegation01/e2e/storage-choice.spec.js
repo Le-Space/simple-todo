@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { isConsentOpen, passConsent, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import { takeStorageInventory } from '@simple-todo/e2e-kit/storage-inventory.mjs';
 
 const timeout = 90000;
 
@@ -61,14 +62,32 @@ test.describe('Where your todos are stored', () => {
 		await page.getByRole('button', { name: 'Add TODO' }).click();
 		await expect(page.getByText(todo, { exact: true })).toBeVisible({ timeout });
 
-		// What the choice promises is about this device, so it is checked on this
-		// device: no IndexedDB database of ours may exist at all. A todo that
-		// merely failed to render would pass a weaker assertion.
-		const ours = await page.evaluate(async () =>
-			(await indexedDB.databases())
-				.map((d) => d.name ?? '')
-				.filter((n) => n.includes('simple-todo'))
-		);
-		expect(ours).toEqual([]);
+		// What the choice promises is about this device, so the whole device is
+		// what gets looked at -- every database, not the ones whose names we
+		// thought to filter for. That filter is what let `level-js-orbitdb/
+		// keystore` hold a signing key while this test called the device clean
+		// (#9).
+		const left = await takeStorageInventory(page);
+
+		expect(left.indexedDB.filter((database) => database.records !== 0)).toEqual([]);
+		expect(left.localStorage).toEqual([]);
+		expect(left.sessionStorage).toEqual([]);
+	});
+
+	test('in memory only: the device is left as it was found', async ({ page }) => {
+		test.setTimeout(timeout * 4);
+		await openWith(page, 'memory');
+
+		await page.getByPlaceholder('What needs to be done?').fill(`trace-${Date.now().toString(36)}`);
+		await page.getByRole('button', { name: 'Add TODO' }).click();
+		// Long enough for the keystore, the registry and the log to have been
+		// written if anything still writes them.
+		await page.waitForTimeout(3000);
+
+		const left = await takeStorageInventory(page);
+		expect(
+			{ databases: left.indexedDB, local: left.localStorage, session: left.sessionStorage },
+			`caches (the app shell, which may stay): ${JSON.stringify(left.caches)}`
+		).toEqual({ databases: [], local: [], session: [] });
 	});
 });

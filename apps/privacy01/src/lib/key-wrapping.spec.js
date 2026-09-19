@@ -1,3 +1,4 @@
+import { setPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
 import { describe, expect, it } from 'vitest';
 
 import { newKey } from './db-encryption.js';
@@ -73,6 +74,10 @@ describe('key-wrapping', () => {
 
 describe('device-keys', () => {
 	it('keeps one pair per identity, so a reload can still unwrap', async () => {
+		// Surviving a reload is only on offer when the reader asked for things to
+		// be kept; in memory mode the pair dies with the tab, which is the point
+		// of that choice (#9).
+		setPersistentStorageEnabled(true);
 		forgetDeviceKeys('did:key:alice');
 		const first = await ownDeviceKeys('did:key:alice');
 		const copy = await wrapKey(newKey(), await importDeviceKey(first.publicKey));
@@ -96,6 +101,8 @@ describe('device-keys', () => {
 		expect(Array.from(await unwrapKey(copy, fromStorage))).toEqual(
 			Array.from(await unwrapKey(copy, first.privateKey))
 		);
+
+		setPersistentStorageEnabled(false);
 	});
 
 	it('gives two identities in one browser two pairs', async () => {

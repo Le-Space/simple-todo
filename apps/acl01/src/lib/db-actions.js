@@ -1,3 +1,4 @@
+import { accessControllerKeepingLogsInMemory } from '@simple-todo/todo/keep-logs-in-memory.js';
 import { writable, derived, get } from 'svelte/store';
 import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import { OrbitDBAccessController } from '@orbitdb/core';
@@ -242,7 +243,9 @@ export async function createPrivateTodoList(name = 'private-todos') {
 		type: 'keyvalue',
 		create: true,
 		sync: true,
-		AccessController: OrbitDBAccessController({ write: [orbitdb.identity.id] }),
+		AccessController: accessControllerKeepingLogsInMemory(
+			OrbitDBAccessController({ write: [orbitdb.identity.id] })
+		),
 		// Memory-only when that is what was chosen; a private list is no more
 		// persistent than the shared one.
 		...(await createLogStorages())

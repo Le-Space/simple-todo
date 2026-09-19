@@ -1,3 +1,4 @@
+import { recall, remember } from '@simple-todo/todo/browser-memory.js';
 import { get } from 'svelte/store';
 import { libp2pStore, peerIdStore, initializationStore } from './p2p-stores.js';
 
@@ -18,7 +19,7 @@ import {
 	createLogStorages,
 	getPersistentStorageEnabled,
 	PERSISTENT_STORAGE_PATHS
-} from './storage-mode.js';
+} from '@simple-todo/todo/storage-mode.js';
 import * as dagCbor from '@ipld/dag-cbor';
 import * as dagJson from '@ipld/dag-json';
 import * as json from 'multiformats/codecs/json';
@@ -367,13 +368,13 @@ function getOrCreateOrbitDBIdentityId(persistent = true) {
 		return createOrbitDBIdentityId();
 	}
 
-	const existingIdentityId = localStorage.getItem(ORBITDB_IDENTITY_STORAGE_KEY);
+	const existingIdentityId = recall(ORBITDB_IDENTITY_STORAGE_KEY);
 	if (existingIdentityId) {
 		return existingIdentityId;
 	}
 
 	const identityId = createOrbitDBIdentityId();
-	localStorage.setItem(ORBITDB_IDENTITY_STORAGE_KEY, identityId);
+	remember(ORBITDB_IDENTITY_STORAGE_KEY, identityId);
 	return identityId;
 }
 

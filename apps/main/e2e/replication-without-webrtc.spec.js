@@ -51,11 +51,12 @@ test.describe('replication when only the relay carries it', () => {
 			// Waited for rather than read straight away: the first attempt looked
 			// immediately, got two empty lists, and would have reported whatever
 			// happened next as having crossed a circuit.
-			await expect
-				.poll(() => connectionTo(alice, bobPeer), { timeout })
-				.not.toEqual([]);
+			await expect.poll(() => connectionTo(alice, bobPeer), { timeout }).not.toEqual([]);
 
-			const carried = await Promise.all([connectionTo(alice, bobPeer), connectionTo(bob, alicePeer)]);
+			const carried = await Promise.all([
+				connectionTo(alice, bobPeer),
+				connectionTo(bob, alicePeer)
+			]);
 			console.log('CONNECTIONS alice→bob:', JSON.stringify(carried[0]));
 			console.log('CONNECTIONS bob→alice:', JSON.stringify(carried[1]));
 
@@ -71,7 +72,10 @@ test.describe('replication when only the relay carries it', () => {
 			const arrived = await bob
 				.getByText(todo, { exact: true })
 				.waitFor({ state: 'visible', timeout })
-				.then(() => true, () => false);
+				.then(
+					() => true,
+					() => false
+				);
 
 			// **Whether the relay was a participant, not merely a route.**
 			//
@@ -114,6 +118,10 @@ async function openWithoutWebRTC(page) {
 	// Set before the app loads: `initializeWebRTCSetting` reads this key on
 	// startup, and the transport list is built from it once.
 	await page.addInitScript(() => {
+		// Seeded on the device, so the app has to be in the mode that reads the
+		// device: in memory mode a setting lives in the tab and a fresh page
+		// knows nothing about it (#9).
+		localStorage.setItem('simpleTodo.persistentStorageEnabled', 'true');
 		localStorage.setItem('simpleTodo.webrtcEnabled', 'false');
 	});
 
