@@ -1,0 +1,25 @@
+{
+  "name": "collab01",
+  "aleph": {
+    "site": "simple-todo-collab01",
+    "domain": "collab01.le-space.de",
+    "deployer": "@le-space/node@0.6.22"
+  },
+  "ports": {
+    "preview": 4178,
+    "relayHttp": 49150,
+    "relayTcp": 49151,
+    "relayWs": 49152,
+    "relayWebrtc": 49153,
+    "relayWebrtcDirect": 49156
+  },
+  "ci": {
+    "specs": [
+      "e2e/shared-list-mnemonic.spec.js",
+      "e2e/default-database-collaboration.spec.js",
+      "e2e/manual-multiaddr-connection.spec.js",
+      "e2e/consent-screen.spec.js"
+    ]
+  },
+  "title": "A shared list behind three Spanish words"
+}
