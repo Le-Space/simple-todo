@@ -18,6 +18,11 @@ import * as json from 'multiformats/codecs/json';
 import { sha512 } from 'multiformats/hashes/sha2';
 import { multiaddr } from '@multiformats/multiaddr';
 import { createLibp2pConfig } from '@simple-todo/net/libp2p-config.js';
+import {
+	createLogStorages,
+	getPersistentStorageEnabled,
+	PERSISTENT_STORAGE_PATHS
+} from '@simple-todo/todo/storage-mode.js';
 import { initializeDatabase, todoDBAddressStore, todosStore } from './db-actions.js';
 import { getWebRTCEnabled, setWebRTCEnabled, webrtcEnabledStore } from '@simple-todo/net/webrtc-settings.js';
 import { getTodoDatabaseName } from '@simple-todo/todo/default-todo-database.js';
@@ -121,10 +126,34 @@ let discoveryDialRetryInterval = null;
 /** @type {ReturnType<typeof setInterval> | null} */
 
 /**
+ * The stores for a session that asked to keep its todos.
+ *
+ * Imported dynamically so a browser that chose "in memory only" never loads
+ * `blockstore-level` and `datastore-level` at all -- the choice is made on the
+ * consent screen, before this runs, and in-memory is the default.
+ *
+ * @returns {Promise<{ blockstore?: any, datastore?: any }>}
+ */
+async function createPersistentStores() {
+	if (!getPersistentStorageEnabled()) return {};
+
+	const [{ LevelBlockstore }, { LevelDatastore }] = await Promise.all([
+		import('blockstore-level'),
+		import('datastore-level')
+	]);
+
+	return {
+		blockstore: new LevelBlockstore(PERSISTENT_STORAGE_PATHS.blockstore),
+		datastore: new LevelDatastore(PERSISTENT_STORAGE_PATHS.datastore)
+	};
+}
+
+/**
  * @param {any} libp2pNode
+ * @param {{ blockstore?: any, datastore?: any }} [stores]
  * @returns {any}
  */
-function createHeliaWithLibp2p(libp2pNode) {
+function createHeliaWithLibp2p(libp2pNode, stores = {}) {
 	return withBitswap(
 		withLibp2p(
 			// Bitswap only, deliberately. `withHTTP` used to wrap this: it ships
@@ -134,7 +163,11 @@ function createHeliaWithLibp2p(libp2pNode) {
 			// the CID to three strangers.
 			createHeliaLight({
 				codecs: [dagCbor, dagJson, json],
-				hashers: [sha512]
+				hashers: [sha512],
+				// Omitted when the user chose in-memory: helia then falls back to
+				// MemoryBlockstore/MemoryDatastore, which is what this chapter did
+				// unconditionally until now.
+				...stores
 			}),
 			libp2pNode
 		)
@@ -174,7 +207,7 @@ export async function initializeP2P(
 
 		// Create Helia (IPFS) instance
 		setInitializationProgress(2);
-		helia = await createHeliaWithLibp2p(libp2p).start();
+		helia = await createHeliaWithLibp2p(libp2p, await createPersistentStores()).start();
 		console.log(`✅ Helia created`);
 
 		// Create OrbitDB instance
@@ -268,7 +301,10 @@ async function openInitialTodoDatabase(address, databaseName) {
 		activeTodoDatabaseName = '';
 		return orbitdb.open(normalizedAddress, {
 			type: 'keyvalue',
-			sync: true
+			sync: true,
+			// Memory-only when that is what was chosen: `Database` defaults both
+			// log storages to LevelStorage, which browser-level puts in IndexedDB.
+			...(await createLogStorages())
 		});
 	}
 
@@ -278,7 +314,9 @@ async function openInitialTodoDatabase(address, databaseName) {
 		type: 'keyvalue', //Stores data as key-value pairs supports basic operations: put(), get(), delete()
 		create: true, // Allows the database to be created if it doesn't exist
 		sync: true, // Enables automatic synchronization with other peers
-		AccessController: IPFSAccessController({ write: ['*'] }) //defines who can write to the database, ["*"] is a wildcard that allows all peers to write to the database, This creates a fully collaborative environment where any peer can add/edit TODOs
+		AccessController: IPFSAccessController({ write: ['*'] }), //defines who can write to the database, ["*"] is a wildcard that allows all peers to write to the database, This creates a fully collaborative environment where any peer can add/edit TODOs
+		// Memory-only when that is what was chosen; see the note above.
+		...(await createLogStorages())
 	});
 
 	defaultTodoDbAddress = defaultTodoDB.address?.toString?.() ?? '';
