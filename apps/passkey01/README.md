@@ -1,0 +1,216 @@
+# Simple Todo - A Local-First Peer-to-Peer PWA Tutorial
+
+[![Main E2E](https://github.com/NiKrause/simple-todo/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/NiKrause/simple-todo/actions/workflows/deploy.yml?query=branch%3Amain)
+[![Remote browser replication](https://github.com/NiKrause/simple-todo/actions/workflows/remote-replication.yml/badge.svg?branch=main)](https://github.com/NiKrause/simple-todo/actions/workflows/remote-replication.yml)
+
+A basic decentralized, local-first, peer-to-peer todo application built with **libp2p**, **IPFS**, and **OrbitDB**. This app demonstrates how modern Web3 technologies can create truly decentralized applications that work entirely in the browser.
+
+> 📚 **This repository is a tutorial.** Its branches — `main`, `collab01`, `passkey01` — are chapters that build the app up step by step, so they are kept separate rather than merged into one another. This is the `passkey01` chapter (passkey-backed WebAuthn DID identities, built on `collab01`).
+
+## 🚀 Live Demo
+
+- **This chapter (passkey01)**: https://passkey01.le-space.de
+- **Main app**: https://simple-todo.le-space.de
+- **IPFS snapshot (Aleph gateway)**: https://ipfs.aleph.im/ipfs/bafybeigo5dip5jl5q6tzyp7xqtnzml25lbbw4y34kvkukgsa7au6qie37y/
+- **IPFS snapshot (dweb.link)**: https://dweb.link/ipfs/bafybeigo5dip5jl5q6tzyp7xqtnzml25lbbw4y34kvkukgsa7au6qie37y/
+
+The custom-domain link tracks the current deployment. The immutable CID links above are a snapshot
+of the deployment published on July 11, 2026.
+
+## 🔐 This Chapter: Passkey Identities (`passkey01`)
+
+The previous chapter (`collab01`) gave every browser a random throwaway
+OrbitDB identity: entries were attributable to *a* peer, but not to *you*.
+This chapter replaces that with an opt-in **passkey-backed identity**:
+
+- **Onboarding choice** before the P2P stack starts: *create a passkey*
+  (one name, and it is only a label), *use an existing passkey* (recovery),
+  or *continue without one* (exactly the previous chapter's behaviour).
+- **WebAuthn DID provider** from
+  [`@le-space/orbitdb-identity-provider-webauthn-did`](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did):
+  the DID is the passkey's own P-256 key, and OrbitDB signs entries with a
+  **secp256k1 key derived from the passkey** (PRF → HKDF-SHA256; without PRF
+  the keystore generates one instead). That key is **not encrypted**: it
+  sits in OrbitDB's keystore in this browser's IndexedDB, where anyone who
+  can read the browser's storage can read it. Creating a passkey costs four
+  WebAuthn prompts (register, `largeBlob` write, PRF, identity proof); after
+  a reload the only prompt is the `largeBlob` read of the recovery below, and
+  signing never asks. (The stricter *varsig* variant — a passkey prompt for
+  every single write — exists in the same package and is a good follow-up
+  exercise, but is not used here.)
+- **Create-or-recover flow** (`src/lib/passkey-identity.js`): identity
+  metadata is written to the authenticator's `largeBlob` when supported and
+  always to `localStorage` as fallback; recovery tries `largeBlob` first.
+  This flow currently lives here — upstreaming it into the provider package
+  is an open TODO.
+- **Visible identity**: your DID appears in the header (shortened, with a
+  copy button), and every todo shows its author resolved from
+  `entry.identity` — the field OrbitDB signs itself, so it cannot be faked
+  by writing a different name into the todo payload.
+- **Access control is unchanged** (`write: ['*']`): this chapter is only
+  about *who you are*, not yet about *who may write*. That is the next
+  chapter (`acl01`).
+
+### The name you type is a label, not your identity
+
+The onboarding form asks for one name, and nothing depends on it. A passkey
+carries two human-readable fields (`user.name` and `displayName`) that exist
+only so the browser's passkey picker has something to show. What identifies
+the credential is the **user handle**, 64 random bytes the identity provider
+generates — and your DID comes from the credential's public key, not from
+either of them. Two people on the same device may type the same name and
+still get two separate identities.
+
+That is worth stating because it was not always true. While the handle was
+derived from the typed name, an authenticator — which keeps one credential
+per (origin, handle) — silently **replaced** the earlier passkey when a
+second person used the same name, taking the DID and everything signed under
+it with it
+([provider #45](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did/issues/45)).
+The WebAuthn spec says the handle must not contain personal data such as a
+username or e-mail address, and should be random, for exactly this reason.
+
+### ⚠️ Passkeys are bound to the origin (rpId)
+
+A WebAuthn credential is scoped to the domain that created it. A passkey
+registered on `http://localhost:5173` does **not** exist on
+`https://simple-todo.le-space.de`, and a passkey created on one IPFS
+gateway (`dweb.link`) is invisible on another (`ipfs.aleph.im`) — even for
+the identical app build. For a local-first app distributed through many
+gateways this is a real constraint: your DID is only portable across
+devices via passkey sync (iCloud Keychain, Google Password Manager, …), not
+across origins. Pin one canonical domain if stable identities matter.
+
+## 🎯 What is this?
+
+This is a **browser-only** local-first peer-to-peer todo application that operates without any traditional server infrastructure. It connects directly to other browsers and mobile devices through peer-to-peer connections, creating a truly decentralized experience. So far, a LibP2P signaling node is necessary to connect the peers, and in this version it also stores the todos since this browser version works with MemoryStorage only instead of local IPFSStorage (e.g. LevelBlockstore).
+
+### Main Branch Scope
+
+This branch extends the basic `main` tutorial with a three-word Spanish shared-list mnemonic, for example `luna-camino-verde`. The normalized mnemonic is the OrbitDB database name: two browsers enter the same words to open and replicate the same list without exchanging a full OrbitDB address. The mnemonic is only a convenient public share code—not a password, recovery phrase, encryption key, or access-control mechanism. Anyone who knows or guesses it can discover and edit the public writable list.
+
+> **Collaboration examples:** [`collab01`](https://github.com/NiKrause/simple-todo/tree/collab01) demonstrates mnemonic-based shared lists.
+
+### Key Features
+
+- ✅ **No Server Required** - PWA runs in browser, desktop or mobile.
+- ✅ **Local Data** - Data is stored in your browser's level storage and replicated via OrbitDB and IPFS
+- ✅ **Peer-to-Peer Communication** - Browsers connect directly via WebRTC (with help of libp2p signaling nodes)
+- ✅ **Real-time Synchronization** - Changes appear instantly across all peers
+
+## 🎯 How to Test
+
+1. **Open Two Browser Windows** - You need at least two browser instances, a mobile device, or ask another distant person to open the app
+2. **Load the Same URL** - All app users should load the same app URL
+3. **Choose the Shared List** - Copy the three-word mnemonic from the first browser and paste it into the second
+4. **Accept Consent and Open** - Check all consent boxes and select **Open shared list**
+5. **Wait for Connection** - The app will automatically discover and connect peers
+6. **Add Todos** - Create todos in one browser and watch them appear in the other
+
+### Try this chapter (passkey identities)
+
+1. On the onboarding screen pick **Create a passkey**, enter a name, then
+   **Open shared list**. Your **Passkey DID** appears in the header (with a
+   copy button).
+2. Add a todo — it shows *Created by: your DID*. Have a second browser create
+   its own passkey; each todo is attributed to the writer's DID on both sides.
+3. **Reload** the page. The app preselects *Use an existing passkey*; confirm,
+   and your DID is recovered unchanged (largeBlob, or localStorage fallback).
+4. To compare, start once more with **Continue without a passkey** — you get
+   the anonymous per-browser identity from the previous chapter.
+
+## 📚 Documentation
+
+For comprehensive guides on how this app works, implementation details, and reusable components:
+
+**[📖 Tutorial](./docs/TUTORIAL.md)**
+
+The tutorial covers:
+
+- Step-by-Step implementation guide
+- Architecture overview
+- Testing procedures
+- Troubleshooting guide
+- Security considerations
+
+**[🔧 Reusable Components](./docs/)**
+
+- **[StorachaIntegration](./docs/StorachaIntegration.md)** - Complete Storacha/Web3.Storage integration component for backing up OrbitDB databases to decentralized storage
+
+## 🛠️ Quick Start
+
+```bash
+# Clone repository
+git clone https://github.com/NiKrause/simple-todo.git
+# checkout main branch
+git checkout main
+
+# install dependencies and start the development server
+pnpm install
+pnpm dev
+```
+
+## 🛰️ Local Relay
+
+In development the app reads `VITE_RELAY_BOOTSTRAP_ADDR_DEV` from `.env`. If that variable is not set, it falls back to a hardcoded localhost relay address, so the safest local workflow is:
+
+1. Start an `orbitdb-relay` process.
+2. Copy its WebSocket multiaddr into `.env`.
+3. Start or restart the Vite dev server.
+
+Install and run the published npm package:
+
+```bash
+npm install -g orbitdb-relay
+
+ENABLE_GENERAL_LOGS=1 \
+RELAY_LISTEN_IPV4=127.0.0.1 \
+RELAY_DISABLE_IPV6=true \
+RELAY_DISABLE_QUIC=true \
+RELAY_DISABLE_WEBRTC=true \
+DATASTORE_PATH=/tmp/simple-todo-orbitdb-relay \
+orbitdb-relay --test
+```
+
+The relay exposes helper routes on `http://127.0.0.1:9090`. In another terminal, fetch the browser-dialable WebSocket address:
+
+```bash
+curl -s http://127.0.0.1:9090/multiaddrs | node -e "let d=''; process.stdin.on('data', c => d += c); process.stdin.on('end', () => { const j = JSON.parse(d); console.log(j.best.websocket || j.byTransport.websocket[0]); });"
+```
+
+Use exactly one printed `/ws` address. Do not paste the raw TCP address on port `9091`, and do not include quotes, commas, or multiple addresses in one value.
+
+Put the printed address in `.env`. If you copied `.env.example`, replace the existing `VITE_RELAY_BOOTSTRAP_ADDR_DEV` value:
+
+```bash
+VITE_RELAY_BOOTSTRAP_ADDR_DEV=/ip4/127.0.0.1/tcp/9092/ws/p2p/<relay-peer-id>
+```
+
+Then start the app:
+
+```bash
+pnpm dev
+```
+
+If you change `.env` while Vite is already running, restart `pnpm dev` so the new relay address is loaded.
+
+## 🔧 Technologies Used
+
+- **libp2p** - Peer-to-peer networking stack
+- **IPFS** - Distributed file system (via Helia)
+- **OrbitDB** - Decentralized database
+- **Svelte** - Frontend framework
+- **WebRTC** - Direct browser-to-browser communication
+
+## ⚠️ Important Notes
+
+- This is a **demo application** for educational purposes
+- Data is stored in a **global unencrypted database** visible to all users
+- **No privacy protection** - all data is publicly visible
+- **Not suitable for production use** without additional security measures
+
+## 📄 License
+
+This project is open source and available under the [LICENSE](./LICENSE) file.
+
+---

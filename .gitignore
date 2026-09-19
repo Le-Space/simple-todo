@@ -20,3 +20,7 @@ apps/*/e2e/relay.log
 
 # A chapter's own workflows do not travel: GitHub reads .github at the root.
 apps/*/.github/
+
+# Python-Cache der Werkzeuge
+__pycache__/
+*.pyc
