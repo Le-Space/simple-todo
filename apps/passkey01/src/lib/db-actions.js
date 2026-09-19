@@ -1,4 +1,5 @@
 import { writable, derived, get } from 'svelte/store';
+import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import { peerIdStore } from './p2p-stores.js';
 import { relayHttpStatusStore } from '@simple-todo/net/relay-status.js';
 
@@ -153,7 +154,10 @@ export async function loadTodoDatabase(address) {
 	try {
 		const loadedTodoDB = await orbitdb.open(normalizedAddress, {
 			type: 'keyvalue',
-			sync: true
+			sync: true,
+			// Memory-only when that is what was chosen: `Database` defaults both
+			// log storages to LevelStorage, which browser-level puts in IndexedDB.
+			...(await createLogStorages())
 		});
 
 		setActiveTodoDatabase(loadedTodoDB);

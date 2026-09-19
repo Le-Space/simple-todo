@@ -88,6 +88,11 @@
 		},
 		"relayReachable": "{count} known relays answered. No directory was queried.",
 		"relayDiscovered": "{count} relays found in the directory - the ones shipped with this app stayed silent.",
-		"showNotice": "Show the notice"
+		"showNotice": "Show the notice",
+		"storageLegend": "Where your todos are stored",
+		"storageMemoryLabel": "In Memory Only",
+		"storageMemoryHint": "Todos are stored in a shared, unencrypted OrbitDB database in memory and will be deleted on app reload or on exit.",
+		"storagePersistentLabel": "IndexedDB",
+		"storagePersistentHint": "I understand todos are stored in a shared, unencrypted OrbitDB database in the browser's IndexedDB and will persist between app restarts or after app exit."
 	}
 }

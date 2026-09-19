@@ -23,6 +23,7 @@
 // per reader that is the right trade: the index cannot answer "who wrote
 // this", and that is the only question that makes the answer trustworthy.
 
+import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import { IPFSAccessController } from '@orbitdb/core';
 
 import { ownDeviceKeys } from './device-keys.js';
@@ -40,7 +41,10 @@ export async function openKeyDirectory(orbitdb) {
 		type: 'keyvalue',
 		create: true,
 		sync: true,
-		AccessController: IPFSAccessController({ write: ['*'] })
+		AccessController: IPFSAccessController({ write: ['*'] }),
+		// Memory-only when that is what was chosen; this database is no more
+		// exempt than the lists it serves.
+		...(await createLogStorages())
 	});
 }
 

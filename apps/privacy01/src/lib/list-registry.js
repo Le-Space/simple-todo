@@ -1,4 +1,5 @@
 import { writable, get } from 'svelte/store';
+import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import { OrbitDBAccessController } from '@orbitdb/core';
 
 /**
@@ -90,7 +91,10 @@ export async function openListRegistry(orbitdb) {
 			type: 'keyvalue',
 			create: true,
 			sync: true,
-			AccessController: OrbitDBAccessController({ write: [orbitdb.identity.id] })
+			AccessController: OrbitDBAccessController({ write: [orbitdb.identity.id] }),
+			// Memory-only when that is what was chosen: the registry is a database
+			// like any other, and its log defaults to LevelStorage.
+			...(await createLogStorages())
 		});
 		registryDB = db;
 		db.events.on('update', () => {

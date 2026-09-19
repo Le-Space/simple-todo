@@ -87,6 +87,11 @@
 		},
 		"relayReachable": "{count} bekannte Relays haben geantwortet. Es wurde kein Verzeichnis abgefragt.",
 		"relayDiscovered": "{count} Relays im Verzeichnis gefunden — die mit dieser App ausgelieferten blieben stumm.",
-		"showNotice": "Hinweis anzeigen"
+		"showNotice": "Hinweis anzeigen",
+		"storageLegend": "Wo Ihre Aufgaben liegen",
+		"storageMemoryLabel": "Nur im Arbeitsspeicher",
+		"storageMemoryHint": "Die Aufgaben liegen in einer geteilten, unverschlüsselten OrbitDB-Datenbank im Arbeitsspeicher und sind beim Neuladen oder Beenden weg.",
+		"storagePersistentLabel": "IndexedDB",
+		"storagePersistentHint": "Mir ist klar, dass die Aufgaben in einer geteilten, unverschlüsselten OrbitDB-Datenbank in der IndexedDB des Browsers liegen und einen Neustart überdauern."
 	}
 }
