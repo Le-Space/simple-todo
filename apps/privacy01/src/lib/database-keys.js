@@ -11,7 +11,7 @@
 // module is the seam that will change: callers ask for the key of a database,
 // not for local storage.
 
-import { canOutlivePage, forget, recall, remember } from '@simple-todo/todo/browser-memory.js';
+import { canKeepForThisMode, forget, recall, remember } from '@simple-todo/todo/browser-memory.js';
 
 const STORAGE_PREFIX = 'privacy01.dbKey.';
 
@@ -117,12 +117,12 @@ export function storedDatabaseKey(databaseKey) {
  * @returns {boolean}
  */
 export function canRememberKeys() {
-	// The question is whether a key can outlive this page, not whether something
-	// will accept a write: in memory mode the facade keeps it in the tab, and
-	// sealing entries under a key that dies with the tab is exactly what this
-	// module refuses to do -- peers keep the sealed copies, and nothing could
-	// ever open them again.
-	return canOutlivePage();
+	// "For as long as this mode needs it", not "forever": in memory mode the tab
+	// is the lifetime, and sealing is still right -- the entries go with the tab
+	// and the copies peers hold stay unreadable. What this module refuses is
+	// sealing when the key cannot even be kept that long, which is a blocked
+	// `localStorage` in persistent mode (#9).
+	return canKeepForThisMode();
 }
 
 /**

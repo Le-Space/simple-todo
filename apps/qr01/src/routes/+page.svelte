@@ -5,6 +5,43 @@
 	import ViewModeToggle from '$lib/ViewModeToggle.svelte';
 	import IntroDialog from '$lib/IntroDialog.svelte';
 	import { hydrateIntro, openIntro } from '$lib/intro-dialog.js';
+	import StorageModeSelector from '@simple-todo/ui/StorageModeSelector.svelte';
+	import {
+		getPersistentStorageEnabled,
+		setPersistentStorageEnabled
+	} from '@simple-todo/todo/storage-mode.js';
+	import { honourStorageChoice } from '@simple-todo/todo/browser-memory.js';
+
+	// This chapter offers the choice, so what the app writes follows it.
+	honourStorageChoice();
+
+	// And it keeps things unless told otherwise -- the others default to memory,
+	// this one is the offline chapter: no relay, a peer met by scanning a code,
+	// and a list that has to be there when the phone comes back into signal.
+	if (
+		typeof localStorage !== 'undefined' &&
+		!localStorage.getItem('simpleTodo.persistentStorageEnabled')
+	) {
+		setPersistentStorageEnabled(true);
+	}
+
+	/** @type {'memory' | 'indexeddb'} */
+	let storageMode = getPersistentStorageEnabled() ? 'indexeddb' : 'memory';
+
+	/**
+	 * Changing where things are kept means building Helia and OrbitDB again:
+	 * the stores are chosen once, at construction, and there is no way to move
+	 * a running node onto different ones.
+	 *
+	 * @param {'memory' | 'indexeddb'} next
+	 */
+	async function applyStorageMode(next) {
+		if (next === (getPersistentStorageEnabled() ? 'indexeddb' : 'memory')) return;
+		setPersistentStorageEnabled(next === 'indexeddb');
+		await restartP2PLazy({ todoDbName: activeMnemonic || undefined });
+	}
+
+	$: void applyStorageMode(storageMode);
 	import { readInviteLink } from '$lib/invite-link.js';
 	import { simpleView, hydrateViewMode } from '$lib/view-mode.js';
 	import { peerIdStore, initializationStore } from '$lib/p2p-stores.js';
@@ -386,6 +423,9 @@
 		<P2PStatusNav initialization={$initializationStore} libp2p={$libp2pStore} peerId={myPeerId}>
 			<svelte:fragment slot="identity">
 				<IdentityPanel />
+				<div class="mt-3">
+					<StorageModeSelector bind:mode={storageMode} />
+				</div>
 			</svelte:fragment>
 			<ManualConnectForm
 				compact

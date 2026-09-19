@@ -340,5 +340,12 @@
 	"footer": {
 		"imprint": "Impressum",
 		"privacy": "Datenschutz"
+	},
+	"consent": {
+		"storageLegend": "Wo Ihre Todos liegen",
+		"storageMemoryLabel": "Nur im Arbeitsspeicher",
+		"storageMemoryHint": "Todos und Schlüssel liegen nur im Arbeitsspeicher und sind beim Neuladen weg. Ohne Relais heißt das: Was hier steht, war noch nirgendwo anders.",
+		"storagePersistentLabel": "In diesem Browser behalten",
+		"storagePersistentHint": "Die Todos überstehen Neuladen und Offline-Phasen. Das ist die Vorgabe dieses Kapitels, weil es ohne Relais arbeitet."
 	}
 }

@@ -1,6 +1,9 @@
 <script>
 	import { _ } from '$lib/i18n/index.js';
-	import { generateSpanishMnemonic, normalizeSpanishMnemonic } from '@simple-todo/todo/spanish-mnemonic.js';
+	import {
+		generateSpanishMnemonic,
+		normalizeSpanishMnemonic
+	} from '@simple-todo/todo/spanish-mnemonic.js';
 
 	export let value = '';
 	export let disabled = false;
@@ -36,13 +39,13 @@
 </script>
 
 <section
-	class="rounded-lg border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan/30 dark:bg-cyan/10"
+	class="dark:border-cyan/30 dark:bg-cyan/10 rounded-lg border border-cyan-200 bg-cyan-50 p-4"
 	data-testid="shared-list-selector"
 >
-	<label for="shared-list-mnemonic" class="block text-sm font-semibold text-heading">
+	<label for="shared-list-mnemonic" class="text-heading block text-sm font-semibold">
 		{$_('consent.mnemonicLabel')}
 	</label>
-	<p id="shared-list-help" class="mt-1 text-xs leading-relaxed text-text">
+	<p id="shared-list-help" class="text-text mt-1 text-xs leading-relaxed">
 		{$_('consent.mnemonicHelp')}
 	</p>
 	<input
@@ -53,11 +56,11 @@
 		on:input={() => (touched = true)}
 		aria-describedby="shared-list-help shared-list-error"
 		aria-invalid={validation.error ? 'true' : 'false'}
-		class="mt-3 w-full rounded-md border border-border bg-surface px-3 py-2 font-mono text-sm focus:border-transparent focus:ring-2 focus:ring-cyan-500 disabled:bg-surface-2"
+		class="border-border bg-surface disabled:bg-surface-2 mt-3 w-full rounded-md border px-3 py-2 font-mono text-sm focus:border-transparent focus:ring-2 focus:ring-cyan-500"
 		placeholder={$_('consent.mnemonicPlaceholder')}
 	/>
 	{#if validation.error && touched}
-		<p id="shared-list-error" role="alert" class="mt-1 text-xs text-danger-700 dark:text-danger">
+		<p id="shared-list-error" role="alert" class="text-danger-700 dark:text-danger mt-1 text-xs">
 			{validation.error}
 		</p>
 	{:else}
@@ -68,7 +71,7 @@
 			type="button"
 			on:click={generateNew}
 			{disabled}
-			class="rounded-md border border-cyan-300 bg-surface px-3 py-1.5 text-xs font-medium text-cyan-800 hover:bg-cyan-100 disabled:opacity-50 dark:border-cyan/40 dark:text-cyan dark:hover:bg-cyan/15"
+			class="bg-surface dark:border-cyan/40 dark:text-cyan dark:hover:bg-cyan/15 rounded-md border border-cyan-300 px-3 py-1.5 text-xs font-medium text-cyan-800 hover:bg-cyan-100 disabled:opacity-50"
 		>
 			{$_('consent.mnemonicGenerate')}
 		</button>
@@ -76,7 +79,7 @@
 			type="button"
 			on:click={copyMnemonic}
 			disabled={disabled || !validation.canonical}
-			class="rounded-md border border-cyan-300 bg-surface px-3 py-1.5 text-xs font-medium text-cyan-800 hover:bg-cyan-100 disabled:opacity-50 dark:border-cyan/40 dark:text-cyan dark:hover:bg-cyan/15"
+			class="bg-surface dark:border-cyan/40 dark:text-cyan dark:hover:bg-cyan/15 rounded-md border border-cyan-300 px-3 py-1.5 text-xs font-medium text-cyan-800 hover:bg-cyan-100 disabled:opacity-50"
 		>
 			{copied ? $_('consent.mnemonicCopied') : $_('consent.mnemonicCopy')}
 		</button>

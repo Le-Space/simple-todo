@@ -93,8 +93,8 @@ export async function openListRegistry(orbitdb) {
 			create: true,
 			sync: true,
 			AccessController: accessControllerKeepingLogsInMemory(
-			OrbitDBAccessController({ write: [orbitdb.identity.id] })
-		),
+				OrbitDBAccessController({ write: [orbitdb.identity.id] })
+			),
 			// Memory-only when that is what was chosen: the registry is a database
 			// like any other, and its log defaults to LevelStorage.
 			...(await createLogStorages())

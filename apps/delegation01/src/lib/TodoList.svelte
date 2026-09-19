@@ -20,7 +20,7 @@
 	const forward = (name) => (/** @type {CustomEvent} */ event) => dispatch(name, event.detail);
 </script>
 
-<div class="mb-6 rounded-lg bg-surface p-6 shadow-md">
+<div class="bg-surface mb-6 rounded-lg p-6 shadow-md">
 	<h2 class="mb-4 text-xl font-semibold">{title} ({todos.length})</h2>
 	{#if todos.length > 0}
 		<div class="space-y-3">
@@ -48,6 +48,6 @@
 			{/each}
 		</div>
 	{:else}
-		<p class="py-8 text-center text-faint">{emptyMessage}</p>
+		<p class="text-faint py-8 text-center">{emptyMessage}</p>
 	{/if}
 </div>

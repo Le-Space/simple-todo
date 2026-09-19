@@ -1,6 +1,9 @@
 <script>
 	import { _ } from '$lib/i18n/index.js';
-	import { generateSpanishMnemonic, normalizeSpanishMnemonic } from '@simple-todo/todo/spanish-mnemonic.js';
+	import {
+		generateSpanishMnemonic,
+		normalizeSpanishMnemonic
+	} from '@simple-todo/todo/spanish-mnemonic.js';
 
 	export let value = '';
 	export let disabled = false;

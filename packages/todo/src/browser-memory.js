@@ -96,6 +96,21 @@ export function forget(key) {
 }
 
 /**
+ * Whether a key can be kept for as long as this mode needs it.
+ *
+ * In memory mode that is the tab, and the session holds it without fail -- so
+ * sealing a list is right there: the entries die with the tab, which is what
+ * the reader asked for, and the copies peers keep stay unreadable, which is
+ * what sealing is for. Only in persistent mode does the key have to outlive
+ * the page, and then a blocked `localStorage` is a real refusal.
+ *
+ * @returns {boolean}
+ */
+export function canKeepForThisMode() {
+	return keepsNothing() ? true : canOutlivePage();
+}
+
+/**
  * Whether a value written now would still be here after a reload.
  *
  * Two things have to be true: the reader asked for things to be kept, and the

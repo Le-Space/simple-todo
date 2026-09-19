@@ -247,14 +247,14 @@
 </script>
 
 <nav
-	class="mb-6 rounded-lg border border-border bg-surface px-4 py-3 shadow-sm"
+	class="border-border bg-surface mb-6 rounded-lg border px-4 py-3 shadow-sm"
 	aria-label="P2P initialization and connection status"
 	data-testid="p2p-status-nav"
 >
-	<div class="mb-2 flex items-center gap-2 text-sm font-medium text-text" aria-live="polite">
+	<div class="text-text mb-2 flex items-center gap-2 text-sm font-medium" aria-live="polite">
 		{#if !allComplete}
 			<span
-				class="h-3 w-3 animate-spin rounded-full border-2 border-border border-t-blue-600"
+				class="border-border h-3 w-3 animate-spin rounded-full border-2 border-t-blue-600"
 				aria-hidden="true"
 				data-testid="p2p-status-spinner"
 			></span>
@@ -265,7 +265,7 @@
 	<div class="flex flex-wrap items-center gap-x-5 gap-y-2">
 		{#each allSteps as step}
 			<div
-				class="flex cursor-help items-center gap-2 text-xs whitespace-nowrap text-faint outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
+				class="text-faint flex cursor-help items-center gap-2 whitespace-nowrap text-xs outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
 				aria-label={`${step.label}: ${step.description}`}
 				data-testid="p2p-status-step"
 				data-status={step.status}
@@ -292,7 +292,7 @@
 
 	{#if tooltipStep}
 		<div
-			class="mt-3 rounded-md border border-border bg-code px-3 py-2 text-xs leading-relaxed text-white shadow-lg"
+			class="border-border bg-code mt-3 rounded-md border px-3 py-2 text-xs leading-relaxed text-white shadow-lg"
 			role="tooltip"
 			data-testid="p2p-status-tooltip"
 		>
@@ -302,9 +302,9 @@
 	{/if}
 
 	{#if $$slots.default}
-		<details class="group mt-3 border-t border-border pt-2" data-testid="network-details">
+		<details class="border-border group mt-3 border-t pt-2" data-testid="network-details">
 			<summary
-				class="flex cursor-pointer list-none items-center gap-2 rounded px-1 py-1 text-xs font-medium text-text outline-none hover:text-heading focus-visible:ring-2 focus-visible:ring-cyan-500 [&::-webkit-details-marker]:hidden"
+				class="text-text hover:text-heading flex cursor-pointer list-none items-center gap-2 rounded px-1 py-1 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 [&::-webkit-details-marker]:hidden"
 			>
 				<svg
 					class="h-3.5 w-3.5 transition-transform group-open:rotate-90"
@@ -319,16 +319,16 @@
 					/>
 				</svg>
 				<span>Network details</span>
-				<span class="font-normal text-faint"
+				<span class="text-faint font-normal"
 					>· {connectedPeerCount} {connectedPeerCount === 1 ? 'peer' : 'peers'}</span
 				>
 				{#if peerId}
-					<code class="hidden font-mono font-normal text-faint sm:inline"
+					<code class="text-faint hidden font-mono font-normal sm:inline"
 						>· {peerId.slice(0, 8)}…{peerId.slice(-6)}</code
 					>
 				{/if}
 			</summary>
-			<div class="mt-3 grid min-w-0 gap-3 border-t border-border pt-3 lg:grid-cols-3 [&>*]:min-w-0">
+			<div class="border-border mt-3 grid min-w-0 gap-3 border-t pt-3 lg:grid-cols-3 [&>*]:min-w-0">
 				<slot />
 			</div>
 		</details>

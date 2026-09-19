@@ -77,8 +77,8 @@
 			Anyone who knows this share code can open the same public database and edit it once connected.
 		</p>
 		<p class="mt-1 text-xs text-faint">
-			The mnemonic selects the same database. Live replication also requires a connection to
-			another browser peer.
+			The mnemonic selects the same database. Live replication also requires a connection to another
+			browser peer.
 		</p>
 		<button
 			type="button"

@@ -1,5 +1,5 @@
 import { MemoryStorage } from '@orbitdb/core';
-import { forgetSession } from './session-store.js';
+import { forgetSession, session } from './session-store.js';
 
 /**
  * Where this browser keeps the todo data it holds.
@@ -62,8 +62,16 @@ export function setPersistentStorageEnabled(enabled) {
 	}
 
 	try {
-		if (enabled) localStorage.setItem(STORAGE_KEY, 'true');
-		else localStorage.removeItem(STORAGE_KEY);
+		if (enabled) {
+			localStorage.setItem(STORAGE_KEY, 'true');
+			// And what this session already holds goes with it. Somebody who picks
+			// a language, sets a list and *then* asks to keep things means the
+			// things they have -- without this the switch quietly starts from
+			// nothing, which reads as the setting not having worked.
+			for (const [key, value] of session) localStorage.setItem(key, value);
+		} else {
+			localStorage.removeItem(STORAGE_KEY);
+		}
 	} catch {
 		// Not being able to remember the choice is survivable; the session still
 		// honours it because the caller passes it on directly.

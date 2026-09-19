@@ -340,5 +340,12 @@
 	"footer": {
 		"imprint": "Imprint",
 		"privacy": "Privacy"
+	},
+	"consent": {
+		"storageLegend": "Where your todos are stored",
+		"storageMemoryLabel": "In memory only",
+		"storageMemoryHint": "Todos and keys live in memory only and are gone on reload. With no relay in the picture, that means what is here has been nowhere else.",
+		"storagePersistentLabel": "Kept in this browser",
+		"storagePersistentHint": "Todos survive a reload and time offline. This chapter's default, because it works without a relay."
 	}
 }

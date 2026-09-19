@@ -21,7 +21,11 @@ import {
 	PERSISTENT_STORAGE_PATHS
 } from '@simple-todo/todo/storage-mode.js';
 import { initializeDatabase, todoDBAddressStore, todosStore } from './db-actions.js';
-import { getWebRTCEnabled, setWebRTCEnabled, webrtcEnabledStore } from '@simple-todo/net/webrtc-settings.js';
+import {
+	getWebRTCEnabled,
+	setWebRTCEnabled,
+	webrtcEnabledStore
+} from '@simple-todo/net/webrtc-settings.js';
 import { getTodoDatabaseName } from '@simple-todo/todo/default-todo-database.js';
 import { normalizeDiscoveredMultiaddrs } from '@simple-todo/net/multiaddr-utils.js';
 

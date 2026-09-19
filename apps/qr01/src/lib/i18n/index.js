@@ -1,4 +1,5 @@
-import { addMessages, init, getLocaleFromNavigator, locale as i18nLocale } from 'svelte-i18n';
+import { setTranslator } from '@simple-todo/ui/i18n.js';
+import { _, addMessages, init, getLocaleFromNavigator, locale as i18nLocale } from 'svelte-i18n';
 import de from './de.json';
 import en from './en.json';
 
@@ -75,5 +76,10 @@ init({
 	fallbackLocale: 'en',
 	initialLocale: initialLocale()
 });
+
+// The components in `@simple-todo/ui` reach this catalogue through here, next
+// to `init()` for the same reason `init()` is not in a layout: a module that
+// can translate has already loaded what makes translation possible.
+setTranslator(_);
 
 export { _, locale } from 'svelte-i18n';

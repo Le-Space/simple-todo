@@ -56,7 +56,7 @@ export function setTranslator(store) {
 	}
 
 	const stop = store.subscribe((value) => format.set(typeof value === 'function' ? value : null));
-	unsubscribe = typeof stop === 'function' ? stop : null;
+	unsubscribe = typeof stop === 'function' ? /** @type {() => void} */ (stop) : null;
 }
 
 /**

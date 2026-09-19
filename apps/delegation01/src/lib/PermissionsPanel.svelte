@@ -92,8 +92,8 @@
 		class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
 		data-testid="permissions-panel"
 	>
-		<h2 class="text-lg font-semibold text-heading">Write permissions</h2>
-		<p class="mt-1 text-xs text-faint">
+		<h2 class="text-heading text-lg font-semibold">Write permissions</h2>
+		<p class="text-faint mt-1 text-xs">
 			DIDs allowed to write to this list. Only list admins (the creator) can grant or revoke.
 		</p>
 
@@ -104,7 +104,7 @@
 					data-testid="permission-entry"
 					data-did={did}
 				>
-					<code class="truncate rounded bg-surface-2 px-1" title={did}>
+					<code class="bg-surface-2 truncate rounded px-1" title={did}>
 						{did.length > 30 ? `${did.slice(0, 18)}…${did.slice(-8)}` : did}
 						{#if did === $ownDidStore}<span class="text-emerald-600"> (you)</span>{/if}
 					</code>

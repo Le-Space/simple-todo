@@ -114,7 +114,7 @@
 </script>
 
 <div
-	class="rounded-md border border-border p-3 hover:bg-surface"
+	class="border-border hover:bg-surface rounded-md border p-3"
 	data-testid="todo-item"
 	data-todo-key={todoKey}
 	data-todo-text={text}
@@ -141,7 +141,7 @@
 			>
 				{#if showReplicationTooltip}
 					<span
-						class="pointer-events-none absolute bottom-full left-0 z-30 mb-2 w-max max-w-72 rounded-md bg-code px-3 py-2 text-xs leading-relaxed text-white shadow-lg"
+						class="bg-code pointer-events-none absolute bottom-full left-0 z-30 mb-2 w-max max-w-72 rounded-md px-3 py-2 text-xs leading-relaxed text-white shadow-lg"
 						role="tooltip"
 						data-testid="todo-relay-tooltip"
 					>
@@ -167,7 +167,7 @@
 						<input
 							type="text"
 							bind:value={editText}
-							class="min-w-0 flex-1 rounded-md border border-border px-2 py-1 text-sm"
+							class="border-border min-w-0 flex-1 rounded-md border px-2 py-1 text-sm"
 							data-testid="todo-edit-input"
 							on:keydown={(event) => onEditKey(event, saveEdit, () => (isEditing = false))}
 						/>
@@ -180,7 +180,7 @@
 						<button
 							type="button"
 							on:click={() => (isEditing = false)}
-							class="rounded-md px-2 py-1 text-xs text-faint hover:text-heading">Cancel</button
+							class="text-faint hover:text-heading rounded-md px-2 py-1 text-xs">Cancel</button
 						>
 					</div>
 				{:else}
@@ -192,22 +192,22 @@
 						{text}
 					</span>
 				{/if}
-				<div class="mt-1 text-sm text-faint">
+				<div class="text-faint mt-1 text-sm">
 					{#if assignee}
-						Assigned to: <code class="rounded bg-surface-2 px-1">{formatPeerId(assignee)}</code>
+						Assigned to: <code class="bg-surface-2 rounded px-1">{formatPeerId(assignee)}</code>
 					{:else}
 						<span class="text-data-600">Unassigned</span>
 					{/if}
 					• Created by:
 					<code
-						class="rounded bg-surface-2 px-1"
+						class="bg-surface-2 rounded px-1"
 						data-testid="todo-author"
 						data-author={author || ''}>{author ? formatDid(author) : formatPeerId(createdBy)}</code
 					>
 					{#if status !== 'none' && delegation}
 						• Delegated to:
 						<code
-							class="rounded bg-surface-2 px-1"
+							class="bg-surface-2 rounded px-1"
 							title={delegation.delegateDid}
 							data-testid="todo-delegate"
 							data-did={delegation.delegateDid}>{formatDid(delegation.delegateDid)}</code
@@ -228,7 +228,7 @@
 					{/if}
 					{#if updatedBy && updatedBy !== createdByIdentity}
 						• Last changed by delegate:
-						<code class="rounded bg-surface-2 px-1" title={updatedBy} data-testid="todo-updated-by"
+						<code class="bg-surface-2 rounded px-1" title={updatedBy} data-testid="todo-updated-by"
 							>{formatDid(updatedBy)}</code
 						>
 					{/if}
@@ -240,7 +240,7 @@
 				<button
 					type="button"
 					on:click={startEdit}
-					class="rounded-md px-2 py-1 text-xs text-faint transition-colors hover:text-heading"
+					class="text-faint hover:text-heading rounded-md px-2 py-1 text-xs transition-colors"
 					data-testid="todo-edit">Rename</button
 				>
 			{/if}
@@ -256,14 +256,14 @@
 				<button
 					type="button"
 					on:click={handleRevoke}
-					class="rounded-md px-2 py-1 text-xs text-data-600 transition-colors hover:text-data-700"
+					class="text-data-600 hover:text-data-700 rounded-md px-2 py-1 text-xs transition-colors"
 					data-testid="todo-revoke-delegation">Revoke</button
 				>
 			{/if}
 			{#if isOwner}
 				<button
 					on:click={handleDelete}
-					class="rounded-md px-3 py-1 text-danger-500 transition-colors hover:text-danger-700"
+					class="text-danger-500 hover:text-danger-700 rounded-md px-3 py-1 transition-colors"
 				>
 					Delete
 				</button>
@@ -273,14 +273,14 @@
 
 	{#if isDelegating}
 		<div
-			class="mt-3 grid grid-cols-1 gap-2 rounded-md border border-border bg-surface-2 p-3 sm:grid-cols-[1fr_auto_auto_auto]"
+			class="border-border bg-surface-2 mt-3 grid grid-cols-1 gap-2 rounded-md border p-3 sm:grid-cols-[1fr_auto_auto_auto]"
 			data-testid="todo-delegate-form"
 		>
 			<input
 				type="text"
 				bind:value={delegateDid}
 				placeholder="did:key:… of the delegate"
-				class="min-w-0 rounded-md border border-border px-2 py-1 font-mono text-xs"
+				class="border-border min-w-0 rounded-md border px-2 py-1 font-mono text-xs"
 				data-testid="todo-delegate-did-input"
 				on:keydown={(event) => onEditKey(event, saveDelegate, () => (isDelegating = false))}
 			/>
@@ -288,7 +288,7 @@
 				type="datetime-local"
 				bind:value={delegationExpiresAt}
 				title="Expires at (optional)"
-				class="rounded-md border border-border px-2 py-1 text-xs"
+				class="border-border rounded-md border px-2 py-1 text-xs"
 				data-testid="todo-delegate-expiry-input"
 			/>
 			<button
@@ -301,7 +301,7 @@
 			<button
 				type="button"
 				on:click={() => (isDelegating = false)}
-				class="rounded-md px-2 py-1 text-xs text-faint hover:text-heading">Cancel</button
+				class="text-faint hover:text-heading rounded-md px-2 py-1 text-xs">Cancel</button
 			>
 		</div>
 	{/if}

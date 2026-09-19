@@ -45,7 +45,7 @@
 	}
 </script>
 
-<div class="mb-6 rounded-lg bg-surface p-6 shadow-md">
+<div class="bg-surface mb-6 rounded-lg p-6 shadow-md">
 	<h2 class="mb-4 text-xl font-semibold">Add New TODO</h2>
 	<div class="space-y-4">
 		<input
@@ -53,12 +53,12 @@
 			bind:value={inputText}
 			{placeholder}
 			{disabled}
-			class="w-full rounded-md border border-border px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-cyan-500 disabled:cursor-not-allowed disabled:bg-surface-2"
+			class="border-border disabled:bg-surface-2 w-full rounded-md border px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-cyan-500 disabled:cursor-not-allowed"
 			on:keydown={handleKeydown}
 		/>
 
 		{#if delegationEnabled}
-			<label class="flex items-center gap-2 text-sm text-faint">
+			<label class="text-faint flex items-center gap-2 text-sm">
 				<input
 					type="checkbox"
 					bind:checked={showDelegation}
@@ -73,7 +73,7 @@
 		{#if delegationEnabled && showDelegation}
 			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2" data-testid="add-todo-delegation">
 				<div>
-					<label for="add-todo-delegate-did" class="mb-1 block text-sm font-medium text-heading">
+					<label for="add-todo-delegate-did" class="text-heading mb-1 block text-sm font-medium">
 						Delegate DID
 					</label>
 					<input
@@ -83,15 +83,15 @@
 						{disabled}
 						placeholder="did:key:… of the person who may complete it"
 						data-testid="add-todo-delegate-did"
-						class="w-full rounded-md border border-border px-4 py-2 font-mono text-xs focus:border-transparent focus:ring-2 focus:ring-cyan-500 disabled:cursor-not-allowed disabled:bg-surface-2"
+						class="border-border disabled:bg-surface-2 w-full rounded-md border px-4 py-2 font-mono text-xs focus:border-transparent focus:ring-2 focus:ring-cyan-500 disabled:cursor-not-allowed"
 					/>
 				</div>
 				<div>
 					<label
 						for="add-todo-delegation-expiry"
-						class="mb-1 block text-sm font-medium text-heading"
+						class="text-heading mb-1 block text-sm font-medium"
 					>
-						Delegation expires at <span class="font-normal text-faint">(optional)</span>
+						Delegation expires at <span class="text-faint font-normal">(optional)</span>
 					</label>
 					<input
 						id="add-todo-delegation-expiry"
@@ -99,10 +99,10 @@
 						bind:value={delegationExpiresAt}
 						{disabled}
 						data-testid="add-todo-delegation-expiry"
-						class="w-full rounded-md border border-border px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-cyan-500 disabled:cursor-not-allowed disabled:bg-surface-2"
+						class="border-border disabled:bg-surface-2 w-full rounded-md border px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-cyan-500 disabled:cursor-not-allowed"
 					/>
 				</div>
-				<p class="text-xs text-faint sm:col-span-2">
+				<p class="text-faint text-xs sm:col-span-2">
 					The delegate does not get write access to the list. They may only complete or rename this
 					one todo, and you can revoke that at any time.
 				</p>
@@ -113,7 +113,7 @@
 			<button
 				on:click={handleSubmit}
 				{disabled}
-				class="rounded-md bg-coral-500 px-6 py-2 font-medium text-white transition-colors hover:bg-coral-600 disabled:cursor-not-allowed disabled:bg-faint"
+				class="bg-coral-500 hover:bg-coral-600 disabled:bg-faint rounded-md px-6 py-2 font-medium text-white transition-colors disabled:cursor-not-allowed"
 			>
 				{buttonText}
 			</button>

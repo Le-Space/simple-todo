@@ -34,7 +34,11 @@ import {
 	PERSISTENT_STORAGE_PATHS
 } from '@simple-todo/todo/storage-mode.js';
 import { initializeDatabase, todoDBAddressStore, todosStore } from './db-actions.js';
-import { getWebRTCEnabled, setWebRTCEnabled, webrtcEnabledStore } from '@simple-todo/net/webrtc-settings.js';
+import {
+	getWebRTCEnabled,
+	setWebRTCEnabled,
+	webrtcEnabledStore
+} from '@simple-todo/net/webrtc-settings.js';
 import { getTodoDatabaseName } from '@simple-todo/todo/default-todo-database.js';
 import { normalizeDiscoveredMultiaddrs } from '@simple-todo/net/multiaddr-utils.js';
 
@@ -386,7 +390,14 @@ async function createOrbitDBInstance(heliaNode) {
 	// a closed tab leaves nothing behind. privacy01 has done it this way since
 	// this branch was cut from it. Without PRF the keystore generates a key for
 	// this session only -- see `warnIfIdentityCannotTravel` in +page.svelte.
-	const identities = await createMemoryIdentities(heliaNode);
+	// The keystore follows the storage choice: a reader who keeps things keeps
+	// the signing key too, and the list registry -- whose name is derived from a
+	// signature -- still points at the same place after a reload. In memory mode
+	// the key goes with the tab, and with PRF the passkey derives the same one
+	// again anyway (#9).
+	const identities = getPersistentStorageEnabled()
+		? await Identities({ ipfs: heliaNode })
+		: await createMemoryIdentities(heliaNode);
 	const identity = await identities.createIdentity({
 		provider: OrbitDBWebAuthnIdentityProviderFunction({
 			webauthnCredential: activePasskeyCredential
