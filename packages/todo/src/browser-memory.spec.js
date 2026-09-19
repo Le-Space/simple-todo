@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { forget, forgetSession, recall, remember } from './browser-memory.js';
+import { forget, forgetSession, honourStorageChoice, recall, remember } from './browser-memory.js';
 import { setPersistentStorageEnabled } from './storage-mode.js';
+
+// These cases are about an app that offers the choice; one that does not keeps
+// to the device whatever the flag says.
+honourStorageChoice();
 
 afterEach(() => {
 	forgetSession();

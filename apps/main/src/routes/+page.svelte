@@ -10,6 +10,12 @@
 		setPersistentStorageEnabled,
 		wipePersistentStorage
 	} from '@simple-todo/todo/storage-mode.js';
+	import { honourStorageChoice } from '@simple-todo/todo/browser-memory.js';
+
+	// This chapter offers the choice, so what the app writes follows it. Said
+	// once, at module scope, because the first `recall()` happens in `onMount`
+	// before anything renders.
+	honourStorageChoice();
 	import { formatBuildDate, formatCommitSha, formatVersions } from '$lib/build-info.js';
 	import { todosStore, addTodo, deleteTodo, toggleTodoComplete } from '$lib/db-actions.js';
 	import ConsentModal from '$lib/ConsentModal.svelte';

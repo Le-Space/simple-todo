@@ -24,11 +24,32 @@ import { forgetSession, session } from './session-store.js';
 export { forgetSession };
 
 /**
+ * Whether this app offers the storage choice at all.
+ *
+ * A chapter without the choice never sets the flag, so asking
+ * `getPersistentStorageEnabled()` there would answer *memory* for a reader who
+ * was never asked -- and quietly stop remembering their language, their relay
+ * opt-in and their list. So the facade keeps to the device until an app says it
+ * honours the choice, which the chapters that render the selector do at start.
+ */
+let honoursChoice = false;
+
+/** Called once by an app whose consent screen offers the storage choice. */
+export function honourStorageChoice() {
+	honoursChoice = true;
+}
+
+/** True only when a reader was offered the choice and asked to keep nothing. */
+function keepsNothing() {
+	return honoursChoice && !getPersistentStorageEnabled();
+}
+
+/**
  * @param {string} key
  * @param {string} value
  */
 export function remember(key, value) {
-	if (!getPersistentStorageEnabled()) {
+	if (keepsNothing()) {
 		session.set(key, value);
 		return;
 	}
@@ -46,7 +67,7 @@ export function remember(key, value) {
  * @returns {string | null}
  */
 export function recall(key) {
-	if (!getPersistentStorageEnabled()) {
+	if (keepsNothing()) {
 		return session.has(key) ? /** @type {string} */ (session.get(key)) : null;
 	}
 
@@ -87,7 +108,7 @@ export function forget(key) {
  * @returns {boolean}
  */
 export function canOutlivePage() {
-	if (!getPersistentStorageEnabled()) return false;
+	if (keepsNothing()) return false;
 
 	const probe = 'simpleTodo.durabilityProbe';
 	try {

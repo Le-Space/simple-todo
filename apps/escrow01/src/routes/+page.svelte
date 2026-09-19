@@ -62,6 +62,12 @@
 	import SharedListSelector from '$lib/SharedListSelector.svelte';
 	import StorageModeSelector from '@simple-todo/ui/StorageModeSelector.svelte';
 	import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
+	import { honourStorageChoice } from '@simple-todo/todo/browser-memory.js';
+
+	// This chapter offers the choice, so what the app writes follows it. Said
+	// once, at module scope, because the first `recall()` happens in `onMount`
+	// before anything renders.
+	honourStorageChoice();
 	import SharedListDetails from '$lib/SharedListDetails.svelte';
 	import PermissionsPanel from '$lib/PermissionsPanel.svelte';
 	import OpenDatabaseForm from '$lib/OpenDatabaseForm.svelte';

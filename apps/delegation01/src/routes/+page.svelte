@@ -41,6 +41,12 @@
 	import SharedListSelector from '$lib/SharedListSelector.svelte';
 	import StorageModeSelector from '@simple-todo/ui/StorageModeSelector.svelte';
 	import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
+	import { honourStorageChoice } from '@simple-todo/todo/browser-memory.js';
+
+	// This chapter offers the choice, so what the app writes follows it. Said
+	// once, at module scope, because the first `recall()` happens in `onMount`
+	// before anything renders.
+	honourStorageChoice();
 	import SharedListDetails from '$lib/SharedListDetails.svelte';
 	import PermissionsPanel from '$lib/PermissionsPanel.svelte';
 	import OpenDatabaseForm from '$lib/OpenDatabaseForm.svelte';
@@ -412,8 +418,8 @@
 		<div class="flex flex-1 items-center gap-3">
 			<LeSpaceLogo size={52} />
 			<div>
-				<h1 class="text-2xl font-bold text-heading sm:text-3xl">Simple-Todo</h1>
-				<p class="mt-1 text-sm text-faint">
+				<h1 class="text-heading text-2xl font-bold sm:text-3xl">Simple-Todo</h1>
+				<p class="text-faint mt-1 text-sm">
 					A local-first peer-to-peer PWA · {formatVersions({
 						appName: 'Simple-Todo'
 					})} · {typeof __APP_BRANCH__ !== 'undefined' ? __APP_BRANCH__ : 'local'} [{typeof __BUILD_DATE__ !==
@@ -438,7 +444,7 @@
 			on:connected={handleManualConnect}
 		/>
 		<ConnectedPeers compact bind:this={connectedPeersRef} libp2p={$libp2pStore} />
-		<div class="max-w-full min-w-0 space-y-3 overflow-hidden">
+		<div class="min-w-0 max-w-full space-y-3 overflow-hidden">
 			<PeerIdCard compact peerId={myPeerId} />
 			<OwnMultiaddrs libp2p={$libp2pStore} />
 		</div>

@@ -24,6 +24,12 @@
 	import OwnMultiaddrs from '@simple-todo/ui/OwnMultiaddrs.svelte';
 	import StorageModeSelector from '@simple-todo/ui/StorageModeSelector.svelte';
 	import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
+	import { honourStorageChoice } from '@simple-todo/todo/browser-memory.js';
+
+	// This chapter offers the choice, so what the app writes follows it. Said
+	// once, at module scope, because the first `recall()` happens in `onMount`
+	// before anything renders.
+	honourStorageChoice();
 	import SharedListSelector from '$lib/SharedListSelector.svelte';
 	import SharedListDetails from '$lib/SharedListDetails.svelte';
 	import {
