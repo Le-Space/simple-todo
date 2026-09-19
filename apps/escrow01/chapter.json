@@ -1,27 +1,28 @@
 {
-  "name": "escrow01",
-  "title": "Confidential budgets on Sepolia with Zama FHE",
-  "aleph": {
-    "site": "simple-todo-escrow01",
-    "domain": "escrow01.le-space.de",
-    "deployer": "@le-space/node@0.6.22"
-  },
-  "ports": {
-    "preview": 4174,
-    "relayHttp": 4910,
-    "relayTcp": 4911,
-    "relayWs": 4912,
-    "relayWebrtc": 4913,
-    "relayWebrtcDirect": 4916
-  },
-  "ci": {
-    "specs": [
-      "e2e/sections.spec.js",
-      "e2e/delegation.spec.js",
-      "e2e/acl-permissions.spec.js",
-      "e2e/consent-screen.spec.js",
-      "e2e/list-registry.spec.js",
-      "e2e/private-list-visibility.spec.js"
-    ]
-  }
+	"name": "escrow01",
+	"title": "Confidential budgets on Sepolia with Zama FHE",
+	"aleph": {
+		"site": "simple-todo-escrow01",
+		"domain": "escrow01.le-space.de",
+		"deployer": "@le-space/node@0.6.22"
+	},
+	"ports": {
+		"preview": 4174,
+		"relayHttp": 4910,
+		"relayTcp": 4911,
+		"relayWs": 4912,
+		"relayWebrtc": 4913,
+		"relayWebrtcDirect": 4916
+	},
+	"ci": {
+		"specs": [
+			"e2e/sections.spec.js",
+			"e2e/delegation.spec.js",
+			"e2e/acl-permissions.spec.js",
+			"e2e/consent-screen.spec.js",
+			"e2e/list-registry.spec.js",
+			"e2e/private-list-visibility.spec.js",
+			"e2e/storage-choice.spec.js"
+		]
+	}
 }

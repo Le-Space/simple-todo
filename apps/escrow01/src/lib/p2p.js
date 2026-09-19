@@ -30,7 +30,7 @@ import {
 	createLogStorages,
 	getPersistentStorageEnabled,
 	PERSISTENT_STORAGE_PATHS
-} from './storage-mode.js';
+} from '@simple-todo/todo/storage-mode.js';
 import { initializeDatabase, todoDBAddressStore, todosStore } from './db-actions.js';
 import { getWebRTCEnabled, setWebRTCEnabled, webrtcEnabledStore } from '@simple-todo/net/webrtc-settings.js';
 import { getTodoDatabaseName } from '@simple-todo/todo/default-todo-database.js';
