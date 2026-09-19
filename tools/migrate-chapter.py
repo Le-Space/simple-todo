@@ -217,6 +217,20 @@ def main() -> int:
             "export default defineConfig({\n" + RETRIES_NOTE + WORKERS_NOTE, 1)
     play.write_text(text)
 
+    # Tailwind scans what it can reach from the app. The shared components are
+    # outside it, and without this their utility classes are simply dropped.
+    css = app / "src/app.css"
+    if css.exists():
+        text = css.read_text()
+        if "@source" not in text:
+            css.write_text(text.replace(
+                "@import 'tailwindcss';",
+                "@import 'tailwindcss';\n\n"
+                "/* The shared components live outside this app's folder, and Tailwind only\n"
+                "   scans what it can reach from here. */\n"
+                "@source '../../../packages/ui/src';\n"
+                "@source '../../../packages/net/src';\n", 1))
+
     (app / "chapter.json").write_text(json.dumps({
         "name": chapter,
         "aleph": {

@@ -1,4 +1,13 @@
 @import 'tailwindcss';
+
+/* The shared components live outside this app's folder, and Tailwind only scans
+   what it can reach from here. Without these, every utility class used solely in
+   a package component is dropped: 12 KB of CSS on acl01 and privacy01, 3 KB on
+   escrow01 — all of it the shared panels. A passkey01 spec is what caught it,
+   by asserting that the multiaddress list still scrolls. */
+@source '../../../packages/ui/src';
+@source '../../../packages/net/src';
+
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
