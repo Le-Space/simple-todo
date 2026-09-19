@@ -1,0 +1,23 @@
+{
+	"name": "qr01",
+	"aleph": {
+		"site": "simple-todo-qr01",
+		"domain": "qr01.le-space.de",
+		"deployer": "@le-space/node@0.6.22"
+	},
+	"ports": {
+		"preview": 4181,
+		"relayHttp": 4980,
+		"relayTcp": 4981,
+		"relayWs": 4982,
+		"relayWebrtc": 4983,
+		"relayWebrtcDirect": 4986
+	},
+	"ci": {
+		"specs": ["e2e/qr01-transfer.spec.js", "e2e/offline-pwa.spec.js"],
+		"lint": true,
+		"check": true,
+		"readme": true
+	},
+	"title": "Meet by scanning a code, with no relay at all"
+}
