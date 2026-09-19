@@ -1,0 +1,344 @@
+{
+	"app": {
+		"title": "QR-Todo",
+		"tagline": "Eine Liste an jemanden weitergeben, der neben Ihnen steht — ganz ohne Internet."
+	},
+	"lang": {
+		"de": "Deutsch",
+		"en": "English"
+	},
+	"view": {
+		"simple": "Einfach",
+		"technical": "Technisch",
+		"switchToTechnical": "Technische Details anzeigen",
+		"switchToSimple": "Technische Details ausblenden",
+		"detailsHeading": "Technische Details"
+	},
+	"status": {
+		"starting": "Wird gestartet…",
+		"ready": "Bereit",
+		"failed": "Beim Starten ist etwas schiefgegangen",
+		"connectedToOne": "Mit einem anderen Gerät verbunden"
+	},
+	"identity": {
+		"heading": "Wer Sie sind",
+		"anonymous": "Nicht angemeldet",
+		"explain": "So funktioniert die App auch. Wenn Sie diesen Browser aber leeren, sind Ihre Listen und Passkeys weg. Ein Passkey unterzeichnet Ihre Einträge und zeigt anderen, von wem sie kommen.",
+		"create": "Passkey einrichten",
+		"namePlaceholder": "Ihr Name",
+		"nameRequired": "Geben Sie einen Namen für den Passkey ein.",
+		"use": "Meinen Passkey benutzen",
+		"signedInAs": "Angemeldet als",
+		"passkeyHidden": "Auf diesem Gerät gibt es einen Passkey. Listen, die Sie damit angelegt haben, bleiben verborgen, bis Sie ihn wiederherstellen.",
+		"useOnDevice": "Passkey auf diesem Gerät benutzen",
+		"peerId": "Peer-ID"
+	},
+	"list": {
+		"heading": "Ihre Liste",
+		"createHeading": "Neue Liste anlegen",
+		"namePlaceholder": "Wie soll die Liste heißen?",
+		"create": "Liste anlegen",
+		"creating": "Wird angelegt…",
+		"example": "Oder die Beispiel-Liste nehmen (10 Arbeiten)",
+		"empty": "Auf dieser Liste steht noch nichts.",
+		"addPlaceholder": "Was ist zu tun?",
+		"add": "Hinzufügen",
+		"count": "{count, plural, =0 {Keine Einträge} one {1 Eintrag} other {# Einträge}}",
+		"onlyYouCanWrite": "Nur Sie können hier etwas eintragen. Andere können mitlesen.",
+		"itemsHeading": "Einträge"
+	},
+	"transfer": {
+		"heading": "Diese Liste weitergeben",
+		"start": "Meinen Code zeigen",
+		"working": "Einen Moment…",
+		"scan": "Code des anderen scannen",
+		"scanReply": "Antwort scannen",
+		"cancel": "Abbrechen",
+		"done": "Fertig",
+		"holdUp": "Halten Sie das hoch, damit das andere Telefon es scannen kann. Tippen Sie danach auf „Antwort scannen“.",
+		"showBack": "Zeigen Sie das zurück, damit die andere Seite fertig werden kann.",
+		"connected": "Verbunden.",
+		"sent": "„{name}“ gesendet. Die andere Seite entscheidet, ob sie die Liste behält.",
+		"linkSummary": "Oder als Link senden",
+		"copy": "Kopieren",
+		"copied": "Kopiert",
+		"staticCode": "Fester Code — das andere Telefon kann ihn mit der Kamera scannen",
+		"staticCodeHint": "Ein festes Bild statt eines bewegten, damit eine normale Kamera es lesen und den Link öffnen kann. Die Verbindung ist dafür etwas weniger zuverlässig."
+	},
+	"handover": {
+		"heading": "Oder an jemanden geben, der schon verbunden ist",
+		"headingOnly": "An jemanden geben, der verbunden ist",
+		"hint": "Kein Code zum Hinhalten: diese Geräte sind gerade erreichbar. Über das Internet braucht das ein Relay; im selben Netz nicht.",
+		"empty": "Noch ist niemand verbunden.",
+		"send": "Liste senden",
+		"sending": "Wird gesendet…",
+		"sent": "An {peer} gesendet. Die andere Seite entscheidet, ob sie sie behält.",
+		"failed": "Konnte nicht gesendet werden: {reason}",
+		"noList": "Es ist keine Liste offen, die gesendet werden könnte.",
+		"connectManually": "Mit einem bestimmten Gerät verbinden",
+		"state": {
+			"connected": "verbunden",
+			"reconnecting": "verbindet erneut…"
+		},
+		"filterPlaceholder": "Nach Peer-ID filtern…",
+		"filterEmpty": "Kein verbundenes Gerät passt dazu."
+	},
+	"offer": {
+		"heading": "Jemand hat Ihnen eine Liste geschickt",
+		"from": "Von",
+		"unnamed": "Liste ohne Namen",
+		"accept": "Ja, behalten",
+		"decline": "Nein danke",
+		"importing": "Liste wird geholt…"
+	},
+	"errors": {
+		"notReady": "Die App startet noch. Bitte gleich noch einmal versuchen.",
+		"noWritePermission": "Sie können auf dieser Liste nichts eintragen — sie gehört jemand anderem."
+	},
+	"tabs": {
+		"transfer": "Liste weitergeben",
+		"create": "Liste anlegen",
+		"open": "Geteilte Liste öffnen"
+	},
+	"theme": {
+		"toLight": "Zur hellen Ansicht wechseln",
+		"toDark": "Zur dunklen Ansicht wechseln",
+		"light": "Helle Ansicht",
+		"dark": "Dunkle Ansicht"
+	},
+	"todo": {
+		"relayStatus": "Relay-Replikation:",
+		"unassigned": "Nicht zugewiesen",
+		"relayPending": "Wartet darauf, dass der Relay diesen Eintrag übernimmt.",
+		"relayUnknown": "Für diesen Eintrag liegt noch kein Nachweis der Relay-Replikation vor.",
+		"relayNotObserved": "Für diesen bestehenden Eintrag wurde die Relay-Replikation nicht beobachtet.",
+		"relayPinned": "Der Relay hat bestätigt, dass genau dieser Eintrag übernommen und gespeichert wurde."
+	},
+	"tech": {
+		"relayConnected": "Relay verbunden",
+		"peerConnected": "Peer verbunden",
+		"relayPeerMismatch": "Relay-Peer-ID stimmt nicht überein",
+		"relayConnecting": "Verbinde mit Relay",
+		"webrtcConnected": "WebRTC verbunden",
+		"enterMultiaddr": "Multiadresse eingeben, um sich mit einem Peer zu verbinden.",
+		"dialing": "Wähle Peer an",
+		"handshake": "Öffnet den WebSocket und schließt den libp2p-Handschlag ab…",
+		"connectionStable": "Verbindung stabil",
+		"connectionDropped": "Verbindung abgebrochen",
+		"myPeerId": "Meine Peer-ID",
+		"sharePeerId": "Teilen Sie diese ID, damit andere Ihnen TODOs zuweisen können.",
+		"loading": "Wird geladen…",
+		"copied": "Kopiert!",
+		"copyToClipboard": "In die Zwischenablage kopieren",
+		"myMultiaddrs": "Meine Multiadressen",
+		"copyAddressHint": "Eine Adresse kopieren, um einen anderen Browser direkt zu verbinden.",
+		"multiaddrCopied": "Multiadresse in die Zwischenablage kopiert.",
+		"writePermissions": "Schreibrechte",
+		"didPlaceholder": "did:key:… der Identität, die zugelassen wird",
+		"openByAddress": "Geteilte Liste über Adresse öffnen",
+		"openByAddressHint": "Fügen Sie die vollständige OrbitDB-Adresse ein, die Ihnen jemand geschickt hat. Mitlesen geht sofort — zum Schreiben braucht es eine Freigabe des Eigentümers.",
+		"opening": "Wird geöffnet…",
+		"openList": "Liste öffnen",
+		"webrtcWaiting": "Wartet auf eine WebRTC-Verbindung"
+	},
+	"steps": {
+		"failed": "{step} konnte nicht gestartet werden",
+		"initializing": "{step} wird gestartet",
+		"networkConfig": {
+			"label": "Netzwerk-Konfiguration",
+			"description": "Prüft die konfigurierten, vom Browser erreichbaren Relay-Adressen und bereitet die libp2p-Transporte und -Dienste vor."
+		},
+		"libp2p": {
+			"label": "libp2p",
+			"description": "Erzeugt und startet den libp2p-Knoten samt Peer-Identität, Discovery, Relay-, WebSocket- und WebRTC-Unterstützung."
+		},
+		"helia": {
+			"label": "Helia",
+			"description": "Startet den Helia-IPFS-Knoten auf libp2p und aktiviert den Blockaustausch."
+		},
+		"orbitdb": {
+			"label": "OrbitDB",
+			"description": "Lädt oder erzeugt die OrbitDB-Identität und initialisiert OrbitDB mit dem Helia-Knoten."
+		},
+		"databaseSync": {
+			"label": "Datenbank + Sync",
+			"description": "Öffnet die Todo-Datenbank, lädt ihr lokales Änderungsprotokoll und startet die OrbitDB-Pubsub-Synchronisierung."
+		},
+		"localTodos": {
+			"label": "Lokale Todos",
+			"description": "Verbindet den lokalen Todo-Speicher und füllt ihn im Hintergrund aus OrbitDB."
+		},
+		"relayConnected": {
+			"label": "Relay verbunden",
+			"description": "Eine bestehende Verbindung zu einem Relay."
+		},
+		"peerConnected": {
+			"label": "Peer verbunden",
+			"description": "Eine bestehende libp2p-Verbindung zu einem anderen Browser."
+		},
+		"webrtcConnected": {
+			"label": "WebRTC verbunden",
+			"description": "Eine direkte WebRTC-Verbindung zu einem anderen Browser."
+		}
+	},
+	"lists": {
+		"heading": "Ihre Listen",
+		"kept": "Liegen in Ihrer eigenen OrbitDB-Registry — sie sind nach einem Neuladen wieder da und folgen Ihrem Passkey auf ein anderes Gerät.",
+		"forget": "Vergessen",
+		"drop": "Löschen",
+		"role": {
+			"owner": "Eigentümer",
+			"guest": "Gast",
+			"shared": "Öffentlich"
+		},
+		"shareAddress": "Geben Sie diese Adresse weiter, damit andere die Liste öffnen können. Mitlesen geht sofort; zum Schreiben braucht es unten eine Freigabe.",
+		"permissionsHint": "DIDs, die in diese Liste schreiben dürfen. Nur wer die Liste angelegt hat, kann Rechte vergeben oder entziehen.",
+		"addDid": "DID hinzufügen",
+		"createdBefore": "„",
+		"createdAfter": "“ angelegt — Sie schreiben jetzt hier hinein.",
+		"unnamed": "Liste ohne Namen",
+		"active": "aktiv"
+	},
+	"net": {
+		"details": "Netzwerk-Details",
+		"peers": "{count, plural, =0 {keine Peers} one {1 Peer} other {# Peers}}",
+		"connectToRelay": "Mit Relay verbinden",
+		"relayHint": "Wählen Sie ein aktuelles, vom Browser erreichbares Relay, das über Aleph gefunden wurde.",
+		"discovering": "Aleph-Relays werden gesucht und angepingt…",
+		"noRelayAddresses": "Keine Relay-Adressen gefunden",
+		"loading": "Wird geladen…",
+		"refresh": "Aktualisieren",
+		"customMultiaddr": "Eigene Multiadresse verwenden",
+		"discoveryFailed": "Aleph-Relay-Suche fehlgeschlagen: {reason}",
+		"discoveryUnavailable": "Relay-Suche nicht verfügbar",
+		"nonePinged": "Keine der {count} gefundenen Relay-Adressen hat auf einen libp2p-Ping geantwortet.",
+		"noDialable": "Es wurden keine aktuell vom Browser erreichbaren Relays gefunden.",
+		"refreshOrCustom": "Aktualisieren Sie oder geben Sie eine eigene Multiadresse ein.",
+		"connecting": "Verbinde…",
+		"connect": "Verbinden",
+		"peersTitle": "Verbundene Peers",
+		"peersEmpty": "Noch keine Peers verbunden."
+	},
+	"shared": {
+		"writingToBefore": "Sie schreiben in ",
+		"writingToAfter": ". Das Mnemonic unten verweist weiterhin auf die öffentliche geteilte Liste.",
+		"mnemonicLabel": "Öffentliches Mnemonic / OrbitDB-Datenbankname",
+		"copy": "Kopieren",
+		"copied": "Kopiert!",
+		"addressLabel": "OrbitDB-Adresse",
+		"anyoneHint": "Wer diesen Code kennt, kann dieselbe öffentliche Datenbank öffnen und darin schreiben, sobald eine Verbindung besteht.",
+		"replicationHint": "Das Mnemonic wählt dieselbe Datenbank aus. Für die Live-Übertragung braucht es zusätzlich eine Verbindung zu einem anderen Browser.",
+		"openAnother": "Andere geteilte Liste öffnen"
+	},
+	"intro": {
+		"title": "Wie das hier funktioniert",
+		"chapter": {
+			"heading": "Worum es in diesem Kapitel geht",
+			"goal": "Ein Tutorial-Kapitel, das fünfte. Jedes fügt dem vorigen eine einzige Idee hinzu; dieses nimmt das Internet weg. Zwei Geräte, die sich nie begegnet sind, kein Server, kein Relay, nichts, was die Begegnung vermittelt: jemand hält einen Code hoch, jemand anders scannt ihn, und eine Liste wechselt hinüber.",
+			"partsHeading": "Woraus es gebaut ist",
+			"parts": {
+				"connection": {
+					"label": "Die Verbindung",
+					"text": "Eine WebRTC-Sitzung, ausgehandelt über einen Code, den man vor eine Kamera hält — ohne Vermittler dazwischen."
+				},
+				"identity": {
+					"label": "Ihre Unterschrift",
+					"text": "Ein Passkey wird zur DID. Ein secp256k1-Schlüssel signiert Ihre Einträge; er liegt unverschlüsselt in diesem Browser, deshalb fragt nach der Einrichtung nichts mehr nach dem Passkey."
+				},
+				"varsig": {
+					"label": "Vorhanden und bewusst aus",
+					"text": "Die strengere Variante fragt bei jedem einzelnen Schreibvorgang nach dem Passkey. Sie kommt mit dem Identity-Provider mit, und dieses Kapitel schaltet sie nicht ein — deshalb steht sie in der Lockfile und nirgends im Code."
+				},
+				"permissions": {
+					"label": "Wer schreiben darf",
+					"text": "Eine Liste wird mit Schreibrecht nur für ihren Eigentümer geöffnet. Die Gegenseite repliziert und liest sie und kann keine Zeile hinzufügen."
+				},
+				"database": {
+					"label": "Die Liste selbst",
+					"text": "Ein Keyvalue-Speicher, dessen Adresse der Hash seines eigenen Manifests ist. Genau das macht eine Adresse unerratbar — und damit wert, übergeben zu werden."
+				},
+				"storage": {
+					"label": "Wo sie überlebt",
+					"text": "Blöcke und Index liegen in der IndexedDB dieses Browsers. Ohne Relay, von dem man sie zurückholen könnte, müssen sie auf dem Gerät liegen, sonst ist die Liste beim nächsten Laden weg."
+				},
+				"protocol": {
+					"label": "Die Übergabe",
+					"text": "Das eigene Protokoll dieser App. Es trägt versionierte JSON-Umschläge, die über ein kind-Feld verteilt werden — so teilen sich das Listenangebot und alles Weitere einen Strom, statt jeweils ein eigenes Protokoll zu bekommen."
+				},
+				"relay": {
+					"label": "Optional und aus",
+					"text": "Eine Verzeichnisabfrage, die ein Relay findet, wenn die in den Build eingebackenen Adressen weggerotiert sind. Nichts kontaktiert es, solange das Kästchen oben nicht angehakt ist."
+				}
+			}
+		},
+		"simple": {
+			"whatItIs": "Eine Aufgabenliste, die Sie jemandem weitergeben können. Kein Server, kein Konto — sie geht von Ihrem Gerät auf das andere und lebt in beiden Browsern.",
+			"lead": "Halten Sie Ihren Code hoch, er wird gescannt, dann hält die Gegenseite ihre Antwort hoch und Sie scannen zurück. Internet braucht das nicht, aber beide Geräte müssen im selben Netz sein — sonst macht eines einen Hotspot auf und das andere verbindet sich damit.",
+			"passkey": "Ein Passkey ist Ihre Unterschrift: er zeigt der anderen Seite, dass die Einträge von Ihnen stammen. Ohne geht es auch."
+		},
+		"tech": {
+			"heading": "Warum es im Mobilfunknetz manchmal scheitert",
+			"nat": "Mobilfunknetze arbeiten meist mit symmetrischem NAT. Das verhindert genau die direkte Verbindung, die der Code aufbaut.",
+			"chromeIpv6": "Chrome gibt keine IPv6-WebRTC-Kandidaten heraus — also fällt der Weg weg, der im Mobilfunknetz sonst funktionieren würde.",
+			"browsers": "DuckDuckGo, Safari, Firefox u. a. Browser geben IPv6-Kandidaten scheinbar zuverlässig weiter. Aber Achtung: DuckDuckGo beherrscht auf Android und GrapheneOS unter Umständen keine Passkeys.",
+			"graphene": "Vanadium auf GrapheneOS funktioniert gut, wenn WebRTC in den Sicherheitseinstellungen freigeschaltet ist — und bei Passkeys zusätzlich Passchain von Accrescent installiert ist.",
+			"vpn": "Hängen beide Geräte am Mobilfunknetz, hilft ein VPN wie NymVPN über das NAT hinweg."
+		},
+		"check": {
+			"heading": "Dieses Gerät gerade",
+			"checking": "Verbindungswege werden geprüft…",
+			"none": "Ihr Netz gibt weder über IPv4 noch über IPv6 einen Weg nach außen her.",
+			"sameNetwork": "Sind Sie mit dem anderen Gerät im selben WLAN oder Hotspot, ist das gleichgültig und es funktioniert trotzdem.",
+			"routable": "Ihr Netz lässt eine direkte Verbindung auch zu Geräten in anderen Netzen zu.",
+			"localOnly": "Ihr Netz vergibt pro Ziel einen neuen Port (symmetrisches NAT). Zu einem Gerät in einem anderen Netz kommen Sie damit nicht durch.",
+			"vpnBefore": "Wollen Sie Daten mit einem Gerät über das Internet austauschen, hilft ein VPN wie ",
+			"vpnLink": "NymVPN",
+			"vpnAfter": " über dieses Hindernis hinweg.",
+			"simple": {
+				"ok": "Passt — auch Geräte in anderen Netzen sind erreichbar.",
+				"limitedBefore": "Im selben WLAN oder Hotspot klappt es. Übers Internet nicht — dafür brauchen Sie ein VPN wie ",
+				"limitedAfter": ".",
+				"limited": "Im selben WLAN oder Hotspot klappt es. Über das Internet nicht."
+			}
+		},
+		"dontShow": "Nicht mehr zeigen",
+		"close": "Los geht's",
+		"reopen": "Erklärung noch einmal zeigen",
+		"relay": {
+			"label": "Über einen Relay verbinden",
+			"hint": "Standardmäßig aus: Diese App braucht keinen Server. Nur anhaken, wenn das andere Gerät den Code nicht scannen kann — etwa über einen Messenger.",
+			"checking": "Suche einen Relay, der antwortet…",
+			"reachable": "{count, plural, one {1 bekannter Relay antwortet} other {# bekannte Relays antworten}}. Aleph wurde nicht gefragt.",
+			"discovered": "{count, plural, one {1 Relay} other {# Relays}} über Aleph gefunden — die mitgelieferten schwiegen.",
+			"none": "Kein Relay hat geantwortet. Der Weg über den Code funktioniert weiter; Sie können ein eigenes Relay starten.",
+			"startHint": "Der Knopf dafür liegt hinter diesem Dialog. Das hier schließt die Erklärung und macht ihn erreichbar.",
+			"startAction": "Eigenes Relay starten"
+		},
+		"ways": {
+			"heading": "Wie das andere Gerät hereinkommt",
+			"qr": "Per Kamera: Sie halten einen Code hoch, das andere Gerät scannt ihn. Nichts verlässt dieses Netz.",
+			"qrWithRelay": "Per Kamera: Sie halten einen Code hoch, das andere Gerät scannt ihn. Nichts verlässt dieses Netz. Ein Relay hat geantwortet, das andere Gerät kann also auch ohne Code dazukommen."
+		},
+		"privacy": {
+			"heading": "Was das für Ihre Daten bedeutet",
+			"empty": "Was hier steht, entscheiden die Angaben oben.",
+			"accept": "Ich habe das gelesen und bin einverstanden",
+			"noServer": "Wir betreiben keinen Server, und nirgends existiert eine Kopie Ihrer Liste, über die wir verfügen.",
+			"qr": "Ein Code, den Sie von diesem Bildschirm zum anderen Gerät tragen. Die Liste geht direkt von einem zum anderen und verlässt dieses Netz nur, wenn Sie den Link verschicken.",
+			"relayOn": "Ein Relay stellt die beiden Geräte einander vor. Es kann Daten kurz vorhalten, damit das andere Gerät sie abholen kann, wenn dieses offline geht.",
+			"relayOff": "Es wird kein Relay kontaktiert. Ohne eines muss das andere Gerät aus diesem Netz erreichbar sein.",
+			"passkey": "Ihr Passkey signiert, was Sie schreiben — die andere Seite sieht, dass die Einträge von Ihnen stammen. Er bleibt auf diesem Gerät.",
+			"throwaway": "Ein temporärer Schlüssel dieses Browsers signiert Ihre Einträge. Niemand kann sie Ihnen zuordnen, und er ist fort, sobald Sie den Browser leeren.",
+			"local": "Ihre Listen liegen in diesem Browser. Wird er geleert, sind sie fort.",
+			"gateway": "Die App selbst kommt über ein öffentliches IPFS-Gateway, das sieht, dass Sie sie geladen haben. Mit einem eigenen Kubo-Knoten oder der IPFS-Companion-Erweiterung holen Sie sie direkt aus dem Netz — niemand dazwischen, und es funktioniert weiter, wenn ein Gateway ausfällt."
+		},
+		"warning": {
+			"heading": "Noch früh",
+			"body": "Das hier ist eine lauffähige Demonstration, kein fertiges Produkt. Es tut, was es sagt, und das Format kann sich noch ändern — bewahren Sie also alles, dessen Verlust Sie ärgern würde, zusätzlich woanders auf."
+		}
+	},
+	"footer": {
+		"imprint": "Impressum",
+		"privacy": "Datenschutz"
+	}
+}

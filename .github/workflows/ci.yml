@@ -67,6 +67,27 @@ jobs:
         working-directory: .
       - name: No preview origin is written down by hand
         run: pnpm run check:preview-origin
+
+      # qr01 was the only chapter that gated lint, types and its README on every
+      # pull request, and it is the only one whose CI never let a type error
+      # through. The gates stay per chapter rather than repo-wide until the
+      # others have paid off the formatting debt they arrived with.
+      - id: gates
+        run: |
+          node -e "
+            const ci = require('./chapter.json').ci ?? {};
+            for (const gate of ['lint', 'check', 'readme'])
+              console.log(gate + '=' + (ci[gate] === true));
+          " >> "$GITHUB_OUTPUT"
+      - name: Lint
+        if: steps.gates.outputs.lint == 'true'
+        run: pnpm run lint
+      - name: Types
+        if: steps.gates.outputs.check == 'true'
+        run: pnpm run check
+      - name: The README's chapter block is current
+        if: steps.gates.outputs.readme == 'true'
+        run: node scripts/sync-chapter-readme.mjs --check
       - name: Unit tests
         run: pnpm run test:unit
       - name: Browser specs
