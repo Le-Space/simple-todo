@@ -12,6 +12,7 @@ import {
 import { TodoBrowserAgent } from './remote/agent.mjs';
 import { selectPeerDialAddress } from '@simple-todo/e2e-kit/remote/main-scenario.mjs';
 import { generateSpanishMnemonic } from '@simple-todo/todo/spanish-mnemonic.js';
+import { PREVIEW_ORIGIN } from '@simple-todo/e2e-kit/preview-origin.mjs';
 
 // Chapter (collab01): provisions a real relay through the Relay Button UI and
 // replicates a Spanish-mnemonic-named shared OrbitDB list between two browsers.
@@ -22,7 +23,7 @@ import { generateSpanishMnemonic } from '@simple-todo/todo/spanish-mnemonic.js';
 
 const PRIVATE_KEY = process.env.RELAY_BUTTON_E2E_PRIVATE_KEY?.trim();
 const SSH_PUBLIC_KEY = process.env.RELAY_BUTTON_E2E_SSH_PUBLIC_KEY?.trim();
-const APP_URL = process.env.RELAY_BUTTON_E2E_APP_URL ?? 'http://localhost:4173';
+const APP_URL = process.env.RELAY_BUTTON_E2E_APP_URL ?? PREVIEW_ORIGIN;
 const OUTPUT_DIR = 'test-results/relay-button';
 // Must fit several CRN failover attempts: a single failed attempt costs
 // 7-13 min (VM boot + config-ack wait + HTTPS activation wait) before the
