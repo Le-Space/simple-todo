@@ -71,3 +71,13 @@ jobs:
         run: pnpm run test:unit
       - name: Browser specs
         run: pnpm exec playwright test $(node -e "console.log(require('./chapter.json').ci.specs.join(' '))") --project=chromium
+
+      # What the page looked like when it failed. Without this a flake on a
+      # runner can only be guessed at from a locator name.
+      - name: Keep the evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.app }}
+          path: apps/${{ matrix.app }}/test-results/
+          retention-days: 7

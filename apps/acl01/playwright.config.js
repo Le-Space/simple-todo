@@ -11,6 +11,13 @@ import { PREVIEW_PORT } from '@simple-todo/e2e-kit/preview-origin.mjs';
 const previewPort = PREVIEW_PORT;
 
 export default defineConfig({
+	// One retry in CI, none here. `private-list-visibility:84` and its relatives
+	// wait for a list opened by address to become the active one, and on a CI
+	// runner that occasionally takes longer than the poll allows — six local runs
+	// with one worker passed, the same job failed roughly every second time. A
+	// retried test is reported as "flaky", so this makes the wobble visible
+	// instead of turning every pull request red while the cause is being found.
+	retries: process.env.CI ? 1 : 0,
 	// One worker, deliberately. Every spec in a chapter drives two browsers that
 	// have to find each other through the one relay this suite starts, and eight
 	// of them at once do not: measured on acl01, the suite failed 2 of 4 runs on

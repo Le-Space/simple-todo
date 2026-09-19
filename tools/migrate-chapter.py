@@ -29,6 +29,7 @@ ADAPTED_IN_PACKAGE = {
     "providers.mjs", "run-main.mjs", "aleph-playwright-provider.spec.js",
 }
 KEEP_IN_CHAPTER = {"agent.mjs"}          # knows the chapter's own UI
+RETRIES_NOTE = """\t// One retry in CI, none locally: a test that only wobbles on a runner is\n\t// reported as flaky instead of red. See the open-by-address investigation.\n\tretries: process.env.CI ? 1 : 0,\n"""
 WORKERS_NOTE = """\t// One worker: every spec drives two browsers that have to meet through\n\t// the single relay this suite starts, and eight at once do not. Measured on\n\t// acl01: 2 of 4 runs red on the frozen branch, 3 of 4 here, green with one\n\t// worker. Chapters run in parallel through the matrix instead.\n\tworkers: 1,\n"""
 ALWAYS_PACKAGE_DIRS = ("scripts/", "static/")
 # A chapter's own workflows are dead here — GitHub reads .github at the root —
@@ -213,7 +214,7 @@ def main() -> int:
     if "workers:" not in text:
         text = text.replace(
             "export default defineConfig({",
-            "export default defineConfig({\n" + WORKERS_NOTE, 1)
+            "export default defineConfig({\n" + RETRIES_NOTE + WORKERS_NOTE, 1)
     play.write_text(text)
 
     (app / "chapter.json").write_text(json.dumps({
