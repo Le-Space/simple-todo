@@ -1,13 +1,13 @@
 /**
  * The relay addresses this build was configured with.
  *
- * Split out of `libp2p-config.js` because that module imports libp2p,
- * gossipsub and the transports, while this is a list of strings from
+ * Split out of `libp2p-config.js` because that module imports libp2p, gossipsub
+ * and the transports -- 13 heavy imports -- while this is a list of strings from
  * `import.meta.env`. `P2PStatusNav` needs the list to look up the relay's HTTP
  * origin per peer; importing it from the config module tied the status bar to
  * the whole networking stack and kept it in the eager bundle.
  *
- * The defaults below are this chapter's own, carried over unchanged.
+ * The defaults below are the ones every chapter shipped, unchanged.
  */
 
 // Environment variables

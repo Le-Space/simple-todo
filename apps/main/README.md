@@ -1,0 +1,255 @@
+# Simple Todo - A Local-First Peer-to-Peer PWA Tutorial
+
+[![Main E2E](https://github.com/NiKrause/simple-todo/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/NiKrause/simple-todo/actions/workflows/deploy.yml?query=branch%3Amain)
+[![Remote browser replication](https://github.com/NiKrause/simple-todo/actions/workflows/remote-replication.yml/badge.svg?branch=main)](https://github.com/NiKrause/simple-todo/actions/workflows/remote-replication.yml)
+
+A basic decentralized, local-first, peer-to-peer todo application built with **libp2p**, **IPFS**, and **OrbitDB**. This app demonstrates how modern Web3 technologies can create truly decentralized applications that work entirely in the browser.
+
+> 📚 **This repository is a tutorial.** Its branches — `main`, `collab01` — are chapters that build the app up step by step, so they are kept separate rather than merged into one another. This is the `main` chapter (the basic local-first PWA).
+
+## 🚀 Live Demo
+
+- **Current deployment**: https://simple-todo.le-space.de
+- **IPFS snapshot (Aleph gateway)**: https://ipfs.aleph.im/ipfs/bafybeigo5dip5jl5q6tzyp7xqtnzml25lbbw4y34kvkukgsa7au6qie37y/
+- **IPFS snapshot (dweb.link)**: https://dweb.link/ipfs/bafybeigo5dip5jl5q6tzyp7xqtnzml25lbbw4y34kvkukgsa7au6qie37y/
+
+The custom-domain link tracks the current deployment. The immutable CID links above are a snapshot
+of the deployment published on July 11, 2026.
+
+## 🎯 What is this?
+
+This is a **browser-only** local-first peer-to-peer todo application that operates without any traditional server infrastructure. It connects directly to other browsers and mobile devices through peer-to-peer connections, creating a truly decentralized experience. So far, a LibP2P signaling node is necessary to connect the peers, and in this version it does not store the todos locally since this browser version works with MemoryStorage only instead of local IPFSStorage (e.g. LevelBlockstore). Doing so is showing how the OrbitDB relay works as a signaling and db pinning node.
+
+### Main Branch Scope
+
+The `main` branch is the basic shared-list demo. Every browser opens the same default OrbitDB database (`simple-todos`); users only load the app URL, accept consent, and add todos. There is no manual OrbitDB address exchange in this branch. A Playwright E2E test verifies the default flow with Alice and Bob in separate browser contexts: each adds three todos, and both browsers must see all six replicated items.
+
+> **Another tutorial path:** The [`collab01`](https://github.com/NiKrause/simple-todo/tree/collab01) branch demonstrates explicit collaboration: users can create or load a todo database by its OrbitDB address, share it with another peer, and replicate changes through the relay.
+
+### Key Features
+
+- ✅ **No Server Required** - PWA runs in browser, desktop or mobile.
+- ✅ **Local Data** - Data is stored in your browser's level storage and replicated via OrbitDB and IPFS
+- ✅ **Peer-to-Peer Communication** - Browsers connect directly via WebRTC (with help of libp2p signaling nodes)
+- ✅ **Real-time Synchronization** - Changes appear instantly across all peers
+
+## 🎯 How to Test
+
+1. **Open Two Browser Windows** - You need at least two browser instances, a mobile device, or ask another distant person to open the app
+2. **Load the Same URL** - All app users should load the same app URL
+3. **Accept Consent** - Check all consent boxes in both browsers
+4. **Wait for Connection** - The app will automatically discover and connect peers
+5. **Add Todos** - Create todos in one browser and watch them appear in the other
+
+## 🤝 Two ways to meet a peer
+
+The app carries **two independent introduction mechanisms**, and they answer
+different questions. Both are reachable from the floating buttons in the
+bottom-right corner.
+
+|                                           | 🛰️ Relay Button                | 📷 Scan Connect SDP                       |
+| ----------------------------------------- | ------------------------------ | ----------------------------------------- |
+| **Question it answers**                   | "How do strangers find me?"    | "How do the two of us connect right now?" |
+| **Introduction via**                      | a relay you deploy and pay for | a code you hand over yourself             |
+| **Needs infrastructure**                  | yes — an Aleph VM              | no                                        |
+| **Works with peers you have never met**   | yes                            | no, someone must show you the code        |
+| **Keeps working after you close the tab** | yes, the relay stays           | no                                        |
+
+They are **not alternatives**. A relay makes you continuously discoverable; an
+invite connects two people who are already talking to each other. Running both
+is the normal case, which is why `main` loads the QR transport alongside the
+relay transports rather than switching between them.
+
+### Choosing on the consent screen
+
+The consent screen carries a checkbox — **"Connect to the public libp2p relay
+network"**, on by default:
+
+- **On** (default): the browser bootstraps from the public relay and finds peers
+  through pubsub discovery. The invite panel is still available on top of that.
+- **Off**: the node starts with the QR transport and nothing else — no relay, no
+  bootstrap, no discovery, no pinning. Nothing announces this browser and nobody
+  can find it; the only way in or out is an invite you exchange yourself, so the
+  panel opens by itself.
+
+It is deliberately **not** one of the "I understand…" boxes and never blocks the
+proceed button: those are acknowledgements, this is a choice, and unticking it is
+a valid way to continue rather than a refusal to consent.
+
+The choice is stored per browser (`localStorage`), because consent can be
+remembered — in which case the modal never renders again and the node starts
+straight from `onMount`. A preference that lived only in the modal would be
+unreachable for exactly the people who visit most often.
+
+### 🛰️ Relay Button
+
+Deploys a relay onto an [Aleph](https://aleph.im) VM from inside the browser,
+paid from your own wallet, and publishes its multiaddress so other browsers can
+bootstrap from it. Peers then find each other through pubsub discovery without
+ever having exchanged anything by hand. The button comes from
+[`@le-space/ui`](https://github.com/NiKrause/relay-button); the relay itself is
+[`orbitdb-relay`](https://github.com/NiKrause/orbitdb-relay).
+
+### 📷 Scan Connect SDP
+
+Opens a panel that negotiates a **direct WebRTC connection** through an invite
+you exchange yourself. One peer presses _Create invite_ and hands it over in
+whichever form fits:
+
+- **the QR code** — the other device scans it;
+- **the text** — paste it into a chat;
+- **_Copy invite link_** — send a URL. Opening it applies the invite by itself,
+  through the consent screen if the recipient is new, and works while their app
+  is already open (the fragment change is handled, not ignored).
+
+Either way the recipient hands the reply back the same way, and that completes
+the connection.
+
+The link carries the payload in the **fragment**, never the query string. A
+fragment is not sent to the server, and this app is served from public IPFS
+gateways as well as its own domain — a query string would hand a signed
+connection offer to every operator on the way and into their logs. The fragment
+is also cleared once used, so a reload cannot replay a spent offer. Measured in
+the E2E: a payload is around **1.1 kB**, so a link stays comfortably shareable.
+
+The invite is signed with the peer's own key and carries the DTLS fingerprint,
+so **accepting one is what authenticates the other side** — there is no relay in
+the middle to be trusted or to fail.
+
+What makes it worth trying: open two windows, write a few todos in each _before_
+connecting, and they stay apart. Exchange the invite and both screens hold
+everything either of them wrote. Nothing merged — every peer opens the same
+content-addressed database, so the two were always writing to one log that had
+no way to replicate. Connecting is what lets it.
+
+The transport and the on-screen elements come from
+[`@le-space/libp2p-webrtc-qr`](https://github.com/NiKrause/libp2p-webrtc-qr);
+the security model of that handshake is written up in
+[connection-security.md](https://github.com/NiKrause/libp2p-webrtc-qr/blob/main/docs/connection-security.md).
+
+#### `?transport=qr` — the isolated variant
+
+Adding `?transport=qr` to the URL forces the same invite-only node the consent
+checkbox produces, and **overrides a stored preference of "on"**. A URL that
+promises no relay must not quietly grow one because this browser once ticked a
+box.
+
+That mode exists so the claim is testable rather than taken on trust — if two
+such nodes end up connected, the code is provably the only thing that introduced
+them (`e2e/qr-invite-merge.spec.js`). In that mode the panel starts open, since
+there is no other way to connect.
+
+### Wiring
+
+Adding the invite path to a page is three pieces:
+
+```js
+// 1. the transport, next to the relay transports (src/lib/libp2p-config.js)
+transports: [webSockets(), webRTC(), circuitRelayTransport(...), webRTCQRTransport()];
+
+// 2. the session, before anything dials (src/lib/p2p.js)
+attachQrSession(libp2p);
+
+// 3. the UI (src/routes/+page.svelte)
+<QrConnect />;
+```
+
+`attachQrSession` must run at node startup, not on first click: the transport
+asks it for an outbound session while dialing, so a session created only when
+someone presses the button would arrive too late.
+
+## 📚 Documentation
+
+For comprehensive guides on how this app works, implementation details, and reusable components:
+
+**[📖 Tutorial](./docs/TUTORIAL.md)**
+
+The tutorial covers:
+
+- Step-by-Step implementation guide
+- Architecture overview
+- Testing procedures
+- Troubleshooting guide
+- Security considerations
+
+**[🔧 Reusable Components](./docs/)**
+
+- **[StorachaIntegration](./docs/StorachaIntegration.md)** - Complete Storacha/Web3.Storage integration component for backing up OrbitDB databases to decentralized storage
+
+## 🛠️ Quick Start
+
+```bash
+# Clone repository
+git clone https://github.com/NiKrause/simple-todo.git
+# checkout main branch
+git checkout main
+
+# install dependencies and start the development server
+pnpm install
+pnpm dev
+```
+
+## 🛰️ Local Relay
+
+In development the app reads `VITE_RELAY_BOOTSTRAP_ADDR_DEV` from `.env`. If that variable is not set, it falls back to a hardcoded localhost relay address, so the safest local workflow is:
+
+1. Start an `orbitdb-relay` process.
+2. Copy its WebSocket multiaddr into `.env`.
+3. Start or restart the Vite dev server.
+
+Install and run the published npm package:
+
+```bash
+npm install -g orbitdb-relay
+
+ENABLE_GENERAL_LOGS=1 \
+RELAY_LISTEN_IPV4=127.0.0.1 \
+RELAY_DISABLE_IPV6=true \
+RELAY_DISABLE_QUIC=true \
+RELAY_DISABLE_WEBRTC=true \
+DATASTORE_PATH=/tmp/simple-todo-orbitdb-relay \
+orbitdb-relay --test
+```
+
+The relay exposes helper routes on `http://127.0.0.1:9090`. In another terminal, fetch the browser-dialable WebSocket address:
+
+```bash
+curl -s http://127.0.0.1:9090/multiaddrs | node -e "let d=''; process.stdin.on('data', c => d += c); process.stdin.on('end', () => { const j = JSON.parse(d); console.log(j.best.websocket || j.byTransport.websocket[0]); });"
+```
+
+Use exactly one printed `/ws` address. Do not paste the raw TCP address on port `9091`, and do not include quotes, commas, or multiple addresses in one value.
+
+Put the printed address in `.env`. If you copied `.env.example`, replace the existing `VITE_RELAY_BOOTSTRAP_ADDR_DEV` value:
+
+```bash
+VITE_RELAY_BOOTSTRAP_ADDR_DEV=/ip4/127.0.0.1/tcp/9092/ws/p2p/<relay-peer-id>
+```
+
+Then start the app:
+
+```bash
+pnpm dev
+```
+
+If you change `.env` while Vite is already running, restart `pnpm dev` so the new relay address is loaded.
+
+## 🔧 Technologies Used
+
+- **libp2p** - Peer-to-peer networking stack
+- **IPFS** - Distributed file system (via Helia)
+- **OrbitDB** - Decentralized database
+- **Svelte** - Frontend framework
+- **WebRTC** - Direct browser-to-browser communication
+
+## ⚠️ Important Notes
+
+- This is a **demo application** for educational purposes
+- Data is stored in a **global unencrypted database** visible to all users
+- **No privacy protection** - all data is publicly visible
+- **Not suitable for production use** without additional security measures
+
+## 📄 License
+
+This project is open source and available under the [LICENSE](./LICENSE) file.
+
+---

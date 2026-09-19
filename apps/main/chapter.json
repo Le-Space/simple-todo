@@ -1,0 +1,29 @@
+{
+	"name": "main",
+	"aleph": {
+		"site": "simple-todo",
+		"domain": "simple-todo.le-space.de",
+		"deployer": "@le-space/node@0.6.30"
+	},
+	"ports": {
+		"preview": 4180,
+		"relayHttp": 4970,
+		"relayTcp": 4971,
+		"relayWs": 4972,
+		"relayWebrtc": 4973,
+		"relayWebrtcDirect": 4976
+	},
+	"ci": {
+		"specs": [
+			"e2e/default-database-collaboration.spec.js",
+			"e2e/manual-multiaddr-connection.spec.js",
+			"e2e/storage-mode-persistence.spec.js",
+			"e2e/storage-mode-offline-and-wipe.spec.js",
+			"e2e/consent-screen.spec.js",
+			"e2e/language.spec.js",
+			"e2e/qr-invite-merge.spec.js",
+			"e2e/replication-without-webrtc.spec.js"
+		]
+	},
+	"title": "The base chapter: one shared todo list in the browser"
+}
