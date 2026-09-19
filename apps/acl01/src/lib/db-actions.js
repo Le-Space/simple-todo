@@ -1,4 +1,5 @@
 import { writable, derived, get } from 'svelte/store';
+import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import { OrbitDBAccessController } from '@orbitdb/core';
 import { peerIdStore } from './p2p-stores.js';
 import { rememberList, listRegistryStore, openListRegistry } from './list-registry.js';
@@ -182,7 +183,10 @@ export async function loadTodoDatabase(address) {
 	try {
 		const loadedTodoDB = await orbitdb.open(normalizedAddress, {
 			type: 'keyvalue',
-			sync: true
+			sync: true,
+			// Memory-only when that is what was chosen: `Database` defaults both
+			// log storages to LevelStorage, which browser-level puts in IndexedDB.
+			...(await createLogStorages())
 		});
 
 		// Prefer what the registry already knows: a list you created is yours even
@@ -238,7 +242,10 @@ export async function createPrivateTodoList(name = 'private-todos') {
 		type: 'keyvalue',
 		create: true,
 		sync: true,
-		AccessController: OrbitDBAccessController({ write: [orbitdb.identity.id] })
+		AccessController: OrbitDBAccessController({ write: [orbitdb.identity.id] }),
+		// Memory-only when that is what was chosen; a private list is no more
+		// persistent than the shared one.
+		...(await createLogStorages())
 	});
 
 	const listName = name.trim() || 'private-todos';

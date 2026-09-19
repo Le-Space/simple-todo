@@ -24,3 +24,8 @@ apps/*/.github/
 # Python-Cache der Werkzeuge
 __pycache__/
 *.pyc
+
+# Vitest's browser mode drops a PNG here when a test fails, and the packages had
+# nothing ignoring it -- which is how screenshots end up committed next to the
+# source they were taken from (see apps/qr01/src/lib).
+**/__screenshots__/
