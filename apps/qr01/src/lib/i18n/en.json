@@ -1,0 +1,344 @@
+{
+	"app": {
+		"title": "QR-Todo",
+		"tagline": "Hand a list to someone standing next to you — no internet needed."
+	},
+	"lang": {
+		"de": "Deutsch",
+		"en": "English"
+	},
+	"view": {
+		"simple": "Simple",
+		"technical": "Technical",
+		"switchToTechnical": "Show technical details",
+		"switchToSimple": "Hide technical details",
+		"detailsHeading": "Technical details"
+	},
+	"status": {
+		"starting": "Starting…",
+		"ready": "Ready",
+		"failed": "Something went wrong while starting",
+		"connectedToOne": "Connected to one other device"
+	},
+	"identity": {
+		"heading": "Who you are",
+		"anonymous": "Not signed in",
+		"explain": "You can use the app like this. But if you clear this browser, your lists and passkeys are gone. A passkey signs your entries and shows others who they came from.",
+		"create": "Set up a passkey",
+		"namePlaceholder": "Your name",
+		"nameRequired": "Enter a name for the passkey.",
+		"use": "Use my passkey",
+		"signedInAs": "Signed in as",
+		"passkeyHidden": "A passkey exists on this device. Lists you made with it stay hidden until you restore it.",
+		"useOnDevice": "Use the passkey on this device",
+		"peerId": "Peer ID"
+	},
+	"list": {
+		"heading": "Your list",
+		"createHeading": "Make a new list",
+		"namePlaceholder": "What is the list called?",
+		"create": "Make the list",
+		"creating": "Making it…",
+		"example": "Or use the example list (10 jobs)",
+		"empty": "Nothing on this list yet.",
+		"addPlaceholder": "What needs doing?",
+		"add": "Add",
+		"count": "{count, plural, =0 {No entries} one {1 entry} other {# entries}}",
+		"onlyYouCanWrite": "Only you can add to this list. Others can read it.",
+		"itemsHeading": "Entries"
+	},
+	"transfer": {
+		"heading": "Give this list to someone",
+		"start": "Show my code",
+		"working": "One moment…",
+		"scan": "Scan their code",
+		"scanReply": "Scan their reply",
+		"cancel": "Cancel",
+		"done": "Done",
+		"holdUp": "Hold this up so the other phone can scan it. Then tap “Scan their reply”.",
+		"showBack": "Show this back to them so they can finish.",
+		"connected": "Connected.",
+		"sent": "Sent “{name}”. They decide whether to keep it.",
+		"linkSummary": "Or send it as a link",
+		"copy": "Copy",
+		"copied": "Copied",
+		"staticCode": "Static code — the other phone can scan it with its camera",
+		"staticCodeHint": "One picture instead of a moving one, so a normal camera can read it and open the link. The connection is a little less reliable."
+	},
+	"handover": {
+		"heading": "Or give it to someone already connected",
+		"headingOnly": "Give it to someone who is connected",
+		"hint": "No code to hold up: these devices are reachable right now. Over the internet that needs a relay — see the explanation for what your network allows.",
+		"empty": "Nobody is connected yet.",
+		"send": "Send the list",
+		"sending": "Sending…",
+		"sent": "Sent to {peer}. They decide whether to keep it.",
+		"failed": "Could not send it: {reason}",
+		"noList": "No list is open to send.",
+		"connectManually": "Connect to a specific device",
+		"state": {
+			"connected": "connected",
+			"reconnecting": "reconnecting…"
+		},
+		"filterPlaceholder": "Filter by peer ID…",
+		"filterEmpty": "No connected device matches that."
+	},
+	"offer": {
+		"heading": "Someone sent you a list",
+		"from": "From",
+		"unnamed": "Unnamed list",
+		"accept": "Yes, keep it",
+		"decline": "No thanks",
+		"importing": "Getting the list…"
+	},
+	"errors": {
+		"notReady": "The app is still starting. Please try again in a moment.",
+		"noWritePermission": "You cannot add to this list — it belongs to someone else."
+	},
+	"tabs": {
+		"transfer": "Hand the list over",
+		"create": "Make a list",
+		"open": "Open a shared list"
+	},
+	"theme": {
+		"toLight": "Switch to light mode",
+		"toDark": "Switch to dark mode",
+		"light": "Light mode",
+		"dark": "Dark mode"
+	},
+	"todo": {
+		"relayStatus": "Relay replication:",
+		"unassigned": "Unassigned",
+		"relayPending": "Waiting for this entry to be copied by the relay.",
+		"relayUnknown": "No proof of relay replication is available for this entry yet.",
+		"relayNotObserved": "Relay replication was not observed for this existing entry.",
+		"relayPinned": "The relay confirmed that this exact entry was copied and stored."
+	},
+	"tech": {
+		"relayConnected": "Relay connected",
+		"peerConnected": "Peer connected",
+		"relayPeerMismatch": "Relay peer ID does not match",
+		"relayConnecting": "Connecting to relay",
+		"webrtcConnected": "WebRTC connected",
+		"enterMultiaddr": "Enter a multiaddress to connect to a peer.",
+		"dialing": "Dialing peer",
+		"handshake": "Opening the websocket and completing the libp2p handshake…",
+		"connectionStable": "Connection stable",
+		"connectionDropped": "Connection dropped",
+		"myPeerId": "My Peer ID",
+		"sharePeerId": "Share this ID with others to assign TODOs to you.",
+		"loading": "Loading…",
+		"copied": "Copied!",
+		"copyToClipboard": "Copy to clipboard",
+		"myMultiaddrs": "My Multiaddresses",
+		"copyAddressHint": "Copy an address to connect another browser directly.",
+		"multiaddrCopied": "Multiaddress copied to clipboard.",
+		"writePermissions": "Write permissions",
+		"didPlaceholder": "did:key:… of the identity to allow",
+		"openByAddress": "Open a shared list by address",
+		"openByAddressHint": "Paste the full OrbitDB address someone shared with you. You can read it right away — writing needs a permission grant from the owner.",
+		"opening": "Opening…",
+		"openList": "Open list",
+		"webrtcWaiting": "Waiting for a WebRTC connection"
+	},
+	"steps": {
+		"failed": "Failed to initialise {step}",
+		"initializing": "Initialising {step}",
+		"networkConfig": {
+			"label": "Network config",
+			"description": "Validates the configured browser-reachable relay addresses and prepares the libp2p transports and services."
+		},
+		"libp2p": {
+			"label": "libp2p",
+			"description": "Creates and starts the libp2p node, including its peer identity, discovery, relay, WebSocket and WebRTC support."
+		},
+		"helia": {
+			"label": "Helia",
+			"description": "Starts the Helia IPFS node on top of libp2p and enables block exchange."
+		},
+		"orbitdb": {
+			"label": "OrbitDB",
+			"description": "Loads or creates the OrbitDB identity and initialises OrbitDB using the Helia node."
+		},
+		"databaseSync": {
+			"label": "Database + sync",
+			"description": "Opens the todo database, loads its local operation log and starts OrbitDB pubsub synchronisation."
+		},
+		"localTodos": {
+			"label": "Local todos",
+			"description": "Connects the local todo store and starts filling it from OrbitDB in the background."
+		},
+		"relayConnected": {
+			"label": "Relay connected",
+			"description": "A live connection to a relay."
+		},
+		"peerConnected": {
+			"label": "Peer connected",
+			"description": "A live libp2p connection to another browser."
+		},
+		"webrtcConnected": {
+			"label": "WebRTC connected",
+			"description": "A direct WebRTC connection to another browser."
+		}
+	},
+	"lists": {
+		"heading": "Your lists",
+		"kept": "Kept in your own OrbitDB registry, so they come back after a reload and follow your passkey to another device.",
+		"forget": "Forget",
+		"drop": "Drop",
+		"role": {
+			"owner": "owner",
+			"guest": "guest",
+			"shared": "public"
+		},
+		"shareAddress": "Share this address so others can open the list. They can read it right away; writing needs a grant below.",
+		"permissionsHint": "DIDs allowed to write to this list. Only list admins (the creator) can grant or revoke.",
+		"addDid": "Add DID",
+		"createdBefore": "Created ",
+		"createdAfter": " — you are now writing to it.",
+		"unnamed": "unnamed list",
+		"active": "open"
+	},
+	"net": {
+		"details": "Network details",
+		"peers": "{count, plural, =0 {no peers} one {1 peer} other {# peers}}",
+		"connectToRelay": "Connect to relay",
+		"relayHint": "Choose a current browser-reachable relay discovered through Aleph.",
+		"discovering": "Discovering and pinging Aleph relays…",
+		"noRelayAddresses": "No relay addresses discovered",
+		"loading": "Loading…",
+		"refresh": "Refresh",
+		"customMultiaddr": "Use a custom multiaddress",
+		"discoveryFailed": "Aleph relay discovery failed: {reason}",
+		"discoveryUnavailable": "Relay discovery unavailable",
+		"nonePinged": "None of the {count} discovered relay addresses answered a libp2p ping.",
+		"noDialable": "No current browser-dialable relays were found.",
+		"refreshOrCustom": "Refresh or enter a custom multiaddress.",
+		"connecting": "Connecting…",
+		"connect": "Connect",
+		"peersTitle": "Connected Peers",
+		"peersEmpty": "No peers connected yet."
+	},
+	"shared": {
+		"writingToBefore": "You are writing to ",
+		"writingToAfter": ". The mnemonic below still refers to the public shared list.",
+		"mnemonicLabel": "Public mnemonic / OrbitDB database name",
+		"copy": "Copy",
+		"copied": "Copied!",
+		"addressLabel": "OrbitDB address",
+		"anyoneHint": "Anyone who knows this share code can open the same public database and edit it once connected.",
+		"replicationHint": "The mnemonic selects the same database. Live replication also requires a connection to another browser peer.",
+		"openAnother": "Open another shared list"
+	},
+	"intro": {
+		"title": "How this works",
+		"chapter": {
+			"heading": "What this chapter is for",
+			"goal": "A tutorial chapter — the fifth. Each one adds a single idea to the one before it; this one takes the internet away. Two devices that have never met, no server, no relay, nothing arranging the introduction: somebody holds up a code, somebody else scans it, and a list crosses.",
+			"partsHeading": "What it is built from",
+			"parts": {
+				"connection": {
+					"label": "The connection",
+					"text": "A WebRTC session negotiated from a code held up to a camera, with nothing in the middle to arrange it."
+				},
+				"identity": {
+					"label": "Your signature",
+					"text": "A passkey becomes a DID. A secp256k1 key signs your entries; it is kept unencrypted in this browser, so once it is set up nothing asks for the passkey again."
+				},
+				"varsig": {
+					"label": "Present, and deliberately off",
+					"text": "The stricter variant asks for the passkey on every single write. It ships with the identity provider, and this chapter does not switch it on — which is why it appears in the lockfile and nowhere in the code."
+				},
+				"permissions": {
+					"label": "Who may write",
+					"text": "A list is opened with write access for its owner alone. The other side replicates it and reads it, and cannot add a line."
+				},
+				"database": {
+					"label": "The list itself",
+					"text": "A keyvalue store whose address is the hash of its own manifest. That is what makes an address impossible to guess, and therefore worth handing over."
+				},
+				"storage": {
+					"label": "Where it survives",
+					"text": "Blocks and index live in this browser's IndexedDB. With no relay to fetch them back from, they have to be on the device or the list is gone at the next reload."
+				},
+				"protocol": {
+					"label": "The handover",
+					"text": "This app's own protocol, carrying versioned JSON envelopes dispatched on a kind field — so the list offer and everything after it share one stream instead of earning a protocol each."
+				},
+				"relay": {
+					"label": "Optional, and off",
+					"text": "A directory lookup that finds a relay when the addresses baked into the build have rotated away. Nothing contacts it unless the box above is ticked."
+				}
+			}
+		},
+		"simple": {
+			"whatItIs": "A to-do list you can hand to somebody else. No server, no account — it goes from your device to theirs and lives in both browsers.",
+			"lead": "Hold up your code, they scan it, then they hold up their answer and you scan back. No internet needed for that, but both devices have to be on the same network — otherwise one opens a hotspot and the other joins it.",
+			"passkey": "A passkey is your signature: it shows the other side the entries came from you. The app works without one."
+		},
+		"tech": {
+			"heading": "Why it sometimes fails on a mobile network",
+			"nat": "Mobile networks commonly use symmetric NAT, which defeats exactly the direct connection the code sets up.",
+			"chromeIpv6": "Chrome does not surface IPv6 WebRTC candidates, so the path that would otherwise work on a mobile network is not offered at all.",
+			"browsers": "DuckDuckGo, Safari, Firefox and others appear to pass IPv6 candidates reliably. One caveat: DuckDuckGo may not support passkeys on Android or GrapheneOS.",
+			"graphene": "Vanadium on GrapheneOS works well with WebRTC enabled in the security settings — and, if you use passkeys, Passchain from Accrescent installed.",
+			"vpn": "If both devices are on mobile data, a VPN such as NymVPN gets you past the NAT."
+		},
+		"check": {
+			"heading": "This device, right now",
+			"checking": "Checking connection paths…",
+			"none": "Your network offers no path out over IPv4 or IPv6.",
+			"sameNetwork": "If you are on the same Wi-Fi or hotspot as the other device, none of this matters and it works anyway.",
+			"routable": "Your network allows a direct connection even to devices on other networks.",
+			"localOnly": "Your network assigns a new port per destination (symmetric NAT). That will not reach a device on another network.",
+			"vpnBefore": "If you want to exchange data with a device over the internet, a VPN such as ",
+			"vpnLink": "NymVPN",
+			"vpnAfter": " gets you past this.",
+			"simple": {
+				"ok": "All good — devices on other networks are reachable too.",
+				"limitedBefore": "On the same Wi-Fi or hotspot it works. Over the internet it does not — for that you need a VPN such as ",
+				"limitedAfter": ".",
+				"limited": "On the same Wi-Fi or hotspot it works. Over the internet it does not."
+			}
+		},
+		"dontShow": "Don't show this again",
+		"close": "Get started",
+		"reopen": "Show the explanation again",
+		"relay": {
+			"label": "Connect through a relay",
+			"hint": "Off by default: this app needs no server. Tick it only if the other device cannot scan your code — over a messenger, for instance.",
+			"checking": "Looking for a relay that answers…",
+			"reachable": "{count, plural, one {1 known relay answers} other {# known relays answer}}. Nothing was asked of Aleph.",
+			"discovered": "{count, plural, one {1 relay found} other {# relays found}} via Aleph — the ones shipped with the app stayed silent.",
+			"none": "No relay answered. The code path still works; you can start your own relay.",
+			"startHint": "The control for that sits behind this dialog. This closes the explanation and leaves it reachable.",
+			"startAction": "Start your own relay"
+		},
+		"ways": {
+			"heading": "How the other device gets in",
+			"qr": "By camera: you hold up a code, they scan it. Nothing leaves this network.",
+			"qrWithRelay": "By camera: you hold up a code, they scan it. Nothing leaves this network. A relay answered, so the other device can also join without a code."
+		},
+		"privacy": {
+			"heading": "What this means for your data",
+			"empty": "The choices above decide what goes here.",
+			"accept": "I have read this and accept it",
+			"noServer": "We run no server, and no copy of your list exists anywhere we control.",
+			"qr": "A code carried from this screen to the other device. The list goes straight from one to the other and leaves this network only if you send the link.",
+			"relayOn": "A relay introduces the two devices to each other. It may hold data briefly so the other device can collect it after this one goes offline.",
+			"relayOff": "No relay is contacted. Without one, the other device has to be reachable from this network.",
+			"passkey": "Your passkey signs what you write, so the other side can see the entries came from you. It stays on this device.",
+			"throwaway": "A temporary key for this browser signs your entries. Nobody can attribute them to you, and it is gone when you clear this browser.",
+			"local": "Your lists live in this browser. Clearing it clears them.",
+			"gateway": "The app itself is delivered through a public IPFS gateway, which sees that you loaded it. Running your own Kubo node, or the IPFS Companion extension, fetches it from the network instead — nobody in the middle, and it keeps working if a gateway is down."
+		},
+		"warning": {
+			"heading": "Early days",
+			"body": "This is a working demonstration rather than a finished product. It does what it says, and the format may still change — so keep anything you would be sorry to lose somewhere else as well."
+		}
+	},
+	"footer": {
+		"imprint": "Imprint",
+		"privacy": "Privacy"
+	}
+}

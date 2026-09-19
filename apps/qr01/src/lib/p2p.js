@@ -1,0 +1,1148 @@
+import { get } from 'svelte/store';
+import { libp2pStore, peerIdStore, ownDidStore, initializationStore } from './p2p-stores.js';
+
+import { createLibp2p } from 'libp2p';
+import { createHeliaLight } from 'helia';
+import { IDBBlockstore } from 'blockstore-idb';
+import { IDBDatastore } from 'datastore-idb';
+import { withBitswap } from '@helia/bitswap';
+import { withLibp2p } from '@helia/libp2p';
+import {
+	createOrbitDB,
+	IPFSAccessController,
+	Identities,
+	useIdentityProvider
+} from '@orbitdb/core';
+import { OrbitDBWebAuthnIdentityProviderFunction } from '@le-space/orbitdb-identity-provider-webauthn-did';
+import * as dagCbor from '@ipld/dag-cbor';
+import * as dagJson from '@ipld/dag-json';
+import * as json from 'multiformats/codecs/json';
+import { sha512 } from 'multiformats/hashes/sha2';
+import { multiaddr } from '@multiformats/multiaddr';
+import { createLibp2pConfig } from './libp2p-config.js';
+import { attachQrSession, resetQrSession } from './qr-transport.js';
+import { registerHandoverProtocol } from './handover-protocol.js';
+// Safe to import here: list-registry pulls in no app modules of its own, so
+// this does not close a cycle with db-actions.
+import {
+	resetListRegistry,
+	rememberList,
+	dropListRegistry,
+	listRegistryStore
+} from './list-registry.js';
+import {
+	stageRegistryHandoff,
+	readRegistryHandoff,
+	clearRegistryHandoff
+} from './registry-handoff.js';
+import { initializeDatabase, todoDBAddressStore, todosStore } from './db-actions.js';
+import {
+	getWebRTCEnabled,
+	setWebRTCEnabled,
+	webrtcEnabledStore
+} from '@simple-todo/net/webrtc-settings.js';
+import { getTodoDatabaseName } from '@simple-todo/todo/default-todo-database.js';
+import { normalizeDiscoveredMultiaddrs } from '@simple-todo/net/multiaddr-utils.js';
+
+export { setWebRTCEnabled, webrtcEnabledStore };
+
+// The stores live in `p2p-stores.js` so a page can read them without
+// pulling libp2p/Helia/OrbitDB into its eager bundle. Re-exported here
+// because plenty of callers legitimately want both from one import.
+export { libp2pStore, peerIdStore, ownDidStore, initializationStore } from './p2p-stores.js';
+
+const INITIALIZATION_STEP_DEFINITIONS = [
+	{
+		key: 'networkConfig'
+	},
+	{
+		key: 'libp2p'
+	},
+	{
+		key: 'helia'
+	},
+	{
+		key: 'orbitdb'
+	},
+	{
+		key: 'databaseSync'
+	},
+	{
+		key: 'localTodos'
+	}
+];
+
+/**
+ * @typedef {'pending' | 'active' | 'complete' | 'error'} InitializationStepStatus
+ * @typedef {{ key: string, status: InitializationStepStatus }} InitializationStep
+ */
+
+/** @param {number} [activeIndex=-1] */
+function createInitializationSteps(activeIndex = -1) {
+	return INITIALIZATION_STEP_DEFINITIONS.map(({ key }, index) => ({
+		key,
+		status: /** @type {InitializationStepStatus} */ (
+			index < activeIndex ? 'complete' : index === activeIndex ? 'active' : 'pending'
+		)
+	}));
+}
+
+/** @param {number} activeIndex */
+function setInitializationProgress(activeIndex) {
+	initializationStore.set({
+		isInitializing: true,
+		isInitialized: false,
+		error: null,
+		steps: createInitializationSteps(activeIndex)
+	});
+}
+
+let libp2p = /** @type {any} */ (null);
+let helia = /** @type {any} */ (null);
+let orbitdb = /** @type {any} */ (null);
+
+let peerId = /** @type {string | null} */ (null);
+/**
+ * The WebAuthn credential backing the current session identity. Kept at
+ * module level so restartP2P (e.g. when switching the shared list) reuses
+ * the same passkey identity without another WebAuthn prompt.
+ * @type {any | null}
+ */
+let activePasskeyCredential = null;
+let todoDB = /** @type {any} */ (null);
+let defaultTodoDbAddress = '';
+let activeTodoDatabaseName = '';
+const ORBITDB_IDENTITY_STORAGE_KEY = 'simpleTodo.orbitdbIdentityId';
+const MANUAL_CONNECT_STABILIZATION_MS = 3_000;
+const RELAY_PING_TIMEOUT_MS = 10_000;
+const DISCOVERY_DIAL_PERIODIC_RETRY_MS = 2_000;
+const DISCOVERY_DIAL_RETRY_COOLDOWN_MS = 5_000;
+const DISCOVERY_DIAL_TIMEOUT_MS = 10_000;
+const CIRCUIT_RELAY_HOP_PROTOCOL = '/libp2p/circuit/relay/0.2.0/hop';
+const CIRCUIT_RELAY_PROTOCOL_WAIT_MS = 5_000;
+/** @type {Map<string, Promise<boolean>>} */
+const relayReservationAttempts = new Map();
+/** @type {Map<string, { peer: any, multiaddrs: any[], isDialing: boolean, lastDialAttemptAt: number }>} */
+const discoveredPeers = new Map();
+/** @type {ReturnType<typeof setInterval> | null} */
+let discoveryDialRetryInterval = null;
+/** @type {ReturnType<typeof setInterval> | null} */
+
+/**
+ * Helia, with its blocks and datastore in IndexedDB rather than memory.
+ *
+ * This chapter needs it more than the others do. Everywhere else, a reload can
+ * refetch what the browser forgot, because a relay is holding it —
+ * `list-registry.js` says so outright: after a reload "the entries have to come
+ * back from the relay". qr01 has no relay. In memory, that made an imported
+ * list vanish on reload with nothing anywhere to restore it from, which the
+ * handover E2E caught by failing on exactly that assertion.
+ *
+ * "LevelDB" in a browser is IndexedDB anyway — `blockstore-level` reaches it
+ * through `level` → `browser-level` — so these go to IndexedDB directly, one
+ * abstraction layer fewer, and this is the pairing already validated against
+ * this codebase in spike 2a20549.
+ *
+ * Both stores must be opened before Helia touches them. Helia does not do it,
+ * and the failure surfaces late and misleadingly as "Datastore needs to be
+ * opened" thrown from inside libp2p's start.
+ *
+ * @param {any} libp2pNode
+ * @returns {Promise<any>}
+ */
+async function createHeliaWithLibp2p(libp2pNode) {
+	const blockstore = new IDBBlockstore('qr01/blocks');
+	const datastore = new IDBDatastore('qr01/data');
+	await Promise.all([blockstore.open(), datastore.open()]);
+
+	return withBitswap(
+		withLibp2p(
+			// Bitswap only, deliberately. `withHTTP` used to wrap this: it ships
+			// three public gateways and Helia asks them for any block bitswap does
+			// not produce. Nothing here can be there — todos are OrbitDB entries
+			// written in a browser, so the request can only fail while announcing
+			// the CID to three strangers.
+			createHeliaLight({
+				blockstore,
+				datastore,
+				codecs: [dagCbor, dagJson, json],
+				hashers: [sha512]
+			}),
+			libp2pNode
+		)
+	);
+}
+
+/**
+ * Initialize the P2P network after user consent
+ * This function should be called only after the user has accepted the consent modal
+ */
+export async function initializeP2P(
+	options = /** @type {{ todoDbAddress?: string, todoDbName?: string, passkeyCredential?: any }} */ ({})
+) {
+	if (Object.prototype.hasOwnProperty.call(options, 'passkeyCredential')) {
+		activePasskeyCredential = options.passkeyCredential ?? null;
+	}
+	console.log('🚀 Starting P2P initialization after user consent...');
+
+	try {
+		// Set initialization state
+		setInitializationProgress(0);
+
+		// Create libp2p configuration and node
+		const config = await createLibp2pConfig();
+		setInitializationProgress(1);
+		libp2p = await createLibp2p(config);
+		libp2pStore.set(libp2p); // Make available to plugins
+		// The transport can carry a connection the QR handshake built; the
+		// session is what builds one. Without this the node has the transport
+		// and no way to produce an offer, which is the entire chapter.
+		attachQrSession(libp2p);
+		// Registered here rather than from a component: an offer can arrive as
+		// soon as the connection exists, before anyone on this side has opened
+		// any particular screen.
+		registerHandoverProtocol(libp2p);
+		console.log(`✅ libp2p node created`);
+
+		// Get and set peer ID
+		peerId = libp2p.peerId.toString();
+		console.log(`✅ peerId is ${peerId}`);
+		peerIdStore.set(peerId);
+		discoveredPeers.clear();
+		setupPubsubDiscoveryAutoDial();
+		setupAutomaticRelayReservations();
+
+		// Create Helia (IPFS) instance
+		setInitializationProgress(2);
+		helia = await (await createHeliaWithLibp2p(libp2p)).start();
+		console.log(`✅ Helia created`);
+
+		// Create OrbitDB instance
+		setInitializationProgress(3);
+		console.log('🛬 Creating OrbitDB instance...');
+		orbitdb = await createOrbitDBInstance(helia);
+		setInitializationProgress(4);
+		todoDB = await openInitialTodoDatabase(options.todoDbAddress, options.todoDbName);
+
+		console.log('✅ Database opened successfully with OrbitDBAccessController:', {
+			address: todoDB.address,
+			type: todoDB.type,
+			accessController: todoDB.access
+		});
+
+		// Initialize database stores and actions
+		setInitializationProgress(5);
+		await initializeDatabase(orbitdb, todoDB);
+
+		// Put the default mnemonic list into the registry, so "your lists" is not
+		// empty on a first visit. It is a real OrbitDB database like any other and
+		// it is the one being written to before anything else is created — leaving
+		// it out made the switcher look like no list existed yet, while todos were
+		// already landing in it. Registered only when we opened it by name: an
+		// address passed in from outside belongs to someone else's list, and
+		// `openInitialTodoDatabase` blanks the name in that case.
+		// Finish any migration a previous session staged. Runs on every start,
+		// not just after adopting a passkey: that is what makes an interrupted
+		// migration recoverable rather than a hole. `rememberList` reads the
+		// database before writing, so re-applying entries that are already there
+		// costs one read and appends nothing.
+		void applyRegistryHandoff(orbitdb).catch((error) => {
+			console.warn('Could not carry the registry across:', error);
+		});
+
+		if (activeTodoDatabaseName && defaultTodoDbAddress) {
+			void rememberList(orbitdb, {
+				address: defaultTodoDbAddress,
+				name: activeTodoDatabaseName,
+				role: 'shared'
+			}).catch((error) => {
+				console.warn('Could not register the default shared list:', error);
+			});
+		}
+
+		// Mark initialization as complete
+		initializationStore.set({
+			isInitializing: false,
+			isInitialized: true,
+			error: null,
+			steps: createInitializationSteps(INITIALIZATION_STEP_DEFINITIONS.length)
+		});
+		installPublicDiagnostics();
+		installE2ETestHooks();
+		console.log('🎉 P2P initialization completed successfully!');
+	} catch (error) {
+		console.error('❌ Failed to initialize P2P:', error);
+		initializationStore.set({
+			isInitializing: false,
+			isInitialized: false,
+			error: error instanceof Error ? error.message : String(error),
+			steps: []
+		});
+		throw error;
+	}
+}
+
+/**
+ * Write a staged registry into whichever registry is current, then let the
+ * buffer go.
+ *
+ * The clear is deliberately last and deliberately conditional: if a single
+ * entry fails to write, the buffer stays and the next start tries again. A
+ * buffer cleared on a partial success would lose exactly the entries that had
+ * the most trouble.
+ *
+ * @param {any} orbitdb
+ */
+async function applyRegistryHandoff(orbitdb) {
+	const carried = readRegistryHandoff();
+	if (carried.length === 0) return;
+
+	for (const entry of carried) {
+		await rememberList(orbitdb, {
+			address: entry.address,
+			name: entry.name || '',
+			role: entry.role === 'owner' || entry.role === 'shared' ? entry.role : 'guest'
+		});
+	}
+	clearRegistryHandoff();
+	console.log(`📇 carried ${carried.length} list(s) across the identity change`);
+}
+
+/**
+ * Restart libp2p, Helia and OrbitDB with the current transport settings.
+ * The active Todo DB address is preserved when one is available.
+ *
+ * `passkeyCredential` is forwarded only when the caller actually passes it.
+ * The distinction matters: `initializeP2P` treats an *absent* key as "keep the
+ * identity you already have" and a present one as "use this", so forwarding
+ * `undefined` unconditionally would silently drop the session's passkey on
+ * every ordinary restart. This chapter needs the explicit form because
+ * identity is now chosen inside the running app rather than before it starts.
+ *
+ * @param {{ todoDbName?: string, passkeyCredential?: any }} [options]
+ */
+export async function restartP2P(options = {}) {
+	const activeTodoDbAddress = get(todoDBAddressStore);
+	const currentDatabaseName = activeTodoDatabaseName;
+	const shouldPreserveActiveTodoDb =
+		!options.todoDbName &&
+		Boolean(activeTodoDbAddress) &&
+		activeTodoDbAddress !== defaultTodoDbAddress;
+
+	// Take the registry with us. The new identity addresses a *different*
+	// registry database — the name is derived from a signature — so without this
+	// a list received before setting up a passkey simply stops being listed, and
+	// nothing in the UI points at it any more (#214).
+	//
+	// The order is the whole design. Staging writes the entries to storage while
+	// the old identity is still alive to read them; the drop then happens while
+	// it is still alive to name its database; and only after the entries land in
+	// the new registry is the buffer cleared. An interruption anywhere in the
+	// middle leaves the buffer on disk, and the next start finishes the job.
+	if (Object.prototype.hasOwnProperty.call(options, 'passkeyCredential') && orbitdb) {
+		const carried = get(listRegistryStore);
+		if (carried.length > 0) {
+			stageRegistryHandoff(carried);
+			try {
+				await dropListRegistry(orbitdb);
+			} catch (error) {
+				// The old registry stays behind — untidy, but the entries are staged,
+				// so the migration still completes and nothing is lost.
+				console.warn('Could not drop the previous registry:', error);
+			}
+		}
+	}
+
+	await stopP2P();
+	await initializeP2P({
+		todoDbAddress: shouldPreserveActiveTodoDb ? activeTodoDbAddress : '',
+		todoDbName: options.todoDbName || currentDatabaseName,
+		...(Object.prototype.hasOwnProperty.call(options, 'passkeyCredential')
+			? { passkeyCredential: options.passkeyCredential }
+			: {})
+	});
+}
+
+async function stopP2P() {
+	setInitializationProgress(0);
+	// Close the QR session before the node goes: it holds a peer connection and
+	// its own outbound contexts, and leaving them attached to a dead node makes
+	// the next handshake negotiate against a corpse.
+	resetQrSession();
+	// Drop the registry handle for the same reason. `resetListRegistry` was
+	// written for exactly this — "used when the OrbitDB instance goes away" —
+	// and was never called from anywhere, which stayed harmless only because
+	// restarting was rare.
+	//
+	// This chapter restarts routinely: adopting a passkey rebuilds the stack,
+	// and that now happens *before* anything touches the registry. `registryDB`
+	// then still pointed at a database belonging to the destroyed OrbitDB, and
+	// `openListRegistry` hands that corpse straight back on its first line —
+	// so `rememberList` wrote into nothing and creating a list simply hung.
+	resetListRegistry();
+	libp2pStore.set(null);
+	peerIdStore.set(null);
+	ownDidStore.set(null);
+	peerId = null;
+	activeTodoDatabaseName = '';
+	stopDiscoveryDialRetryInterval();
+	discoveredPeers.clear();
+	relayReservationAttempts.clear();
+
+	const resources = [todoDB, orbitdb, helia, libp2p];
+	todoDB = null;
+	orbitdb = null;
+	helia = null;
+	libp2p = null;
+
+	await Promise.allSettled(resources.map((resource) => resource?.stop?.() ?? resource?.close?.()));
+
+	todosStore.set([]);
+}
+
+/**
+ * @param {string | undefined} address
+ * @param {string | undefined} databaseName
+ */
+async function openInitialTodoDatabase(address, databaseName) {
+	const normalizedAddress = address?.trim() ?? '';
+
+	if (normalizedAddress.startsWith('/orbitdb/')) {
+		activeTodoDatabaseName = '';
+		return orbitdb.open(normalizedAddress, {
+			type: 'keyvalue',
+			sync: true
+		});
+	}
+
+	const canonicalDatabaseName = getTodoDatabaseName(databaseName || '');
+	activeTodoDatabaseName = canonicalDatabaseName;
+	const defaultTodoDB = await orbitdb.open(canonicalDatabaseName, {
+		type: 'keyvalue', //Stores data as key-value pairs supports basic operations: put(), get(), delete()
+		create: true, // Allows the database to be created if it doesn't exist
+		sync: true, // Enables automatic synchronization with other peers
+		// The mnemonic default list stays public (write: ['*']) so the shared-list
+		// collaboration from collab01 keeps working. Access-controlled lists are
+		// created explicitly as *private lists* (see createPrivateTodoList).
+		AccessController: IPFSAccessController({ write: ['*'] })
+	});
+
+	defaultTodoDbAddress = defaultTodoDB.address?.toString?.() ?? '';
+	return defaultTodoDB;
+}
+
+/**
+ * Create the OrbitDB instance with either the passkey-backed WebAuthn DID
+ * identity (this chapter) or the anonymous browser-profile identity from the
+ * previous chapters — the onboarding screen makes it a user choice.
+ * @param {any} heliaNode
+ */
+async function createOrbitDBInstance(heliaNode) {
+	if (!activePasskeyCredential) {
+		ownDidStore.set(null);
+		return createOrbitDB({ ipfs: heliaNode, id: getOrCreateOrbitDBIdentityId() });
+	}
+
+	// Register the provider type once so Identities can verify webauthn
+	// identities received from other peers.
+	try {
+		useIdentityProvider(OrbitDBWebAuthnIdentityProviderFunction);
+	} catch {
+		// Already registered — fine.
+	}
+
+	// The DID is the passkey's own P-256 key. OrbitDB signs entries with a
+	// separate secp256k1 key (the provider's default `signingKeyType`), which
+	// the provider derives from the passkey's PRF output before OrbitDB asks
+	// for it, so one passkey yields one identity document on every device.
+	// Without PRF the keystore generates that key instead.
+	//
+	// The key stays in OrbitDB's default keystore, unencrypted in this
+	// browser's IndexedDB, and later sessions sign with it without asking for
+	// the passkey. An `encryptKeystore: true` used to sit here: the provider
+	// reads it only together with `useKeystoreDID`, so it encrypted nothing.
+	const identities = await Identities({ ipfs: heliaNode });
+	const identity = await identities.createIdentity({
+		provider: OrbitDBWebAuthnIdentityProviderFunction({
+			webauthnCredential: activePasskeyCredential
+		})
+	});
+	ownDidStore.set(identity.id);
+	console.log(`✅ Passkey identity ready: ${identity.id}`);
+	// `identities` is a documented OrbitDB option — see its own
+	// `@param {module:Identities} [params.identities]` and the destructuring in
+	// `@orbitdb/core/src/orbitdb.js`. Only the bundled declaration omits it.
+	// @ts-expect-error incomplete upstream types, not a wrong call
+	return createOrbitDB({ ipfs: heliaNode, identities, identity });
+}
+
+/**
+ * Keep a browser-profile identity id so entries from separate peers retain
+ * distinct authors, while every peer opens the shared default database.
+ */
+function getOrCreateOrbitDBIdentityId() {
+	if (typeof localStorage === 'undefined') {
+		return createOrbitDBIdentityId();
+	}
+
+	const existingIdentityId = localStorage.getItem(ORBITDB_IDENTITY_STORAGE_KEY);
+	if (existingIdentityId) {
+		return existingIdentityId;
+	}
+
+	const identityId = createOrbitDBIdentityId();
+	localStorage.setItem(ORBITDB_IDENTITY_STORAGE_KEY, identityId);
+	return identityId;
+}
+
+function createOrbitDBIdentityId() {
+	if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+		return `simple-todo-${crypto.randomUUID()}`;
+	}
+
+	return `simple-todo-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function getReadOnlyDiagnostics() {
+	return {
+		getPeerId: () => peerId,
+		getDatabaseName: () => activeTodoDatabaseName,
+		getDatabaseAddress: () => get(todoDBAddressStore),
+		getDatabasePeers: () => Array.from(todoDB?.peers ?? [], String),
+		getMultiaddrs: () => {
+			const ownAddrs =
+				libp2p?.getMultiaddrs?.().map((/** @type {any} */ addr) => addr.toString()) ?? [];
+			const peerStoreAddrs =
+				libp2p?.peerStore?.addressBook
+					?.get?.(libp2p?.peerId)
+					?.multiaddrs?.map((/** @type {any} */ addr) => addr.toString()) ?? [];
+			return Array.from(new Set([...ownAddrs, ...peerStoreAddrs]));
+		},
+		getConnections: () =>
+			libp2p?.getConnections?.().map((/** @type {any} */ connection) => ({
+				remotePeer: connection.remotePeer?.toString() ?? null,
+				remoteAddr: connection.remoteAddr?.toString() ?? null
+			})) ?? [],
+		// Read-only gossipsub introspection for the remote-replication E2E: live
+		// head propagation runs over pubsub on the database topic, and a run has
+		// shown both browsers fully synced and relay-joined while the freshly
+		// created entry still never arrived. These getters make the topic
+		// subscriptions and the gossipsub mesh observable from the test so that
+		// failure mode is attributable instead of an opaque timeout.
+		getPubsubState: () => {
+			const pubsub = /** @type {any} */ (libp2p?.services?.pubsub);
+			if (!pubsub) return null;
+			const topics = pubsub.getTopics?.() ?? [];
+			return {
+				topics,
+				peers: (pubsub.getPeers?.() ?? []).map(String),
+				subscribers: Object.fromEntries(
+					topics.map((/** @type {string} */ topic) => [
+						topic,
+						(pubsub.getSubscribers?.(topic) ?? []).map(String)
+					])
+				),
+				mesh: Object.fromEntries(
+					Array.from(pubsub.mesh?.entries?.() ?? [], ([topic, peers]) => [
+						topic,
+						Array.from(peers ?? [], String)
+					])
+				)
+			};
+		}
+	};
+}
+
+function installPublicDiagnostics() {
+	if (typeof window === 'undefined') return;
+
+	/** @type {Window & typeof globalThis & { __simpleTodoDiagnostics?: Record<string, unknown> }} */ (
+		window
+	).__simpleTodoDiagnostics = Object.freeze(getReadOnlyDiagnostics());
+}
+
+function installE2ETestHooks() {
+	if (typeof window === 'undefined' || import.meta.env.VITE_E2E !== 'true') return;
+
+	const diagnostics = getReadOnlyDiagnostics();
+
+	/** @type {Window & typeof globalThis & { __simpleTodoE2E?: Record<string, unknown> }} */ (
+		window
+	).__simpleTodoE2E = {
+		...diagnostics,
+		getConnectionCount: () => libp2p?.getConnections?.().length ?? 0,
+		getConnectedPeerIds: () =>
+			libp2p
+				?.getConnections?.()
+				.map((/** @type {any} */ connection) => connection.remotePeer?.toString())
+				.filter(Boolean) ?? [],
+		getDiscoveredPeerIds: () => Array.from(discoveredPeers.keys()),
+		getDiscoveredPeers: () =>
+			Array.from(discoveredPeers.entries()).map(([peerId, peer]) => ({
+				peerId,
+				multiaddrs: peer.multiaddrs.map((/** @type {any} */ addr) => addr.toString())
+			})),
+		getOrbitDBIdentity: () =>
+			orbitdb?.identity
+				? {
+						id: orbitdb.identity.id ?? null,
+						publicKey: orbitdb.identity.publicKey ?? null,
+						hash: orbitdb.identity.hash ?? null,
+						type: orbitdb.identity.type ?? null
+					}
+				: null,
+		hasOrbitDBIdentity: async (/** @type {unknown} */ hash) =>
+			typeof hash === 'string' && Boolean(await orbitdb?.identities?.getIdentity?.(hash)),
+		getWebRTCEnabled,
+		setWebRTCEnabled,
+		connectToMultiaddr
+	};
+}
+
+function setupPubsubDiscoveryAutoDial() {
+	if (!libp2p) return;
+
+	/** @param {Event} event */
+	const handlePeerDiscovery = async (event) => {
+		const detail = /** @type {CustomEvent<{ id?: { toString(): string }, multiaddrs?: any[] }>} */ (
+			event
+		).detail;
+		const discoveredPeer = detail?.id;
+		const discoveredPeerId = discoveredPeer?.toString();
+
+		if (!discoveredPeer || !discoveredPeerId || discoveredPeerId === peerId) {
+			return;
+		}
+
+		const peerInfo = updateDiscoveredPeer(discoveredPeer, detail?.multiaddrs ?? []);
+
+		await dialDiscoveredPeer(discoveredPeerId, peerInfo, 'peer:discovery');
+	};
+
+	const handleConnectivityChanged = async () => {
+		await retryDiscoveredPeerDials('connectivity:update');
+	};
+
+	libp2p.addEventListener('peer:discovery', handlePeerDiscovery);
+	libp2p.addEventListener('self:peer:update', handleConnectivityChanged);
+	libp2p.addEventListener('peer:update', handleConnectivityChanged);
+	libp2p.addEventListener('connection:close', handleConnectivityChanged);
+	startDiscoveryDialRetryInterval();
+}
+
+/**
+ * Circuit Relay discovery and bootstrap dialing are independent libp2p
+ * subsystems. If Identify learns that an already-connected bootstrap peer is a
+ * HOP relay after the generic `/p2p-circuit` listener searched for one, no
+ * reservation may be created. Explicitly reserve one connected HOP relay so
+ * AddressManager can advertise a browser-dialable circuit/WebRTC address.
+ */
+function setupAutomaticRelayReservations() {
+	if (!libp2p) return;
+
+	const reserveFromConnections = () => {
+		if (!libp2p || hasCircuitRelayAddress()) return;
+
+		for (const connection of libp2p.getConnections()) {
+			const remotePeerId = connection.remotePeer?.toString?.();
+			const remoteAddr = connection.remoteAddr;
+			if (!remotePeerId || !remoteAddr || remoteAddr.toString().includes('/p2p-circuit/')) continue;
+			void reserveConnectedRelayOnce(remoteAddr, connection.remotePeer).then((reserved) => {
+				if (reserved) {
+					console.info(`Reserved Circuit Relay v2 peer ${remotePeerId}`);
+				}
+			});
+		}
+	};
+
+	libp2p.addEventListener('connection:open', reserveFromConnections);
+	libp2p.addEventListener('peer:update', reserveFromConnections);
+	reserveFromConnections();
+}
+
+function hasCircuitRelayAddress() {
+	return (
+		libp2p
+			?.getMultiaddrs?.()
+			.some((/** @type {any} */ addr) => addr.toString().includes('/p2p-circuit')) ?? false
+	);
+}
+
+function startDiscoveryDialRetryInterval() {
+	stopDiscoveryDialRetryInterval();
+	discoveryDialRetryInterval = setInterval(() => {
+		void retryDiscoveredPeerDials('periodic:discovery-retry').catch((error) => {
+			console.warn(
+				'Failed to retry discovered peer dials:',
+				error instanceof Error ? error.message : String(error)
+			);
+		});
+	}, DISCOVERY_DIAL_PERIODIC_RETRY_MS);
+}
+
+function stopDiscoveryDialRetryInterval() {
+	if (!discoveryDialRetryInterval) return;
+
+	clearInterval(discoveryDialRetryInterval);
+	discoveryDialRetryInterval = null;
+}
+
+/**
+ * @param {any} discoveredPeer
+ * @param {any[]} multiaddrs
+ */
+function updateDiscoveredPeer(discoveredPeer, multiaddrs) {
+	const discoveredPeerId = discoveredPeer.toString();
+	const existingPeerInfo = discoveredPeers.get(discoveredPeerId);
+	const normalizedMultiaddrs = normalizeDiscoveredMultiaddrs(discoveredPeerId, multiaddrs);
+	const mergedMultiaddrs = dedupeMultiaddrs([
+		...(existingPeerInfo?.multiaddrs ?? []),
+		...normalizedMultiaddrs
+	]);
+
+	const peerInfo = {
+		peer: discoveredPeer,
+		multiaddrs: mergedMultiaddrs,
+		isDialing: existingPeerInfo?.isDialing ?? false,
+		lastDialAttemptAt: existingPeerInfo?.lastDialAttemptAt ?? 0
+	};
+
+	discoveredPeers.set(discoveredPeerId, peerInfo);
+	return peerInfo;
+}
+
+/**
+ * @param {string} discoveredPeerId
+ * @param {any[]} multiaddrs
+ * @returns {any[]}
+ */
+/**
+ * @param {any[]} multiaddrs
+ * @returns {any[]}
+ */
+function dedupeMultiaddrs(multiaddrs) {
+	return Array.from(new Map(multiaddrs.map((addr) => [addr.toString(), addr])).values());
+}
+
+/**
+ * @param {string} discoveredPeerId
+ * @param {{ peer: any, multiaddrs: any[], isDialing: boolean, lastDialAttemptAt: number }} peerInfo
+ * @param {string} reason
+ */
+async function dialDiscoveredPeer(discoveredPeerId, peerInfo, reason) {
+	return dialDiscoveredPeerWithOptions(discoveredPeerId, peerInfo, reason, {});
+}
+
+/**
+ * @param {string} discoveredPeerId
+ * @param {{ peer: any, multiaddrs: any[], isDialing: boolean, lastDialAttemptAt: number }} peerInfo
+ * @param {string} reason
+ * @param {{ force?: boolean }} options
+ */
+async function dialDiscoveredPeerWithOptions(
+	discoveredPeerId,
+	peerInfo,
+	reason,
+	{ force = false } = {}
+) {
+	if (!libp2p) return;
+
+	if (peerInfo.isDialing) {
+		return;
+	}
+
+	if (!force && !shouldDialDiscoveredPeer(peerInfo)) {
+		return;
+	}
+
+	const dialCandidates = selectDiscoveredDialCandidates(peerInfo.multiaddrs);
+	const existingConnections = libp2p.getConnections(peerInfo.peer) ?? [];
+	const shouldAttemptWebRTCUpgrade =
+		getWebRTCEnabled() &&
+		existingConnections.length > 0 &&
+		!hasWebRTCConnection(existingConnections) &&
+		dialCandidates.some(isWebRTCDialCandidate);
+
+	if (existingConnections.length > 0 && !shouldAttemptWebRTCUpgrade) {
+		return;
+	}
+
+	peerInfo.isDialing = true;
+	peerInfo.lastDialAttemptAt = Date.now();
+
+	try {
+		await mergeDiscoveredPeerMultiaddrs(peerInfo.peer, dialCandidates);
+
+		console.log('🔍 Pubsub discovered peer, dialing:', {
+			peerId: discoveredPeerId,
+			reason,
+			candidates: dialCandidates.map((addr) => addr.toString())
+		});
+
+		await dialDiscoveredPeerCandidates(peerInfo.peer, dialCandidates);
+	} catch (error) {
+		console.warn(
+			'Failed to dial pubsub-discovered peer:',
+			discoveredPeerId,
+			error instanceof Error ? error.message : String(error)
+		);
+	} finally {
+		peerInfo.isDialing = false;
+	}
+}
+
+/**
+ * @param {any[]} connections
+ * @returns {boolean}
+ */
+function hasWebRTCConnection(connections) {
+	return connections.some(isWebRTCConnection);
+}
+
+/**
+ * @param {any} connection
+ * @returns {boolean}
+ */
+function isWebRTCConnection(connection) {
+	return connection.remoteAddr?.toString().toLowerCase().includes('/webrtc') ?? false;
+}
+
+/**
+ * @param {any} peer
+ * @param {any[]} multiaddrs
+ */
+async function mergeDiscoveredPeerMultiaddrs(peer, multiaddrs) {
+	if (!libp2p?.peerStore?.merge || multiaddrs.length === 0) return;
+
+	await libp2p.peerStore.merge(peer, { multiaddrs });
+}
+
+/**
+ * @param {any} peer
+ * @param {any[]} dialCandidates
+ */
+async function dialDiscoveredPeerCandidates(peer, dialCandidates) {
+	const errors = [];
+
+	for (const candidate of dialCandidates) {
+		try {
+			return await libp2p.dial(candidate, { signal: createDialTimeoutSignal() });
+		} catch (error) {
+			errors.push({
+				target: candidate.toString(),
+				error: error instanceof Error ? error.message : String(error)
+			});
+		}
+	}
+
+	if (!getWebRTCEnabled()) {
+		throw new Error(JSON.stringify(errors));
+	}
+
+	try {
+		return await libp2p.dial(peer, { signal: createDialTimeoutSignal() });
+	} catch (error) {
+		errors.push({
+			target: peer.toString(),
+			error: error instanceof Error ? error.message : String(error)
+		});
+	}
+
+	throw new Error(JSON.stringify(errors));
+}
+
+/**
+ * @returns {AbortSignal | undefined}
+ */
+function createDialTimeoutSignal() {
+	return typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+		? AbortSignal.timeout(DISCOVERY_DIAL_TIMEOUT_MS)
+		: undefined;
+}
+
+/**
+ * @param {any[]} multiaddrs
+ * @returns {any[]}
+ */
+function selectDiscoveredDialCandidates(multiaddrs) {
+	const candidates = multiaddrs.filter(isBrowserDialableDiscoveredAddress);
+
+	if (!getWebRTCEnabled()) {
+		return candidates
+			.filter((addr) => !isWebRTCDialCandidate(addr))
+			.sort(rankDiscoveredDialCandidate);
+	}
+
+	return candidates.sort(rankDiscoveredDialCandidate);
+}
+
+/**
+ * @param {any} addr
+ * @returns {boolean}
+ */
+function isBrowserDialableDiscoveredAddress(addr) {
+	const normalized = addr.toString().toLowerCase();
+	const usesBrowserReachableTransport =
+		normalized.includes('/ws') ||
+		normalized.includes('/wss') ||
+		normalized.includes('/webrtc') ||
+		normalized.includes('/webrtc-direct');
+
+	return normalized.includes('/p2p/') && usesBrowserReachableTransport;
+}
+
+/**
+ * @param {any} a
+ * @param {any} b
+ * @returns {number}
+ */
+function rankDiscoveredDialCandidate(a, b) {
+	return rankDiscoveredDialCandidateAddress(a) - rankDiscoveredDialCandidateAddress(b);
+}
+
+/**
+ * @param {any} addr
+ * @returns {number}
+ */
+function rankDiscoveredDialCandidateAddress(addr) {
+	const normalized = addr.toString().toLowerCase();
+	const usesRelayCircuit = normalized.includes('/p2p-circuit');
+	const usesWebSocket = normalized.includes('/ws') || normalized.includes('/wss');
+	const usesWebRTC = normalized.includes('/webrtc');
+
+	if (usesRelayCircuit && usesWebSocket && usesWebRTC) return 0;
+	if (usesRelayCircuit && usesWebSocket && !usesWebRTC) return 1;
+	if (normalized.includes('/webrtc-direct')) return 2;
+	if (usesWebRTC) return 3;
+	if (usesWebSocket) return 4;
+	return 10;
+}
+
+/**
+ * @param {any} addr
+ * @returns {boolean}
+ */
+function isWebRTCDialCandidate(addr) {
+	return addr.toString().toLowerCase().includes('/webrtc');
+}
+
+/**
+ * @param {string} reason
+ */
+async function retryDiscoveredPeerDials(reason, { force = false } = {}) {
+	for (const [discoveredPeerId, peerInfo] of discoveredPeers) {
+		await dialDiscoveredPeerWithOptions(discoveredPeerId, peerInfo, reason, { force });
+	}
+}
+
+/**
+ * @param {{ lastDialAttemptAt: number }} peerInfo
+ * @returns {boolean}
+ */
+function shouldDialDiscoveredPeer(peerInfo) {
+	if (!peerInfo.lastDialAttemptAt) return true;
+
+	return Date.now() - peerInfo.lastDialAttemptAt >= DISCOVERY_DIAL_RETRY_COOLDOWN_MS;
+}
+
+/**
+ * Attempt to connect to a remote peer via a multiaddress.
+ *
+ * @param {string} address
+ * @returns {Promise<{ status: 'stable' | 'dropped', detail: string, remotePeer: string | null, remoteAddr: string }>}
+ */
+export async function connectToMultiaddr(address) {
+	const normalizedAddress = address.trim();
+
+	if (!normalizedAddress) {
+		throw new Error('Please enter a multiaddress.');
+	}
+
+	if (!normalizedAddress.startsWith('/')) {
+		throw new Error('A multiaddress must start with "/".');
+	}
+
+	if (!libp2p) {
+		throw new Error('P2P is not initialized yet.');
+	}
+
+	let target;
+
+	try {
+		target = multiaddr(normalizedAddress);
+	} catch (error) {
+		throw new Error(
+			`Invalid multiaddress: ${error instanceof Error ? error.message : String(error)}`
+		);
+	}
+
+	if (extractPeerIdFromMultiaddr(normalizedAddress) == null) {
+		throw new Error(
+			'The multiaddress must include a peer id, for example ending with "/p2p/<peer-id>".'
+		);
+	}
+
+	if (!getWebRTCEnabled() && normalizedAddress.toLowerCase().includes('/webrtc')) {
+		throw new Error('WebRTC is disabled. Use a relay circuit multiaddress instead.');
+	}
+
+	const connection = await libp2p.dial(target);
+	const outcome = await waitForManualConnectionOutcome(connection);
+	await reserveConnectedRelayOnce(target, connection.remotePeer);
+
+	return {
+		status: outcome.status,
+		detail: outcome.detail,
+		remotePeer: connection.remotePeer?.toString() ?? null,
+		remoteAddr: connection.remoteAddr?.toString() ?? normalizedAddress
+	};
+}
+
+/**
+ * Reserve a connected Circuit Relay v2 peer so this browser advertises a
+ * dialable circuit address through an automatic bootstrap or manually selected
+ * relay.
+ *
+ * @param {any} target
+ * @param {any} remotePeer
+ */
+async function reserveConnectedRelay(target, remotePeer) {
+	if (!libp2p || target.toString().includes('/p2p-circuit/')) return false;
+
+	const relaySegment = `/p2p/${remotePeer.toString()}/p2p-circuit`;
+	if (
+		libp2p.getMultiaddrs().some((/** @type {any} */ addr) => addr.toString().includes(relaySegment))
+	)
+		return true;
+
+	const deadline = Date.now() + CIRCUIT_RELAY_PROTOCOL_WAIT_MS;
+	let supportsCircuitRelay = false;
+	while (Date.now() < deadline) {
+		const peer = await libp2p.peerStore.get(remotePeer).catch(() => null);
+		supportsCircuitRelay = peer?.protocols?.includes(CIRCUIT_RELAY_HOP_PROTOCOL) ?? false;
+		if (supportsCircuitRelay) break;
+		await new Promise((resolve) => setTimeout(resolve, 250));
+	}
+
+	if (!supportsCircuitRelay) return false;
+
+	try {
+		await libp2p.components.transportManager.listen([target.encapsulate('/p2p-circuit')]);
+		return true;
+	} catch (error) {
+		console.warn(
+			'Connected to relay but could not create a circuit reservation:',
+			error instanceof Error ? error.message : String(error)
+		);
+		return false;
+	}
+}
+
+/**
+ * Share one reservation attempt between automatic connection events and the
+ * manual custom-multiaddress flow. Calling TransportManager.listen twice for
+ * the same relay creates competing listeners and can stall relay setup.
+ *
+ * @param {any} target
+ * @param {any} remotePeer
+ * @returns {Promise<boolean>}
+ */
+function reserveConnectedRelayOnce(target, remotePeer) {
+	const remotePeerId = remotePeer.toString();
+	const existingAttempt = relayReservationAttempts.get(remotePeerId);
+	if (existingAttempt) return existingAttempt;
+
+	const attempt = reserveConnectedRelay(target, remotePeer).finally(() => {
+		if (relayReservationAttempts.get(remotePeerId) === attempt) {
+			relayReservationAttempts.delete(remotePeerId);
+		}
+	});
+	relayReservationAttempts.set(remotePeerId, attempt);
+	return attempt;
+}
+
+/**
+ * Verify that a specific relay multiaddress accepts the libp2p ping protocol.
+ * `force` is important here: without it libp2p may reuse another open connection
+ * to the same peer and incorrectly mark this particular address as reachable.
+ *
+ * @param {string} address
+ * @returns {Promise<number>} round-trip time in milliseconds
+ */
+export async function pingMultiaddr(address) {
+	if (!libp2p?.services?.ping) {
+		throw new Error('P2P ping service is not initialized yet.');
+	}
+
+	const target = multiaddr(address.trim());
+	return libp2p.services.ping.ping(target, {
+		force: true,
+		signal: AbortSignal.timeout(RELAY_PING_TIMEOUT_MS)
+	});
+}
+
+/**
+ * @param {string} addr
+ * @returns {string | null}
+ */
+function extractPeerIdFromMultiaddr(addr) {
+	const parts = addr.split('/').filter(Boolean);
+	const peerIndex = parts.findIndex((part) => part === 'p2p' || part === 'ipfs');
+	return peerIndex >= 0 ? parts[peerIndex + 1] || null : null;
+}
+
+/**
+ * Watch a freshly-opened manual connection long enough to distinguish
+ * a stable handshake from a remote peer that drops during follow-up setup.
+ *
+ * @param {any} connection
+ * @returns {Promise<{ status: 'stable' | 'dropped', detail: string }>}
+ */
+function waitForManualConnectionOutcome(connection) {
+	return new Promise((resolve) => {
+		if (!libp2p) {
+			resolve({
+				status: 'dropped',
+				detail: 'P2P node is no longer available.'
+			});
+			return;
+		}
+
+		let settled = false;
+
+		/**
+		 * @param {{ status: 'stable' | 'dropped', detail: string }} outcome
+		 */
+		const finish = (outcome) => {
+			if (settled) return;
+			settled = true;
+			clearTimeout(timeoutId);
+			libp2p.removeEventListener('connection:close', handleConnectionClose);
+			resolve(outcome);
+		};
+
+		/** @type {EventListener} */
+		const handleConnectionClose = (event) => {
+			const closedConnection = /** @type {CustomEvent<any>} */ (event).detail;
+
+			if (closedConnection?.id !== connection.id) {
+				return;
+			}
+
+			finish({
+				status: 'dropped',
+				detail:
+					'Handshake succeeded, but the remote peer closed the connection during relay or protocol setup.'
+			});
+		};
+
+		const timeoutId = setTimeout(() => {
+			finish({
+				status: 'stable',
+				detail: `Connection stayed open for ${MANUAL_CONNECT_STABILIZATION_MS / 1000} seconds.`
+			});
+		}, MANUAL_CONNECT_STABILIZATION_MS);
+
+		libp2p.addEventListener('connection:close', handleConnectionClose);
+	});
+}
