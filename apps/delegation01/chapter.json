@@ -1,26 +1,27 @@
 {
-  "name": "delegation01",
-  "title": "Hand one todo to another DID, and take it back",
-  "aleph": {
-    "site": "simple-todo-delegation01",
-    "domain": "delegation01.le-space.de",
-    "deployer": "@le-space/node@0.6.22"
-  },
-  "ports": {
-    "preview": 4173,
-    "relayHttp": 4900,
-    "relayTcp": 4901,
-    "relayWs": 4902,
-    "relayWebrtc": 4903,
-    "relayWebrtcDirect": 4906
-  },
-  "ci": {
-    "specs": [
-      "e2e/delegation.spec.js",
-      "e2e/acl-permissions.spec.js",
-      "e2e/consent-screen.spec.js",
-      "e2e/list-registry.spec.js",
-      "e2e/private-list-visibility.spec.js"
-    ]
-  }
+	"name": "delegation01",
+	"title": "Hand one todo to another DID, and take it back",
+	"aleph": {
+		"site": "simple-todo-delegation01",
+		"domain": "delegation01.le-space.de",
+		"deployer": "@le-space/node@0.6.22"
+	},
+	"ports": {
+		"preview": 4173,
+		"relayHttp": 4900,
+		"relayTcp": 4901,
+		"relayWs": 4902,
+		"relayWebrtc": 4903,
+		"relayWebrtcDirect": 4906
+	},
+	"ci": {
+		"specs": [
+			"e2e/delegation.spec.js",
+			"e2e/acl-permissions.spec.js",
+			"e2e/consent-screen.spec.js",
+			"e2e/list-registry.spec.js",
+			"e2e/private-list-visibility.spec.js",
+			"e2e/storage-choice.spec.js"
+		]
+	}
 }

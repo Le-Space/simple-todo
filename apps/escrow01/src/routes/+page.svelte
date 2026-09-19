@@ -55,8 +55,8 @@
 	import PeerIdCard from '$lib/PeerIdCard.svelte';
 	import OwnMultiaddrs from '$lib/OwnMultiaddrs.svelte';
 	import SharedListSelector from '$lib/SharedListSelector.svelte';
-	import StorageModeSelector from '$lib/StorageModeSelector.svelte';
-	import { getPersistentStorageEnabled } from '$lib/storage-mode.js';
+	import StorageModeSelector from '@simple-todo/ui/StorageModeSelector.svelte';
+	import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
 	import SharedListDetails from '$lib/SharedListDetails.svelte';
 	import PermissionsPanel from '$lib/PermissionsPanel.svelte';
 	import OpenDatabaseForm from '$lib/OpenDatabaseForm.svelte';

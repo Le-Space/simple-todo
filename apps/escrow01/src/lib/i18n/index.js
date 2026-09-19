@@ -6,6 +6,7 @@ import {
 	getLocaleFromNavigator,
 	locale as i18nLocale
 } from 'svelte-i18n';
+import { setTranslator } from '@simple-todo/ui/i18n.js';
 import de from './de.json';
 import en from './en.json';
 
@@ -84,6 +85,13 @@ init({
 	fallbackLocale: 'en',
 	initialLocale: initialLocale()
 });
+
+// The components in `@simple-todo/ui` reach this catalogue through here. It is
+// registered next to `init()` for the same reason `init()` is not in a layout:
+// a module that can translate has, by construction, already loaded what makes
+// translation possible. Keys this chapter does not have fall back to the
+// English written at the component's call site.
+setTranslator(formatter);
 
 /*
 	`app.html` says `lang="en"`, and a German page that declares itself English is

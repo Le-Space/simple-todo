@@ -11,7 +11,7 @@ import {
 import { confirmDelegatedWrite } from './delegated-write-auth.js';
 import { rememberList, listRegistryStore, openListRegistry } from './list-registry.js';
 import { relayHttpStatusStore } from '@simple-todo/net/relay-status.js';
-import { createLogStorages } from './storage-mode.js';
+import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import { translate } from './i18n/index.js';
 
 /**

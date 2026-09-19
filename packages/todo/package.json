@@ -10,6 +10,7 @@
     "src"
   ],
   "dependencies": {
+    "@orbitdb/core": "^4.0.0",
     "vitest": "^3.2.3"
   }
 }
