@@ -1,26 +1,27 @@
 {
-  "name": "passkey01",
-  "aleph": {
-    "site": "simple-todo-passkey01",
-    "domain": "passkey01.le-space.de",
-    "deployer": "@le-space/node@0.6.22"
-  },
-  "ports": {
-    "preview": 4177,
-    "relayHttp": 4940,
-    "relayTcp": 4941,
-    "relayWs": 4942,
-    "relayWebrtc": 4943,
-    "relayWebrtcDirect": 4946
-  },
-  "ci": {
-    "specs": [
-      "e2e/consent-screen.spec.js",
-      "e2e/default-database-collaboration.spec.js",
-      "e2e/manual-multiaddr-connection.spec.js",
-      "e2e/shared-list-mnemonic.spec.js",
-      "e2e/passkey-identity.spec.js"
-    ]
-  },
-  "title": "Your identity is a passkey, not a random key"
+	"name": "passkey01",
+	"aleph": {
+		"site": "simple-todo-passkey01",
+		"domain": "passkey01.le-space.de",
+		"deployer": "@le-space/node@0.6.22"
+	},
+	"ports": {
+		"preview": 4177,
+		"relayHttp": 4940,
+		"relayTcp": 4941,
+		"relayWs": 4942,
+		"relayWebrtc": 4943,
+		"relayWebrtcDirect": 4946
+	},
+	"ci": {
+		"specs": [
+			"e2e/consent-screen.spec.js",
+			"e2e/default-database-collaboration.spec.js",
+			"e2e/manual-multiaddr-connection.spec.js",
+			"e2e/shared-list-mnemonic.spec.js",
+			"e2e/passkey-identity.spec.js",
+			"e2e/storage-choice.spec.js"
+		]
+	},
+	"title": "Your identity is a passkey, not a random key"
 }

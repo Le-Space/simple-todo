@@ -1,25 +1,26 @@
 {
-  "name": "privacy01",
-  "aleph": {
-    "site": "simple-todo-privacy01",
-    "domain": "privacy01.le-space.de",
-    "deployer": "@le-space/node@0.6.22"
-  },
-  "ports": {
-    "preview": 4176,
-    "relayHttp": 4930,
-    "relayTcp": 4931,
-    "relayWs": 4932,
-    "relayWebrtc": 4933,
-    "relayWebrtcDirect": 4936
-  },
-  "ci": {
-    "specs": [
-      "e2e/acl-permissions.spec.js",
-      "e2e/consent-screen.spec.js",
-      "e2e/list-registry.spec.js",
-      "e2e/private-list-visibility.spec.js"
-    ]
-  },
-  "title": "Entries are sealed; holding the address is not reading it"
+	"name": "privacy01",
+	"aleph": {
+		"site": "simple-todo-privacy01",
+		"domain": "privacy01.le-space.de",
+		"deployer": "@le-space/node@0.6.22"
+	},
+	"ports": {
+		"preview": 4176,
+		"relayHttp": 4930,
+		"relayTcp": 4931,
+		"relayWs": 4932,
+		"relayWebrtc": 4933,
+		"relayWebrtcDirect": 4936
+	},
+	"ci": {
+		"specs": [
+			"e2e/acl-permissions.spec.js",
+			"e2e/consent-screen.spec.js",
+			"e2e/list-registry.spec.js",
+			"e2e/private-list-visibility.spec.js",
+			"e2e/storage-choice.spec.js"
+		]
+	},
+	"title": "Entries are sealed; holding the address is not reading it"
 }
