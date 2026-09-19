@@ -95,7 +95,12 @@ async function startPreview({ env, relayInfo }) {
 	await runCommand('pnpm', ['run', 'build'], { env });
 	previewProcess = spawn(
 		'pnpm',
-		['exec', 'vite', 'preview', '--host', '127.0.0.1', '--port', previewPort],
+		// `--strictPort` is what makes a collision *visible*. Without it vite takes
+		// the next free port when the requested one is busy, while Playwright goes
+		// on waiting for the one it asked for — and finds whatever else answers
+		// there. That is how a suite passes or fails against an app it never built,
+		// and it fails as a flake rather than as an error (#197).
+		['exec', 'vite', 'preview', '--host', '127.0.0.1', '--strictPort', '--port', previewPort],
 		{
 			cwd: rootDir,
 			env,
