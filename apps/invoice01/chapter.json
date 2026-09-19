@@ -1,0 +1,26 @@
+{
+  "name": "invoice01",
+  "aleph": {
+    "site": "simple-todo-invoice01",
+    "domain": "invoice01.le-space.de",
+    "deployer": "@le-space/node@0.6.22"
+  },
+  "ports": {
+    "preview": 4179,
+    "relayHttp": 4960,
+    "relayTcp": 4961,
+    "relayWs": 4962,
+    "relayWebrtc": 4963,
+    "relayWebrtcDirect": 4966
+  },
+  "ci": {
+    "specs": [
+      "e2e/delegation.spec.js",
+      "e2e/acl-permissions.spec.js",
+      "e2e/consent-screen.spec.js",
+      "e2e/list-registry.spec.js",
+      "e2e/private-list-visibility.spec.js"
+    ]
+  },
+  "title": "Invoices on top of delegation"
+}
