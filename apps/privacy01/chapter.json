@@ -7,11 +7,11 @@
   },
   "ports": {
     "preview": 4176,
-    "relayHttp": 49130,
-    "relayTcp": 49131,
-    "relayWs": 49132,
-    "relayWebrtc": 49133,
-    "relayWebrtcDirect": 49136
+    "relayHttp": 4930,
+    "relayTcp": 4931,
+    "relayWs": 4932,
+    "relayWebrtc": 4933,
+    "relayWebrtcDirect": 4936
   },
   "ci": {
     "specs": [

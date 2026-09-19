@@ -113,6 +113,14 @@ def rewrite_imports(app: pathlib.Path, moved: dict[str, tuple[str, str]]) -> int
 
 def main() -> int:
     chapter, preview, relay = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+    # Relay ports must sit below 32768. Above it both macOS (ephemeral from
+    # 49152) and Linux (from 32768) hand the number to an outgoing connection
+    # sooner or later, and the relay's metrics server answers that EADDRINUSE
+    # by moving to a random port in silence -- from the outside the relay
+    # simply never answers, which is a slow thing to diagnose.
+    if relay >= 32768:
+        print(f"relay base {relay} is inside the ephemeral port range; pick one below 32768")
+        return 1
     app = pathlib.Path(f"apps/{chapter}")
     if app.exists():
         print(f"apps/{chapter} exists already — remove it first")
