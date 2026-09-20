@@ -131,6 +131,7 @@ function credentialFromRestored(restored) {
  * effect of a lookup that does not work.
  *
  * @returns {Promise<any | null>} the credential, or null when nothing found
+ * @param {{ onTouch?: (step: { touch: number, of: number }) => void }} [options]
  */
 export async function recoverPasskeyCredential({ onTouch } = {}) {
 	const stored = loadWebAuthnCredential(CREDENTIAL_STORAGE_KEY);
@@ -139,9 +140,25 @@ export async function recoverPasskeyCredential({ onTouch } = {}) {
 	// Nothing here and nothing in the passkey: ask the authenticator itself.
 	// Two touches, and no fallback if it cannot evaluate PRF -- an identity
 	// derived from something else would be a different one wearing this name.
-	const restored = await restoreIdentityFromAuthenticator({ onTouch });
+	// A device with no passkey for this origin answers with a WebAuthn error --
+	// "Resident credentials or empty 'allowCredentials' lists are not supported"
+	// and its kin -- which says nothing to a reader. Treated as "nothing found",
+	// so the caller keeps its own readable message about there being no passkey
+	// here.
+	let restored;
+	try {
+		restored = await restoreIdentityFromAuthenticator({ onTouch });
+	} catch (error) {
+		console.warn('the authenticator could not answer for an identity:', error);
+		return null;
+	}
+
 	const credential = credentialFromRestored(restored);
-	rememberCredential(credential);
+	// Written down only when the reader asked for things to be kept -- this
+	// chapter has no `rememberCredential` helper, it stores inline.
+	if (getPersistentStorageEnabled()) {
+		storeWebAuthnCredential(credential, CREDENTIAL_STORAGE_KEY);
+	}
 	return credential;
 }
 
