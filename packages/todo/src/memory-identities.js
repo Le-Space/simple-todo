@@ -26,5 +26,14 @@ import { Identities, KeyStore, MemoryStorage } from '@orbitdb/core';
  */
 export async function createMemoryIdentities(ipfs) {
 	const keystore = await KeyStore({ storage: await MemoryStorage() });
+
+	// The same thing the passkey provider's own `createSessionKeystore()` builds,
+	// and marked the way it marks it: `isSessionKeystore()` reads `sessionOnly`
+	// to tell a keystore that forgets from one that writes to disk. Built here
+	// rather than imported so that `@simple-todo/todo` -- which `main` and
+	// `collab01` use without ever touching a passkey -- does not have to depend
+	// on the provider.
+	keystore.sessionOnly = true;
+
 	return Identities({ ipfs, keystore });
 }

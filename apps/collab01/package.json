@@ -69,7 +69,7 @@
 		"@ipld/dag-cbor": "^10.0.1",
 		"@ipld/dag-json": "^11.0.0",
 		"@le-space/aleph-bootstrap": "0.7.0",
-		"@le-space/orbitdb-identity-provider-webauthn-did": "0.5.4",
+		"@le-space/orbitdb-identity-provider-webauthn-did": "0.6.0",
 		"@le-space/ui": "0.7.0",
 		"@libp2p/autonat": "^3.0.24",
 		"@libp2p/bootstrap": "^12.0.27",
