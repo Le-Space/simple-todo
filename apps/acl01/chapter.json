@@ -19,7 +19,8 @@
 			"e2e/consent-screen.spec.js",
 			"e2e/list-registry.spec.js",
 			"e2e/private-list-visibility.spec.js",
-			"e2e/storage-choice.spec.js"
+			"e2e/storage-choice.spec.js",
+			"e2e/passkey-restore.spec.js"
 		]
 	},
 	"title": "Who may write is decided per DID"

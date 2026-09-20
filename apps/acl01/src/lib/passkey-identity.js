@@ -12,6 +12,7 @@
 // The passkey is bound to the page origin (rpId). A credential created on
 // localhost cannot be used on simple-todo.le-space.de or an IPFS gateway —
 // see the chapter README.
+import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
 import {
 	WebAuthnDIDProvider,
 	createDidLargeBlobPayload,
@@ -20,7 +21,8 @@ import {
 	readLargeBlobMetadata,
 	storeWebAuthnCredential,
 	loadWebAuthnCredential,
-	clearWebAuthnCredential
+	clearWebAuthnCredential,
+	restoreIdentityFromAuthenticator
 } from '@le-space/orbitdb-identity-provider-webauthn-did';
 
 const CREDENTIAL_STORAGE_KEY = 'simpleTodo.webauthnCredential';
@@ -42,6 +44,7 @@ const CREDENTIAL_STORAGE_KEY = 'simpleTodo.webauthnCredential';
  * @param {any} credential
  */
 function rememberCredential(credential) {
+	if (!getPersistentStorageEnabled()) return;
 	storeWebAuthnCredential(credential, CREDENTIAL_STORAGE_KEY);
 }
 
@@ -82,7 +85,44 @@ export async function createPasskeyCredential({ userId, displayName }) {
  *
  * @returns {Promise<any | null>} the credential, or null when nothing found
  */
-export async function recoverPasskeyCredential() {
+/**
+ * What the provider needs, rebuilt from what the authenticator gave back.
+ *
+ * It reads three things off a credential — `credentialId`, `rawCredentialId`
+ * and `publicKey` — and `prfInput` when it derives the signing key. The
+ * constants are the ones `createCredential()` writes for a P-256 passkey
+ * (ES256, EC2, P-256), and the rest of a registered credential (the
+ * attestation object, the user handle, the display name) has no reader past
+ * registration.
+ *
+ * @param {{ did: string, publicKey: { x: Uint8Array, y: Uint8Array },
+ *   credentialId: Uint8Array, prfInput: Uint8Array }} restored
+ */
+function credentialFromRestored(restored) {
+	const bytes = new Uint8Array(restored.credentialId);
+	let binary = '';
+	for (const byte of bytes) binary += String.fromCharCode(byte);
+	const credentialId = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+	return {
+		did: restored.did,
+		credentialId,
+		rawCredentialId: bytes,
+		publicKey: {
+			algorithm: -7,
+			keyType: 2,
+			curve: 1,
+			x: restored.publicKey.x,
+			y: restored.publicKey.y
+		},
+		prfInput: restored.prfInput
+	};
+}
+
+/**
+ * @param {{ onTouch?: (step: { touch: number, of: number }) => void }} [options]
+ */
+export async function recoverPasskeyCredential({ onTouch } = {}) {
 	try {
 		const { blob } = await readLargeBlobMetadata({ discoverableCredentials: true });
 		if (blob?.length) {
@@ -98,7 +138,16 @@ export async function recoverPasskeyCredential() {
 		console.warn('largeBlob recovery unavailable, trying localStorage:', error);
 	}
 
-	return loadWebAuthnCredential(CREDENTIAL_STORAGE_KEY);
+	const stored = loadWebAuthnCredential(CREDENTIAL_STORAGE_KEY);
+	if (stored) return stored;
+
+	// Nothing here and nothing in the passkey: ask the authenticator itself.
+	// Two touches, and no fallback if it cannot evaluate PRF -- an identity
+	// derived from something else would be a different one wearing this name.
+	const restored = await restoreIdentityFromAuthenticator({ onTouch });
+	const credential = credentialFromRestored(restored);
+	rememberCredential(credential);
+	return credential;
 }
 
 /** True when a serialized credential exists in this browser profile. */
