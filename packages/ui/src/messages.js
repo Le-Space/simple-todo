@@ -31,6 +31,16 @@ export const uiMessages = {
 			},
 			build: {
 				state: 'Built'
+			},
+			pageQr: {
+				open: 'This page as a QR code',
+				dialog: 'QR code of this page',
+				hint: 'Scan with your phone — it opens exactly this page.',
+				hintList: 'Scan with your phone — it opens this page, and this list.'
+			},
+			listLink: {
+				rejected: 'The link names a list this page cannot open, so it starts with its own.',
+				openFailed: 'The list from the link could not be opened: {reason}'
 			}
 		}
 	},
@@ -47,6 +57,16 @@ export const uiMessages = {
 			},
 			build: {
 				state: 'Stand'
+			},
+			pageQr: {
+				open: 'Diese Seite als QR-Code',
+				dialog: 'QR-Code dieser Seite',
+				hint: 'Mit dem Telefon scannen — öffnet genau diese Seite.',
+				hintList: 'Mit dem Telefon scannen — öffnet diese Seite und diese Liste.'
+			},
+			listLink: {
+				rejected: 'Der Link nennt eine Liste, die diese Seite nicht öffnen kann; sie beginnt mit ihrer eigenen.',
+				openFailed: 'Die Liste aus dem Link ließ sich nicht öffnen: {reason}'
 			}
 		}
 	}

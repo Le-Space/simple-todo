@@ -24,7 +24,7 @@
  */
 import { derived, writable } from 'svelte/store';
 
-/** @type {import('svelte/store').Writable<((key: string) => string) | null>} */
+/** @type {import('svelte/store').Writable<((key: string, options?: { values: Record<string, string | number> }) => string) | null>} */
 const format = writable(null);
 
 /** @type {(() => void) | null} */
@@ -60,25 +60,29 @@ export function setTranslator(store) {
 }
 
 /**
- * `$t(key, fallback)` — the translation, or the English written at the call site.
+ * `$t(key, fallback, values?)` — the translation, or the English written at the
+ * call site. `values` fills `{name}` placeholders in either.
  *
- * @type {import('svelte/store').Readable<(key: string, fallback: string) => string>}
+ * @type {import('svelte/store').Readable<(key: string, fallback: string, values?: Record<string, string | number>) => string>}
  */
 export const t = derived(format, ($format) => {
 	/**
 	 * @param {string} key
 	 * @param {string} fallback
+	 * @param {Record<string, string | number>} [values]
 	 */
-	return (key, fallback) => {
-		if (!$format) return fallback;
+	return (key, fallback, values) => {
+		const english = () =>
+			values ? fallback.replace(/\{(\w+)\}/g, (whole, name) => String(values[name] ?? whole)) : fallback;
+		if (!$format) return english();
 		let translated;
 		try {
-			translated = $format(key);
+			translated = /** @type {any} */ ($format)(key, values ? { values } : undefined);
 		} catch {
 			// A catalogue that has not finished loading throws rather than misses.
-			return fallback;
+			return english();
 		}
 		// svelte-i18n hands back the key when it has nothing for it.
-		return !translated || translated === key ? fallback : translated;
+		return !translated || translated === key ? english() : translated;
 	};
 });

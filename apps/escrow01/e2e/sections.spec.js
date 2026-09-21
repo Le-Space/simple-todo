@@ -45,7 +45,11 @@ test.describe('the page in tabs', () => {
 			await openSection(page, /** @type {any} */ (section));
 			expect(await shownSections(page)).toEqual([`section-${section}`]);
 			await expect(page.locator('[aria-current="page"]')).toHaveCount(1);
-			expect(new URL(page.url()).hash).toBe(`#${section}`);
+			// The section leads the fragment; the open list follows it, so a tab
+			// switch never drops the list from the link and the page QR.
+			await expect
+				.poll(() => new URL(page.url()).hash)
+				.toMatch(new RegExp(`^#${section}&list=[^&]+$`));
 		}
 
 		// The switch to another list is where the todos are.

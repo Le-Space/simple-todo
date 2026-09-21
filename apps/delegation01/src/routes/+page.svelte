@@ -1,6 +1,9 @@
 <script>
 	import { recall, remember } from '@simple-todo/todo/browser-memory.js';
 	import { onMount } from 'svelte';
+	import { get } from 'svelte/store';
+	import { createListLink } from '@simple-todo/todo/list-link.js';
+	import { t } from '@simple-todo/ui/i18n.js';
 	import { _ } from '$lib/i18n/index.js';
 	import { peerIdStore, initializationStore, ownDidStore } from '$lib/p2p-stores.js';
 	import PasskeyOnboarding from '$lib/PasskeyOnboarding.svelte';
@@ -21,7 +24,8 @@
 		toggleTodoComplete,
 		updateTodoText,
 		delegateTodo,
-		revokeTodoDelegation
+		revokeTodoDelegation,
+		loadTodoDatabase
 	} from '$lib/db-actions.js';
 	import { supportsDelegation } from '$lib/delegated-access.js';
 	import DelegatedAuthBadge from '$lib/DelegatedAuthBadge.svelte';
@@ -31,6 +35,7 @@
 	import ThemeToggle from '@simple-todo/ui/ThemeToggle.svelte';
 	import LeSpaceLogo from '@simple-todo/ui/LeSpaceLogo.svelte';
 	import AppFooter from '@simple-todo/ui/AppFooter.svelte';
+	import PageQr from '@simple-todo/ui/PageQr.svelte';
 	import ToastNotification from '@simple-todo/ui/ToastNotification.svelte';
 	import P2PStatusNav from '$lib/P2PStatusNav.svelte';
 	import ErrorAlert from '@simple-todo/ui/ErrorAlert.svelte';
@@ -96,6 +101,42 @@
 	let myPeerId = null;
 	let selectedMnemonic = '';
 	let activeMnemonic = '';
+
+	// The open list travels in the URL fragment — `#list=` for the three words,
+	// `#db=` for one list by its address — so a link, or the page QR, opens the
+	// same list on another device. Words from a link go through the dialog like
+	// typed ones: the reader sees which list it is before joining it.
+	const listLink = createListLink({
+		openWords: (words) => {
+			selectedMnemonic = words;
+			showModal = true;
+		},
+		openAddress: openLinkedList
+	});
+	onMount(() => listLink.listen());
+
+	/** @param {string} address */
+	async function openLinkedList(address) {
+		try {
+			await loadTodoDatabase(address);
+		} catch (err) {
+			const reason = err instanceof Error ? err.message : String(err);
+			showToast(
+				get(t)('ui.listLink.openFailed', 'The list from the link could not be opened: {reason}', {
+					reason
+				}),
+				'error'
+			);
+		}
+	}
+
+	$: if ($initializationStore.isInitialized && activeMnemonic) {
+		listLink.show(
+			$activeListStore.kind === 'shared'
+				? { words: activeMnemonic }
+				: { address: $activeListStore.address || $todoDBAddressStore }
+		);
+	}
 	$: mnemonicValid = isValidSpanishMnemonic(selectedMnemonic);
 
 	// Modal state
@@ -182,6 +223,7 @@
 				await startP2P({ todoDbName: canonicalMnemonic, passkeyCredential });
 			}
 			activeMnemonic = canonicalMnemonic;
+			void listLink.openLinked();
 			warnIfIdentityCannotTravel(passkeyCredential);
 		} catch (err) {
 			showModal = true;
@@ -221,7 +263,16 @@
 
 	onMount(async () => {
 		try {
-			selectedMnemonic = loadOrGenerateMnemonic();
+			selectedMnemonic = listLink.initial.words ?? loadOrGenerateMnemonic();
+			if (listLink.initial.rejected.length > 0) {
+				showToast(
+					get(t)(
+						'ui.listLink.rejected',
+						'The link names a list this page cannot open, so it starts with its own.'
+					),
+					'warning'
+				);
+			}
 			// Asked of the credential rather than of a remembered flag: the flag is
 			// something kept, and memory mode keeps nothing -- while the passkey
 			// link is what actually decides whether there is an identity to come
@@ -236,6 +287,7 @@
 				showModal = false;
 				activeMnemonic = normalizeSpanishMnemonic(selectedMnemonic);
 				await startP2P({ todoDbName: activeMnemonic, passkeyCredential: null });
+				void listLink.openLinked();
 			}
 		} catch {
 			// ignore storage errors
@@ -431,6 +483,7 @@
 			<DidBadge did={$ownDidStore ?? ''} />
 			<DelegatedAuthBadge />
 			<ThemeToggle />
+			<PageQr />
 			<SocialIcons size="w-5 h-5" className="" />
 		</div>
 	</header>
