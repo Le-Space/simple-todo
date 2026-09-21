@@ -6,12 +6,12 @@
 <div class="flex space-x-3 {className}">
 	<!-- GitHub -->
 		<a
-			href="https://github.com/NiKrause/simple-todo"
+			href="https://github.com/Le-Space/simple-todo"
 			target="_blank"
 			rel="noopener noreferrer"
 			aria-label="GitHub"
 			class="rounded-md p-2 text-text transition-colors duration-200 hover:bg-surface-2 hover:text-heading"
-			title="GitHub (/NiKrause/simple-todo)"
+			title="GitHub (Le-Space/simple-todo)"
 	>
 		<svg class={size} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 			<path

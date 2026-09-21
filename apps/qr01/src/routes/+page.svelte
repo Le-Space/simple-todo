@@ -63,6 +63,7 @@
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
 	import ThemeToggle from '$lib/ThemeToggle.svelte';
 	import LeSpaceLogo from '@simple-todo/ui/LeSpaceLogo.svelte';
+	import AppFooter from '@simple-todo/ui/AppFooter.svelte';
 	import ToastNotification from '@simple-todo/ui/ToastNotification.svelte';
 	import P2PStatusNav from '$lib/P2PStatusNav.svelte';
 	import ErrorAlert from '@simple-todo/ui/ErrorAlert.svelte';
@@ -542,21 +543,21 @@
 		than as pages, so these land on its front page where the two buttons are.
 		A deep link would be better and there is nothing to link to yet.
 	-->
-	<footer class="mt-10 border-t border-border pt-4 text-xs text-faint">
+	<AppFooter>
 		<a
 			href="https://le-space.de"
 			target="_blank"
 			rel="noopener noreferrer"
 			class="hover:text-text hover:underline">{$_('footer.imprint')}</a
 		>
-		<span class="mx-2" aria-hidden="true">·</span>
+		<span aria-hidden="true">·</span>
 		<a
 			href="https://le-space.de"
 			target="_blank"
 			rel="noopener noreferrer"
 			class="hover:text-text hover:underline">{$_('footer.privacy')}</a
 		>
-	</footer>
+	</AppFooter>
 </main>
 
 <!--

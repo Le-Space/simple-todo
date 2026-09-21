@@ -14,7 +14,7 @@
 		"relayWebrtcDirect": 4986
 	},
 	"ci": {
-		"specs": ["e2e/qr01-transfer.spec.js", "e2e/offline-pwa.spec.js"],
+		"specs": ["e2e/qr01-transfer.spec.js", "e2e/offline-pwa.spec.js", "e2e/footer.spec.js"],
 		"lint": true,
 		"check": true,
 		"readme": true
