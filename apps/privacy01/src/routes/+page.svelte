@@ -23,6 +23,7 @@
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
 	import ThemeToggle from '@simple-todo/ui/ThemeToggle.svelte';
 	import LeSpaceLogo from '@simple-todo/ui/LeSpaceLogo.svelte';
+	import AppFooter from '@simple-todo/ui/AppFooter.svelte';
 	import ToastNotification from '@simple-todo/ui/ToastNotification.svelte';
 	import P2PStatusNav from '$lib/P2PStatusNav.svelte';
 	import ErrorAlert from '@simple-todo/ui/ErrorAlert.svelte';
@@ -440,6 +441,8 @@
 		<OpenDatabaseForm />
 		<PermissionsPanel />
 	{/if}
+
+	<AppFooter />
 </main>
 
 <!-- Floating Relay Button FAB -->

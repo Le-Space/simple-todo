@@ -6,6 +6,7 @@
 	 */
 	import { remember } from '@simple-todo/todo/browser-memory.js';
 	import { onMount } from 'svelte';
+	import { t } from './i18n.js';
 
 	let dark = $state(false);
 
@@ -30,8 +31,10 @@
 	type="button"
 	onclick={() => apply(!dark)}
 	class="rounded-full p-2 text-text transition hover:bg-surface hover:text-coral focus:ring-2 focus:ring-cyan focus:outline-none"
-	aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-	title={dark ? 'Light mode' : 'Dark mode'}
+	aria-label={dark
+		? $t('ui.theme.toLight', 'Switch to light mode')
+		: $t('ui.theme.toDark', 'Switch to dark mode')}
+	title={dark ? $t('ui.theme.light', 'Light mode') : $t('ui.theme.dark', 'Dark mode')}
 >
 	{#if dark}
 		<!-- sun -->

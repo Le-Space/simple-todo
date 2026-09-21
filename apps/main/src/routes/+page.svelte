@@ -24,6 +24,7 @@
 	import LanguageSwitcher from '$lib/LanguageSwitcher.svelte';
 	import ThemeToggle from '$lib/ThemeToggle.svelte';
 	import LeSpaceLogo from '@simple-todo/ui/LeSpaceLogo.svelte';
+	import AppFooter from '@simple-todo/ui/AppFooter.svelte';
 	import ToastNotification from '@simple-todo/ui/ToastNotification.svelte';
 	import P2PStatusNav from '$lib/P2PStatusNav.svelte';
 	import ErrorAlert from '$lib/ErrorAlert.svelte';
@@ -345,4 +346,6 @@
 
 	<!-- TODO List -->
 	<TodoList todos={$todosStore} on:delete={handleDelete} on:toggleComplete={handleToggleComplete} />
+
+	<AppFooter />
 </main>

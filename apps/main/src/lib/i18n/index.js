@@ -1,5 +1,7 @@
 import { recall, remember } from '@simple-todo/todo/browser-memory.js';
-import { addMessages, init, getLocaleFromNavigator, locale as i18nLocale } from 'svelte-i18n';
+import { _, addMessages, init, getLocaleFromNavigator, locale as i18nLocale } from 'svelte-i18n';
+import { setTranslator } from '@simple-todo/ui/i18n.js';
+import { uiMessages } from '@simple-todo/ui/messages.js';
 import de from './de.json';
 import en from './en.json';
 
@@ -19,6 +21,10 @@ import en from './en.json';
  * the chapters are read side by side, and a reader comparing them should find
  * the difference in what each chapter teaches, not in how it loads strings.
  */
+// The shared components' own wording first, so this catalogue can still reword
+// one of them without having to repeat the rest.
+addMessages('de', uiMessages.de);
+addMessages('en', uiMessages.en);
 addMessages('de', de);
 addMessages('en', en);
 
@@ -78,5 +84,10 @@ init({
 	fallbackLocale: 'en',
 	initialLocale: initialLocale()
 });
+
+// The components in `@simple-todo/ui` reach this catalogue through here, next to
+// `init()` for the same reason `init()` is not in a layout. Keys this chapter
+// does not have fall back to the English written at the component's call site.
+setTranslator(_);
 
 export { _, json, locale } from 'svelte-i18n';

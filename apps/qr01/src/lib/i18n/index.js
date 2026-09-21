@@ -1,4 +1,5 @@
 import { setTranslator } from '@simple-todo/ui/i18n.js';
+import { uiMessages } from '@simple-todo/ui/messages.js';
 import { _, addMessages, init, getLocaleFromNavigator, locale as i18nLocale } from 'svelte-i18n';
 import de from './de.json';
 import en from './en.json';
@@ -15,6 +16,10 @@ import en from './en.json';
  * The cost is that both dictionaries ship to everyone. For two languages and a
  * few dozen strings that is a rounding error next to the libp2p bundle.
  */
+// The shared components' own wording first, so this catalogue can still reword
+// one of them without having to repeat the rest.
+addMessages('de', uiMessages.de);
+addMessages('en', uiMessages.en);
 addMessages('de', de);
 addMessages('en', en);
 
