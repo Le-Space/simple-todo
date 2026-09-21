@@ -19,8 +19,9 @@
 	import { createEventDispatcher } from 'svelte';
 	// `around` splits a translated sentence around its one DID, which is set in
 	// a `<code>`: "Delegated to you by X" / "Von X an Sie delegiert".
-	import { _, SLOT, around, locale } from '$lib/i18n/index.js';
+	import { _, SLOT, around } from '$lib/i18n/index.js';
 	import { formatPeerId } from '@simple-todo/todo/utils.js';
+	import { describeMoment } from '@simple-todo/todo/moment.js';
 	import { delegationStatus, isDelegationActiveFor } from './delegation.js';
 	import { budgetHoldsTodo, canReleaseBudget } from './budget.js';
 	import BudgetChip from './BudgetChip.svelte';
@@ -88,18 +89,10 @@
 	$: budgetPerspective = ownsBudget ? 'owner' : isBeneficiary ? 'beneficiary' : 'other';
 	$: budgetParty = formatDid(ownsBudget ? (delegation?.delegateDid ?? '') : owner);
 
+	$: expiry = describeMoment(delegation?.expiresAt);
 	$: canDelegate = delegationEnabled && isOwner && !isLegacy && !holdsBudget;
 	$: canRevoke = isOwner && status === 'active';
 	$: canDelete = isOwner && !holdsBudget;
-
-	/** @param {string | null} iso */
-	function formatDeadline(iso) {
-		if (!iso) return '';
-		return new Intl.DateTimeFormat($locale ?? 'en', {
-			dateStyle: 'short',
-			timeStyle: 'short'
-		}).format(new Date(iso));
-	}
 
 	function handleToggleComplete() {
 		dispatch('toggleComplete', { key: todoKey });
@@ -263,11 +256,13 @@
 							>
 						{/if}
 						{#if delegation.expiresAt && !(completedByDelegate && !isBeneficiary)}
+							{@const sentence = around($_('todo.item.until', { values: { date: SLOT } }))}
 							<span aria-hidden="true">•</span>
-							<span title={new Date(delegation.expiresAt).toISOString()}
-								>{$_('todo.item.until', {
-									values: { date: formatDeadline(delegation.expiresAt) }
-								})}</span
+							<!-- A deadline between two people: whose clock it is has to be on screen. -->
+							<span
+								>{sentence.before}{#if expiry}<time datetime={expiry.datetime} title={expiry.utc}
+										>{expiry.local}</time
+									>{/if}{sentence.after}</span
 							>
 						{/if}
 						{#if completedByDelegate && !isBeneficiary}

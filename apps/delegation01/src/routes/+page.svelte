@@ -423,10 +423,7 @@
 				<p class="text-faint mt-1 text-sm">
 					A local-first peer-to-peer PWA · {formatVersions({
 						appName: 'Simple-Todo'
-					})} · {typeof __APP_BRANCH__ !== 'undefined' ? __APP_BRANCH__ : 'local'} [{typeof __BUILD_DATE__ !==
-					'undefined'
-						? __BUILD_DATE__
-						: 'dev'}]
+					})} · {typeof __APP_BRANCH__ !== 'undefined' ? __APP_BRANCH__ : 'local'}
 				</p>
 			</div>
 		</div>

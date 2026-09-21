@@ -1,10 +1,10 @@
-import { execSync } from 'node:child_process';
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { fileURLToPath } from 'url';
 import { readFileSync } from 'fs';
+import { chapterCommit } from '@simple-todo/todo/node/chapter-commit.js';
 
 // update version in package.json and title
 const file = fileURLToPath(new URL('package.json', import.meta.url));
@@ -35,34 +35,11 @@ function installedVersion(name) {
 	}
 }
 
-// Baked as ISO 8601 UTC and formatted in the browser, so the reader sees their
-// own locale and clock convention. The previous value glued an ISO *date* to a
-// `toLocaleTimeString()` — two different zones in one string, which agreed only
-// because CI runs on UTC machines, and rendered midnight as "12:24:19 AM".
-const buildDate = new Date().toISOString();
+// The chapter's last commit and that commit's instant — not the build clock.
+// Rebuilding a commit has to give the same bytes, and on IPFS the same CID; the
+// browser formats the instant in the reader's locale, clock and zone.
+const built = chapterCommit(fileURLToPath(new URL('.', import.meta.url)));
 const appBranch = process.env.VITE_APP_BRANCH || process.env.GITHUB_REF_NAME || 'local';
-
-// The commit this bundle was built from. A build date only answers "is this
-// recent"; it takes a workflow listing and a timezone conversion to turn that
-// into "does this deployment contain commit X", which is the question actually
-// being asked when something looks stale. `__APP_VERSION__` cannot answer it
-// either — package.json's version stands still for dozens of commits.
-//
-// `git rev-parse` covers a local build; CI has the value in the environment
-// already. Empty when neither is available, and the header then omits it
-// rather than showing a guess.
-const commitSha = (() => {
-	const fromCi = process.env.GITHUB_SHA || process.env.VITE_COMMIT_SHA;
-	if (fromCi) return fromCi.trim();
-	try {
-		return execSync('git rev-parse HEAD', {
-			encoding: 'utf8',
-			stdio: ['ignore', 'pipe', 'ignore']
-		}).trim();
-	} catch {
-		return '';
-	}
-})();
 
 export default defineConfig({
 	// Workspace packages ship source, not a build; SvelteKit has to process
@@ -106,9 +83,9 @@ export default defineConfig({
 	],
 	define: {
 		__APP_VERSION__: JSON.stringify(pkg.version),
-		__BUILD_DATE__: JSON.stringify(buildDate),
+		__BUILD_DATE__: JSON.stringify(built.date),
+		__BUILD_COMMIT__: JSON.stringify(built.commit),
 		__APP_BRANCH__: JSON.stringify(appBranch),
-		__COMMIT_SHA__: JSON.stringify(commitSha),
 		__ORBITDB_VERSION__: JSON.stringify(installedVersion('@orbitdb/core')),
 		__HELIA_VERSION__: JSON.stringify(installedVersion('helia')),
 		__LIBP2P_VERSION__: JSON.stringify(installedVersion('libp2p'))

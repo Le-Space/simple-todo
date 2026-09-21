@@ -4,6 +4,7 @@
  * The numbers are Vite `define` substitutions (see vite.config.js), fixed when
  * the bundle is built, so nothing here reads a package.json at runtime.
  */
+import { describeMoment } from './moment.js';
 
 /**
  * The stack the app is built against, one entry per dependency.
@@ -29,6 +30,14 @@ function stackVersions() {
 }
 
 /**
+ * The build date as a moment, in the reader's locale, clock and zone.
+ *
+ * The date is the commit's (see `node/chapter-commit.js`), not the build
+ * machine's clock, and the zone is always named: the stamp it replaces glued a
+ * UTC date to the build machine's local time, so a build made in Berlin just
+ * after midnight was dated a day early — and no reader could tell whose clock
+ * any of it was.
+ *
  * @param {string} [iso] the baked ISO timestamp
  * @param {string | string[]} [locales] defaults to the browser's own
  * @returns {string}
@@ -38,23 +47,45 @@ export function formatBuildDate(iso, locales = undefined) {
 		return 'dev';
 	}
 
-	const parsed = new Date(iso);
-
 	// Anything unparseable is shown as-is rather than swallowed: a build stamped
 	// by an older toolchain is still more useful on screen than "Invalid Date",
 	// and silently blanking it would hide which build someone is looking at.
-	if (Number.isNaN(parsed.getTime())) {
-		return iso;
-	}
+	return describeMoment(iso, locales)?.local ?? iso;
+}
 
-	return parsed.toLocaleString(locales, {
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit',
-		hour: '2-digit',
-		minute: '2-digit',
-		second: '2-digit'
-	});
+/**
+ * What this bundle was built from: the commit, and that commit's instant.
+ *
+ * Both are baked in by the chapter's vite.config.js. A build without git has
+ * neither, and then there is nothing to show — a stamp taken from the clock
+ * instead would claim a commit nobody can look up.
+ *
+ * @returns {{ commit: string, short: string, when: Date } | null}
+ */
+export function builtFrom() {
+	const commit = typeof __BUILD_COMMIT__ === 'string' ? __BUILD_COMMIT__.trim().toLowerCase() : '';
+	const short = shortCommit(commit);
+	const iso = typeof __BUILD_DATE__ === 'string' ? __BUILD_DATE__ : '';
+	const when = iso ? new Date(iso) : null;
+	if (!short || !when || Number.isNaN(when.getTime())) return null;
+	return { commit, short, when };
+}
+
+/**
+ * A commit shortened to what a person compares.
+ *
+ * Seven characters is what `git log --oneline` prints, so the value can be
+ * matched against the repository by eye. Empty for anything that is not a
+ * commit, and the caller then leaves it out rather than showing a placeholder
+ * that looks like a real answer.
+ *
+ * @param {string | null | undefined} sha
+ * @returns {string}
+ */
+export function shortCommit(sha) {
+	const trimmed = String(sha ?? '').trim();
+	if (!/^[0-9a-f]{7,40}$/i.test(trimmed)) return '';
+	return trimmed.slice(0, 7).toLowerCase();
 }
 
 /**

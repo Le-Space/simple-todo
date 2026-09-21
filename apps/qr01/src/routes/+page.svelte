@@ -364,10 +364,7 @@
 					{:else}
 						A local-first peer-to-peer PWA · {formatVersions({
 							appName: 'QR-Todo'
-						})} · {typeof __APP_BRANCH__ !== 'undefined' ? __APP_BRANCH__ : 'local'} [{typeof __BUILD_DATE__ !==
-						'undefined'
-							? __BUILD_DATE__
-							: 'dev'}]
+						})} · {typeof __APP_BRANCH__ !== 'undefined' ? __APP_BRANCH__ : 'local'}
 					{/if}
 				</p>
 			</div>

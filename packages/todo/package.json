@@ -4,10 +4,12 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./node/*": "./node/*",
     "./*": "./src/*"
   },
   "files": [
-    "src"
+    "src",
+    "node"
   ],
   "dependencies": {
     "@orbitdb/core": "^4.0.0",

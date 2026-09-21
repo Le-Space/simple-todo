@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { passConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import { openSection } from './sections.mjs';
 import { pinTechnicalView } from './technical-view.mjs';
+import { expectReadersMoment } from '@simple-todo/e2e-kit/moment.mjs';
 
 // Chapter (delegation01): a list stays owner-only, but the owner may hand ONE
 // todo to another DID. That delegate may complete or rename exactly that todo
@@ -146,6 +147,12 @@ test.describe('Per-todo delegation', () => {
 			await addTodoOk(alice.page, todo, { delegateDid: bob.did, expiresAt: aMinuteAgo });
 			await expect(rowFor(alice.page, todo).getByTestId('todo-delegation-status')).toHaveText(
 				'expired'
+			);
+			// A deadline between two people says whose clock it is written in.
+			await expectReadersMoment(
+				alice.page,
+				rowFor(alice.page, todo).locator('time[datetime]'),
+				expect
 			);
 			const address = await getActiveDatabaseAddress(alice.page);
 			await openListByAddress(bob.page, address);
