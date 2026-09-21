@@ -20,7 +20,8 @@
 			"e2e/manual-multiaddr-connection.spec.js",
 			"e2e/consent-screen.spec.js",
 			"e2e/storage-choice.spec.js",
-			"e2e/footer.spec.js"
+			"e2e/footer.spec.js",
+			"e2e/page-qr.spec.js"
 		]
 	},
 	"title": "A shared list behind three Spanish words"

@@ -1,5 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
+	import { get } from 'svelte/store';
+	import { createListLink } from '@simple-todo/todo/list-link.js';
+	import { t } from '@simple-todo/ui/i18n.js';
 	import { _ } from '$lib/i18n/index.js';
 	import LanguageSwitcher from '$lib/LanguageSwitcher.svelte';
 	import ViewModeToggle from '$lib/ViewModeToggle.svelte';
@@ -57,13 +60,15 @@
 		activeListStore,
 		addTodo,
 		deleteTodo,
-		toggleTodoComplete
+		toggleTodoComplete,
+		loadTodoDatabase
 	} from '$lib/db-actions.js';
 	import { formatVersions } from '@simple-todo/todo/build-info.js';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
 	import ThemeToggle from '$lib/ThemeToggle.svelte';
 	import LeSpaceLogo from '@simple-todo/ui/LeSpaceLogo.svelte';
 	import AppFooter from '@simple-todo/ui/AppFooter.svelte';
+	import PageQr from '@simple-todo/ui/PageQr.svelte';
 	import ToastNotification from '@simple-todo/ui/ToastNotification.svelte';
 	import P2PStatusNav from '$lib/P2PStatusNav.svelte';
 	import ErrorAlert from '@simple-todo/ui/ErrorAlert.svelte';
@@ -103,6 +108,42 @@
 	let selectedMnemonic = '';
 	let activeMnemonic = '';
 	$: mnemonicValid = isValidSpanishMnemonic(selectedMnemonic);
+
+	// The open list travels in the URL fragment — `#list=` for the three words,
+	// `#db=` for one list by its address — so a link, or the page QR, opens the
+	// same list on another device. This chapter starts without a dialog, so the
+	// link's list is simply the one it starts with.
+	const listLink = createListLink({
+		openWords: (words) => {
+			selectedMnemonic = words;
+			void applyMnemonic();
+		},
+		openAddress: openLinkedList
+	});
+	onMount(() => listLink.listen());
+
+	/** @param {string} address */
+	async function openLinkedList(address) {
+		try {
+			await loadTodoDatabase(address);
+		} catch (err) {
+			const reason = err instanceof Error ? err.message : String(err);
+			showToast(
+				get(t)('ui.listLink.openFailed', 'The list from the link could not be opened: {reason}', {
+					reason
+				}),
+				'error'
+			);
+		}
+	}
+
+	$: if ($initializationStore.isInitialized && activeMnemonic) {
+		listLink.show(
+			$activeListStore.kind === 'shared'
+				? { words: activeMnemonic }
+				: { address: $activeListStore.address || $todoDBAddressStore }
+		);
+	}
 
 	/**
 	 * Switch the shared list without a modal in the way.
@@ -218,8 +259,17 @@
 		// so upgrading to a passkey is an offer in `IdentityPanel`, not a toll
 		// gate here.
 		let mnemonic = '';
+		if (listLink.initial.rejected.length > 0) {
+			showToast(
+				get(t)(
+					'ui.listLink.rejected',
+					'The link names a list this page cannot open, so it starts with its own.'
+				),
+				'warning'
+			);
+		}
 		try {
-			mnemonic = loadOrGenerateMnemonic();
+			mnemonic = listLink.initial.words ?? loadOrGenerateMnemonic();
 			selectedMnemonic = mnemonic;
 		} catch {
 			// Storage unavailable: fall through with a session-only mnemonic.
@@ -230,6 +280,7 @@
 		try {
 			activeMnemonic = normalizeSpanishMnemonic(mnemonic);
 			await startP2P({ todoDbName: activeMnemonic, passkeyCredential: null });
+			void listLink.openLinked();
 		} catch (err) {
 			error = `Failed to initialize P2P: ${err instanceof Error ? err.message : String(err)}`;
 			console.error('P2P initialization failed:', err);
@@ -390,6 +441,7 @@
 				?
 			</button>
 			<ThemeToggle />
+			<PageQr />
 			{#if !$simpleView}
 				<SocialIcons size="w-5 h-5" className="" />
 			{/if}

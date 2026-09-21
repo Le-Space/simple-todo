@@ -16,6 +16,17 @@ to the one before it, and each chapter is a complete app you can run.
 | `escrow01` | Confidential budgets on Sepolia with Zama FHE | [escrow01.le-space.de](https://escrow01.le-space.de) |
 | `invoice01` | Invoices on top of delegation | [invoice01.le-space.de](https://invoice01.le-space.de) |
 
+## A list, on another device
+
+The QR icon in every chapter's header shows the page as a code. The open list
+is part of the page: its three words (`#list=agua-casa-flor`) or, for a private
+list, its address (`#db=zdpu…`) sit in the URL fragment, so the code — or the
+link copied from the address bar — opens the same list on a phone. Where a
+chapter has a consent dialog, the words from a link appear in it before anyone
+joins; `qr01`, which has none, opens the list straight away. Writing to someone
+else's list still needs their grant. In `main` every peer shares one list, so
+the page alone is the link.
+
 ## Layout
 
 ```

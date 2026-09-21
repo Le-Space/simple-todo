@@ -22,7 +22,8 @@
 			"e2e/passkey-identity.spec.js",
 			"e2e/storage-choice.spec.js",
 			"e2e/passkey-restore.spec.js",
-			"e2e/footer.spec.js"
+			"e2e/footer.spec.js",
+			"e2e/page-qr.spec.js"
 		]
 	},
 	"title": "Your identity is a passkey, not a random key"

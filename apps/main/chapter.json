@@ -23,7 +23,8 @@
 			"e2e/language.spec.js",
 			"e2e/qr-invite-merge.spec.js",
 			"e2e/replication-without-webrtc.spec.js",
-			"e2e/footer.spec.js"
+			"e2e/footer.spec.js",
+			"e2e/page-qr.spec.js"
 		]
 	},
 	"title": "The base chapter: one shared todo list in the browser"

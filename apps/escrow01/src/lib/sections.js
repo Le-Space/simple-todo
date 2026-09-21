@@ -12,8 +12,9 @@ import { readable } from 'svelte/store';
  * Every section stays mounted and is only hidden, so a half-filled form or an
  * open connection survives a switch.
  *
- * The section is the URL's fragment, which is what makes reload, the back
- * button and a link to one section work without code of their own. The names
+ * The section is the URL's fragment — its first part, ahead of the open list —
+ * which is what makes reload, the back button and a link to one section work
+ * without code of their own. The names
  * are German because `#pruefstelle`, the auditor view's, already was.
  */
 
@@ -33,7 +34,11 @@ export const DEFAULT_SECTION = 'aufgaben';
  * @returns {Section}
  */
 export function sectionFromHash(hash) {
-	const id = String(hash ?? '').replace(/^#/, '');
+	// The section is the fragment's first part; the open list follows it
+	// (`#listen&list=agua-casa-flor`, see `@simple-todo/todo/list-link.js`).
+	const id = String(hash ?? '')
+		.replace(/^#/, '')
+		.split('&')[0];
 	if (id === AUDITOR_SECTION) return AUDITOR_SECTION;
 	return /** @type {readonly string[]} */ (TAB_SECTIONS).includes(id)
 		? /** @type {Section} */ (id)

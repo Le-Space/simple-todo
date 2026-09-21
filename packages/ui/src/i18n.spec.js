@@ -60,4 +60,18 @@ describe('the translator registry', () => {
 		setTranslator(null);
 		expect(get(t)('a.key', 'fallback')).toBe('fallback');
 	});
+
+	it('fills placeholders in the translation and in the fallback alike', () => {
+		expect(get(t)('ui.listLink.openFailed', 'Could not open: {reason}', { reason: 'offline' })).toBe(
+			'Could not open: offline'
+		);
+		setTranslator(
+			readable((/** @type {string} */ key, /** @type {any} */ options) =>
+				key === 'ui.listLink.openFailed' ? `Nicht geöffnet: ${options?.values?.reason}` : key
+			)
+		);
+		expect(get(t)('ui.listLink.openFailed', 'Could not open: {reason}', { reason: 'offline' })).toBe(
+			'Nicht geöffnet: offline'
+		);
+	});
 });

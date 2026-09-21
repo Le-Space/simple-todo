@@ -53,6 +53,11 @@ describe('which section a fragment opens', () => {
 		}
 	});
 
+	it('reads the section ahead of the open list the fragment also carries', () => {
+		expect(sectionFromHash('#listen&list=agua-casa-flor')).toBe('listen');
+		expect(sectionFromHash('#list=agua-casa-flor')).toBe('aufgaben');
+	});
+
 	it('still opens the auditor view from the fragment it always had', () => {
 		expect(sectionFromHash('#pruefstelle')).toBe(AUDITOR_SECTION);
 	});

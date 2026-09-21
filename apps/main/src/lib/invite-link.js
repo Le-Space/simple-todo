@@ -7,6 +7,8 @@
  * would hand it to every gateway operator and into their access logs, for no
  * benefit. The receiving page reads it locally and nothing else ever sees it.
  */
+import { withoutFragmentKeys } from '@simple-todo/todo/list-link.js';
+
 const FRAGMENT_KEY = 'invite';
 
 /**
@@ -66,7 +68,9 @@ export function clearInviteLink() {
 	}
 
 	try {
-		history.replaceState(null, '', `${location.pathname}${location.search}`);
+		// Only the invite goes: the rest of the fragment — the open list, which
+		// the page keeps there — stays, and so does SvelteKit's history state.
+		history.replaceState(history.state, '', withoutFragmentKeys(location.href, [FRAGMENT_KEY]));
 	} catch {
 		// Sandboxed frames can refuse history access; a stale fragment is a far
 		// smaller problem than failing to connect.

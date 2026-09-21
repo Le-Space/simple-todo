@@ -12,6 +12,7 @@
   "dependencies": {
     "@simple-todo/todo": "workspace:*",
     "svelte": "^5.0.0",
+    "uqr": "0.1.3",
     "vitest": "^3.2.3"
   }
 }
