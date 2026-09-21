@@ -15,12 +15,24 @@
 	 * round node *is* the mark. Here the mark is decorative and the link is named
 	 * by its text, so a screen reader says "Made with Le Space" once.
 	 *
+	 * Then what is deployed: the commit and its instant, in the reader's locale,
+	 * clock and zone, UTC on hover (the Le-Space time and date convention). Both
+	 * are the chapter's last commit, baked in at build time; a build without git
+	 * has neither and shows nothing rather than a date from the clock.
+	 *
 	 * A chapter passes its own links as children; they follow the credit.
 	 */
+	import { builtFrom } from '@simple-todo/todo/build-info.js';
+	import { describeMoment } from '@simple-todo/todo/moment.js';
 	import { t } from './i18n.js';
 
 	/** @type {{ children?: import('svelte').Snippet }} */
 	let { children } = $props();
+
+	const build = builtFrom();
+	// Formatted here, in the browser: only the reader's browser knows their
+	// locale, clock and zone, and the bytes on IPFS stay the same for everyone.
+	const moment = build ? describeMoment(build.when) : null;
 </script>
 
 <footer class="mt-10 border-t border-border pt-4 pb-2 text-xs text-faint" data-testid="app-footer">
@@ -55,6 +67,19 @@
 			</svg>
 			<span class="underline">Le Space</span>
 		</a>
+		{#if build && moment}
+			<span aria-hidden="true">·</span>
+			<span data-testid="build-stamp"
+				>{$t('ui.build.state', 'Built')}
+				<time datetime={moment.datetime} title={moment.utc}>{moment.local}</time>
+				<a
+					href="https://github.com/Le-Space/simple-todo/commit/{build.commit}"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="font-mono underline hover:text-text">{build.short}</a
+				></span
+			>
+		{/if}
 		{#if children}
 			<span aria-hidden="true">·</span>
 			{@render children()}

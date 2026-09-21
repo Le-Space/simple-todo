@@ -473,11 +473,11 @@
 		});
 	});
 
-	// What this build is made of — versions, branch, build date — in the
-	// technical view, as on the consent screen.
+	// What this build is made of — versions and branch — in the technical view.
+	// When it was built, and from which commit, the footer says on every tab.
 	const buildStamp = `${formatVersions({ appName: 'Simple-Todo' })} · ${
 		typeof __APP_BRANCH__ !== 'undefined' ? __APP_BRANCH__ : 'local'
-	} [${typeof __BUILD_DATE__ !== 'undefined' ? __BUILD_DATE__ : 'dev'}]`;
+	}`;
 
 	// A budget is paid to the delegate, so it exists only where delegation does,
 	// and only for a session the service can sign for.

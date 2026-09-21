@@ -3,7 +3,8 @@
 	import { get } from 'svelte/store';
 	import { _, json } from '$lib/i18n/index.js';
 	import LanguageSwitcher from './LanguageSwitcher.svelte';
-	import { formatBuildDate, formatVersions } from './build-info.js';
+	import { formatVersions } from './build-info.js';
+	import { formatBuildDate } from '@simple-todo/todo/build-info.js';
 
 	const dispatch = createEventDispatcher();
 	// No app name in front of the version here: `title` already renders it

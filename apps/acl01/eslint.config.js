@@ -13,6 +13,7 @@ const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 const buildTimeGlobals = {
 	__APP_VERSION__: 'readonly',
 	__BUILD_DATE__: 'readonly',
+	__BUILD_COMMIT__: 'readonly',
 	__APP_BRANCH__: 'readonly',
 	__ORBITDB_VERSION__: 'readonly',
 	__HELIA_VERSION__: 'readonly',

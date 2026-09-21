@@ -1,42 +1,4 @@
 /**
- * Rendering the baked build timestamp for a reader.
- *
- * `__BUILD_DATE__` is an ISO 8601 UTC string, so the moment is unambiguous no
- * matter where the build ran. Turning it into text is left until here, in the
- * browser, because only the browser knows the reader's locale and whether they
- * expect a 12- or 24-hour clock.
- */
-
-/**
- * @param {string} [iso] the baked ISO timestamp
- * @param {string | string[]} [locales] defaults to the browser's own
- * @returns {string}
- */
-export function formatBuildDate(iso, locales = undefined) {
-	if (typeof iso !== 'string' || iso.length === 0) {
-		return 'dev';
-	}
-
-	const parsed = new Date(iso);
-
-	// Anything unparseable is shown as-is rather than swallowed: a build stamped
-	// by an older toolchain is still more useful on screen than "Invalid Date",
-	// and silently blanking it would hide which build someone is looking at.
-	if (Number.isNaN(parsed.getTime())) {
-		return iso;
-	}
-
-	return parsed.toLocaleString(locales, {
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit',
-		hour: '2-digit',
-		minute: '2-digit',
-		second: '2-digit'
-	});
-}
-
-/**
  * The stack the app is built against, newest-baked value per dependency.
  *
  * Read through `typeof` guards because these are Vite `define` substitutions,
@@ -76,22 +38,4 @@ export function formatVersions({ appName = '' } = {}) {
 	const app = appName ? `${appName} v${appVersion}` : `v${appVersion}`;
 
 	return [app, ...stackVersions().map(({ name, version }) => `${name} ${version}`)].join(' · ');
-}
-
-/**
- * The commit a bundle was built from, shortened to what a person compares.
- *
- * Seven characters is what `git log --oneline` prints, so the value can be
- * matched against the repository by eye. Returns an empty string when the
- * build had no commit to record — a local `vite dev` outside a checkout —
- * and the caller then leaves it out rather than showing a placeholder that
- * looks like a real answer.
- *
- * @param {string} sha
- * @returns {string}
- */
-export function formatCommitSha(sha) {
-	const trimmed = String(sha ?? '').trim();
-	if (!/^[0-9a-f]{7,40}$/i.test(trimmed)) return '';
-	return trimmed.slice(0, 7).toLowerCase();
 }

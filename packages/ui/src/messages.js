@@ -29,6 +29,9 @@ export const uiMessages = {
 			credit: {
 				madeWith: 'Made with'
 			},
+			build: {
+				state: 'Built'
+			},
 			pageQr: {
 				open: 'This page as a QR code',
 				dialog: 'QR code of this page',
@@ -51,6 +54,9 @@ export const uiMessages = {
 			},
 			credit: {
 				madeWith: 'Gebaut mit'
+			},
+			build: {
+				state: 'Stand'
 			},
 			pageQr: {
 				open: 'Diese Seite als QR-Code',
