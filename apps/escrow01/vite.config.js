@@ -4,6 +4,7 @@ import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { fileURLToPath } from 'url';
 import { readFileSync } from 'fs';
+import { chapterCommit } from '@simple-todo/todo/node/chapter-commit.js';
 
 // update version in package.json and title
 const file = fileURLToPath(new URL('package.json', import.meta.url));
@@ -35,7 +36,10 @@ function installedVersion(name) {
 }
 
 // Create build date
-const buildDate = new Date().toISOString().split('T')[0] + ' ' + new Date().toLocaleTimeString(); // YYYY-MM-DD HH:MM:SS format
+// The chapter's last commit and that commit's instant — not the build clock.
+// Rebuilding a commit has to give the same bytes, and on IPFS the same CID; the
+// browser formats the instant in the reader's locale, clock and zone.
+const built = chapterCommit(fileURLToPath(new URL('.', import.meta.url)));
 const appBranch = process.env.VITE_APP_BRANCH || process.env.GITHUB_REF_NAME || 'local';
 
 export default defineConfig({
@@ -84,7 +88,8 @@ export default defineConfig({
 		],
 	define: {
 		__APP_VERSION__: JSON.stringify(pkg.version),
-		__BUILD_DATE__: JSON.stringify(buildDate),
+		__BUILD_DATE__: JSON.stringify(built.date),
+		__BUILD_COMMIT__: JSON.stringify(built.commit),
 		__APP_BRANCH__: JSON.stringify(appBranch),
 		__ORBITDB_VERSION__: JSON.stringify(installedVersion('@orbitdb/core')),
 		__HELIA_VERSION__: JSON.stringify(installedVersion('helia')),

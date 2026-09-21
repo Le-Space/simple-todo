@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { expectCredit, expectNoEnglishThemeToggle } from '@simple-todo/e2e-kit/footer.mjs';
+import {
+	expectBuildStamp,
+	expectCredit,
+	expectNoEnglishThemeToggle
+} from '@simple-todo/e2e-kit/footer.mjs';
 
 // The footer is there before anybody has agreed to anything: it sits under the
 // consent dialog, and it says who made the page the dialog is asking about.
@@ -18,4 +22,22 @@ test.describe('Footer', () => {
 			await expectNoEnglishThemeToggle(page, expect);
 		});
 	});
+
+	// Two readers on two continents: the same instant, each in their own clock.
+	for (const reader of [
+		{ locale: 'de-DE', timezoneId: 'Europe/Berlin' },
+		{ locale: 'en-US', timezoneId: 'America/New_York' }
+	]) {
+		test.describe(`read in ${reader.timezoneId}`, () => {
+			test.use(reader);
+
+			test('says which commit is deployed, and when, in the reader’s clock', async ({ page }) => {
+				await page.goto('/');
+				await expectBuildStamp(page, expect, {
+					locale: reader.locale,
+					timeZone: reader.timezoneId
+				});
+			});
+		});
+	}
 });

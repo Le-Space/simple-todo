@@ -48,6 +48,10 @@ jobs:
         app: ${{ fromJson(needs.discover.outputs.apps) }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          # The build stamps the chapter's own last commit, which git can only
+          # find with the history; a shallow clone would stamp HEAD.
+          fetch-depth: 0
       # The version comes from packageManager in the root manifest; naming it
       # here as well makes the action refuse with ERR_PNPM_BAD_PM_VERSION.
       - uses: pnpm/action-setup@v6

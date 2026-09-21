@@ -28,6 +28,9 @@ export const uiMessages = {
 			},
 			credit: {
 				madeWith: 'Made with'
+			},
+			build: {
+				state: 'Built'
 			}
 		}
 	},
@@ -41,6 +44,9 @@ export const uiMessages = {
 			},
 			credit: {
 				madeWith: 'Gebaut mit'
+			},
+			build: {
+				state: 'Stand'
 			}
 		}
 	}

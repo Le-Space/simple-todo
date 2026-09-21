@@ -8,6 +8,8 @@
  * and name side by side with the gap between them, the heart filled with the
  * theme's coral.
  */
+import { chapterCommit } from '@simple-todo/todo/node/chapter-commit.js';
+import { localStamp, utcStamp } from '@simple-todo/todo/moment.js';
 
 /**
  * The signature line: "Made with [mark] Le Space", mark and name one link.
@@ -69,3 +71,43 @@ export async function expectCredit(page, expect, { language = 'en' } = {}) {
 export async function expectNoEnglishThemeToggle(page, expect) {
 	await expect(page.locator('[aria-label^="Switch to"]')).toHaveCount(0);
 }
+
+/**
+ * The build stamp: the chapter's last commit, at that commit's instant, in the
+ * reader's locale, clock and zone — UTC on hover, UTC in `datetime`.
+ *
+ * The expectation is computed here, by the same two functions the page uses:
+ * `chapterCommit` for which commit (asked of git, as the build did), and
+ * `localStamp` for how a reader in `locale` and `timeZone` writes it. So a
+ * reader in Berlin and one in New York each get exactly their own line, and a
+ * stamp taken from the build clock, or from HEAD instead of the chapter's own
+ * last commit, fails.
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {typeof import('@playwright/test').expect} expect
+ * @param {{ locale: string, timeZone: string, chapterDir?: string }} reader
+ */
+export async function expectBuildStamp(page, expect, { locale, timeZone, chapterDir = process.cwd() }) {
+	const built = chapterCommit(chapterDir);
+	expect(built.commit, 'the suite runs in a git checkout').toMatch(/^[0-9a-f]{40}$/);
+	const instant = new Date(built.date);
+
+	const stamp = page.getByTestId('app-footer').getByTestId('build-stamp');
+	const time = stamp.locator('time[datetime]');
+	await expect(time).toHaveCount(1);
+	await expect(time).toHaveAttribute('datetime', instant.toISOString());
+	await expect(time).toHaveAttribute('title', utcStamp(instant));
+	expect(plain(await time.innerText()), `the reader's clock in ${locale}, ${timeZone}`).toBe(
+		plain(localStamp(instant, locale, timeZone))
+	);
+
+	const link = stamp.getByRole('link');
+	await expect(link).toHaveAttribute(
+		'href',
+		`https://github.com/Le-Space/simple-todo/commit/${built.commit}`
+	);
+	await expect(link).toHaveText(built.commit.slice(0, 7));
+}
+
+/** Whitespace as a reader sees it: ICU puts narrow no-break spaces before AM/PM. */
+const plain = (/** @type {string} */ text) => text.replace(/[\s  ]+/g, ' ').trim();

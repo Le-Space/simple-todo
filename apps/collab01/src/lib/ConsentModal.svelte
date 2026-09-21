@@ -1,6 +1,6 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
-	import { formatVersions } from '@simple-todo/todo/build-info.js';
+	import { formatBuildDate, formatVersions } from '@simple-todo/todo/build-info.js';
 
 	const dispatch = createEventDispatcher();
 	// No app name in front of the version here: `title` already renders it
@@ -8,7 +8,9 @@
 	// same way the page header states them, so the dependencies this screen
 	// asks the reader to consent to are named with the numbers that shipped.
 	const fallbackVersions = formatVersions();
-	const fallbackBuildDate = typeof __BUILD_DATE__ !== 'undefined' ? __BUILD_DATE__ : 'dev';
+	const fallbackBuildDate = formatBuildDate(
+		typeof __BUILD_DATE__ !== 'undefined' ? __BUILD_DATE__ : ''
+	);
 
 	export let show = true;
 	export let title = 'Simple-Todo';

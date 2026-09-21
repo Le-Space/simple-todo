@@ -402,7 +402,7 @@
 			<p class="text-xs break-words text-faint" data-testid="build-info">
 				{formatVersions({ appName: 'Simple-Todo' })} · {typeof __APP_BRANCH__ !== 'undefined'
 					? __APP_BRANCH__
-					: 'local'} [{typeof __BUILD_DATE__ !== 'undefined' ? __BUILD_DATE__ : 'dev'}]
+					: 'local'}
 			</p>
 		</div>
 		<svelte:fragment slot="shared-list">

@@ -18,6 +18,7 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
 	import { formatPeerId } from '@simple-todo/todo/utils.js';
+	import { describeMoment } from '@simple-todo/todo/moment.js';
 	import { delegationStatus, isDelegationActiveFor } from './delegation.js';
 
 	export const id = undefined;
@@ -59,6 +60,7 @@
 	$: isDelegate = !isOwner && isDelegationActiveFor({ delegation }, currentIdentityId);
 	$: canChange = isOwner || isDelegate;
 	$: status = delegationStatus(delegation);
+	$: expiry = describeMoment(delegation?.expiresAt);
 	$: canDelegate = delegationEnabled && isOwner && !isLegacy;
 	$: canRevoke = isOwner && status === 'active';
 	/** @type {'owner' | 'delegate' | 'none'} */
@@ -212,9 +214,11 @@
 							data-testid="todo-delegate"
 							data-did={delegation.delegateDid}>{formatDid(delegation.delegateDid)}</code
 						>
-						{#if delegation.expiresAt}
-							<span title={new Date(delegation.expiresAt).toISOString()}
-								>(until {new Date(delegation.expiresAt).toLocaleString()})</span
+						{#if expiry}
+							<!-- A deadline between two people: whose clock it is has to be on screen. -->
+							<span
+								>(until <time datetime={expiry.datetime} title={expiry.utc}>{expiry.local}</time
+								>)</span
 							>
 						{/if}
 						<span
