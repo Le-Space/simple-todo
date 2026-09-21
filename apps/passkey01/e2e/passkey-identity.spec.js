@@ -122,6 +122,11 @@ async function proceedWithExistingPasskey(page) {
 /** @param {import('@playwright/test').Page} page */
 async function fillConsentModal(page) {
 	await waitForConsent(page);
+	// This scenario is about a *remembered* session -- the dialog preselecting
+	// the passkey it knows about -- so it asks for the storage that remembers.
+	// In memory mode nothing is kept, and the identity comes back through the
+	// authenticator instead; `passkey-restore.spec.js` covers that path (#9).
+	await page.getByTestId('storage-mode-indexeddb').check();
 	await consentModal(page).getByTestId('shared-list-mnemonic-input').fill(sharedMnemonic);
 	// Ticked here rather than at the click, so this helper still hands back a
 	// dialog its callers can leave whenever they choose to.

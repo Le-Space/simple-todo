@@ -93,7 +93,7 @@
 		"showNotice": "Show the notice",
 		"storageLegend": "Where your todos are stored",
 		"storageMemoryLabel": "In memory only",
-		"storageMemoryHint": "Todos and keys live in memory only and are gone on reload. The one thing left on this device is the link to your passkey, so you can find your identity again.",
+		"storageMemoryHint": "Todos and keys live in memory only and are gone on reload. Nothing is left on the device — your identity comes back through the passkey next time, in two touches.",
 		"storagePersistentLabel": "Keep them in this browser",
 		"storagePersistentHint": "Todos are stored in the browser's IndexedDB and survive a restart. They are not encrypted there, so anyone who can read this browser's storage can read them."
 	}
