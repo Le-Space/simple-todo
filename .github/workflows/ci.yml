@@ -68,6 +68,14 @@ jobs:
         working-directory: apps/${{ matrix.app }}
     steps:
       - uses: actions/checkout@v6
+      # The build stamps the chapter's last commit, so it asks git. This job
+      # runs as root in the Playwright container while the checkout belongs to
+      # the runner's user, and git refuses a repository it does not own —
+      # checkout@v6 trusts it only inside its own step. Without this every
+      # build here was stamp-less, and footer.spec.js says so.
+      - name: Git may read the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+        working-directory: .
       # The version comes from packageManager in the root manifest; naming it
       # here as well makes the action refuse with ERR_PNPM_BAD_PM_VERSION.
       - uses: pnpm/action-setup@v6
