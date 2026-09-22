@@ -5,7 +5,8 @@ import {
 	recordPeerConnections
 } from '@simple-todo/e2e-kit/network-check.mjs';
 
-const intro = (/** @type {import('@playwright/test').Page} */ page) => page.getByTestId('intro-dialog');
+const intro = (/** @type {import('@playwright/test').Page} */ page) =>
+	page.getByTestId('intro-dialog');
 
 // qr01 is the WebRTC-QR chapter, so its introduction keeps the network check --
 // but the check asks STUN servers for the reader's address, and it waits until
@@ -16,7 +17,8 @@ test('the network check waits for the accepted statement, then measures with STU
 	await recordPeerConnections(page);
 	await page.goto('/');
 	await page.waitForFunction(
-		() => /** @type {any} */ (document.querySelector('[data-testid="intro-dialog"]'))?.isOpen === true
+		() =>
+			/** @type {any} */ (document.querySelector('[data-testid="intro-dialog"]'))?.isOpen === true
 	);
 	await page.waitForTimeout(3000);
 
