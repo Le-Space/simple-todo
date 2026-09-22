@@ -18,7 +18,8 @@
 			"e2e/qr01-transfer.spec.js",
 			"e2e/offline-pwa.spec.js",
 			"e2e/footer.spec.js",
-			"e2e/page-qr.spec.js"
+			"e2e/page-qr.spec.js",
+			"e2e/intro-network.spec.js"
 		],
 		"lint": true,
 		"check": true,

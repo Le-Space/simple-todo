@@ -5,6 +5,7 @@
 	import LanguageSwitcher from './LanguageSwitcher.svelte';
 	import { formatVersions } from './build-info.js';
 	import { formatBuildDate } from '@simple-todo/todo/build-info.js';
+	import { deferNetworkCheck } from '@simple-todo/ui/qr-intro-network.js';
 
 	const dispatch = createEventDispatcher();
 	// No app name in front of the version here: `title` already renders it
@@ -50,6 +51,16 @@
 	 * to is what was configured.
 	 */
 	export let accepted = false;
+
+	/**
+	 * The element's network check, held back until the statement is accepted:
+	 * it measures against STUN servers at Google and Cloudflare, and nobody has
+	 * agreed to that by opening the page. Until then it measures nothing outside
+	 * and its two sections are hidden.
+	 * @type {(() => Promise<void>) | null}
+	 */
+	let measureNetwork = null;
+	$: if (accepted && measureNetwork) void measureNetwork();
 	export let rememberDecision = false;
 
 	/**
@@ -260,6 +271,7 @@
 			show = false;
 			dispatch('proceed');
 		});
+		measureNetwork = deferNetworkCheck(introEl);
 		ready = true;
 	});
 </script>

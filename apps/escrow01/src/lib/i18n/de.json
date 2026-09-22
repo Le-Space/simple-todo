@@ -330,7 +330,7 @@
 			"candidateMdns": "Adressen, die auf .local enden, sind Platzhalter, die der Browser anstelle der echten Adresse dieses Geräts einsetzt, damit eine Webseite sie nicht lesen kann. Sie sind kein Fehler und nicht das VPN.",
 			"candidateNew": "neu",
 			"candidateGone": "weg",
-			"technicalHeading": "Gut zu wissen",
+			"technicalHeading": "Unter der Haube",
 			"waysHeading": "Wie das andere Gerät hereinkommt",
 			"wayQr": "Per Kamera: Sie halten einen Code hin, das andere Gerät scannt ihn. Dabei verlässt nichts dieses Netz.",
 			"relayLabel": "Über einen Relay verbinden",
@@ -341,10 +341,16 @@
 			"privacyEmpty": "Was hier steht, entscheiden die Angaben oben.",
 			"privacyAccept": "Ich habe das gelesen und bin einverstanden",
 			"technical": [
-				"Ein Telefon schließt eine wartende Einladung wenige Sekunden nachdem Sie die App verlassen. Nur DuckDuckGo und Safari halten sie beobachtet etwa zehn.",
-				"Chrome auf Android meldet kein IPv6, wo Firefox und DuckDuckGo auf demselben Telefon im selben WLAN eines melden. Ein Urteil beschreibt diesen Browser, nicht das Netz.",
-				"Im Mobilfunk blockiert das Carrier-NAT eine direkte Verbindung nach außen meist.",
-				"Ein VPN verlegt beide Enden woandershin. Das kann ein blockiertes Netz retten und ein funktionierendes zerstören."
+				"Passkey: ein WebAuthn-Schlüssel mit ES256 (P-256), auffindbar gespeichert und mit der PRF-Erweiterung. Ihre DID ist ein did:key aus seinem öffentlichen Schlüssel (unkomprimiert, 0x04‖x‖y). Der private Schlüssel verlässt den Authenticator nie.",
+				"OrbitDB signiert Ihre Einträge nicht mit dem Passkey, sondern mit einem secp256k1-Schlüssel, abgeleitet aus dem PRF-Wert des Passkeys (HKDF-SHA256, getrennt nach DID). Derselbe Passkey ergibt so auf jedem Gerät dieselbe Identität; der Passkey signiert nur das Identitätsdokument.",
+				"Keystore: OrbitDBs KeyStore. Bei „Nur im Arbeitsspeicher“ liegt der Signaturschlüssel im Speicher dieses Tabs und ist beim Neuladen weg. Bei „In diesem Browser behalten“ liegt er in IndexedDB (Level-Datenbank ./orbitdb/identities) unter private_<DID>, als rohe 32 Byte, unverschlüsselt.",
+				"Konto: EIP-7702. Die Adresse eines Einrichtungsschlüssels (secp256k1, nur während der Einrichtung im Speicher) erhält den Code von Uniswaps Calibur v1.0.0 (0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00); der Passkey wird dort als Admin-Schlüssel vom Typ WebAuthnP256 eingetragen. Der Einrichtungsschlüssel wird danach verworfen, bleibt aber für immer Root-Schlüssel des Kontos.",
+				"Zahlungen sind ERC-4337-User-Operations an den EntryPoint v0.8. Der Passkey signiert deren EIP-712-Hash; Calibur prüft die Signatur on-chain mit webauthn-sol, über den P-256-Precompile (RIP-7212, Adresse 0x100), sonst in Solidity. On-chain wird Nutzerverifikation nicht verlangt, nur die App verlangt sie.",
+				"Gas zahlt ein Paymaster: Openfort betreibt Bundler und Paymaster für Sepolia und sponsert nach einer Regel für diese Chain, abgefragt per ERC-7677 (pm_getPaymasterStubData, pm_getPaymasterData). Ihr Konto hält kein ETH; im Browser liegt nur Openforts öffentlicher Schlüssel pk_test_….",
+				"Budgets sind cUSDT, ein vertraulicher Token nach ERC-7984 (Zamas cUSDTMock auf Sepolia, 6 Nachkommastellen). Beträge liegen on-chain nur als euint64-Handles; gerechnet wird auf den Chiffraten in Zamas Coprozessoren.",
+				"Sperren: Ihr Browser verschlüsselt den Betrag mit Zamas SDK (TFHE, WebAssembly) und holt über Zamas Relayer den Eingabebeweis. Der Treuhand-Vertrag ConfidentialTodoEscrow (0x6Ee3Fa9d3aEdaAD189F5DeA9d859605c9D743429) übernimmt ihn per FHE.fromExternal und bucht mit confidentialTransferFrom um.",
+				"Lesen: ein zweiter secp256k1-Schlüssel, der Leseschlüssel, liegt im localStorage und ist per ACL.delegateForUserDecryption 24 Stunden lang für Treuhand und Token bevollmächtigt. Er signiert EIP-712-Leseanfragen; den Klartext setzt Ihr Browser aus Anteilen von 13 KMS-Knoten zusammen, von denen 9 nötig sind.",
+				"Öffentlich bleiben Absender, Empfänger und Zeitpunkt jeder Buchung, die Verknüpfung von Konto und Leseschlüssel (Event DelegatedForUserDecryption) und jede Leseanfrage auf Zamas Gateway-Chain. Nicht öffentlich sind die Beträge."
 			]
 		},
 		"relayReachable": "{count} bekannte Relays haben geantwortet. Es wurde kein Verzeichnis abgefragt.",

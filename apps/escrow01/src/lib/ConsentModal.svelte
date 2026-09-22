@@ -6,6 +6,11 @@
 	import TechnicalToggle from './TechnicalToggle.svelte';
 	import { formatBuildDate, formatVersions } from '@simple-todo/todo/build-info.js';
 	import { technicalView } from './technical-view.js';
+	import {
+		NETWORK_ADDRESSES,
+		NETWORK_CHECK,
+		withoutNetworkCheck
+	} from '@simple-todo/ui/qr-intro-network.js';
 
 	const dispatch = createEventDispatcher();
 
@@ -95,8 +100,11 @@
 		compares the two sets in the browser so the hole is a failing test rather
 		than a sentence in the wrong language.
 
-		`technical` is deliberately absent: the element's own bullets are about
-		networks, and this chapter replaces them with its own.
+		`technical` and `technicalHeading` are this chapter's own: the element's
+		bullets are about a WebRTC-QR connection this chapter never makes, so the
+		list says instead how the passkey, the OrbitDB keystore, the Calibur
+		account, Openfort's paymaster and Zama's confidential token work — shown
+		in the technical view only, as the element does with its caveats.
 	*/
 	$: strings = {
 		.../** @type {Record<string, string>} */ ($json('consent.element')),
@@ -181,6 +189,13 @@
 			show = false;
 			dispatch('proceed');
 		});
+		// This chapter connects through a relay. The element's network check and
+		// the addresses it measured are about a direct WebRTC-QR connection it
+		// never makes, so both are off, and measured against no STUN server:
+		// opening the dialog asks nobody outside for this reader's address before
+		// they have agreed to anything. The caveat list stays — it carries this
+		// chapter's own "under the hood" notes (consent.element.technical).
+		withoutNetworkCheck(introEl, [NETWORK_CHECK, NETWORK_ADDRESSES]);
 		ready = true;
 	});
 </script>
