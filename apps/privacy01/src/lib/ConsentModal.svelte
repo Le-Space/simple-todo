@@ -4,6 +4,7 @@
 	import { _, json } from '$lib/i18n/index.js';
 	import LanguageSwitcher from './LanguageSwitcher.svelte';
 	import { formatBuildDate, formatVersions } from '@simple-todo/todo/build-info.js';
+	import { withoutNetworkCheck } from '@simple-todo/ui/qr-intro-network.js';
 
 	const dispatch = createEventDispatcher();
 
@@ -170,6 +171,12 @@
 			show = false;
 			dispatch('proceed');
 		});
+		// This chapter connects through a relay. The element's network check and
+		// its caveats are about a direct WebRTC-QR connection it never makes, so
+		// both are off, and the check measures against no STUN server: opening
+		// the dialog asks nobody outside for this reader's address before they
+		// have agreed to anything.
+		withoutNetworkCheck(introEl);
 		ready = true;
 	});
 </script>

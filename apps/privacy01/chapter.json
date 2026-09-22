@@ -22,7 +22,8 @@
 			"e2e/storage-choice.spec.js",
 			"e2e/passkey-restore.spec.js",
 			"e2e/footer.spec.js",
-			"e2e/page-qr.spec.js"
+			"e2e/page-qr.spec.js",
+			"e2e/consent-network.spec.js"
 		]
 	},
 	"title": "Entries are sealed; holding the address is not reading it"

@@ -24,7 +24,8 @@
 			"e2e/private-list-visibility.spec.js",
 			"e2e/storage-choice.spec.js",
 			"e2e/footer.spec.js",
-			"e2e/page-qr.spec.js"
+			"e2e/page-qr.spec.js",
+			"e2e/consent-network.spec.js"
 		]
 	}
 }

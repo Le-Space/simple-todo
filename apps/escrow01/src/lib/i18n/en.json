@@ -330,7 +330,7 @@
 			"candidateMdns": "Addresses ending in .local are stand-ins the browser substitutes for this device’s own address, so a web page cannot read it. They are not a fault and they are not the VPN.",
 			"candidateNew": "new",
 			"candidateGone": "gone",
-			"technicalHeading": "Worth knowing",
+			"technicalHeading": "Under the hood",
 			"waysHeading": "How the other device gets in",
 			"wayQr": "By camera: you hold up a code, they scan it. Nothing leaves this network.",
 			"relayLabel": "Connect through a relay",
@@ -341,10 +341,16 @@
 			"privacyEmpty": "The choices above decide what goes here.",
 			"privacyAccept": "I have read this and accept it",
 			"technical": [
-				"A phone closes a waiting invite within seconds of you leaving the app. Only DuckDuckGo and Safari have been seen to hold one for about ten.",
-				"Chrome on Android reports no IPv6 where Firefox and DuckDuckGo on the same phone and the same Wi-Fi report one. A verdict describes this browser, not the network.",
-				"On mobile data, carrier NAT usually blocks a direct connection to anyone outside that network.",
-				"A VPN moves both ends somewhere else, which can fix a blocked network or break a working one."
+				"Passkey: a WebAuthn key with ES256 (P-256), stored discoverable and with the PRF extension. Your DID is a did:key of its public key (uncompressed, 0x04‖x‖y). The private key never leaves the authenticator.",
+				"OrbitDB signs your entries not with the passkey but with a secp256k1 key derived from the passkey's PRF output (HKDF-SHA256, separated by DID). So one passkey yields one identity on every device; the passkey signs only the identity document.",
+				"Keystore: OrbitDB's KeyStore. With \"in memory only\" the signing key lives in this tab's memory and is gone on reload. With \"keep in this browser\" it lives in IndexedDB (the Level database ./orbitdb/identities) under private_<DID>, as the raw 32 bytes, unencrypted.",
+				"Account: EIP-7702. The address of a setup key (secp256k1, in memory only during setup) gets the code of Uniswap's Calibur v1.0.0 (0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00); the passkey is registered there as an admin key of type WebAuthnP256. The setup key is then discarded, but stays the account's root key for good.",
+				"Payments are ERC-4337 user operations to EntryPoint v0.8. The passkey signs their EIP-712 hash; Calibur checks the signature on chain with webauthn-sol, through the P-256 precompile (RIP-7212, address 0x100), otherwise in Solidity. On chain user verification is not required; only the app requires it.",
+				"Gas is paid by a paymaster: Openfort runs bundler and paymaster for Sepolia and sponsors under a rule for that chain, asked through ERC-7677 (pm_getPaymasterStubData, pm_getPaymasterData). Your account holds no ETH; the browser holds only Openfort's public key pk_test_….",
+				"Budgets are cUSDT, a confidential token under ERC-7984 (Zama's cUSDTMock on Sepolia, 6 decimals). On chain amounts exist only as euint64 handles; the arithmetic runs on the ciphertexts in Zama's coprocessors.",
+				"Locking: your browser encrypts the amount with Zama's SDK (TFHE, WebAssembly) and gets the input proof through Zama's relayer. The escrow contract ConfidentialTodoEscrow (0x6Ee3Fa9d3aEdaAD189F5DeA9d859605c9D743429) takes it with FHE.fromExternal and moves it with confidentialTransferFrom.",
+				"Reading: a second secp256k1 key, the read key, sits in localStorage and is authorised for 24 hours for escrow and token through ACL.delegateForUserDecryption. It signs EIP-712 read requests; your browser assembles the plain value from shares of 13 KMS nodes, 9 of which are needed.",
+				"Public remain the sender, recipient and time of every transfer, the link between account and read key (the DelegatedForUserDecryption event) and every read request on Zama's gateway chain. The amounts are not."
 			]
 		},
 		"relayReachable": "{count} known relays answered. No directory was queried.",

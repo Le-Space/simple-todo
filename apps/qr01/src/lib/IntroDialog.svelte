@@ -18,6 +18,7 @@
 	// joke.
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
+	import { deferNetworkCheck } from '@simple-todo/ui/qr-intro-network.js';
 	import { _, locale } from '$lib/i18n/index.js';
 	import { simpleView } from './view-mode.js';
 	import { introOpen, closeIntro } from './intro-dialog.js';
@@ -52,6 +53,16 @@
 	 * is the honest way to ask.
 	 */
 	let accepted = false;
+
+	/**
+	 * The element's network check, held back until the statement is accepted:
+	 * it measures against STUN servers at Google and Cloudflare, and nobody has
+	 * agreed to that by opening the page. Until then it measures nothing outside
+	 * and its two sections are hidden.
+	 * @type {(() => Promise<void>) | null}
+	 */
+	let measureNetwork = null;
+	$: if (accepted && measureNetwork) void measureNetwork();
 
 	/**
 	 * The element's own text, folded over its English defaults.
@@ -238,7 +249,7 @@
 		const elements = await import('@le-space/libp2p-webrtc-qr/elements');
 		packageStrings = elements.QR_INTRO_STRINGS_DE ?? {};
 
-		introEl.rtcConfiguration = diagnosticRtcConfiguration();
+		measureNetwork = deferNetworkCheck(introEl, diagnosticRtcConfiguration());
 		introEl.strings = strings;
 		introEl.technical = !$simpleView;
 		// Assigned before the first `open()`, so a remembered yes is checked as
