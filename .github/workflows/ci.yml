@@ -51,6 +51,8 @@ jobs:
           node-version: '24.x'
       - name: Every kit import resolves
         run: node packages/e2e-kit/src/check-kit-exports.mjs
+      - name: Which chapters a change tests, and which it deploys
+        run: node --test .github/pick-apps.test.mjs
 
   test:
     needs: discover
