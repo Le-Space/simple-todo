@@ -21,6 +21,7 @@ import { sha512 } from 'multiformats/hashes/sha2';
 import { multiaddr } from '@multiformats/multiaddr';
 import { createLibp2pConfig } from '@simple-todo/net/libp2p-config.js';
 import { createMemoryIdentities } from '@simple-todo/todo/memory-identities.js';
+import { seedRestoredSigningKey } from '@simple-todo/todo/restored-signing-key.js';
 import { keepLogsWhereTheChoiceSays } from '@simple-todo/todo/keep-logs-in-memory.js';
 import { forgetByPrefix, recall, remember } from '@simple-todo/todo/browser-memory.js';
 import {
@@ -379,6 +380,10 @@ async function createOrbitDBInstance(heliaNode) {
 	// nothing, and cost a passkey prompt to unlock it.
 	const keystore = await KeyStore({ storage: await MemoryStorage() });
 	const identities = await Identities({ ipfs: heliaNode, keystore });
+	// A passkey restored on this device brought its signing key along; in the
+	// keystore before the provider looks, it spares the passkey a touch that
+	// would only read the PRF output the restore already read.
+	await seedRestoredSigningKey(identities.keystore, activePasskeyCredential);
 	const identity = await identities.createIdentity({
 		provider: OrbitDBWebAuthnIdentityProviderFunction({
 			webauthnCredential: activePasskeyCredential,

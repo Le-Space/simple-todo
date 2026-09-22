@@ -3,6 +3,7 @@ import { libp2pStore, peerIdStore, ownDidStore, initializationStore } from './p2
 
 import { createLibp2p } from 'libp2p';
 import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
+import { seedRestoredSigningKey } from '@simple-todo/todo/restored-signing-key.js';
 import { createMemoryIdentities } from '@simple-todo/todo/memory-identities.js';
 import { keepLogsWhereTheChoiceSays } from '@simple-todo/todo/keep-logs-in-memory.js';
 import { createHeliaLight } from 'helia';
@@ -495,6 +496,10 @@ async function createOrbitDBInstance(heliaNode) {
 	const identities = getPersistentStorageEnabled()
 		? await Identities({ ipfs: heliaNode })
 		: await createMemoryIdentities(heliaNode);
+	// A passkey restored on this device brought its signing key along; in the
+	// keystore before the provider looks, it spares the passkey a touch that
+	// would only read the PRF output the restore already read.
+	await seedRestoredSigningKey(identities.keystore, activePasskeyCredential);
 	const identity = await identities.createIdentity({
 		provider: OrbitDBWebAuthnIdentityProviderFunction({
 			webauthnCredential: activePasskeyCredential
