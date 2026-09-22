@@ -28,48 +28,53 @@
 		<meta name="theme-color" content="#0B0E15" />
 
 		<!-- SEO Meta Tags -->
-		<title>Simple-Todo — A Local-First Peer-to-Peer TODO</title>
+		<!-- escrow01 is shown to people outside the tutorial -- a bank's
+		     specialists among them -- so its title, description and social card
+		     speak of what it demonstrates, in German, and say that it runs on a
+		     testnet. The card is tools/aleph/make-og-cards.py's. -->
+		<title>Vertrauliche Treuhand für delegierte Aufgaben · escrow01</title>
 		<meta
 			name="description"
-			content="Simple-Todo — a local-first peer-to-peer todo list. No servers, no accounts, no passwords — data you own. Built with OrbitDB, IPFS and libp2p."
+			content="Demo: Alice delegiert eine Aufgabe an Bob und sperrt dafür ein Budget in einem vertraulichen Token. Der Betrag bleibt verschlüsselt (Zama FHE, ERC-7984), ein Passkey signiert, das Gas ist gesponsert. Im Sepolia-Testnetz."
 		/>
-		<meta name="author" content="Nico Krause" />
+		<meta name="author" content="Le Space UG" />
 		<meta
 			name="keywords"
-			content="peer-to-peer, local-first, libp2p, todo, list, orbitdb, ipfs, decentralized, p2p, le-space"
+			content="vertrauliche Treuhand, Zama, FHE, ERC-7984, Passkey, EIP-7702, Account Abstraction, local-first, peer-to-peer, OrbitDB"
 		/>
 
-		<!-- Open Graph / Facebook / Telegram -->
+		<!-- Open Graph / Facebook / LinkedIn / Telegram / Mail -->
 		<meta property="og:type" content="website" />
-		<meta property="og:url" content="https://delegation01.le-space.de/" />
-		<meta property="og:title" content="Simple-Todo — delegation01 tutorial chapter" />
+		<meta property="og:url" content="https://escrow01.le-space.de/" />
+		<meta property="og:title" content="Vertrauliche Treuhand für delegierte Aufgaben" />
 		<meta
 			property="og:description"
-			content="Hand one todo to someone, and take it back. A local-first peer-to-peer todo list. No servers, no accounts, no passwords — data you own. OrbitDB · IPFS · libp2p."
+			content="Alice delegiert eine Aufgabe an Bob und sperrt ein Budget, dessen Betrag verschlüsselt bleibt (Zama FHE, ERC-7984). Ein Passkey signiert, das Gas ist gesponsert. Demo im Sepolia-Testnetz."
 		/>
-		<meta property="og:image" content="https://delegation01.le-space.de/og-image.png" />
-		<meta property="og:image:type" content="image/png" />
+		<meta property="og:image" content="https://escrow01.le-space.de/og/escrow01.jpg" />
+		<meta property="og:image:type" content="image/jpeg" />
 		<meta
 			property="og:image:alt"
-			content="Simple-Todo — a local-first peer-to-peer todo list, on the Le-Space stack"
+			content="Vertrauliche Treuhand: Budget gesperrt, Betrag verschlüsselt, Freigabe per Passkey. escrow01, Sepolia-Testnetz."
 		/>
 		<meta property="og:image:width" content="1200" />
 		<meta property="og:image:height" content="630" />
-		<meta property="og:site_name" content="Simple-Todo" />
-		<meta property="og:locale" content="en_US" />
+		<meta property="og:site_name" content="Le Space" />
+		<meta property="og:locale" content="de_DE" />
+		<meta property="og:locale:alternate" content="en_US" />
 
 		<!-- Twitter -->
 		<meta property="twitter:card" content="summary_large_image" />
-		<meta property="twitter:url" content="https://delegation01.le-space.de/" />
-		<meta property="twitter:title" content="Simple-Todo — delegation01 tutorial chapter" />
+		<meta property="twitter:url" content="https://escrow01.le-space.de/" />
+		<meta property="twitter:title" content="Vertrauliche Treuhand für delegierte Aufgaben" />
 		<meta
 			property="twitter:description"
-			content="Hand one todo to someone, and take it back. A local-first peer-to-peer todo list. No servers, no accounts, no passwords — data you own. OrbitDB · IPFS · libp2p."
+			content="Alice delegiert eine Aufgabe an Bob und sperrt ein Budget, dessen Betrag verschlüsselt bleibt (Zama FHE, ERC-7984). Ein Passkey signiert, das Gas ist gesponsert. Demo im Sepolia-Testnetz."
 		/>
-		<meta property="twitter:image" content="https://delegation01.le-space.de/og-image.png" />
+		<meta property="twitter:image" content="https://escrow01.le-space.de/og/escrow01.jpg" />
 		<meta
 			property="twitter:image:alt"
-			content="Simple-Todo — a local-first peer-to-peer todo list, on the Le-Space stack"
+			content="Vertrauliche Treuhand: Budget gesperrt, Betrag verschlüsselt, Freigabe per Passkey. escrow01, Sepolia-Testnetz."
 		/>
 
 		<!-- Additional Meta Tags -->
@@ -81,11 +86,10 @@
 		<meta name="msapplication-TileColor" content="#0B0E15" />
 		<meta name="msapplication-config" content="./browserconfig.xml" />
 
-		<!-- Tutorial chapter: this deployment shows an intentionally older state of
-		     the app, so it must not compete with the live product in search results.
-		     It stays crawlable (a disallowed page's noindex is never seen) but is
-		     de-indexed and points its canonical at the production app. -->
-		<link rel="canonical" href="https://simple-todo.le-space.de/" />
+		<!-- Still de-indexed, like every chapter, but canonical to itself: a link
+		     preview that follows the canonical (LinkedIn does) would otherwise show
+		     the main app instead of this demo. -->
+		<link rel="canonical" href="https://escrow01.le-space.de/" />
 
 		<!-- Technical Meta Tags -->
 		<meta name="format-detection" content="telephone=no" />
@@ -93,12 +97,12 @@
 		<meta name="googlebot" content="noindex, follow" />
 
 		<!-- Schema.org markup -->
-		<meta itemprop="name" content="Simple-Todo — A Local-First Peer-to-Peer TODO" />
+		<meta itemprop="name" content="Vertrauliche Treuhand für delegierte Aufgaben · escrow01" />
 		<meta
 			itemprop="description"
-			content="A local-first peer-to-peer todo list using OrbitDB, IPFS and libp2p. No servers, no accounts, no passwords — data you own."
+			content="Demo im Sepolia-Testnetz: ein Budget für eine delegierte Aufgabe, gesperrt in einem vertraulichen Token (Zama FHE, ERC-7984), freigegeben per Passkey."
 		/>
-		<meta itemprop="image" content="https://simple-todo.le-space.de/og-image.png" />
+		<meta itemprop="image" content="https://escrow01.le-space.de/og/escrow01.jpg" />
 
 		%sveltekit.head%
 	</head>
