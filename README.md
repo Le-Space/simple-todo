@@ -56,6 +56,11 @@ had to be ported by hand into up to nine of them. Those branches are frozen;
 their history is kept here under `refs/archive/<chapter>` and tagged
 `frozen/<chapter>`. See [docs/FROZEN.md](docs/FROZEN.md) for the exact commits.
 
+**That repository is archived (read-only) since 2026-09-22, and nothing
+deploys from it any more** — its deploy and preview workflows were switched
+off first. It stays for its history until it is deleted. Every chapter goes
+live from this repository only: a push to `main` deploys what it touched.
+
 ```
 git fetch origin 'refs/archive/*:refs/archive/*'
 git log refs/archive/qr01
