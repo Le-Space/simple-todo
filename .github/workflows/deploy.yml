@@ -7,8 +7,10 @@ name: Deploy
 permissions:
   contents: read
 
-# Every push to main deploys what it touched (.github/pick-apps.mjs: an app's
-# own folder, or everything when a change lies outside apps/). A deploy from
+# Every push to main deploys the chapters whose own build inputs it changed
+# (.github/pick-apps.mjs, deploy mode): each chapter has its own domain, and a
+# change to shared code or to this workflow does not redeploy all nine; the
+# run's summary names them, and a manual run deploys them. A deploy from
 # here was seen to land on the live domain on 2026-09-18 (delegation01), and
 # the chapter branches of NiKrause/simple-todo, which deployed until then, are
 # archived with their deploy workflows switched off: this repository is the
@@ -19,7 +21,7 @@ on:
   workflow_dispatch:
     inputs:
       apps:
-        description: 'Apps to deploy, space separated; empty means all'
+        description: 'Apps to deploy, space separated; empty means all nine'
         required: false
         default: ''
 
@@ -42,6 +44,9 @@ jobs:
       - id: pick
         run: node .github/pick-apps.mjs
         env:
+          # Only chapters whose own build inputs changed go live on a push;
+          # shared changes are named in the summary and deployed by hand.
+          PICK_MODE: deploy
           BASE_SHA: ${{ github.event.before }}
           HEAD_SHA: ${{ github.sha }}
           APPS_INPUT: ${{ inputs.apps }}
