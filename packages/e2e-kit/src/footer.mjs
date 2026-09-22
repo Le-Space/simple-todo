@@ -63,6 +63,28 @@ export async function expectCredit(page, expect, { language = 'en' } = {}) {
 }
 
 /**
+ * The header mark links to local-first.le-space.de, the stack behind the app.
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {typeof import('@playwright/test').expect} expect
+ * @param {{ language?: 'en' | 'de' }} [options]
+ */
+export async function expectLocalFirstLink(page, expect, { language = 'en' } = {}) {
+	const link = page.getByTestId('local-first-link');
+	await expect(link).toHaveCount(1);
+	await expect(link).toHaveAttribute('href', 'https://local-first.le-space.de');
+	await expect(link).toHaveAttribute('target', '_blank');
+	await expect(link).toHaveAttribute(
+		'aria-label',
+		language === 'de'
+			? 'Le Space: der Local-First-Stack hinter dieser App'
+			: 'Le Space: the local-first stack behind this app'
+	);
+	// The logo itself, not an empty link.
+	await expect(link.locator('svg[role="img"]')).toHaveCount(1);
+}
+
+/**
  * No shared control left speaking English on a German page.
  *
  * @param {import('@playwright/test').Page} page

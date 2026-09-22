@@ -1,12 +1,17 @@
 import { test, expect } from '@playwright/test';
-import { expectBuildStamp, expectCredit } from '@simple-todo/e2e-kit/footer.mjs';
+import {
+	expectBuildStamp,
+	expectCredit,
+	expectLocalFirstLink
+} from '@simple-todo/e2e-kit/footer.mjs';
 
 // The footer is there before anybody has agreed to anything: it sits under the
 // consent dialog, and it says who made the page the dialog is asking about.
 test.describe('Footer', () => {
-	test('signs the page: Made with [heart] Le Space', async ({ page }) => {
+	test('signs the page, and its mark links to the local-first stack', async ({ page }) => {
 		await page.goto('/');
 		await expectCredit(page, expect);
+		await expectLocalFirstLink(page, expect);
 	});
 
 	// Two readers on two continents: the same instant, each in their own clock.

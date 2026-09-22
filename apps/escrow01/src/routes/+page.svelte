@@ -54,7 +54,7 @@
 	import ConsentModal from '$lib/ConsentModal.svelte';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
 	import ThemeToggle from '$lib/ThemeToggle.svelte';
-	import LeSpaceLogo from '@simple-todo/ui/LeSpaceLogo.svelte';
+	import LocalFirstLink from '@simple-todo/ui/LocalFirstLink.svelte';
 	import AppFooter from '@simple-todo/ui/AppFooter.svelte';
 	import PageQr from '@simple-todo/ui/PageQr.svelte';
 	import ToastNotification from '@simple-todo/ui/ToastNotification.svelte';
@@ -620,7 +620,7 @@
 		class="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 sm:mb-6 sm:grid-cols-[minmax(0,1fr)_auto_auto]"
 	>
 		<div class="col-start-1 row-start-1 flex min-w-0 items-center gap-3">
-			<LeSpaceLogo size={44} />
+			<LocalFirstLink size={44} />
 			<div class="min-w-0">
 				{#if auditorOpen}
 					<h1 class="truncate text-xl font-bold text-heading sm:text-3xl">

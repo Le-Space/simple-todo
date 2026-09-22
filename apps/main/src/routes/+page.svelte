@@ -23,7 +23,7 @@
 	import { _ } from '$lib/i18n/index.js';
 	import LanguageSwitcher from '$lib/LanguageSwitcher.svelte';
 	import ThemeToggle from '$lib/ThemeToggle.svelte';
-	import LeSpaceLogo from '@simple-todo/ui/LeSpaceLogo.svelte';
+	import LocalFirstLink from '@simple-todo/ui/LocalFirstLink.svelte';
 	import AppFooter from '@simple-todo/ui/AppFooter.svelte';
 	import PageQr from '@simple-todo/ui/PageQr.svelte';
 	import ToastNotification from '@simple-todo/ui/ToastNotification.svelte';
@@ -270,7 +270,7 @@
 	<!-- Header with title and social icons -->
 	<header class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div class="flex flex-1 items-center gap-3">
-			<LeSpaceLogo size={52} />
+			<LocalFirstLink size={52} />
 			<div>
 				<h1 class="text-2xl font-bold text-heading sm:text-3xl">{$_('app.title')}</h1>
 				<p class="mt-1 text-sm text-faint">
