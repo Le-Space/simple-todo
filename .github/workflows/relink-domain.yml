@@ -1,0 +1,56 @@
+name: Relink a domain
+
+# Point a chapter's domain back at an earlier upload — a rollback without a
+# rebuild. The upload stays on Aleph after a newer deploy; this only moves the
+# domain. The chapter's site and domain come from its chapter.json, as in
+# deploy.yml; the item hash and CIDs are those of the upload to return to
+# (the domains aggregate names the message; its content has the CID).
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'Chapter, e.g. escrow01'
+        required: true
+      item_hash:
+        description: 'Aleph STORE message hash of the upload to return to'
+        required: true
+      cid:
+        description: 'Its IPFS CID (v1, bafy…)'
+        required: true
+      cid_v0:
+        description: 'The same CID in v0 form (Qm…)'
+        required: true
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  relink:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+      - name: Read the chapter's deploy settings
+        id: chapter
+        run: node .github/read-chapter.mjs apps/${{ inputs.app }}/chapter.json
+      - name: Install isolated Aleph deploy tooling
+        run: npm install --prefix /tmp/le-space-deployer ${{ steps.chapter.outputs.deployer }} --ignore-scripts
+      - name: Link the domain
+        env:
+          ALEPH_VM_MODE: site-domain-link
+          ALEPH_SITE_NAME: ${{ steps.chapter.outputs.site }}
+          ALEPH_SITE_ITEM_HASH: ${{ inputs.item_hash }}
+          ALEPH_SITE_IPFS_CID: ${{ inputs.cid }}
+          ALEPH_SITE_IPFS_CID_V0: ${{ inputs.cid_v0 }}
+          ALEPH_SITE_DOMAIN: ${{ steps.chapter.outputs.domain }}
+          ALEPH_SITE_DOMAIN_CATCH_ALL_PATH: /index.html
+          ALEPH_SITE_CHANNEL: ALEPH-CLOUDSOLUTIONS
+          ALEPH_PRIVATE_KEY: ${{ secrets.ALEPH_PRIVATE_KEY }}
+        run: node --input-type=module -e "import('/tmp/le-space-deployer/node_modules/@le-space/node/index.js').then((m) => m.runSiteMode())"
