@@ -7,9 +7,15 @@ name: Deploy
 permissions:
   contents: read
 
-# The push trigger goes in once a deploy from here has been seen to land on the
-# live domain — until then this runs only when somebody asks for it.
+# Every push to main deploys what it touched (.github/pick-apps.mjs: an app's
+# own folder, or everything when a change lies outside apps/). A deploy from
+# here was seen to land on the live domain on 2026-09-18 (delegation01), and
+# the chapter branches of NiKrause/simple-todo, which deployed until then, are
+# archived with their deploy workflows switched off: this repository is the
+# only place the chapters go live from.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       apps:
@@ -17,8 +23,11 @@ on:
         required: false
         default: ''
 
+# One deploy at a time, in push order: two pushes in quick succession must not
+# race, or the older build could be the one left on the domain. A newer push
+# waiting behind a running deploy replaces an older one still waiting.
 concurrency:
-  group: deploy-${{ github.sha }}
+  group: deploy-main
   cancel-in-progress: false
 
 jobs:
