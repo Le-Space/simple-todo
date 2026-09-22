@@ -4,15 +4,20 @@
 // @le-space/orbitdb-identity-provider-webauthn-did (examples/). Once it is
 // exported there as an official helper, replace this module with that import.
 //
-// Recovery order (mirrors the provider's documented layers):
-//   1. largeBlob — identity metadata stored inside the passkey itself,
-//      readable through a discoverable WebAuthn assertion.
-//   2. localStorage — the serialized credential stored at registration time.
+// Recovery order:
+//   1. this browser's stored credential — only when the reader chose to keep
+//      things, and no WebAuthn call at all.
+//   2. the authenticator alone — two touches, nothing stored anywhere (#9).
+//
+// No largeBlob layer: the credential is never registered with that extension
+// (Le-Space/orbitdb-identity-provider-webauthn-did#48) — see
+// createPasskeyCredential below for what that measurement showed.
 //
 // The passkey is bound to the page origin (rpId). A credential created on
 // localhost cannot be used on simple-todo.le-space.de or an IPFS gateway —
 // see the chapter README.
 import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
+import { withRestoredSigningKey } from '@simple-todo/todo/restored-signing-key.js';
 import {
 	WebAuthnDIDProvider,
 	storeWebAuthnCredential,
@@ -24,8 +29,7 @@ import {
 const CREDENTIAL_STORAGE_KEY = 'simpleTodo.webauthnCredential';
 
 /**
- * Register a brand-new passkey and persist its identity metadata for later
- * recovery (largeBlob first, localStorage always).
+ * Register a brand-new passkey and, when the reader keeps things, remember it.
  *
  * @param {{ userId: string, displayName: string }} options
  * @returns {Promise<any>} the WebAuthn credential for the identity provider
@@ -73,35 +77,40 @@ export async function createPasskeyCredential({ userId, displayName }) {
 /**
  * What the provider needs, rebuilt from what the authenticator gave back.
  *
- * It reads three things off a credential — `credentialId`, `rawCredentialId`
- * and `publicKey` — and `prfInput` when it derives the signing key. The
- * constants are the ones `createCredential()` writes for a P-256 passkey
- * (ES256, EC2, P-256), and the rest of a registered credential (the
- * attestation object, the user handle, the display name) has no reader past
- * registration.
+ * It reads `credentialId` (text), `rawCredentialId` (bytes) and `publicKey`
+ * off a credential, and `prfInput` when it derives the signing key; since
+ * provider 0.7.0 the restore returns both forms of the id under those names.
+ * The constants are the ones `createCredential()` writes for a P-256 passkey
+ * (ES256, EC2, P-256). `attestationObject` is empty, because
+ * `storeWebAuthnCredential` serialises it and a restored passkey has none —
+ * without it, keeping a restored credential threw.
+ *
+ * The signing key the restore derived rides along, out of reach of any
+ * serialiser; p2p.js hands it to the keystore, which spares the passkey a
+ * touch (see @simple-todo/todo/restored-signing-key.js).
  *
  * @param {{ did: string, publicKey: { x: Uint8Array, y: Uint8Array },
- *   credentialId: Uint8Array, prfInput: Uint8Array }} restored
+ *   credentialId: string, rawCredentialId: Uint8Array, prfInput: Uint8Array,
+ *   signingKey: Uint8Array }} restored
  */
 function credentialFromRestored(restored) {
-	const bytes = new Uint8Array(restored.credentialId);
-	let binary = '';
-	for (const byte of bytes) binary += String.fromCharCode(byte);
-	const credentialId = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-
-	return {
-		did: restored.did,
-		credentialId,
-		rawCredentialId: bytes,
-		publicKey: {
-			algorithm: -7,
-			keyType: 2,
-			curve: 1,
-			x: restored.publicKey.x,
-			y: restored.publicKey.y
+	return withRestoredSigningKey(
+		{
+			did: restored.did,
+			credentialId: restored.credentialId,
+			rawCredentialId: restored.rawCredentialId,
+			attestationObject: new Uint8Array(0),
+			publicKey: {
+				algorithm: -7,
+				keyType: 2,
+				curve: 1,
+				x: restored.publicKey.x,
+				y: restored.publicKey.y
+			},
+			prfInput: restored.prfInput
 		},
-		prfInput: restored.prfInput
-	};
+		restored.signingKey
+	);
 }
 
 /**
