@@ -29,6 +29,9 @@ export const uiMessages = {
 			credit: {
 				madeWith: 'Made with'
 			},
+			localFirst: {
+				link: 'Le Space: the local-first stack behind this app'
+			},
 			build: {
 				state: 'Built'
 			},
@@ -54,6 +57,9 @@ export const uiMessages = {
 			},
 			credit: {
 				madeWith: 'Gebaut mit'
+			},
+			localFirst: {
+				link: 'Le Space: der Local-First-Stack hinter dieser App'
 			},
 			build: {
 				state: 'Stand'

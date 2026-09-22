@@ -66,7 +66,7 @@
 	import { formatVersions } from '@simple-todo/todo/build-info.js';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
 	import ThemeToggle from '$lib/ThemeToggle.svelte';
-	import LeSpaceLogo from '@simple-todo/ui/LeSpaceLogo.svelte';
+	import LocalFirstLink from '@simple-todo/ui/LocalFirstLink.svelte';
 	import AppFooter from '@simple-todo/ui/AppFooter.svelte';
 	import PageQr from '@simple-todo/ui/PageQr.svelte';
 	import ToastNotification from '@simple-todo/ui/ToastNotification.svelte';
@@ -392,15 +392,7 @@
 	<!-- Header with title and social icons -->
 	<header class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div class="flex flex-1 items-center gap-3">
-			<a
-				href="https://local-first.le-space.de"
-				target="_blank"
-				rel="noopener noreferrer"
-				class="shrink-0"
-				aria-label={$_('app.title')}
-			>
-				<LeSpaceLogo size={52} />
-			</a>
+			<LocalFirstLink size={52} />
 			<div>
 				<h1 class="text-2xl font-bold text-heading sm:text-3xl">{$_('app.title')}</h1>
 				<!--
