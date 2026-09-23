@@ -107,6 +107,7 @@
 				<button
 					on:click={handleSubmit}
 					{disabled}
+					data-testid="add-todo-submit"
 					class="shrink-0 rounded-md bg-coral-500 px-4 py-2 font-medium text-white transition-colors hover:bg-coral-600 disabled:cursor-not-allowed disabled:bg-faint sm:px-6"
 				>
 					{buttonText ?? $_('todo.form.submit')}
@@ -229,9 +230,13 @@
 
 		{#if expanded}
 			<div class="flex gap-2">
+				<!-- The same test id as the collapsed form's button above: only one of
+				     the two is ever on screen, and a spec should not have to know
+				     which shape the form is in to submit it. -->
 				<button
 					on:click={handleSubmit}
 					{disabled}
+					data-testid="add-todo-submit"
 					class="rounded-md bg-coral-500 px-6 py-2 font-medium text-white transition-colors hover:bg-coral-600 disabled:cursor-not-allowed disabled:bg-faint"
 				>
 					{withBudget ? $_('todo.form.submitWithBudget') : (buttonText ?? $_('todo.form.submit'))}

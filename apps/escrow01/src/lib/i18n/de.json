@@ -32,11 +32,13 @@
 			"auditorOpen": "Prüfansicht öffnen",
 			"chainAccount": "Konto auf Sepolia",
 			"accountCreating": "Wird eingerichtet. Openfort zahlt die Gebühr, eine Passkey-Bestätigung ist dafür nicht nötig.",
-			"accountHint": "Ihr Passkey ist der Admin-Schlüssel dieses Kontos. Mit dem ersten Sperren kommen 1.000,00 Test-cUSDT darauf.",
+			"accountHint": "Ihr Passkey ist der Admin-Schlüssel dieses Kontos.",
 			"accountFailed": "Die Einrichtung ist fehlgeschlagen: {reason}",
 			"accountRetry": "Erneut versuchen",
 			"viewOnEtherscan": "Auf Etherscan ansehen",
-			"balanceAfterAccount": "Ihr Guthaben erscheint hier, sobald Ihr Konto eingerichtet ist."
+			"balanceAfterAccount": "Ihr Guthaben erscheint hier, sobald Ihr Konto eingerichtet ist.",
+			"accountFunding": "Guthaben bekommt es mit dem ersten Sperren: 1.000,00 Test-cUSDT, im selben Vorgang geprägt.",
+			"etherscanHint": "Die Vorgänge dieses Kontos stehen auf Etherscan unter „Other Transactions“; der erste Tab bleibt leer, weil ein Passkey-Konto nie selbst sendet."
 		},
 		"network": {
 			"app": "App",
@@ -148,7 +150,8 @@
 				"pinned": "Der Relay hat bestätigt, dass er genau diesen OrbitDB-Eintrag repliziert und bei sich gespeichert hat.",
 				"unavailable": "Für diesen Eintrag liegt derzeit kein genauer Nachweis vor, dass der Relay ihn repliziert hat.",
 				"unknown": "Für diesen bestehenden Eintrag wurde nicht beobachtet, ob der Relay ihn repliziert hat."
-			}
+			},
+			"budgetOnlyOnCreate": "Ein Budget lässt sich nur beim Anlegen einer Aufgabe festlegen."
 		},
 		"list": {
 			"title": "Aufgaben",
