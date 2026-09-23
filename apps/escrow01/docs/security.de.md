@@ -385,8 +385,10 @@ ist, kann niemand wiederherstellen, und der Schlüssel, der das Gas bezahlt, ist
   UserOperations auf Sepolia sponsern lassen, bis das Guthaben des Projekts aufgebraucht ist; für ein
   Konto signieren kann der Schlüssel nicht. Einen geheimen `sk_`-Schlüssel in der Konfiguration lehnt
   die App ab (`readChainEndpoints`).
-- **Keine Wiederherstellung.** Außer dem verworfenen Root-Key ist der Passkey der einzige Schlüssel
-  des Kontos. Ein synchronisierter Passkey erreicht weitere Geräte; ein verlorener nimmt das Konto mit.
+- **Keine Wiederherstellung ohne den Passkey.** Außer dem verworfenen Root-Key ist der Passkey der
+  einzige Schlüssel des Kontos. Ein synchronisierter Passkey erreicht weitere Geräte und gibt dort
+  seit Provider 0.8.0 Identität und Konto in zwei Berührungen zurück, ohne gespeicherte Daten; ein
+  verlorener nimmt das Konto mit.
 - **Calibur v1.1.0.** Uniswap hat am 2026-07-02 v1.1.0 unter einer neuen Adresse veröffentlicht und
   führt seitdem nur diese Version. Unter anderem dürfen dort nur Admin-Schlüssel den EntryPoint
   aufrufen. Die App nutzt v1.0.0, in der ihr einziger Schlüssel außer dem Root-Key ein Admin ist
@@ -405,11 +407,11 @@ ist, kann niemand wiederherstellen, und der Schlüssel, der das Gas bezahlt, ist
    Blockliste des zugrunde liegenden Tokens die Blacklist von USDT ab (`getBlackListStatus`).
 3. Metadaten: `todoRef`, DID des Delegierten und Budget-Status sind in der unverschlüsselten
    OrbitDB-Liste lesbar, und Entschlüsselungsanfragen sind auf der Gateway-Chain öffentlich.
-4. Die App hat keine Schaltfläche für die Rückzahlung, und ihr Sepolia-Modus hängt an zwei
-   unveröffentlichten Paketen, die als Tarballs beiliegen.
+4. Die App hat keine Schaltfläche für die Rückzahlung, und ihr Sepolia-Modus hängt an einem
+   unveröffentlichten Paket, das als Tarball beiliegt.
 5. Passkey-Wallet: dauerhafter Root-Key, keine Nutzerverifikation on-chain, öffentliche Verknüpfung
    zwischen Konto und Sitzungsschlüssel, der Sitzungsschlüssel im Klartext in `localStorage`, keine
-   Wiederherstellung, Calibur v1.0.0 statt v1.1.0.
+   Wiederherstellung bei verlorenem Passkey, Calibur v1.0.0 statt v1.1.0.
 6. Mainnet-Reife: ein einziger Coprozessor-Signierer für die Input-Attestierung im Mainnet,
    API-Schlüssel und Gebühren des Relayers, Migration auf v0.14, kein Audit.
 7. Verfügbarkeit der Entschlüsselung: Die Anteils-Einstellungen des Relayers nach #3481 auf Sepolia

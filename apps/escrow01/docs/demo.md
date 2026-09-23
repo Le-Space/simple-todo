@@ -27,8 +27,10 @@ Statements that would not be true today:
   trust assumptions in [Who can read the amounts?](#who-can-read-the-amounts).
 - "A passkey already pays." True only in Sepolia mode and only on the testnet: the passkey signs,
   Openfort pays the gas.
-- "The account can be recovered." No: it has no key the app knows besides the passkey, and the
-  discarded setup key technically remains a master key ([Limits](passkey-account.md#limits-technical)).
+- "A lost passkey can be recovered from." No: the account has no key the app knows besides the
+  passkey, and the discarded setup key technically remains a master key
+  ([Limits](passkey-account.md#limits-technical)). A passkey that still exists is another matter:
+  on a second device it gives back the same identity and the same account in two touches.
 - "The read key is protected." No: it sits in the browser in plain text for up to 24 hours.
 
 ## Checks the day before
@@ -335,7 +337,7 @@ service level agreement. On Sepolia, user decryption failed for a time twice in 
   root key, and under EIP-7702 it can re-delegate the account anyway); the app discards it after
   setup. The passkey's user verification is not enforced on chain. For reading, the browser keeps a
   session key in plain text for up to 24 hours, because Zama's current version accepts only ECDSA
-  signatures. There is no recovery without the passkey.
+  signatures. There is no recovery without the passkey; with it, a second device needs nothing else.
 - **Openfort key:** a publishable key in the shipped page. Whoever reads it out can have operations on
   Sepolia sponsored at the Openfort project's expense, but cannot sign for any account.
 
@@ -373,7 +375,7 @@ app setting, not a Zama requirement, and it is enforced through the chain
 No, it is a testnet demonstration. Zama's host contracts on Ethereum mainnet have the same version
 v0.13 and the same verified source as on Sepolia. Open points: the app knows only Sepolia and depends
 on unpublished packages, the escrow is not audited, the auditor is a development key, the passkey
-account has no recovery and uses Calibur v1.0.0 instead of the newer v1.1.0, the sponsorship is not
+account cannot be recovered without its passkey and uses Calibur v1.0.0 instead of the newer v1.1.0, the sponsorship is not
 restricted to the demo's contracts, the read key sits in the browser in plain text, version v0.14 is
 released but not yet deployed, and mainnet's InputVerifier accepts an encrypted input with the
 signature of a single registered coprocessor key (3 of 5 on Sepolia); how Zama operates that key is not

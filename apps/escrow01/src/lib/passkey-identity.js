@@ -4,50 +4,64 @@
 // @le-space/orbitdb-identity-provider-webauthn-did (examples/). Once it is
 // exported there as an official helper, replace this module with that import.
 //
-// Recovery order (mirrors the provider's documented layers):
-//   1. largeBlob — identity metadata stored inside the passkey itself,
-//      readable through a discoverable WebAuthn assertion.
-//   2. localStorage — the serialized credential stored at registration time.
+// Recovery order:
+//   1. this browser's stored credential — only when the reader chose to keep
+//      things, and no WebAuthn call at all.
+//   2. the authenticator alone — two touches, nothing stored anywhere. The
+//      provider derives the DID from two signatures (an assertion does not
+//      carry the public key) and the signing key from the PRF output, so a
+//      device that has never seen this passkey can still be it (#9).
+//
+// In this chapter the passkey is also the admin key of a Calibur account, so a
+// restore has to give that back too. It does: `getP256CredentialDescriptor`
+// reads `x`, `y` and the credential id off the credential rebuilt below, and
+// falls back to this page's hostname for the `rpId` a restore does not carry —
+// the same origin the passkey is bound to anyway. The account address is
+// derived from that key, so it is the same account, with the same confidential
+// balance, as before the restore (docs/passkey-account.md).
+//
+// There is no largeBlob layer any more. qr01 measured it: the provider never
+// registers a credential with the largeBlob extension
+// (Le-Space/orbitdb-identity-provider-webauthn-did#48), so the write after
+// registration returned `written: false` and the read before recovery found
+// nothing — two prompts that achieved nothing, and a third touch on every
+// restore.
 //
 // The passkey is bound to the page origin (rpId). A credential created on
-// localhost cannot be used on simple-todo.le-space.de or an IPFS gateway —
+// localhost cannot be used on escrow01.le-space.de or an IPFS gateway —
 // see the chapter README.
+import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
+import { withRestoredSigningKey } from '@simple-todo/todo/restored-signing-key.js';
 import {
 	WebAuthnDIDProvider,
-	createDidLargeBlobPayload,
-	parseDidLargeBlobPayload,
-	writeLargeBlobMetadata,
-	readLargeBlobMetadata,
 	storeWebAuthnCredential,
 	loadWebAuthnCredential,
-	clearWebAuthnCredential
+	clearWebAuthnCredential,
+	restoreIdentityFromAuthenticator
 } from '@le-space/orbitdb-identity-provider-webauthn-did';
 
 const CREDENTIAL_STORAGE_KEY = 'simpleTodo.webauthnCredential';
 
 /**
- * The credential, written down so a later visit finds the same identity.
+ * The credential, written down so a later visit finds the same identity --
+ * and only when the reader asked for things to be kept.
  *
- * This is the one thing memory mode still leaves on the device, and it is
- * deliberate for now: with provider 0.5.4 an assertion proves possession but
- * does not carry the public key back, so without this (or a largeBlob the
- * authenticator may not have) the identity cannot return -- a reader would
- * come back to a new DID and no access to their own private list.
- *
- * Provider 0.6.0 removes the reason: `restoreIdentityFromAuthenticator()`
- * touches the same passkey twice and derives the DID and the signing key from
- * the two signatures, with nothing stored. Once the chapters are on it, this
- * write goes away in memory mode (#9).
+ * In memory mode nothing is written, and nothing needs to be: recovery asks
+ * the authenticator itself. The cost is two touches instead of none (#9).
  *
  * @param {any} credential
  */
 function rememberCredential(credential) {
+	if (!getPersistentStorageEnabled()) return;
 	storeWebAuthnCredential(credential, CREDENTIAL_STORAGE_KEY);
 }
 
 /**
- * Register a brand-new passkey and persist its identity metadata for later
- * recovery (largeBlob first, localStorage always).
+ * Register a brand-new passkey.
+ *
+ * Three prompts in all, counted in e2e/passkey-restore.spec.js: this `create`,
+ * then — when OrbitDB builds the identity — one for the PRF output the signing
+ * key is derived from and one to sign the identity.
  *
  * @param {{ userId: string, displayName: string }} options
  * @returns {Promise<any>} the WebAuthn credential for the identity provider
@@ -57,48 +71,82 @@ export async function createPasskeyCredential({ userId, displayName }) {
 		userId,
 		displayName
 	});
-
-	// localStorage fallback first — it never fails for platform reasons.
 	rememberCredential(credential);
-
-	// Best effort: put the metadata into the authenticator's largeBlob so the
-	// identity survives a cleared browser profile. Costs one extra WebAuthn
-	// prompt right after registration; not every authenticator supports it.
-	try {
-		const payload = createDidLargeBlobPayload(credential, credential.did);
-		await writeLargeBlobMetadata({
-			credentialId: credential.rawCredentialId,
-			payload
-		});
-	} catch (error) {
-		console.warn('largeBlob write skipped (falling back to localStorage only):', error);
-	}
-
 	return credential;
+}
+
+/**
+ * What the provider needs, rebuilt from what the authenticator gave back.
+ *
+ * It reads `credentialId` (text), `rawCredentialId` (bytes) and `publicKey`
+ * off a credential, and `prfInput` when it derives the signing key; since
+ * provider 0.7.0 the restore returns both forms of the id under those names.
+ * The constants are the ones `createCredential()` writes for a P-256 passkey
+ * (ES256, EC2, P-256), and the budget account reads the same three fields.
+ * `attestationObject` is empty, because `storeWebAuthnCredential` serialises it
+ * and a restored passkey has none — without it, keeping a restored credential
+ * threw.
+ *
+ * The signing key the restore derived rides along, out of reach of any
+ * serialiser; p2p.js hands it to the keystore, which spares the passkey a
+ * touch (see @simple-todo/todo/restored-signing-key.js).
+ *
+ * @param {{ did: string, publicKey: { x: Uint8Array, y: Uint8Array },
+ *   credentialId: string, rawCredentialId: Uint8Array, prfInput: Uint8Array,
+ *   signingKey: Uint8Array }} restored
+ */
+function credentialFromRestored(restored) {
+	return withRestoredSigningKey(
+		{
+			did: restored.did,
+			credentialId: restored.credentialId,
+			rawCredentialId: restored.rawCredentialId,
+			attestationObject: new Uint8Array(0),
+			publicKey: {
+				algorithm: -7,
+				keyType: 2,
+				curve: 1,
+				x: restored.publicKey.x,
+				y: restored.publicKey.y
+			},
+			prfInput: restored.prfInput
+		},
+		restored.signingKey
+	);
 }
 
 /**
  * Recover a previously registered passkey identity.
  *
+ * A stored credential is used as it is: no WebAuthn call, so this step asks for
+ * nothing — the identity signature when OrbitDB starts is the one touch left.
+ * Without one, the authenticator is asked: two touches, and no fallback if it
+ * cannot evaluate PRF -- an identity derived from something else would be a
+ * different one wearing this name, and would open a different budget account.
+ *
+ * @param {{ onTouch?: (step: { touch: number, of: number }) => void }} [options]
  * @returns {Promise<any | null>} the credential, or null when nothing found
  */
-export async function recoverPasskeyCredential() {
+export async function recoverPasskeyCredential({ onTouch } = {}) {
+	const stored = loadWebAuthnCredential(CREDENTIAL_STORAGE_KEY);
+	if (stored) return stored;
+
+	// A device with no passkey for this origin answers with a WebAuthn error --
+	// "Resident credentials or empty 'allowCredentials' lists are not supported"
+	// and its kin -- which says nothing to a reader. Treated as "nothing found",
+	// so the caller keeps its own readable message about there being no passkey
+	// here.
+	let restored;
 	try {
-		const { blob } = await readLargeBlobMetadata({ discoverableCredentials: true });
-		if (blob?.length) {
-			const payload = parseDidLargeBlobPayload(blob);
-			const credential = payload?.credential ?? payload;
-			if (credential?.did) {
-				// Refresh the local fallback so the next recovery works offline of largeBlob.
-				rememberCredential(credential);
-				return credential;
-			}
-		}
+		restored = await restoreIdentityFromAuthenticator({ onTouch });
 	} catch (error) {
-		console.warn('largeBlob recovery unavailable, trying localStorage:', error);
+		console.warn('the authenticator could not answer for an identity:', error);
+		return null;
 	}
 
-	return loadWebAuthnCredential(CREDENTIAL_STORAGE_KEY);
+	const credential = credentialFromRestored(restored);
+	rememberCredential(credential);
+	return credential;
 }
 
 /** True when a serialized credential exists in this browser profile. */

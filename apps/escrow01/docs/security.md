@@ -350,8 +350,10 @@ can restore an account whose passkey is lost, and the key that pays for gas is r
   restriction to contracts or functions. Anyone who reads the key out of the page can have arbitrary
   Sepolia user operations sponsored until the project's credits run out; the key cannot sign for any
   account. The app refuses a secret `sk_` key in its configuration (`readChainEndpoints`).
-- **No recovery.** Besides the discarded root key the passkey is the account's only key. A synced
-  passkey reaches further devices; a lost one takes the account with it.
+- **No recovery for a lost passkey.** Besides the discarded root key the passkey is the account's
+  only key. A synced passkey reaches further devices and, since provider 0.8.0, gives back the
+  identity and the account there in two touches with nothing stored; a lost one takes the account
+  with it.
 - **Calibur v1.1.0.** Uniswap released v1.1.0 on 2026-07-02 at a new address and lists only that
   version since. Among other hardening it allows only admin keys to call the EntryPoint. The app uses
   v1.0.0, where its only non-root key is an admin
@@ -368,11 +370,11 @@ can restore an account whose passkey is lost, and the key that pays for gas is r
    consulted USDT's own blacklist (`getBlackListStatus`) as its underlying deny list.
 3. Metadata: `todoRef`, delegate DID and budget status are readable in the unencrypted OrbitDB list,
    and decryption requests are public on the Gateway chain.
-4. The app has no refund button, and its Sepolia mode depends on two unpublished packages vendored as
-   tarballs.
+4. The app has no refund button, and its Sepolia mode depends on one unpublished package vendored as a
+   tarball.
 5. Passkey wallet: permanent root key, no on-chain user verification, public link between account and
-   session key, the session key in plain text in `localStorage`, no recovery, Calibur v1.0.0 rather
-   than v1.1.0.
+   session key, the session key in plain text in `localStorage`, no recovery for a lost passkey,
+   Calibur v1.0.0 rather than v1.1.0.
 6. Mainnet readiness: a single coprocessor signer for input attestation on mainnet, relayer API key
    and fees, v0.14 migration, no audit.
 7. Decryption availability: the relayer's share settings after #3481 on Sepolia are unknown; there is

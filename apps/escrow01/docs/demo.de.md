@@ -28,9 +28,11 @@ Aussagen, die heute nicht stimmen würden:
   Vertrauensannahmen in [Wer kann die Beträge lesen?](#wer-kann-die-beträge-lesen).
 - „Ein Passkey bezahlt bereits.“ Stimmt nur im Sepolia-Modus und nur im Testnetz: Der Passkey
   signiert, Openfort bezahlt das Gas.
-- „Das Konto lässt sich wiederherstellen.“ Nein: Außer dem Passkey hat es keinen Schlüssel, den die App
-  kennt, und der verworfene Einrichtungsschlüssel bleibt technisch ein Generalschlüssel
-  ([Grenzen](passkey-account.de.md#grenzen-technisch)).
+- „Ein verlorener Passkey lässt sich ersetzen.“ Nein: Außer dem Passkey hat das Konto keinen
+  Schlüssel, den die App kennt, und der verworfene Einrichtungsschlüssel bleibt technisch ein
+  Generalschlüssel ([Grenzen](passkey-account.de.md#grenzen-technisch)). Ein Passkey, den es noch
+  gibt, ist etwas anderes: Auf einem zweiten Gerät gibt er dieselbe Identität und dasselbe Konto in
+  zwei Berührungen zurück.
 - „Der Leseschlüssel ist geschützt.“ Nein: Er liegt bis zu 24 Stunden im Klartext im Browser.
 
 ## Am Tag vorher prüfen
@@ -345,7 +347,7 @@ schlug die Nutzer-Entschlüsselung Anfang September 2026 zweimal zeitweise fehl.
   neu delegieren); die App verwirft ihn nach der Einrichtung. Die Nutzerverifikation des Passkeys wird
   on-chain nicht erzwungen. Fürs Lesen hält der Browser einen Sitzungsschlüssel bis zu 24 Stunden im
   Klartext, weil Zamas aktuelle Version nur ECDSA-Signaturen annimmt. Eine Wiederherstellung ohne den
-  Passkey gibt es nicht.
+  Passkey gibt es nicht; mit ihm braucht ein zweites Gerät nichts weiter.
 - **Openfort-Schlüssel:** ein publishable Schlüssel in der ausgelieferten Seite. Wer ihn ausliest, kann
   auf Sepolia Operationen auf Kosten des Openfort-Projekts sponsern lassen, aber für kein Konto
   signieren.
@@ -386,7 +388,7 @@ durchgesetzt wird sie über die Chain ([Der Leseschlüssel](passkey-account.de.m
 Nein, es ist eine Testnetz-Vorführung. Zamas Host-Verträge auf Ethereum Mainnet haben dieselbe
 Version v0.13 und denselben verifizierten Quellcode wie auf Sepolia. Offen sind: Die App kennt nur
 Sepolia und hängt an unveröffentlichten Paketen, die Treuhand ist nicht auditiert, die Prüfstelle ist
-ein Entwicklerschlüssel, das Passkey-Konto hat keine Wiederherstellung und nutzt Calibur v1.0.0 statt
+ein Entwicklerschlüssel, das Passkey-Konto lässt sich ohne seinen Passkey nicht wiederherstellen und nutzt Calibur v1.0.0 statt
 des neueren v1.1.0, das Sponsoring ist nicht auf die Verträge der Demo beschränkt, der Leseschlüssel
 liegt im Klartext im Browser, Version v0.14 ist veröffentlicht, aber noch nicht bereitgestellt, und der
 InputVerifier auf Mainnet nimmt eine verschlüsselte Eingabe mit der Signatur eines einzigen

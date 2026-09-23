@@ -71,7 +71,7 @@
     "@le-space/aleph-bootstrap": "0.9.6",
     "@le-space/libp2p-webrtc-qr": "0.13.1",
     "@le-space/orbitdb-access-controller-delegated-todo": "0.1.0",
-    "@le-space/orbitdb-identity-provider-webauthn-did": "file:vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz",
+    "@le-space/orbitdb-identity-provider-webauthn-did": "0.8.0",
     "@le-space/passkey-wallet": "file:vendor/le-space-passkey-wallet-0.0.0-cde6878.tgz",
     "@le-space/ui": "0.9.6",
     "@libp2p/autonat": "^3.0.24",
