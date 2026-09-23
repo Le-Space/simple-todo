@@ -7,6 +7,8 @@ does. How Zama's protocol encrypts, computes and decrypts is in
 [zama-confidential-transactions.md](zama-confidential-transactions.md), what leaks and whom you trust
 is in [security.md](security.md), and a real run on Sepolia, transaction by transaction, is in
 [smoke-test.md](smoke-test.md).
+Where the test money comes from, and whose token contracts these are, is in
+[money-flow.md](money-flow.md).
 
 State on 2026-09-16: the contract is deployed on Sepolia at
 [`0x6Ee3Fa9d3aEdaAD189F5DeA9d859605c9D743429`](https://sepolia.etherscan.io/address/0x6Ee3Fa9d3aEdaAD189F5DeA9d859605c9D743429)
