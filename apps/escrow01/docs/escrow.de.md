@@ -7,6 +7,8 @@ Seite beschreibt, was die Treuhand tut. Wie Zamas Protokoll verschlüsselt, rech
 steht in [zama-confidential-transactions.de.md](zama-confidential-transactions.de.md), was nach außen
 dringt und wem man vertraut, steht in [security.de.md](security.de.md), und ein echter Lauf auf
 Sepolia, Transaktion für Transaktion, steht in [smoke-test.de.md](smoke-test.de.md).
+Woher das Testgeld kommt und wem die Token-Verträge gehören, steht in
+[money-flow.de.md](money-flow.de.md).
 
 Stand am 2026-09-16: Der Vertrag ist auf Sepolia unter
 [`0x6Ee3Fa9d3aEdaAD189F5DeA9d859605c9D743429`](https://sepolia.etherscan.io/address/0x6Ee3Fa9d3aEdaAD189F5DeA9d859605c9D743429)
