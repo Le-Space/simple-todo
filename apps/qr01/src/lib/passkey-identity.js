@@ -9,9 +9,9 @@
 //      things, and no WebAuthn call at all.
 //   2. the authenticator alone — two touches, nothing stored anywhere (#9).
 //
-// No largeBlob layer: the credential is never registered with that extension
-// (Le-Space/orbitdb-identity-provider-webauthn-did#48) — see
-// createPasskeyCredential below for what that measurement showed.
+// No largeBlob layer: the authenticator does not grant the extension, so there
+// is nothing to write to (Le-Space/orbitdb-identity-provider-webauthn-did#48)
+// — see createPasskeyCredential below for what that measurement showed.
 //
 // The passkey is bound to the page origin (rpId). A credential created on
 // localhost cannot be used on simple-todo.le-space.de or an IPFS gateway —
@@ -50,13 +50,15 @@ export async function createPasskeyCredential({ userId, displayName }) {
 	// The largeBlob write used to sit here, and it cost a WebAuthn prompt to do
 	// nothing at all.
 	//
-	// Measured by wrapping `navigator.credentials`: the write assertion returns
-	// `largeBlob: { written: false }`, every time. `WebAuthnDIDProvider.
-	// createCredential` never requests the extension at registration — PRF and
-	// hmac-secret get theirs, largeBlob is left with a comment saying the write
-	// happens later — and the WebAuthn spec only permits writing a blob to a
-	// credential registered with `largeBlob: { support: ... }`. So there was
-	// nothing to write to.
+	// Measured by wrapping `navigator.credentials` on provider 0.5.4: the write
+	// assertion returns `largeBlob: { written: false }`, every time. Not because
+	// the extension goes unrequested — `WebAuthnDIDProvider.createCredential`
+	// asks for `largeBlob: { support: 'preferred' }` since that release
+	// (provider#55). `preferred` is exactly what it says: the authenticator may
+	// decline, this one declines, and the WebAuthn spec only permits writing a
+	// blob to a credential that was registered with it. So there is nothing to
+	// write to. An earlier version of this note blamed the missing request; the
+	// request is there, the grant is not.
 	//
 	// It also *looked* like it worked, because the return value was discarded:
 	// `writeLargeBlobMetadata` reports the outcome in `extensionResults`, and
@@ -65,8 +67,10 @@ export async function createPasskeyCredential({ userId, displayName }) {
 	// So this is removed rather than moved behind a button. A button offering to
 	// back the passkey up would fail in exactly the same way, and an action that
 	// asks for a fingerprint and silently achieves nothing is worse than no
-	// action. Registering with the extension is an upstream change; when it
-	// lands, the explicit backup step is worth adding.
+	// action. What would have to change is not upstream but underfoot: an
+	// authenticator that grants the extension. Android Chrome grants it and then
+	// does not return the blob on read, which is the same dead end one step
+	// further along.
 	//
 	// Creating a passkey now costs three WebAuthn prompts instead of four:
 	// `create` (prf), `get` (prf, keystore), `get` (signIdentity).

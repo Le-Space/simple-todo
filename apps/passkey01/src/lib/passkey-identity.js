@@ -12,12 +12,14 @@
 //      carry the public key) and the signing key from the PRF output, so a
 //      device that has never seen this passkey can still be it (#9).
 //
-// There is no largeBlob layer any more. qr01 measured it: the provider never
-// registers a credential with the largeBlob extension
-// (Le-Space/orbitdb-identity-provider-webauthn-did#48), so the write after
-// registration returned `written: false` and the read before recovery found
-// nothing — two prompts that achieved nothing, and a third touch on every
-// restore.
+// There is no largeBlob layer any more. qr01 measured it on provider 0.5.4 —
+// which does request the extension at registration, so the older note here
+// that it never did was wrong: the write assertion returns
+// `largeBlob: { written: false }` every time all the same, and the read before
+// recovery finds nothing. Two prompts that achieve nothing, and a third touch
+// on every restore. The provider's hardware test adds the other half: Android
+// Chrome writes the blob and does not return it on read
+// (Le-Space/orbitdb-identity-provider-webauthn-did#48).
 //
 // The passkey is bound to the page origin (rpId). A credential created on
 // localhost cannot be used on simple-todo.le-space.de or an IPFS gateway —

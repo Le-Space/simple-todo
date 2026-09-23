@@ -1,0 +1,37 @@
+test-results
+node_modules
+coverage
+orbitdb*
+p2p-todo-demo
+relay/
+e2e/relay-info.json
+e2e/relay.log
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Local-only pnpm config. It has no `packages:` field, so committing it makes
+# every CI job fail at `pnpm store path` in setup-node before install runs.
+pnpm-workspace.yaml
+
+# Vitest browser-mode writes these when an assertion fails.
+**/__screenshots__/
