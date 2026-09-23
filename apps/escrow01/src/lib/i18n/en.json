@@ -32,11 +32,13 @@
 			"auditorOpen": "Open the auditor view",
 			"chainAccount": "Account on Sepolia",
 			"accountCreating": "Being set up. Openfort pays the fee; no passkey confirmation is needed for this.",
-			"accountHint": "Your passkey is this account's admin key. Its first lock adds 1,000.00 test cUSDT.",
+			"accountHint": "Your passkey is this account's admin key.",
 			"accountFailed": "Setting it up failed: {reason}",
 			"accountRetry": "Try again",
 			"viewOnEtherscan": "View on Etherscan",
-			"balanceAfterAccount": "Your balance shows here once your account is set up."
+			"balanceAfterAccount": "Your balance shows here once your account is set up.",
+			"accountFunding": "It gets money with its first lock: 1,000.00 test cUSDT, minted in the same operation.",
+			"etherscanHint": "This account’s activity sits under “Other Transactions” on Etherscan; the first tab stays empty because a passkey account never sends anything itself."
 		},
 		"network": {
 			"app": "App",
@@ -148,7 +150,8 @@
 				"pinned": "The relay confirmed that this exact OrbitDB entry was replicated and stored locally.",
 				"unavailable": "No exact relay replication proof is currently available for this entry.",
 				"unknown": "Relay replication status was not observed for this existing entry."
-			}
+			},
+			"budgetOnlyOnCreate": "A budget can only be set when the todo is created."
 		},
 		"list": {
 			"title": "TODO Items",

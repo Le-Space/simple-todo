@@ -20,6 +20,7 @@
 	import { formatAmount } from '$lib/budget.js';
 	import {
 		addTodoWithBudget,
+		balanceStore,
 		budgetInfo,
 		readAmount,
 		refreshBalance,
@@ -483,6 +484,12 @@
 	// and only for a session the service can sign for.
 	$: budgetEnabled = delegationEnabled && (!budgetInfo.requiresPasskey || Boolean($ownDidStore));
 	$: budgetsInList = $todosStore.some((todo) => todo.budget && todo.budget.status !== 'none');
+	// The starting funds are a sentence about *this* account, so it stops being
+	// true the moment the account holds anything -- a recipient's balance comes
+	// from a payout, and telling them the first lock will mint them 1,000.00
+	// reads as an explanation of the number above it. Unknown counts as empty:
+	// before the first read there is nothing to contradict.
+	$: showFundingHint = !($balanceStore.state === 'ready' && $balanceStore.units > 0n);
 	// The balance appears where the storyboard has it: once a budget was paid
 	// out to this session. On Sepolia the account holds real test money from its
 	// first lock, so it shows as soon as the account is there.
@@ -788,7 +795,16 @@
 							>{$_('sections.account.viewOnEtherscan')}</a
 						>
 					</p>
-					<p class="mt-2 text-xs text-faint">{$_('sections.account.accountHint')}</p>
+					<p class="mt-2 text-xs text-faint">
+						{$_('sections.account.accountHint')}
+						{#if showFundingHint}
+							<span data-testid="account-funding-hint">{$_('sections.account.accountFunding')}</span
+							>
+						{/if}
+					</p>
+					<p class="mt-1 text-xs text-faint" data-testid="account-etherscan-hint">
+						{$_('sections.account.etherscanHint')}
+					</p>
 				{:else if $accountStatusStore.phase === 'failed'}
 					<p class="mt-1 text-sm text-danger-700 dark:text-danger" role="alert">
 						{$_('sections.account.accountFailed', {

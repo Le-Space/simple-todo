@@ -417,6 +417,13 @@
 				class="rounded-md px-2 py-1 text-xs text-faint hover:text-heading"
 				>{$_('todo.item.cancel')}</button
 			>
+			<!-- This form hands the todo to somebody; it cannot put money on it. A
+			     budget is locked in the same user operation that creates the todo,
+			     so there is no later moment to add one, and saying so here is
+			     cheaper than letting somebody look for a field that is elsewhere. -->
+			<p class="text-xs text-faint sm:col-span-4" data-testid="todo-delegate-budget-note">
+				{$_('todo.item.budgetOnlyOnCreate')}
+			</p>
 		</div>
 	{/if}
 </div>

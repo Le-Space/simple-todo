@@ -17,6 +17,7 @@
 	"ci": {
 		"specs": [
 			"e2e/sections.spec.js",
+			"e2e/budget.spec.js",
 			"e2e/delegation.spec.js",
 			"e2e/acl-permissions.spec.js",
 			"e2e/consent-screen.spec.js",
