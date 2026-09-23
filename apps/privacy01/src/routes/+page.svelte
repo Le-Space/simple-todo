@@ -38,6 +38,7 @@
 	import PeerIdCard from '@simple-todo/ui/PeerIdCard.svelte';
 	import OwnMultiaddrs from '@simple-todo/ui/OwnMultiaddrs.svelte';
 	import StorageModeSelector from '@simple-todo/ui/StorageModeSelector.svelte';
+	import { RELAY_FAB_POSITION_KEY } from '@simple-todo/ui/relay-fab.js';
 	import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
 	import { honourStorageChoice } from '@simple-todo/todo/browser-memory.js';
 
@@ -504,5 +505,7 @@
 		this={SponsorRelayFab}
 		manifestUrl="./rootfs-manifest.json"
 		showInstances={true}
+		draggable={true}
+		positionStorageKey={RELAY_FAB_POSITION_KEY}
 	/>
 {/if}
