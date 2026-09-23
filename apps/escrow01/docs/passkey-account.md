@@ -13,14 +13,14 @@ setting up the accounts to Bob's balance ([measurements](#measured-on-2026-09-17
 settings under [Configuration](#configuration) the app keeps using the in-memory fake; the tests run
 against it too.
 
-| Piece                 | Version and address                                                                                                                              |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Account contract      | Calibur v1.0.0, a smart contract by Uniswap Labs (MIT license), `0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00` (Sepolia and mainnet)               |
-| ERC-4337              | EntryPoint v0.8, `0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108`                                                                                    |
-| Bundler and paymaster | Openfort, `https://api.openfort.io/rpc/11155111`; paymaster contract `0x8888fee873e7035789db91c16b5dddbad7214cda`                                |
-| Wallet code           | `@le-space/passkey-wallet`, unpublished, a tarball in [`vendor/`](../vendor) (commit `cde6878`)                                                  |
-| Passkey key           | `@le-space/orbitdb-identity-provider-webauthn-did` `0.5.5-p256.8366ed8`, a tarball in [`vendor/`](../vendor), with `getP256CredentialDescriptor` |
-| Zama client           | `@zama-fhe/sdk` 3.6.0 on `@fhevm/sdk` 0.13.2                                                                                                     |
+| Piece                 | Version and address                                                                                                                          |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Account contract      | Calibur v1.0.0, a smart contract by Uniswap Labs (MIT license), `0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00` (Sepolia and mainnet)           |
+| ERC-4337              | EntryPoint v0.8, `0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108`                                                                                |
+| Bundler and paymaster | Openfort, `https://api.openfort.io/rpc/11155111`; paymaster contract `0x8888fee873e7035789db91c16b5dddbad7214cda`                            |
+| Wallet code           | `@le-space/passkey-wallet`, unpublished, a tarball in [`vendor/`](../vendor) (commit `cde6878`)                                              |
+| Passkey key           | `@le-space/orbitdb-identity-provider-webauthn-did` 0.8.0 from npm, with `getP256CredentialDescriptor` and `restoreIdentityFromAuthenticator` |
+| Zama client           | `@zama-fhe/sdk` 3.6.0 on `@fhevm/sdk` 0.13.2                                                                                                 |
 
 Every section has a simple explanation and a technical one.
 
@@ -28,6 +28,7 @@ Every section has a simple explanation and a technical one.
 - [Who runs what: central or decentralized](#who-runs-what-central-or-decentralized)
 - [What Calibur is](#calibur-simple)
 - [Setting up the account](#setup-simple)
+- [On a second device](#second-device-simple)
 - [Signing with the passkey](#signing-simple)
 - [Locking a budget: where encryption happens](#locking-simple)
 - [Reading an amount: where decryption happens](#reading-simple)
@@ -266,7 +267,7 @@ sequenceDiagram
     participant DB as OrbitDB<br/>account directory
   end
 
-  Note over App: passkey signed in, public key x, y known
+  Note over App: passkey signed in or restored,<br/>public key x, y known
   App->>App: create the read key (secp256k1)
   App->>W: createCaliburPasskeySetup(passkey, calls)
   W->>W: create the setup key (secp256k1, in memory only)<br/>its address becomes the account
@@ -321,6 +322,66 @@ On 2026-09-17 Openfort bundled the setup of both accounts into one transaction
 ([`0xe66c…a165`](https://sepolia.etherscan.io/tx/0xe66c286f10f4715cc4eebfc0b3cc42700a402ec2718a84638e7707aaedd9a165)):
 type 4, two authorizations, 799,333 gas, 13 logs, among them `Registered`, `KeySettingsUpdated` and
 two `DelegatedForUserDecryption` per account.
+
+## On a second device
+
+### Second device: simple
+
+A second device, or the same one after its browser profile was cleared, needs nothing carried over:
+the passkey alone is enough. The app asks it twice; that gives back the DID and the signing key.
+Because the account address follows from the same public key, it is the same account, with the same
+confidential balance. A third touch signs the OrbitDB identity. Nothing is set up again; the
+account's code is already on chain.
+
+Amounts stay unreadable until "Renew with passkey": the read key sits in the old browser and does not
+travel ([The read key](#read-key-simple)).
+
+### Second device: technical
+
+```mermaid
+sequenceDiagram
+  autonumber
+  box transparent Second device (local)
+    actor P as Person
+    participant App as Browser: app
+    participant PK as Passkey<br/>(synced or security key)
+    participant KS as OrbitDB keystore
+  end
+  box transparent Ethereum Sepolia
+    participant TOK as cUSDTMock
+  end
+
+  Note over App: localStorage empty: no credential, no read key
+  App->>PK: credentials.get with PRF eval
+  P->>PK: touch 1
+  PK-->>App: signature 1 + PRF output
+  App->>PK: credentials.get, another challenge
+  P->>PK: touch 2
+  PK-->>App: signature 2
+  App->>App: recover the public key from both signatures<br/>x, y → did:key
+  App->>App: signing key = HKDF-SHA256(PRF output)
+  App->>KS: seedRestoredSigningKey(DID, signing key)
+  App->>PK: sign the identity
+  P->>PK: touch 3
+  App->>App: getP256CredentialDescriptor: x, y, credentialId,<br/>rpId = this page's hostname
+  Note over App: the account address follows from the same key —<br/>the same account as on the first device
+  App->>TOK: confidentialBalanceOf(account)
+  TOK-->>App: handle
+  Note over App,TOK: readable only with a new read key:<br/>one user operation, one more touch
+```
+
+`recoverPasskeyCredential()` in [`src/lib/passkey-identity.js`](../src/lib/passkey-identity.js) uses a
+stored credential when there is one, and otherwise calls `restoreIdentityFromAuthenticator()`
+(provider 0.8.0). An assertion does not carry the public key, hence the two signatures: together they
+give it back. If the PRF evaluation fails the restore stops rather than deriving a key from something
+else — that would be a different identity under the same name, and a different account.
+
+It is measured in [`e2e/passkey-restore.spec.js`](../e2e/passkey-restore.spec.js): three ceremonies,
+the first with PRF, the same DID before and after, and an inventory in between showing that nothing
+was on the device. On real hardware the same path ran on 2026-09-21 in
+[funkpost](https://github.com/NiKrause/funkpost): a phone that had been reset, a second device, the
+same YubiKey, the same identity. How a whole database comes back that way is in
+[RECOVERY-ON-A-SECOND-DEVICE.md](https://github.com/NiKrause/orbitdb-storage-bridge/blob/main/docs/RECOVERY-ON-A-SECOND-DEVICE.md).
 
 ## Signing with the passkey
 
@@ -720,7 +781,9 @@ otherwise it reports that the delegate has no account for budgets yet, before th
 
 - The throwaway setup key technically stays a master key of the account forever. The app forgets it
   at once; that cannot be proven on chain.
-- Losing the passkey loses the account. The app sets up no second key and no recovery.
+- Losing the passkey loses the account. The app sets up no second key and no recovery. A passkey
+  that still exists is a different matter: on another device the same passkey gives back the same
+  identity and the same account, in two touches and with nothing stored.
 - The chain does not check whether the passkey really asked for fingerprint or PIN; only the app
   requires it.
 - The read key sits unencrypted in the browser. Whoever gets at the browser profile can read amounts
@@ -735,8 +798,11 @@ otherwise it reports that the delegate has no account for budgets yet, before th
   JavaScript cannot wipe memory, and a page compromised during setup could read it. Until the first
   lock the account holds nothing; the starting funds arrive only with a user operation the passkey
   signs. Details in [Passkey wallet](security.md#passkey-wallet-technical).
-- **No recovery.** Apart from the discarded root key, the passkey is the only key. A synced passkey
-  travels to further devices; a deleted one takes the account with it.
+- **No recovery for a lost passkey.** Apart from the discarded root key, the passkey is the only
+  key. A synced passkey — or one on a security key — travels to further devices, where
+  `restoreIdentityFromAuthenticator` (provider 0.8.0) returns the DID from two signatures and the
+  signing key from the PRF output, so the account comes back without anything stored. A deleted
+  passkey still takes the account with it.
 - **User verification.** `KeyLib.verify` passes `requireUV: false`; the app requests
   `userVerification: 'required'`.
 - **Read key.** Plain text in `localStorage`, valid for up to 24 hours, publicly linked to the account.
@@ -784,10 +850,10 @@ The `pol_…` ID from the second output goes into `VITE_OPENFORT_POLICY_ID`.
 
 Further requirements in the repository:
 
-- **Unpublished packages.** `vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz`
-  and `vendor/le-space-passkey-wallet-0.0.0-cde6878.tgz` were packed with `git archive` from the
-  commits named above and are `file:` dependencies in `package.json`, the provider also under
-  `pnpm.overrides`. Once both are on npm, version numbers replace the tarballs.
+- **One unpublished package.** `vendor/le-space-passkey-wallet-0.0.0-cde6878.tgz` was packed with
+  `git archive` from the commit named above and is a `file:` dependency in `package.json`. Once it
+  is on npm, a version number replaces the tarball. The provider went that way on 2026-09-23: its
+  P-256 primitives were released as 0.8.0, and the chapter takes them from npm.
 - **Vite** needs `worker: { format: 'es' }` ([`vite.config.js`](../vite.config.js)): the provider's
   keystore worker imports modules.
 
@@ -821,7 +887,8 @@ EntryPoint and paymaster; the lock alone cost 682,630 gas in the smoke test of 2
    only their root key can sign. New accounts on v1.1.0 would be the simpler path.
 2. **Openfort rule**: restrict it to the demo's contracts and cap the budget.
 3. **Read key**: seal it instead of storing it in plain text.
-4. **Recovery**: a second admin key or a hook, before real money is involved.
+4. **Recovery for a lost passkey**: a second admin key or a hook, before real money is involved.
+   Another device with the same passkey needs none of that since 0.8.0.
 5. **Publish the packages** and replace the tarballs.
 6. **Zama v0.14**: wait for it and check whether the passkey itself can permit decryptions.
 7. **Auditor**: still a development key, see [security.md](security.md#open-issues).

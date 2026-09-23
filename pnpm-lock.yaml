@@ -8,7 +8,7 @@ overrides:
   '@ipshipyard/node-datachannel': npm:node-datachannel@0.29.0
   '@le-space/orbitdb-identity-provider-webauthn-did': 0.7.0
   '@libp2p/gossipsub': 16.1.0
-  '@simple-todo/escrow01>@le-space/orbitdb-identity-provider-webauthn-did': file:./apps/escrow01/vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz
+  '@simple-todo/escrow01>@le-space/orbitdb-identity-provider-webauthn-did': 0.8.0
   orbitdb-relay>@orbitdb/core: 4.0.0
   react: 19.2.6
   react-dom: 19.2.6
@@ -748,13 +748,13 @@ importers:
         version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-access-controller-delegated-todo':
         specifier: 0.1.0
-        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@file:apps/escrow01/vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
+        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.8.0(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: file:vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz
-        version: file:apps/escrow01/vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz(@orbitdb/core@4.0.0)
+        specifier: 0.8.0
+        version: 0.8.0(@orbitdb/core@4.0.0)
       '@le-space/passkey-wallet':
         specifier: file:vendor/le-space-passkey-wallet-0.0.0-cde6878.tgz
-        version: file:apps/escrow01/vendor/le-space-passkey-wallet-0.0.0-cde6878.tgz(@le-space/orbitdb-identity-provider-webauthn-did@file:apps/escrow01/vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz(@orbitdb/core@4.0.0))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))
+        version: file:apps/escrow01/vendor/le-space-passkey-wallet-0.0.0-cde6878.tgz(@le-space/orbitdb-identity-provider-webauthn-did@0.8.0(@orbitdb/core@4.0.0))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))
       '@le-space/ui':
         specifier: 0.9.6
         version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -3248,9 +3248,8 @@ packages:
     peerDependencies:
       '@orbitdb/core': ^4.0.0
 
-  '@le-space/orbitdb-identity-provider-webauthn-did@file:apps/escrow01/vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz':
-    resolution: {integrity: sha512-oEHPwGtnO/S55ViGxIY4/BPHuNRGfVgHpILt+HMp9k/7C0fRPC19IOKOxbsh3hEUjYIP2mG7ZnIysvTIzjhcAQ==, tarball: file:apps/escrow01/vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz}
-    version: 0.5.5-p256.8366ed8
+  '@le-space/orbitdb-identity-provider-webauthn-did@0.8.0':
+    resolution: {integrity: sha512-vNZaiClqv5OEj9pTXupgaHcV9YgNzfjuWV3HdjBNIomK0DgouEFZjhPDMO0vec+knn8RQMZ1oIZyMKETTIDEZg==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@orbitdb/core': ^4.0.0
@@ -9036,9 +9035,9 @@ snapshots:
       '@le-space/orbitdb-identity-provider-webauthn-did': 0.7.0(@orbitdb/core@4.0.0)
       '@orbitdb/core': 4.0.0
 
-  '@le-space/orbitdb-access-controller-delegated-todo@0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@file:apps/escrow01/vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)':
+  '@le-space/orbitdb-access-controller-delegated-todo@0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.8.0(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)':
     dependencies:
-      '@le-space/orbitdb-identity-provider-webauthn-did': file:apps/escrow01/vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz(@orbitdb/core@4.0.0)
+      '@le-space/orbitdb-identity-provider-webauthn-did': 0.8.0(@orbitdb/core@4.0.0)
       '@orbitdb/core': 4.0.0
 
   '@le-space/orbitdb-identity-provider-webauthn-did@0.7.0(@orbitdb/core@4.0.0)':
@@ -9058,7 +9057,7 @@ snapshots:
       iso-webauthn-varsig: '@le-space/iso-webauthn-varsig@0.3.0'
       multiformats: 14.0.5
 
-  '@le-space/orbitdb-identity-provider-webauthn-did@file:apps/escrow01/vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz(@orbitdb/core@4.0.0)':
+  '@le-space/orbitdb-identity-provider-webauthn-did@0.8.0(@orbitdb/core@4.0.0)':
     dependencies:
       '@ipld/dag-cbor': 10.0.1
       '@ipld/dag-ucan': 3.4.5
@@ -9075,9 +9074,9 @@ snapshots:
       iso-webauthn-varsig: '@le-space/iso-webauthn-varsig@0.3.0'
       multiformats: 14.0.5
 
-  '@le-space/passkey-wallet@file:apps/escrow01/vendor/le-space-passkey-wallet-0.0.0-cde6878.tgz(@le-space/orbitdb-identity-provider-webauthn-did@file:apps/escrow01/vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz(@orbitdb/core@4.0.0))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))':
+  '@le-space/passkey-wallet@file:apps/escrow01/vendor/le-space-passkey-wallet-0.0.0-cde6878.tgz(@le-space/orbitdb-identity-provider-webauthn-did@0.8.0(@orbitdb/core@4.0.0))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))':
     dependencies:
-      '@le-space/orbitdb-identity-provider-webauthn-did': file:apps/escrow01/vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz(@orbitdb/core@4.0.0)
+      '@le-space/orbitdb-identity-provider-webauthn-did': 0.8.0(@orbitdb/core@4.0.0)
       viem: 2.56.8(typescript@5.9.2)(zod@4.6.5)
 
   '@le-space/playwright@0.7.0(@playwright/test@1.61.1)(typescript@5.9.2)(zod@4.6.5)':

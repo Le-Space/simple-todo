@@ -240,15 +240,21 @@ This chapter replaces that with an opt-in **passkey-backed identity**:
   **secp256k1 key derived from the passkey** (PRF → HKDF-SHA256; without PRF
   the keystore generates one instead). That key is **not encrypted**: it
   sits in OrbitDB's keystore in this browser's IndexedDB, where anyone who
-  can read the browser's storage can read it. Creating a passkey costs four
-  WebAuthn prompts (register, `largeBlob` write, PRF, identity proof); after
-  a reload the only prompt is the `largeBlob` read of the recovery below, and
-  signing never asks. (The stricter *varsig* variant — a passkey prompt for
+  can read the browser's storage can read it. Creating a passkey costs three
+  WebAuthn prompts (register, PRF, identity proof); after a reload a kept
+  credential costs one (the identity proof), and a device that kept nothing
+  costs three: two to restore, one to sign. Signing entries never asks. (The stricter *varsig* variant — a passkey prompt for
   every single write — exists in the same package and is a good follow-up
   exercise, but is not used here.)
-- **Create-or-recover flow** (`src/lib/passkey-identity.js`): identity
-  metadata is written to the authenticator's `largeBlob` when supported and
-  always to `localStorage` as fallback; recovery tries `largeBlob` first.
+- **Create-or-recover flow** (`src/lib/passkey-identity.js`): the credential
+  is written to `localStorage` only when the reader chose to keep things.
+  Recovery uses that copy when it exists, and otherwise asks the authenticator
+  itself: `restoreIdentityFromAuthenticator` (provider 0.8.0) derives the DID
+  from two signatures and the signing key from the PRF output, so a device
+  that has never seen this passkey — or a new one holding the same security
+  key — comes back to the same identity and the same budget account, with
+  nothing stored. There is no `largeBlob` layer any more; it never wrote
+  anything ([provider #48](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did/issues/48)).
   This flow currently lives here — upstreaming it into the provider package
   is an open TODO.
 - **Visible identity**: your DID appears in the header (in `escrow01`, in

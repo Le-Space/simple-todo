@@ -14,14 +14,14 @@ durch, von der Kontoeinrichtung bis zu Bobs Guthaben ([Messwerte](#gemessen-am-2
 Einstellungen aus [Konfiguration](#konfiguration) arbeitet die App weiter mit der Attrappe im
 Arbeitsspeicher; auch die Tests laufen gegen sie.
 
-| Baustein              | Version und Adresse                                                                                                                           |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Kontovertrag          | Calibur v1.0.0, ein Smart Contract von Uniswap Labs (MIT-Lizenz), `0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00` (Sepolia und Mainnet)          |
-| ERC-4337              | EntryPoint v0.8, `0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108`                                                                                 |
-| Bundler und Paymaster | Openfort, `https://api.openfort.io/rpc/11155111`; Paymaster-Vertrag `0x8888fee873e7035789db91c16b5dddbad7214cda`                              |
-| Wallet-Code           | `@le-space/passkey-wallet`, unveröffentlicht, als Tarball in [`vendor/`](../vendor) (Commit `cde6878`)                                        |
-| Passkey-Schlüssel     | `@le-space/orbitdb-identity-provider-webauthn-did` `0.5.5-p256.8366ed8`, Tarball in [`vendor/`](../vendor), mit `getP256CredentialDescriptor` |
-| Zama-Client           | `@zama-fhe/sdk` 3.6.0 auf `@fhevm/sdk` 0.13.2                                                                                                 |
+| Baustein              | Version und Adresse                                                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Kontovertrag          | Calibur v1.0.0, ein Smart Contract von Uniswap Labs (MIT-Lizenz), `0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00` (Sepolia und Mainnet)       |
+| ERC-4337              | EntryPoint v0.8, `0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108`                                                                              |
+| Bundler und Paymaster | Openfort, `https://api.openfort.io/rpc/11155111`; Paymaster-Vertrag `0x8888fee873e7035789db91c16b5dddbad7214cda`                           |
+| Wallet-Code           | `@le-space/passkey-wallet`, unveröffentlicht, als Tarball in [`vendor/`](../vendor) (Commit `cde6878`)                                     |
+| Passkey-Schlüssel     | `@le-space/orbitdb-identity-provider-webauthn-did` 0.8.0 von npm, mit `getP256CredentialDescriptor` und `restoreIdentityFromAuthenticator` |
+| Zama-Client           | `@zama-fhe/sdk` 3.6.0 auf `@fhevm/sdk` 0.13.2                                                                                              |
 
 Jeder Abschnitt hat eine einfache und eine technische Erklärung.
 
@@ -29,6 +29,7 @@ Jeder Abschnitt hat eine einfache und eine technische Erklärung.
 - [Wer betreibt was: zentral oder dezentral](#wer-betreibt-was-zentral-oder-dezentral)
 - [Was Calibur ist](#calibur-einfach)
 - [Konto einrichten](#einrichtung-einfach)
+- [Auf einem zweiten Gerät](#zweites-gerät-einfach)
 - [Mit dem Passkey signieren](#signieren-einfach)
 - [Budget sperren: wo verschlüsselt wird](#sperren-einfach)
 - [Betrag lesen: wo entschlüsselt wird](#lesen-einfach)
@@ -273,7 +274,7 @@ sequenceDiagram
     participant DB as OrbitDB<br/>Kontoverzeichnis
   end
 
-  Note over App: Passkey angemeldet, öffentlicher Schlüssel x, y bekannt
+  Note over App: Passkey angemeldet oder wiederhergestellt,<br/>öffentlicher Schlüssel x, y bekannt
   App->>App: Leseschlüssel erzeugen (secp256k1)
   App->>W: createCaliburPasskeySetup(Passkey, Aufrufe)
   W->>W: Einrichtungsschlüssel erzeugen (secp256k1, nur im Speicher)<br/>seine Adresse wird das Konto
@@ -330,6 +331,67 @@ Am 2026-09-17 bündelte Openfort die Einrichtung beider Konten in eine Transakti
 ([`0xe66c…a165`](https://sepolia.etherscan.io/tx/0xe66c286f10f4715cc4eebfc0b3cc42700a402ec2718a84638e7707aaedd9a165)):
 Typ 4, zwei Autorisierungen, 799.333 Gas, 13 Logs, darunter je Konto `Registered`,
 `KeySettingsUpdated` und zweimal `DelegatedForUserDecryption`.
+
+## Auf einem zweiten Gerät
+
+### Zweites Gerät: einfach
+
+Ein zweites Gerät, oder dasselbe nach einem geleerten Browserprofil, braucht nichts Mitgebrachtes:
+Der Passkey allein genügt. Die App fragt ihn zweimal; daraus kommen die DID und der Signierschlüssel
+zurück. Weil die Kontoadresse aus demselben öffentlichen Schlüssel stammt, ist es dasselbe Konto mit
+demselben vertraulichen Guthaben. Eine dritte Berührung signiert die OrbitDB-Identität. Eingerichtet
+wird nichts neu; der Code des Kontos steht schon auf der Chain.
+
+Beträge sieht das neue Gerät erst nach „Mit Passkey verlängern“: Der Leseschlüssel liegt im alten
+Browser und wandert nicht mit ([Der Leseschlüssel](#leseschlüssel-einfach)).
+
+### Zweites Gerät: technisch
+
+```mermaid
+sequenceDiagram
+  autonumber
+  box transparent Zweites Gerät (lokal)
+    actor P as Person
+    participant App as Browser: App
+    participant PK as Passkey<br/>(synchronisiert oder Sicherheitsschlüssel)
+    participant KS as OrbitDB-Keystore
+  end
+  box transparent Ethereum Sepolia
+    participant TOK as cUSDTMock
+  end
+
+  Note over App: localStorage leer: kein Credential, kein Leseschlüssel
+  App->>PK: credentials.get mit PRF-Eval
+  P->>PK: Berührung 1
+  PK-->>App: Signatur 1 + PRF-Ausgabe
+  App->>PK: credentials.get, andere Challenge
+  P->>PK: Berührung 2
+  PK-->>App: Signatur 2
+  App->>App: öffentlichen Schlüssel aus beiden Signaturen zurückrechnen<br/>x, y → did:key
+  App->>App: Signierschlüssel = HKDF-SHA256(PRF-Ausgabe)
+  App->>KS: seedRestoredSigningKey(DID, Signierschlüssel)
+  App->>PK: Identität signieren
+  P->>PK: Berührung 3
+  App->>App: getP256CredentialDescriptor: x, y, credentialId,<br/>rpId = Hostname dieser Seite
+  Note over App: Kontoadresse folgt aus demselben Schlüssel —<br/>dasselbe Konto wie auf dem ersten Gerät
+  App->>TOK: confidentialBalanceOf(Konto)
+  TOK-->>App: Handle
+  Note over App,TOK: lesbar erst mit einem neuen Leseschlüssel:<br/>eine UserOperation, eine weitere Berührung
+```
+
+`recoverPasskeyCredential()` in [`src/lib/passkey-identity.js`](../src/lib/passkey-identity.js) nimmt
+ein gespeichertes Credential, wenn es eins gibt, und fragt sonst
+`restoreIdentityFromAuthenticator()` (Provider 0.8.0). Eine Assertion trägt den öffentlichen Schlüssel
+nicht mit, deshalb die zwei Signaturen: Aus beiden lässt er sich zurückrechnen. Scheitert die
+PRF-Auswertung, bricht die Wiederherstellung ab, statt einen Schlüssel aus etwas anderem abzuleiten —
+das wäre eine andere Identität unter demselben Namen und damit ein anderes Konto.
+
+Gemessen wird das in [`e2e/passkey-restore.spec.js`](../e2e/passkey-restore.spec.js): drei Zeremonien,
+die erste mit PRF, dieselbe DID davor und danach, und dazwischen eine Bestandsaufnahme, die zeigt,
+dass wirklich nichts auf dem Gerät lag. Auf echter Hardware ist derselbe Weg am 2026-09-21 in
+[funkpost](https://github.com/NiKrause/funkpost) gelaufen: ein zurückgesetztes Telefon, ein zweites
+Gerät, derselbe YubiKey, dieselbe Identität. Wie eine ganze Datenbank so zurückkommt, steht in
+[RECOVERY-ON-A-SECOND-DEVICE.md](https://github.com/NiKrause/orbitdb-storage-bridge/blob/main/docs/RECOVERY-ON-A-SECOND-DEVICE.md).
 
 ## Mit dem Passkey signieren
 
@@ -746,7 +808,9 @@ delegierte Person hat noch kein Konto für Budgets“, bevor der Passkey gefragt
 - Der Wegwerf-Schlüssel der Einrichtung bleibt technisch für immer ein Generalschlüssel des Kontos.
   Die App vergisst ihn sofort; beweisen lässt sich das auf der Chain nicht.
 - Geht der Passkey verloren, ist das Konto verloren. Einen zweiten Schlüssel oder eine
-  Wiederherstellung richtet die App nicht ein.
+  Wiederherstellung dafür richtet die App nicht ein. Ein Passkey, den es noch gibt, ist etwas
+  anderes: Auf einem zweiten Gerät gibt derselbe Passkey dieselbe Identität und dasselbe Konto
+  zurück, in zwei Berührungen und ohne dass irgendwo etwas gespeichert wäre.
 - Die Chain prüft nicht, ob beim Passkey wirklich Fingerabdruck oder PIN abgefragt wurden; das
   verlangt nur die App.
 - Der Leseschlüssel liegt unverschlüsselt im Browser. Wer an das Browserprofil kommt, kann bis zu 24
@@ -762,8 +826,12 @@ delegierte Person hat noch kein Konto für Budgets“, bevor der Passkey gefragt
   kompromittierte Seite könnte ihn lesen. Bis zur ersten Sperre hält das Konto nichts; das
   Startguthaben kommt erst mit einer UserOperation, die der Passkey signiert. Details in
   [Passkey-Wallet](security.de.md#passkey-wallet-technisch).
-- **Keine Wiederherstellung.** Der Passkey ist der einzige Schlüssel außer dem verworfenen Root-Key.
-  Ein synchronisierter Passkey überträgt sich auf weitere Geräte; ein gelöschter nimmt das Konto mit.
+- **Keine Wiederherstellung für einen verlorenen Passkey.** Der Passkey ist der einzige Schlüssel
+  außer dem verworfenen Root-Key. Ein synchronisierter Passkey — oder einer auf einem
+  Sicherheitsschlüssel — überträgt sich auf weitere Geräte, und dort gibt
+  `restoreIdentityFromAuthenticator` (Provider 0.8.0) die DID aus zwei Signaturen und den
+  Signierschlüssel aus der PRF-Ausgabe zurück, ohne dass etwas gespeichert sein müsste. Ein
+  gelöschter Passkey nimmt das Konto weiterhin mit.
 - **Nutzerverifikation.** `KeyLib.verify` übergibt `requireUV: false`; die App fordert
   `userVerification: 'required'` an.
 - **Leseschlüssel.** Klartext in `localStorage`, bis zu 24 Stunden gültig, öffentlich mit dem Konto
@@ -811,10 +879,11 @@ Die `pol_…`-ID aus der zweiten Ausgabe gehört in `VITE_OPENFORT_POLICY_ID`.
 
 Weitere Voraussetzungen im Repository:
 
-- **Unveröffentlichte Pakete.** `vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz`
-  und `vendor/le-space-passkey-wallet-0.0.0-cde6878.tgz` sind per `git archive` aus den genannten
-  Commits gepackt und in `package.json` als `file:`-Abhängigkeiten eingetragen, der Provider auch unter
-  `pnpm.overrides`. Sind beide auf npm, ersetzen Versionsnummern die Tarballs.
+- **Ein unveröffentlichtes Paket.** `vendor/le-space-passkey-wallet-0.0.0-cde6878.tgz` ist per
+  `git archive` aus dem genannten Commit gepackt und in `package.json` als `file:`-Abhängigkeit
+  eingetragen. Ist es auf npm, ersetzt eine Versionsnummer den Tarball. Der Provider hat diesen Weg
+  am 2026-09-23 genommen: Seine P-256-Primitive sind als 0.8.0 erschienen, und das Kapitel holt sie
+  von npm.
 - **Vite** braucht `worker: { format: 'es' }` ([`vite.config.js`](../vite.config.js)): Der
   Keystore-Worker des Providers importiert Module.
 
@@ -849,7 +918,8 @@ von EntryPoint und Paymaster; die Sperre allein kostete im Smoke-Test vom 2026-0
    der einfachere Weg.
 2. **Openfort-Regel** auf die Verträge der Demo beschränken und das Kontingent begrenzen.
 3. **Leseschlüssel** versiegeln statt im Klartext speichern.
-4. **Wiederherstellung**: ein zweiter Admin-Schlüssel oder ein Hook, bevor echtes Geld im Spiel ist.
+4. **Wiederherstellung bei verlorenem Passkey**: ein zweiter Admin-Schlüssel oder ein Hook, bevor
+   echtes Geld im Spiel ist. Ein zweites Gerät mit demselben Passkey braucht das seit 0.8.0 nicht.
 5. **Pakete veröffentlichen** und die Tarballs ersetzen.
 6. **Zama v0.14** abwarten und prüfen, ob der Passkey selbst Entschlüsselungen erlauben kann.
 7. **Prüfstelle**: weiter ein Entwicklungsschlüssel, siehe [security.de.md](security.de.md#offene-punkte).

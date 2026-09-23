@@ -32,14 +32,13 @@
 		{
 			value: 'existing',
 			label: $_('consent.identityExisting'),
-			// The second half used to promise recovery "from a passkey created
-			// earlier on this origin", which is more than this can do:
-			// `recoverPasskeyCredential()` reads the authenticator's largeBlob
-			// and otherwise falls back to this browser's localStorage. A passkey
-			// that exists in the operating system but carries no largeBlob, in a
-			// browser whose storage was cleared, cannot be found — and the option
-			// stays selectable, because a largeBlob-carrying passkey genuinely is
-			// recoverable here and disabling it would take that away.
+			// Since provider 0.8.0 this option really does reach a passkey this
+			// browser has never seen: `recoverPasskeyCredential()` uses a stored
+			// credential when there is one, and otherwise asks the authenticator
+			// itself — two touches, from which the provider derives the DID and
+			// the signing key. It fails only on an authenticator that cannot
+			// evaluate PRF, which is why the option stays selectable and says so
+			// in its hint rather than being disabled.
 			hint: hasStoredPasskey
 				? $_('consent.identityExistingFound')
 				: $_('consent.identityExistingNone')

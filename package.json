@@ -22,14 +22,15 @@
       "@ipshipyard/node-datachannel": "npm:node-datachannel@0.29.0",
       "@le-space/orbitdb-identity-provider-webauthn-did": "0.7.0",
       "@libp2p/gossipsub": "16.1.0",
-      "@simple-todo/escrow01>@le-space/orbitdb-identity-provider-webauthn-did": "file:./apps/escrow01/vendor/le-space-orbitdb-identity-provider-webauthn-did-0.5.5-p256.8366ed8.tgz",
+      "@simple-todo/escrow01>@le-space/orbitdb-identity-provider-webauthn-did": "0.8.0",
       "orbitdb-relay>@orbitdb/core": "4.0.0",
       "react": "19.2.6",
       "react-dom": "19.2.6"
     },
     "peerDependencyRules": {
       "allowedVersions": {
-        "@le-space/orbitdb-access-controller-delegated-todo>@le-space/orbitdb-identity-provider-webauthn-did": "0.5.4",
+        "@le-space/orbitdb-access-controller-delegated-todo>@le-space/orbitdb-identity-provider-webauthn-did": "0.5.4 || 0.7.0 || 0.8.0",
+        "@le-space/passkey-wallet>@le-space/orbitdb-identity-provider-webauthn-did": "0.8.0",
         "@le-space/orbitdb-access-controller-delegated-todo>@orbitdb/core": "4.0.0"
       }
     },
