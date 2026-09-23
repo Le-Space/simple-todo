@@ -253,8 +253,10 @@ This chapter replaces that with an opt-in **passkey-backed identity**:
   from two signatures and the signing key from the PRF output, so a device
   that has never seen this passkey — or a new one holding the same security
   key — comes back to the same identity and the same budget account, with
-  nothing stored. There is no `largeBlob` layer any more; it never wrote
-  anything ([provider #48](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did/issues/48)).
+  nothing stored. There is no `largeBlob` layer any more: the
+  extension is requested, but Android Chrome writes the blob and never returns
+  it ([provider #48](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did/issues/48)),
+  so on a phone it cost two prompts and gave nothing back.
   This flow currently lives here — upstreaming it into the provider package
   is an open TODO.
 - **Visible identity**: your DID appears in the header (in `escrow01`, in

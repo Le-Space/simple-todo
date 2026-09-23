@@ -20,12 +20,12 @@
 // derived from that key, so it is the same account, with the same confidential
 // balance, as before the restore (docs/passkey-account.md).
 //
-// There is no largeBlob layer any more. qr01 measured it: the provider never
-// registers a credential with the largeBlob extension
-// (Le-Space/orbitdb-identity-provider-webauthn-did#48), so the write after
-// registration returned `written: false` and the read before recovery found
-// nothing — two prompts that achieved nothing, and a third touch on every
-// restore.
+// There is no largeBlob layer any more. The extension is requested at
+// registration (provider 0.5.4), but the measurement in
+// Le-Space/orbitdb-identity-provider-webauthn-did#48 is what decides it:
+// Android Chrome writes the blob and does not return it on read, so on a phone
+// the write after registration and the read before recovery were two prompts
+// that achieved nothing. The restore needs neither.
 //
 // The passkey is bound to the page origin (rpId). A credential created on
 // localhost cannot be used on escrow01.le-space.de or an IPFS gateway —
