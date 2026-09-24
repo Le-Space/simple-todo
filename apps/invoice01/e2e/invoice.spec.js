@@ -164,3 +164,49 @@ test.describe('Settings', () => {
 		await expect(page.getByTestId('invoice-next-number')).toContainText('042', { timeout });
 	});
 });
+
+test.describe('The template', () => {
+	test('is edited with a preview, saved, and downloaded as Markdown', async ({ page }) => {
+		test.setTimeout(timeout * 4);
+		await addVirtualAuthenticator(page);
+		await openReadyApp(page);
+		await openPrivateList(page);
+		await page.getByTestId('section-invoices').click();
+		await fillIssuer(page);
+
+		await page.getByTestId('invoice-template-open').click();
+		await page
+			.getByTestId('template-source')
+			.fill(
+				'## Anschreiben\n\nGuten Tag {{kunde.name}}, hier ist **{{nummer}}**.\n\n## Mahnung\n\nBitte zahlen\n\n## Schluss\n\nBis bald\n{{aussteller.nmae}}'
+			);
+
+		// The preview fills in what it knows and says what it does not.
+		const preview = page.getByTestId('template-preview');
+		await expect(preview).toContainText('Guten Tag', { timeout: 10_000 });
+		await expect(page.getByTestId('template-unknown-heading')).toContainText('Mahnung');
+		await expect(page.getByTestId('template-unknown-placeholder')).toContainText('aussteller.nmae');
+
+		// Markdown leaves the app as a file.
+		const download = page.waitForEvent('download', { timeout });
+		await page.getByTestId('template-download').click();
+		expect((await download).suggestedFilename()).toBe('rechnung-vorlage.md');
+
+		await page.getByTestId('template-save').click();
+		await expect(page.getByTestId('invoice-message')).toBeVisible({ timeout });
+
+		// And the invoice goes out with it.
+		await page.getByTestId('invoice-new').click();
+		await page.getByTestId('invoice-customer-name').fill('Acme GmbH');
+		await page.getByTestId('invoice-customer-address').fill('Teststraße 2\n10115 Berlin');
+		await page.getByTestId('invoice-line-description').fill('Beratung');
+		await page.getByTestId('invoice-line-quantity').fill('1');
+		await page.getByTestId('invoice-line-price').fill('250,00');
+		await page.getByTestId('invoice-issue').click();
+		await expect(page.getByTestId('invoice-message')).toContainText(/\d{4}-\d{5}-/, { timeout });
+
+		const pdf = page.waitForEvent('download', { timeout });
+		await page.getByTestId('invoice-pdf').click();
+		expect((await pdf).suggestedFilename()).toMatch(/\.pdf$/);
+	});
+});

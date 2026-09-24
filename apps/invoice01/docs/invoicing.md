@@ -62,6 +62,47 @@ case distinction. The five digits are derived from the DID instead. Two
 identities that land on the same five digits share one series and count past
 each other — a collision costs a shared series, never a duplicate number.
 
+## The wording, as a template
+
+The layout is drawn and stays drawn. What belongs to whoever sends the invoice
+is the wording: the letter above the lines and the closing under them. Those
+live in one small Markdown document, edited in the app beside a preview,
+downloadable as a file, changeable in any editor and uploadable again.
+
+```markdown
+## Anschreiben
+
+Sehr geehrte Damen und Herren,
+
+vielen Dank für Ihren Auftrag. Die Rechnungsnummer **{{nummer}}** bitten wir
+als Verwendungszweck anzugeben.
+
+## Schluss
+
+Mit freundlichen Grüßen
+{{aussteller.geschaeftsfuehrer}}
+```
+
+It is deliberately a subset: `## heading` opens a block, a blank line separates
+paragraphs, `- ` makes a bullet, `**bold**` is bold, and a line break somebody
+typed stays a line break — strict Markdown would join "Mit freundlichen Grüßen"
+and the name below it into one line, and nobody writing a letter means that.
+
+Two blocks are known, under either language's name: _intro_ (Anschreiben,
+Letter) and _closing_ (Schluss, Sign-off). A heading nobody knows keeps its text
+off the invoice, and the editor says so rather than swallowing it. Placeholders
+that resolve to nothing stay on the page as written — a gap in an invoice is
+invisible, `{{kunde.nmae}}` is not.
+
+Placeholders read the invoice's own figures under German or English names:
+`{{nummer}}`/`{{number}}`, `{{betrag}}`, `{{faellig}}`, `{{kunde.name}}`,
+`{{kunde.anschrift}}`, `{{aussteller.geschaeftsfuehrer}}`, `{{aussteller.iban}}`
+and the rest of the issuer's block.
+
+**Issuing freezes it.** The template travels into the invoice, like the
+addresses and the totals, so re-exporting an invoice from two years ago produces
+what it said then rather than what the template says now.
+
 ## What the footer says, and where it comes from
 
 Everything on the printed invoice beyond the lines is issuer master data, kept

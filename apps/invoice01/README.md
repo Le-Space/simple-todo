@@ -50,6 +50,11 @@ cancelled, all offline, all in a list that replicates to your other devices.
   payment cannot be matched to its invoice.
 - **A series can be carried over.** "The first number here is 2026-005"
   continues the run from whatever program issued the last one.
+- **The wording is yours.** The letter above the lines and the closing under
+  them come from a small Markdown template, edited in the app beside a preview,
+  downloadable and uploadable as a file. Placeholders like `{{kunde.name}}` are
+  filled in when the invoice is issued — and frozen there, so a template edited
+  next year does not change what last year's invoice said.
 
 What this chapter deliberately does not do: XRechnung or ZUGFeRD export, a
 customer directory, payment matching. [`docs/invoicing.md`](./docs/invoicing.md)

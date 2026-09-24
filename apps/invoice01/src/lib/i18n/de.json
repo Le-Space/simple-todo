@@ -124,7 +124,8 @@
 			"storno": "Stornieren",
 			"delete": "Löschen",
 			"back": "Zurück zur Übersicht",
-			"settings": "Einstellungen"
+			"settings": "Einstellungen",
+			"template": "Vorlage"
 		},
 		"form": {
 			"customer": "Kunde",
@@ -257,6 +258,20 @@
 			"by": "Storniert durch {number}",
 			"of": "Storniert Rechnung {number}",
 			"confirm": "Eine ausgestellte Rechnung wird nicht geändert, sondern storniert: Es entsteht eine Stornorechnung mit negativen Beträgen, die die Nummer {number} zurücknimmt. Fortfahren?"
+		},
+		"template": {
+			"heading": "Vorlage für die Texte",
+			"hint": "Anschreiben und Schluss der Rechnung. Überschrift mit ## öffnet einen Block, eine Leerzeile trennt Absätze, - macht eine Aufzählung, **fett** ist fett. Platzhalter in doppelten geschweiften Klammern werden beim Ausstellen eingesetzt.",
+			"editorLabel": "Markdown",
+			"preview": "Voransicht",
+			"download": "Herunterladen",
+			"upload": "Datei laden",
+			"reset": "Auf Standard zurücksetzen",
+			"placeholders": "Verfügbare Platzhalter",
+			"unknownHeading": "Unbekannte Überschrift: {names}. Dieser Abschnitt erscheint nicht auf der Rechnung.",
+			"unknownPlaceholder": "Unbekannter Platzhalter: {names}. Er bleibt so stehen, wie er dasteht.",
+			"frozen": "Eine ausgestellte Rechnung behält den Text, mit dem sie herausging. Änderungen hier gelten für die nächste.",
+			"default": "## Anschreiben\n\nSehr geehrte Damen und Herren,\n\nvielen Dank für Ihren Auftrag. Wir berechnen Ihnen die unten aufgeführten Leistungen.\n\n## Schluss\n\nMit freundlichen Grüßen\n{{aussteller.geschaeftsfuehrer}}"
 		}
 	}
 }

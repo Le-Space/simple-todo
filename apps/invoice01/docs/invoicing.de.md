@@ -64,6 +64,50 @@ Ziffern werden deshalb aus der DID abgeleitet. Zwei Identitäten mit denselben
 fünf Ziffern teilen sich eine Reihe und zählen aneinander vorbei: Das kostet
 eine gemeinsame Reihe, nie eine doppelte Nummer.
 
+## Die Texte, als Vorlage
+
+Das Layout ist gezeichnet und bleibt es. Was demjenigen gehört, der die Rechnung
+schickt, sind die Texte: das Anschreiben über den Positionen und der Schluss
+darunter. Sie stehen in einem kleinen Markdown-Dokument, das sich in der App
+neben einer Voransicht bearbeiten, als Datei herunterladen, in jedem Editor
+ändern und wieder hochladen lässt.
+
+```markdown
+## Anschreiben
+
+Sehr geehrte Damen und Herren,
+
+vielen Dank für Ihren Auftrag. Die Rechnungsnummer **{{nummer}}** bitten wir
+als Verwendungszweck anzugeben.
+
+## Schluss
+
+Mit freundlichen Grüßen
+{{aussteller.geschaeftsfuehrer}}
+```
+
+Bewusst nur eine Teilmenge: `## Überschrift` öffnet einen Block, eine Leerzeile
+trennt Absätze, `- ` macht eine Aufzählung, `**fett**` ist fett, und ein
+getippter Zeilenumbruch bleibt ein Zeilenumbruch — striktes Markdown würde „Mit
+freundlichen Grüßen" und den Namen darunter zu einer Zeile verbinden, und das
+meint niemand, der einen Brief schreibt.
+
+Zwei Blöcke sind bekannt, unter dem Namen beider Sprachen: _Anschreiben_
+(intro, letter) und _Schluss_ (closing, sign-off). Eine unbekannte Überschrift
+hält ihren Text von der Rechnung fern, und der Editor sagt das, statt ihn
+stillschweigend zu schlucken. Platzhalter, die ins Leere zeigen, bleiben stehen,
+wie sie dastehen — eine Lücke in einer Rechnung sieht niemand, `{{kunde.nmae}}`
+schon.
+
+Platzhalter greifen auf die Zahlen der Rechnung zu, deutsch oder englisch
+benannt: `{{nummer}}`/`{{number}}`, `{{betrag}}`, `{{faellig}}`,
+`{{kunde.name}}`, `{{kunde.anschrift}}`, `{{aussteller.geschaeftsfuehrer}}`,
+`{{aussteller.iban}}` und der Rest des Ausstellerblocks.
+
+**Das Ausstellen friert sie ein.** Die Vorlage wandert in die Rechnung, wie die
+Anschriften und die Summen. Wer eine zwei Jahre alte Rechnung noch einmal
+exportiert, bekommt, was damals daraufstand, nicht was die Vorlage heute sagt.
+
 ## Was in der Fußzeile steht, und woher es kommt
 
 Alles auf der gedruckten Rechnung außer den Positionen sind Stammdaten des
