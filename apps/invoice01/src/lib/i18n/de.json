@@ -96,5 +96,123 @@
 		"storageMemoryHint": "Aufgaben und Schlüssel liegen nur im Arbeitsspeicher und sind beim Neuladen weg. Auf dem Gerät bleibt nichts — Ihre Identität kommt beim nächsten Mal über den Passkey zurück, mit drei Berührungen.",
 		"storagePersistentLabel": "In diesem Browser behalten",
 		"storagePersistentHint": "Die Todos liegen in der IndexedDB des Browsers und überstehen einen Neustart. Verschlüsselt sind sie dort nicht: Wer den Speicher dieses Browsers lesen kann, liest sie mit."
+	},
+	"invoice": {
+		"tab": "Rechnungen",
+		"todosTab": "Aufgaben",
+		"heading": "Rechnungen",
+		"new": "Neue Rechnung",
+		"none": "Noch keine Rechnung. Die erste legt den Nummernkreis dieses Geräts an.",
+		"nextNumber": "Nächste Nummer: {number}",
+		"needsList": "Zum Schreiben von Rechnungen zuerst eine eigene Liste öffnen.",
+		"state": {
+			"draft": "Entwurf",
+			"issued": "Ausgestellt",
+			"cancelled": "Storniert"
+		},
+		"columns": {
+			"number": "Nummer",
+			"customer": "Kunde",
+			"date": "Datum",
+			"gross": "Brutto",
+			"state": "Status"
+		},
+		"actions": {
+			"open": "Öffnen",
+			"edit": "Bearbeiten",
+			"pdf": "PDF",
+			"storno": "Stornieren",
+			"delete": "Löschen",
+			"back": "Zurück zur Übersicht",
+			"settings": "Einstellungen"
+		},
+		"form": {
+			"customer": "Kunde",
+			"customerName": "Name",
+			"customerAddress": "Anschrift",
+			"customerVatId": "USt-IdNr. (bei Reverse-Charge nötig)",
+			"issueDate": "Rechnungsdatum",
+			"deliveryDate": "Leistungsdatum",
+			"taxMode": "Besteuerung",
+			"paymentTerms": "Zahlungsziel (Tage)",
+			"notes": "Bemerkung auf der Rechnung",
+			"lines": "Positionen",
+			"lineDescription": "Beschreibung",
+			"lineQuantity": "Menge",
+			"lineUnit": "Einheit",
+			"lineUnitPrice": "Einzelpreis netto",
+			"lineVatRate": "USt",
+			"addLine": "Position hinzufügen",
+			"removeLine": "Position entfernen",
+			"save": "Entwurf speichern",
+			"issue": "Rechnung ausstellen",
+			"issueHint": "Beim Ausstellen wird die Nummer vergeben, und der Inhalt lässt sich danach nicht mehr ändern — nur noch stornieren.",
+			"saved": "Entwurf gespeichert.",
+			"issued": "Rechnung {number} ausgestellt."
+		},
+		"taxMode": {
+			"standard": "Regelbesteuerung",
+			"kleinunternehmer": "Kleinunternehmer (§ 19 UStG)",
+			"reverseCharge": "Reverse-Charge (§ 13b UStG)"
+		},
+		"totals": {
+			"net": "Zwischensumme netto",
+			"vat": "USt {rate} %",
+			"gross": "Gesamtbetrag"
+		},
+		"problem": {
+			"issuerMissing": "In den Einstellungen fehlen Name und Anschrift des Ausstellers.",
+			"customerName": "Der Kunde braucht einen Namen.",
+			"customerAddress": "Der Kunde braucht eine Anschrift.",
+			"customerVatId": "Reverse-Charge geht nur mit der USt-IdNr. des Empfängers.",
+			"issueDate": "Das Rechnungsdatum fehlt.",
+			"deliveryDate": "Das Leistungsdatum fehlt — § 14 Abs. 4 Nr. 6 UStG verlangt es.",
+			"noLines": "Eine Rechnung ohne Position geht nicht.",
+			"lineDescription": "Eine Position braucht eine Beschreibung.",
+			"lineQuantity": "Eine Position braucht eine Menge.",
+			"lineUnitPrice": "Eine Position braucht einen Preis.",
+			"lineVatRate": "Erlaubt sind 19 %, 7 % oder 0 %."
+		},
+		"note": {
+			"kleinunternehmer": "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.",
+			"reverseCharge": "Steuerschuldnerschaft des Leistungsempfängers (Reverse Charge, § 13b UStG)."
+		},
+		"settings": {
+			"heading": "Aussteller und Nummernkreis",
+			"issuerName": "Name",
+			"issuerAddress": "Anschrift",
+			"issuerVatId": "USt-IdNr.",
+			"issuerEmail": "E-Mail",
+			"issuerIban": "IBAN",
+			"paymentTerms": "Zahlungsziel (Tage)",
+			"series": "Nummernkreis dieses Geräts",
+			"seriesHint": "Jede Identität zählt in ihrer eigenen Reihe. Zwei Geräte können deshalb gleichzeitig offline eine Rechnung ausstellen, ohne sich abzustimmen — erlaubt nach UStAE 14.5 Abs. 10.",
+			"save": "Einstellungen speichern",
+			"saved": "Einstellungen gespeichert."
+		},
+		"document": {
+			"title": "Rechnung",
+			"titleCancellation": "Stornorechnung",
+			"invoiceDate": "Rechnungsdatum",
+			"deliveryDate": "Leistungsdatum",
+			"cancels": "Storniert Rechnung",
+			"position": "Pos.",
+			"description": "Beschreibung",
+			"quantity": "Menge",
+			"unitPrice": "Einzelpreis",
+			"vat": "USt",
+			"lineNet": "Netto",
+			"netTotal": "Zwischensumme netto",
+			"grossTotal": "Gesamtbetrag",
+			"vatId": "USt-IdNr.",
+			"iban": "IBAN",
+			"paymentTerms": "Zahlbar ohne Abzug bis zum {date}.",
+			"paymentOnReceipt": "Zahlbar sofort nach Erhalt."
+		},
+		"cancelled": {
+			"by": "Storniert durch {number}",
+			"of": "Storniert Rechnung {number}",
+			"confirm": "Eine ausgestellte Rechnung wird nicht geändert, sondern storniert: Es entsteht eine Stornorechnung mit negativen Beträgen, die die Nummer {number} zurücknimmt. Fortfahren?"
+		}
 	}
 }

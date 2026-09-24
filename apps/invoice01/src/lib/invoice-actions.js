@@ -18,6 +18,13 @@ import {
 import { cancellationFor, draftProblems, invoiceKey, issue } from './invoice/records.js';
 import { invoiceSettingsStore, invoicesStore } from './invoice/store.js';
 
+/**
+ * Every action answers in the same shape, so a caller can read `ok` and then
+ * `error` without asking which function it called.
+ *
+ * @typedef {{ ok: boolean, error?: string, problems?: import('./invoice/records.js').Problem[], number?: string, draft?: any }} Result
+ */
+
 /** @returns {{ db: any, identityId: string } | null} */
 function ready() {
 	const db = get(todoDBStore);
@@ -48,7 +55,7 @@ export function previewNextNumber(date = new Date()) {
 
 /**
  * @param {Partial<ReturnType<typeof currentInvoiceSettings>>} patch
- * @returns {Promise<{ ok: boolean, error?: string }>}
+ * @returns {Promise<Result>}
  */
 export async function saveInvoiceSettings(patch) {
 	const context = ready();
@@ -69,6 +76,7 @@ export async function saveInvoiceSettings(patch) {
  * anyone likes; an issued invoice never comes back through here.
  *
  * @param {any} draft
+ * @returns {Promise<Result>}
  */
 export async function saveInvoiceDraft(draft) {
 	const context = ready();
@@ -92,15 +100,21 @@ export async function saveInvoiceDraft(draft) {
 /**
  * Issue a draft: assign the number, freeze the document, write it once.
  *
- * @param {string} id
+ * The draft is passed in rather than looked up. Writing it and reading it back
+ * are two different moments: `saveInvoiceDraft` returns when OrbitDB has the
+ * entry, while `invoicesStore` is only refilled when the log has been re-read,
+ * which is later. A lookup here therefore missed a draft that had just been
+ * saved, and issuing failed on the first press and worked on the second.
+ *
+ * @param {any} draft
  * @param {{ date?: Date }} [options]
+ * @returns {Promise<Result>}
  */
-export async function issueInvoiceDraft(id, { date = new Date() } = {}) {
+export async function issueInvoiceDraft(draft, { date = new Date() } = {}) {
 	const context = ready();
 	if (!context) return { ok: false, error: 'The list is not open yet.' };
 
-	const draft = get(invoicesStore).find((invoice) => invoice.id === id);
-	if (!draft) return { ok: false, error: 'This invoice is not in the list.' };
+	if (!draft?.id) return { ok: false, error: 'There is no invoice to issue.' };
 	if (draft.state === 'issued') return { ok: false, error: 'This invoice was already issued.' };
 
 	const settings = currentInvoiceSettings();
@@ -129,6 +143,7 @@ export async function issueInvoiceDraft(id, { date = new Date() } = {}) {
  * the invoice it cancels stays exactly as it was.
  *
  * @param {string} number
+ * @returns {Promise<Result>}
  */
 export async function startCancellation(number) {
 	const issued = get(invoicesStore).find(
@@ -147,6 +162,7 @@ export async function startCancellation(number) {
  * §147 AO keeps it for eight years.
  *
  * @param {string} id
+ * @returns {Promise<Result>}
  */
 export async function deleteInvoiceDraft(id) {
 	const context = ready();

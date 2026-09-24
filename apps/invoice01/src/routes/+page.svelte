@@ -29,6 +29,7 @@
 	} from '$lib/db-actions.js';
 	import { supportsDelegation } from '$lib/delegated-access.js';
 	import DelegatedAuthBadge from '$lib/DelegatedAuthBadge.svelte';
+	import InvoiceSection from '$lib/InvoiceSection.svelte';
 	import { formatVersions } from '@simple-todo/todo/build-info.js';
 	import ConsentModal from '$lib/ConsentModal.svelte';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
@@ -415,6 +416,21 @@
 	// delegations; private lists and lists opened by address can.
 	$: delegationEnabled = supportsDelegation($todoDBStore);
 
+	// invoice01: the chapter has two halves now. The fragment keeps them
+	// linkable and survives a reload; both stay mounted, so switching back does
+	// not throw away a half-written invoice.
+	/** @type {'todos' | 'invoices'} */
+	let section = 'todos';
+	const SECTION_FRAGMENT = { todos: '#aufgaben', invoices: '#rechnungen' };
+
+	/** @param {'todos' | 'invoices'} next */
+	function showSection(next) {
+		section = next;
+		if (typeof history !== 'undefined') {
+			history.replaceState(null, '', SECTION_FRAGMENT[next]);
+		}
+	}
+
 	/**
 	 * @param {{ detail: { status: 'stable' | 'dropped', detail: string, remotePeer: string | null, remoteAddr: string } }} event
 	 */
@@ -527,24 +543,43 @@
 		<PermissionsPanel />
 	{/if}
 
-	<!-- Add TODO Form -->
-	<AddTodoForm
-		on:add={handleAddTodo}
-		disabled={!$initializationStore.isInitialized}
-		{delegationEnabled}
-	/>
+	<nav class="mt-6 flex gap-1 border-b border-gray-200 dark:border-gray-700" aria-label="Sections">
+		{#each [['todos', $_('invoice.todosTab')], ['invoices', $_('invoice.tab')]] as [name, label] (name)}
+			<button
+				class="-mb-px border-b-2 px-3 py-2 text-sm font-medium {section === name
+					? 'border-cyan-600 text-heading'
+					: 'border-transparent text-faint hover:text-heading'}"
+				data-testid="section-{name}"
+				aria-current={section === name ? 'page' : undefined}
+				on:click={() => showSection(/** @type {'todos' | 'invoices'} */ (name))}>{label}</button
+			>
+		{/each}
+	</nav>
 
-	<!-- TODO List -->
-	<TodoList
-		todos={$todosStore}
-		currentIdentityId={$ownIdentityIdStore}
-		{delegationEnabled}
-		on:delete={handleDelete}
-		on:toggleComplete={handleToggleComplete}
-		on:updateText={handleUpdateText}
-		on:delegate={handleDelegate}
-		on:revokeDelegation={handleRevokeDelegation}
-	/>
+	<div hidden={section !== 'todos'}>
+		<!-- Add TODO Form -->
+		<AddTodoForm
+			on:add={handleAddTodo}
+			disabled={!$initializationStore.isInitialized}
+			{delegationEnabled}
+		/>
+
+		<!-- TODO List -->
+		<TodoList
+			todos={$todosStore}
+			currentIdentityId={$ownIdentityIdStore}
+			{delegationEnabled}
+			on:delete={handleDelete}
+			on:toggleComplete={handleToggleComplete}
+			on:updateText={handleUpdateText}
+			on:delegate={handleDelegate}
+			on:revokeDelegation={handleRevokeDelegation}
+		/>
+	</div>
+
+	<div hidden={section !== 'invoices'}>
+		<InvoiceSection enabled={$initializationStore.isInitialized && delegationEnabled} />
+	</div>
 
 	<AppFooter />
 </main>
