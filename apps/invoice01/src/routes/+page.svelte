@@ -33,6 +33,7 @@
 	import SectionTabs from '$lib/SectionTabs.svelte';
 	import ActiveListHeading from '$lib/ActiveListHeading.svelte';
 	import { currentSection } from '$lib/sections.js';
+	import { placeRelayButtonForThisScreen } from '$lib/relay-fab-position.js';
 	import { formatVersions } from '@simple-todo/todo/build-info.js';
 	import ConsentModal from '$lib/ConsentModal.svelte';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
@@ -264,7 +265,11 @@
 	let SponsorRelayFab = null;
 	async function loadSponsorFab() {
 		if (SponsorRelayFab) return;
-		SponsorRelayFab = (await import('@le-space/ui/svelte')).default;
+		const component = (await import('@le-space/ui/svelte')).default;
+		// Read once, when the launcher mounts: on a phone it starts above the tab
+		// bar rather than on top of it.
+		placeRelayButtonForThisScreen();
+		SponsorRelayFab = component;
 	}
 
 	onMount(async () => {

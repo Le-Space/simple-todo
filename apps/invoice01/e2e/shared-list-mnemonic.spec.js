@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { acceptNotice, consentModal, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import { openSection } from './sections.mjs';
 
 const testUrl = '/';
 const timeout = 90000;
@@ -46,20 +47,34 @@ test.describe('Spanish mnemonic shared todo lists', () => {
 				openSelectedList(isolated)
 			]);
 
+			await Promise.all([alice, bob, isolated].map((page) => openSection(page, 'listen')));
 			const [aliceDetails, bobDetails, isolatedDetails] = [alice, bob, isolated].map((page) =>
 				page.getByTestId('shared-list-details')
 			);
 			for (const details of [aliceDetails, bobDetails, isolatedDetails]) {
-				await expect(details).not.toHaveAttribute('open', '');
+				// In the lists tab the open list is what the tab is about, so it
+				// starts unfolded — and it sits in that section, not in the status
+				// bar it used to hang from.
+				await expect(details).toHaveAttribute('open', '');
 				await expect(details).toBeVisible();
 				await expect(
-					details.locator('xpath=ancestor::nav[@data-testid="p2p-status-nav"]')
+					details.locator('xpath=ancestor::section[@data-testid="section-listen"]')
 				).toHaveCount(1);
 			}
 			await expect(alice.getByTestId('network-details')).not.toHaveAttribute('open', '');
+			// The summary still operates, by pointer and by keyboard — the keyboard
+			// through the <summary> itself, which is what carries the focus; the
+			// heading inside it takes none.
 			await aliceDetails.getByText('Shared list', { exact: true }).click();
-			await bobDetails.getByText('Shared list', { exact: true }).focus();
+			await expect(aliceDetails).not.toHaveAttribute('open', '');
+			await aliceDetails.getByText('Shared list', { exact: true }).click();
+			await bobDetails.locator('summary').focus();
 			await bob.keyboard.press('Enter');
+			await expect(bobDetails).not.toHaveAttribute('open', '');
+			await bob.keyboard.press('Enter');
+			for (const details of [aliceDetails, bobDetails]) {
+				await expect(details).toHaveAttribute('open', '');
+			}
 			await expect(aliceDetails.getByTestId('active-shared-list-name')).toHaveText(copiedMnemonic);
 			await expect(bobDetails.getByTestId('active-shared-list-name')).toHaveText(copiedMnemonic);
 
@@ -126,6 +141,8 @@ async function getDatabaseDiagnostics(page) {
 
 /** @param {import('@playwright/test').Page} page @param {string} text */
 async function addTodo(page, text) {
+	// The spec was last in the lists tab; the todos have their own.
+	await openSection(page, 'aufgaben');
 	await page.getByPlaceholder('What needs to be done?').fill(text);
 	await page.getByRole('button', { name: 'Add TODO' }).click();
 	await expectTodo(page, text);
@@ -133,5 +150,6 @@ async function addTodo(page, text) {
 
 /** @param {import('@playwright/test').Page} page @param {string} text */
 async function expectTodo(page, text) {
+	await openSection(page, 'aufgaben');
 	await expect(page.getByText(text, { exact: true })).toBeVisible({ timeout });
 }

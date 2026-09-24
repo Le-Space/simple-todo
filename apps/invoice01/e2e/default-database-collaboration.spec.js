@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { passConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import { openSection } from './sections.mjs';
 
 const testUrl = '/';
 const collaborationTimeout = 90000;
@@ -155,6 +156,7 @@ async function expectWebRTCConnection(page, remotePeerId) {
 		)
 		.toBe(true);
 
+	await openSection(page, 'netzwerk');
 	const networkDetails = page.getByTestId('network-details');
 	if ((await networkDetails.getAttribute('open')) === null) {
 		await networkDetails.getByText('Network details', { exact: true }).click();

@@ -151,7 +151,7 @@
 						on:click={() => copyAddress(address)}
 						class="text-text dark:hover:bg-cyan/20 shrink-0 rounded p-1 transition-colors hover:bg-cyan-200 focus-visible:ring-2 focus-visible:ring-cyan-500"
 						aria-label={$t('ui.multiaddrs.copyLabel', 'Copy multiaddress {index}', {
-							values: { index: index + 1 }
+							index: index + 1
 						})}
 						title={copiedAddress === address
 							? $t('ui.copy.copied', 'Copied!')
