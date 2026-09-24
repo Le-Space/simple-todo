@@ -4,6 +4,7 @@
 	import { formatEuro } from './invoice/money.js';
 	import { formatDay } from './invoice/document.js';
 	import { invoiceTotals } from './invoice/records.js';
+	import { duplicateGroups, isDuplicated, mustGiveWay } from './invoice/duplicates.js';
 
 	/** @type {any[]} */
 	export let invoices = [];
@@ -12,6 +13,10 @@
 	const dispatch = createEventDispatcher();
 
 	/** Newest first, and a draft belongs at the top: it is what somebody is working on. */
+	// Two invoices with one number: found here rather than waited for, because
+	// nobody notices it by reading a list.
+	$: clashes = duplicateGroups(invoices);
+
 	$: sorted = [...invoices].sort((a, b) => {
 		if (a.state !== b.state) return a.state === 'draft' ? -1 : 1;
 		return String(b.issueDate ?? '').localeCompare(String(a.issueDate ?? ''));
@@ -38,6 +43,15 @@
 					<tr class="border-t border-gray-200 dark:border-gray-700" data-testid="invoice-row">
 						<td class="py-2 pr-3 font-mono text-xs">
 							{invoice.number ?? '—'}
+							{#if isDuplicated(invoice, clashes)}
+								<span
+									class="block font-sans text-amber-700 dark:text-amber-400"
+									data-testid="invoice-duplicate-mark"
+									title={mustGiveWay(invoice, clashes)
+										? $_('invoice.duplicate.explain')
+										: $_('invoice.duplicate.keeps')}>{$_('invoice.duplicate.mark')}</span
+								>
+							{/if}
 							{#if invoice.cancels}
 								<span class="block text-faint"
 									>{$_('invoice.cancelled.of', { values: { number: invoice.cancels } })}</span
@@ -80,7 +94,14 @@
 									data-testid="invoice-pdf"
 									on:click={() => dispatch('pdf', invoice)}>{$_('invoice.actions.pdf')}</button
 								>
-								{#if !invoice.cancelledBy && !invoice.cancels}
+								{#if mustGiveWay(invoice, clashes)}
+									<button
+										class="rounded border border-amber-400 px-2 py-0.5 text-xs text-amber-700 dark:text-amber-400"
+										data-testid="invoice-reissue"
+										on:click={() => dispatch('reissue', invoice)}
+										>{$_('invoice.duplicate.giveWay')}</button
+									>
+								{:else if !invoice.cancelledBy && !invoice.cancels}
 									<button
 										class="rounded border border-gray-300 px-2 py-0.5 text-xs dark:border-gray-600"
 										data-testid="invoice-storno"

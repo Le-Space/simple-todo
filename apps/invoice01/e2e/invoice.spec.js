@@ -159,17 +159,38 @@ test.describe('Settings', () => {
 		await page.getByTestId('section-invoices').click();
 		await fillIssuer(page);
 
-		// "The first number here is …-042": what a migration from SumUp looks
-		// like. The circle keeps it as its floor.
+		// What migrating from another program looks like: the pattern that
+		// program used, and the number its last invoice had.
 		await page.getByTestId('invoice-settings-open').click();
-		const pattern = (await page.getByTestId('invoice-series').textContent())?.trim() ?? '';
-		const first = pattern.replace('{YYYY}', '2026').replace('{NNN}', '042');
-		await page.getByTestId('series-start').fill(first);
+		await page.getByTestId('invoice-series').fill('{YYYY}-{NNN}');
+		await page.getByTestId('invoice-series-reset').selectOption('yearly');
+		await page.getByTestId('series-start').fill('2026-004');
+
+		// A pattern without this identity's digits means every device shares one
+		// series, and the app says so rather than letting somebody find out.
+		await expect(page.getByTestId('invoice-series-shared')).toBeVisible();
+
 		await page.getByTestId('invoice-settings-save').click();
 		await expect(page.getByTestId('invoice-message')).toBeVisible({ timeout });
 
 		await page.getByTestId('invoice-new').click();
-		await expect(page.getByTestId('invoice-next-number')).toContainText('042', { timeout });
+		await expect(page.getByTestId('invoice-next-number')).toContainText('2026-004', { timeout });
+	});
+
+	test('a pattern that would hand out the same number twice is refused', async ({ page }) => {
+		test.setTimeout(timeout * 4);
+		await addVirtualAuthenticator(page);
+		await openReadyApp(page);
+		await openPrivateList(page);
+		await page.getByTestId('section-invoices').click();
+
+		await page.getByTestId('invoice-settings-open').click();
+		// Restarts every year, and carries no year: RE-001 in 2026 and again in
+		// 2027 is two invoices with one number.
+		await page.getByTestId('invoice-series').fill('RE-{NNN}');
+		await page.getByTestId('invoice-settings-save').click();
+		await expect(page.getByTestId('invoice-settings-problem')).toBeVisible({ timeout });
+		await expect(page.getByTestId('invoice-settings')).toBeVisible();
 	});
 });
 
