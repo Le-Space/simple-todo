@@ -64,6 +64,101 @@ Ziffern werden deshalb aus der DID abgeleitet. Zwei Identitäten mit denselben
 fünf Ziffern teilen sich eine Reihe und zählen aneinander vorbei: Das kostet
 eine gemeinsame Reihe, nie eine doppelte Nummer.
 
+## Eine Position, und worum es ging
+
+Eine Rechnung, die der Kunde nachvollziehen kann, wird bezahlt statt
+hinterfragt. Neben den Zahlen trägt eine Position zwei freiwillige Dinge: eine
+**Unterzeile** — der Einzeiler mit dem Zusammenhang, „Doichain Core 31.1 ·
+Aufwand 9,5 Std." — und **Stichpunkte**, die sagen, was tatsächlich getan wurde.
+
+Beides rührt keinen Betrag an. `computeTotals` sieht es nie, und eine Position
+mit vier Stichpunkten summiert sich genau wie dieselbe Position ohne. Es gibt
+sie, weil die Alternative eine Rechnung ist, auf der „Beratung, 2 Tage,
+1.000,00" steht — und ein E-Mail-Wechsel darüber, was das war.
+
+Ein Seitenumbruch fällt zwischen zwei Positionen, nicht in die Zahlen einer
+hinein, und der Tabellenkopf wiederholt sich oben auf der nächsten Seite.
+
+## Die Texte, als Vorlage
+
+Das Layout ist gezeichnet und bleibt es. Was demjenigen gehört, der die Rechnung
+schickt, sind die Texte: das Anschreiben über den Positionen und der Schluss
+darunter. Sie stehen in einem kleinen Markdown-Dokument, das sich in der App
+neben einer Voransicht bearbeiten, als Datei herunterladen, in jedem Editor
+ändern und wieder hochladen lässt.
+
+```markdown
+## Anschreiben
+
+Sehr geehrte Damen und Herren,
+
+vielen Dank für Ihren Auftrag. Die Rechnungsnummer **{{nummer}}** bitten wir
+als Verwendungszweck anzugeben.
+
+## Schluss
+
+Mit freundlichen Grüßen
+{{aussteller.geschaeftsfuehrer}}
+```
+
+Bewusst nur eine Teilmenge: `## Überschrift` öffnet einen Block, eine Leerzeile
+trennt Absätze, `- ` macht eine Aufzählung, `**fett**` ist fett, und ein
+getippter Zeilenumbruch bleibt ein Zeilenumbruch — striktes Markdown würde „Mit
+freundlichen Grüßen" und den Namen darunter zu einer Zeile verbinden, und das
+meint niemand, der einen Brief schreibt.
+
+Zwei Blöcke sind bekannt, unter dem Namen beider Sprachen: _Anschreiben_
+(intro, letter) und _Schluss_ (closing, sign-off). Eine unbekannte Überschrift
+hält ihren Text von der Rechnung fern, und der Editor sagt das, statt ihn
+stillschweigend zu schlucken. Platzhalter, die ins Leere zeigen, bleiben stehen,
+wie sie dastehen — eine Lücke in einer Rechnung sieht niemand, `{{kunde.nmae}}`
+schon.
+
+Platzhalter greifen auf die Zahlen der Rechnung zu, deutsch oder englisch
+benannt: `{{nummer}}`/`{{number}}`, `{{betrag}}`, `{{faellig}}`,
+`{{kunde.name}}`, `{{kunde.anschrift}}`, `{{aussteller.geschaeftsfuehrer}}`,
+`{{aussteller.iban}}` und der Rest des Ausstellerblocks.
+
+**Das Ausstellen friert sie ein.** Die Vorlage wandert in die Rechnung, wie die
+Anschriften und die Summen. Wer eine zwei Jahre alte Rechnung noch einmal
+exportiert, bekommt, was damals daraufstand, nicht was die Vorlage heute sagt.
+
+## Was in der Fußzeile steht, und woher es kommt
+
+Alles auf der gedruckten Rechnung außer den Positionen sind Stammdaten des
+Ausstellers, gespeichert in der Liste, damit jedes Gerät dasselbe druckt: Name
+und Anschrift, USt-IdNr. und Steuernummer, E-Mail, Telefon und Webseite,
+Registergericht und -nummer, Geschäftsführer, die Bankverbindung und — wer mag —
+eine Bitcoin- und eine Ethereum-Adresse. Ein Logo wird einmal hochgeladen und
+dort mit abgelegt.
+
+§ 14 Abs. 4 UStG regelt die Angaben der Rechnung selbst; Registereintrag und
+Geschäftsführer sind Sache des § 35a GmbHG, und die Bankverbindung ist Sache des
+Kunden, der irgendwie bezahlen soll. Alles ist freiwillig: Eine Zeile, die
+niemand ausgefüllt hat, entfällt, statt als leeres Etikett gedruckt zu werden.
+
+Das Logo wird auf 600 Pixel verkleinert und als PNG gespeichert, egal was
+hochgeladen wurde. Das begrenzt, was mit der Liste reist, und macht aus einem
+SVG zugleich etwas, das die PDF einbetten kann.
+
+## Der GiroCode
+
+Wo eine Bankverbindung hinterlegt ist und ein positiver Betrag offensteht, trägt
+die Rechnung einen EPC069-12-Code — den GiroCode. Eine Banking-App, die ihn
+scannt, übernimmt Empfänger, IBAN, Betrag und Verwendungszweck von selbst, und
+der Verwendungszweck ist die Rechnungsnummer. Genau daran hängt, ob sich eine
+eingehende Zahlung zuordnen lässt.
+
+Ein Storno trägt keinen: Es schuldet Geld in die andere Richtung, und das kann
+keine Überweisung ausdrücken.
+
+Beträge werden ohne Euro-Zeichen gedruckt. Die PDF bettet ihre Schrift nicht
+ein, ein Betrachter setzt also seine eigene Helvetica ein — und wo deren
+Euro-Zeichen schmaler ist als die Metrik verspricht, rutscht alles dahinter nach
+links. Auf einer gerenderten Seite stand deshalb „1.190,00 €bis zum 02.10.2026".
+Stattdessen nennt das Dokument die Währung in den Überschriften, so wie die
+Vorlage es tut.
+
 ## Geld
 
 Beträge sind ganze Cent, Mengen in Zehntausendsteln, und jede Zahl wird genau

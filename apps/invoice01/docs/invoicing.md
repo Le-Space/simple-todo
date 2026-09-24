@@ -62,6 +62,95 @@ case distinction. The five digits are derived from the DID instead. Two
 identities that land on the same five digits share one series and count past
 each other — a collision costs a shared series, never a duplicate number.
 
+## A line, and what it was about
+
+An invoice that a customer can check is an invoice that gets paid. Beside the
+figures, a line carries two optional things: a **subtitle** — the one-line
+context, "Doichain Core 31.1 · Aufwand 9,5 Std." — and **bullet points** saying
+what was actually done.
+
+Neither touches an amount. `computeTotals` never sees them, and a line with four
+bullets sums exactly as the same line without them. They exist because the
+alternative is an invoice that reads "Beratung, 2 Tage, 1.000,00" and an email
+thread asking what that was.
+
+A page break falls between lines rather than inside their figures, and the table
+header repeats at the top of the next page.
+
+## The wording, as a template
+
+The layout is drawn and stays drawn. What belongs to whoever sends the invoice
+is the wording: the letter above the lines and the closing under them. Those
+live in one small Markdown document, edited in the app beside a preview,
+downloadable as a file, changeable in any editor and uploadable again.
+
+```markdown
+## Anschreiben
+
+Sehr geehrte Damen und Herren,
+
+vielen Dank für Ihren Auftrag. Die Rechnungsnummer **{{nummer}}** bitten wir
+als Verwendungszweck anzugeben.
+
+## Schluss
+
+Mit freundlichen Grüßen
+{{aussteller.geschaeftsfuehrer}}
+```
+
+It is deliberately a subset: `## heading` opens a block, a blank line separates
+paragraphs, `- ` makes a bullet, `**bold**` is bold, and a line break somebody
+typed stays a line break — strict Markdown would join "Mit freundlichen Grüßen"
+and the name below it into one line, and nobody writing a letter means that.
+
+Two blocks are known, under either language's name: _intro_ (Anschreiben,
+Letter) and _closing_ (Schluss, Sign-off). A heading nobody knows keeps its text
+off the invoice, and the editor says so rather than swallowing it. Placeholders
+that resolve to nothing stay on the page as written — a gap in an invoice is
+invisible, `{{kunde.nmae}}` is not.
+
+Placeholders read the invoice's own figures under German or English names:
+`{{nummer}}`/`{{number}}`, `{{betrag}}`, `{{faellig}}`, `{{kunde.name}}`,
+`{{kunde.anschrift}}`, `{{aussteller.geschaeftsfuehrer}}`, `{{aussteller.iban}}`
+and the rest of the issuer's block.
+
+**Issuing freezes it.** The template travels into the invoice, like the
+addresses and the totals, so re-exporting an invoice from two years ago produces
+what it said then rather than what the template says now.
+
+## What the footer says, and where it comes from
+
+Everything on the printed invoice beyond the lines is issuer master data, kept
+in the list so every device prints the same: name and address, VAT id and tax
+number, email, phone and website, the register court and number, the managing
+director, the bank, and — for whoever wants them — a Bitcoin and an Ethereum
+address. A logo is uploaded once and stored with them.
+
+§14 Abs. 4 UStG governs the invoice's own particulars; the register entry and
+the managing director are §35a GmbHG's business, and the bank is nobody's but
+the customer's, who has to pay it somehow. All of it is optional: a line nobody
+filled in is left out rather than printed as a bare label.
+
+The logo is scaled to 600 pixels and kept as a PNG, whatever was uploaded. That
+bounds what travels with the list, and it is also how an SVG becomes something
+the PDF can embed.
+
+## The GiroCode
+
+Where a bank account is set and there is a positive amount to pay, the invoice
+carries an EPC069-12 code — the GiroCode. A banking app that scans it fills in
+recipient, IBAN, amount and reference by itself, and the reference is the
+invoice number, which is what makes a payment matchable when it arrives.
+
+A Storno carries none: it owes money the other way, and no credit transfer can
+express that.
+
+Amounts are printed without the euro sign. The PDF does not embed its font, so
+a viewer substitutes its own Helvetica, and where that one's euro glyph is
+narrower than the metrics promise, everything after it shifts left — a rendered
+page read "1.190,00 €bis zum 02.10.2026". The document names the currency in its
+headings instead, as the template it follows does.
+
 ## Money
 
 Amounts are integer cents; quantities are scaled to ten-thousandths; each figure

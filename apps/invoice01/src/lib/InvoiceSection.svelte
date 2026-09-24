@@ -3,11 +3,14 @@
 	import InvoiceForm from './InvoiceForm.svelte';
 	import InvoiceList from './InvoiceList.svelte';
 	import InvoiceSettingsPanel from './InvoiceSettingsPanel.svelte';
+	import InvoiceTemplateEditor from './InvoiceTemplateEditor.svelte';
 	import { invoiceSettingsStore, invoicesStore } from './invoice/store.js';
 	import { emptyDraft } from './invoice/records.js';
 	import { circleOf, nextNumberFor, normaliseInvoiceSettings } from './invoice/settings.js';
+	import { templateContext } from './invoice/template.js';
 	import { ownIdentityIdStore } from './db-actions.js';
 	import { invoiceFileName, invoicePdfBytes } from './invoice/pdf.js';
+	import { documentLabels } from './invoice/labels.js';
 	import {
 		deleteInvoiceDraft,
 		issueInvoiceDraft,
@@ -19,7 +22,7 @@
 	/** Writing invoices needs a list this identity may write to. */
 	export let enabled = false;
 
-	/** @type {'list' | 'edit' | 'settings'} */
+	/** @type {'list' | 'edit' | 'settings' | 'template'} */
 	let view = 'list';
 	/** @type {any} */
 	let draft = null;
@@ -38,6 +41,19 @@
 		.filter((invoice) => invoice.state === 'issued' && invoice.number)
 		.map((invoice) => invoice.number);
 	$: nextNumber = identityId ? nextNumberFor(settings, identityId, issuedNumbers) : '';
+	// Nobody has edited the wording yet: the reader's language decides what the
+	// letter says, rather than leaving the invoice silent.
+	$: template = settings.template || $_('invoice.template.default');
+	// What a placeholder stands for in the editor's preview: this list's own
+	// issuer, with a customer standing in for whoever the next invoice is for.
+	$: previewContext = templateContext(
+		{
+			number: nextNumber,
+			meta: [['', new Date().toLocaleDateString($locale ?? 'de')]],
+			totals: [{ label: '', value: '0,00', due: true }]
+		},
+		{ issuer: settings.issuer, customer: { name: '…', address: '', vatId: '' } }
+	);
 
 	function newInvoice() {
 		draft = emptyDraft({
@@ -79,7 +95,7 @@
 			busy = false;
 			return (error = saved.error ?? '');
 		}
-		const result = await issueInvoiceDraft(draft);
+		const result = await issueInvoiceDraft(draft, { template });
 		busy = false;
 		if (!result.ok) {
 			problems = result.problems ?? [];
@@ -110,49 +126,14 @@
 		view = 'edit';
 	}
 
-	/**
-	 * The labels the document speaks, in the language the reader is reading.
-	 *
-	 * `documentModel` looks the tax-mode sentence up by the code stored on the
-	 * invoice, so those two keys go in under their code rather than their name.
-	 *
-	 * @returns {Record<string, string>}
-	 */
-	function documentLabels() {
-		/** @type {Record<string, string>} */
-		const labels = {};
-		for (const key of [
-			'title',
-			'titleCancellation',
-			'invoiceDate',
-			'deliveryDate',
-			'cancels',
-			'position',
-			'description',
-			'quantity',
-			'unitPrice',
-			'vat',
-			'lineNet',
-			'netTotal',
-			'grossTotal',
-			'vatId',
-			'iban',
-			'paymentTerms',
-			'paymentOnReceipt'
-		]) {
-			labels[key] = $_(`invoice.document.${key}`);
-		}
-		labels['invoice.note.kleinunternehmer'] = $_('invoice.note.kleinunternehmer');
-		labels['invoice.note.reverseCharge'] = $_('invoice.note.reverseCharge');
-		return labels;
-	}
-
 	/** @param {CustomEvent<any>} event */
 	async function download(event) {
 		const invoice = event.detail;
 		try {
 			busy = true;
-			const bytes = await invoicePdfBytes(invoice, documentLabels(), { locale: $locale ?? 'de' });
+			const bytes = await invoicePdfBytes(invoice, documentLabels($_), {
+				locale: $locale ?? 'de'
+			});
 			const url = URL.createObjectURL(
 				new Blob([/** @type {BlobPart} */ (bytes)], { type: 'application/pdf' })
 			);
@@ -197,6 +178,11 @@
 					data-testid="invoice-settings-open"
 					on:click={() => (view = 'settings')}>{$_('invoice.actions.settings')}</button
 				>
+				<button
+					class="rounded-md border border-gray-300 px-3 py-1.5 text-sm dark:border-gray-600"
+					data-testid="invoice-template-open"
+					on:click={() => (view = 'template')}>{$_('invoice.actions.template')}</button
+				>
 			</div>
 		{/if}
 	</div>
@@ -215,11 +201,20 @@
 			on:issue={issue}
 			on:back={() => (view = 'list')}
 		/>
+	{:else if view === 'template'}
+		<InvoiceTemplateEditor
+			markdown={template}
+			context={previewContext}
+			{busy}
+			on:save={storeSettings}
+			on:back={() => (view = 'list')}
+		/>
 	{:else if view === 'settings'}
 		<InvoiceSettingsPanel
 			{settings}
 			{busy}
 			{circle}
+			circleKey={identityId}
 			on:save={storeSettings}
 			on:back={() => (view = 'list')}
 		/>

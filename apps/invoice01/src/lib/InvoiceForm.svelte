@@ -50,6 +50,8 @@
 	let quantityText = draft.lines.map((/** @type {any} */ line) =>
 		String(line.quantity).replace('.', ',')
 	);
+	/** The bullets as one text, one per line, so typing an empty line is fine. */
+	let detailText = draft.lines.map((/** @type {any} */ line) => (line.details ?? []).join('\n'));
 
 	$: totals = computeTotals(draft.lines, draft.taxMode);
 	$: lineProblems = draft.lines.map((/** @type {any} */ _line, /** @type {number} */ index) =>
@@ -61,6 +63,7 @@
 		draft = { ...draft, lines: [...draft.lines, emptyLine()] };
 		priceText = [...priceText, '0,00'];
 		quantityText = [...quantityText, '1'];
+		detailText = [...detailText, ''];
 	}
 
 	/** @param {number} index */
@@ -76,6 +79,22 @@
 		);
 		quantityText = quantityText.filter(
 			(/** @type {string} */ _text, /** @type {number} */ at) => at !== index
+		);
+		detailText = detailText.filter(
+			(/** @type {string} */ _text, /** @type {number} */ at) => at !== index
+		);
+	}
+
+	/** @param {number} index @param {string} text */
+	function readDetails(index, text) {
+		detailText[index] = text;
+		setLine(
+			index,
+			'details',
+			text
+				.split('\n')
+				.map((line) => line.trim())
+				.filter(Boolean)
 		);
 	}
 
@@ -204,6 +223,15 @@
 						on:input={(event) => setLine(index, 'description', event.currentTarget.value)}
 					/>
 				</label>
+				<label class="block text-sm sm:col-span-7">
+					<span class="text-faint">{$_('invoice.form.lineSubtitle')}</span>
+					<input
+						class="mt-1 w-full rounded-md border border-gray-300 px-2 py-1.5 dark:border-gray-600"
+						data-testid="invoice-line-subtitle"
+						value={line.subtitle ?? ''}
+						on:input={(event) => setLine(index, 'subtitle', event.currentTarget.value)}
+					/>
+				</label>
 				<label class="block text-sm sm:col-span-2">
 					<span class="text-faint">{$_('invoice.form.lineQuantity')}</span>
 					<input
@@ -242,6 +270,17 @@
 						<option value={7}>7 %</option>
 						<option value={0}>0 %</option>
 					</select>
+				</label>
+				<label class="block text-sm sm:col-span-12">
+					<span class="text-faint">{$_('invoice.form.lineDetails')}</span>
+					<textarea
+						class="mt-1 w-full rounded-md border border-gray-300 px-2 py-1.5 text-xs dark:border-gray-600"
+						data-testid="invoice-line-details"
+						rows="2"
+						placeholder={$_('invoice.form.lineDetailsHint')}
+						value={detailText[index] ?? ''}
+						on:input={(event) => readDetails(index, event.currentTarget.value)}
+					></textarea>
 				</label>
 				<div class="flex items-end justify-between gap-2 sm:col-span-1">
 					<span class="text-sm tabular-nums" data-testid="invoice-line-net">

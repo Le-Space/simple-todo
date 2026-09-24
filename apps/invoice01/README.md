@@ -41,7 +41,24 @@ cancelled, all offline, all in a list that replicates to your other devices.
   cent fails EN 16931's own consistency rules, and with them every e-invoice
   validator.
 - **The PDF is drawn, not printed.** One click gives a file named after the
-  invoice, the same on every browser, with no page URL in the footer.
+  invoice, the same on every browser, with no page URL in the footer. It carries
+  the logo, the issuer's block, and on every page the foot that names the
+  register entry, the managing director and the bank.
+- **A GiroCode fills in the transfer.** Where a bank account is set, the invoice
+  carries an EPC069-12 code: a banking app that scans it takes recipient, IBAN,
+  amount and the invoice number as the reference, which is the usual reason a
+  payment cannot be matched to its invoice.
+- **A series can be carried over.** "The first number here is 2026-005"
+  continues the run from whatever program issued the last one.
+- **A line can explain itself.** Beside the figures, a line carries a subtitle
+  and bullet points — what it was about, and what was actually done. Neither
+  changes an amount; both are why an invoice gets checked and paid rather than
+  queried.
+- **The wording is yours.** The letter above the lines and the closing under
+  them come from a small Markdown template, edited in the app beside a preview,
+  downloadable and uploadable as a file. Placeholders like `{{kunde.name}}` are
+  filled in when the invoice is issued — and frozen there, so a template edited
+  next year does not change what last year's invoice said.
 
 What this chapter deliberately does not do: XRechnung or ZUGFeRD export, a
 customer directory, payment matching. [`docs/invoicing.md`](./docs/invoicing.md)

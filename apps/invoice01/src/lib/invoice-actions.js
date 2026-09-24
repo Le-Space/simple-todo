@@ -107,10 +107,12 @@ export async function saveInvoiceDraft(draft) {
  * saved, and issuing failed on the first press and worked on the second.
  *
  * @param {any} draft
- * @param {{ date?: Date }} [options]
+ * @param {{ date?: Date, template?: string }} [options] `template` is the
+ *   wording this invoice goes out with, which the app takes from the settings
+ *   or, where nobody edited them, from the reader's language.
  * @returns {Promise<Result>}
  */
-export async function issueInvoiceDraft(draft, { date = new Date() } = {}) {
+export async function issueInvoiceDraft(draft, { date = new Date(), template = '' } = {}) {
 	const context = ready();
 	if (!context) return { ok: false, error: 'The list is not open yet.' };
 
@@ -128,7 +130,9 @@ export async function issueInvoiceDraft(draft, { date = new Date() } = {}) {
 			number,
 			issuer: settings.issuer,
 			issuedBy: context.identityId,
-			issuedAt: date.toISOString()
+			issuedAt: date.toISOString(),
+			// What the letter said when it went out, not what it says now.
+			template: template || settings.template
 		});
 		await context.db.put(invoiceKey(invoice.id), invoice);
 		return { ok: true, number };
