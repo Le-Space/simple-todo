@@ -53,6 +53,8 @@ jobs:
         run: node packages/e2e-kit/src/check-kit-exports.mjs
       - name: Which chapters a change tests, and which it deploys
         run: node --test .github/pick-apps.test.mjs
+      - name: Every chapter's tab says which chapter it is
+        run: node .github/check-chapter-titles.mjs
 
   test:
     needs: discover

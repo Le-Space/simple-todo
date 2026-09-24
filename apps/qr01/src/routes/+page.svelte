@@ -380,7 +380,6 @@
 <ListOfferDialog />
 
 <svelte:head>
-	<title>QR-Todo {typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<meta
 		name="description"
