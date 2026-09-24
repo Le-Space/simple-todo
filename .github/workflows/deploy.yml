@@ -117,6 +117,14 @@ jobs:
           ALEPH_SITE_PIN: 'true'
           ALEPH_SITE_NAME: ${{ steps.chapter.outputs.site }}
           ALEPH_SITE_CHANNEL: ALEPH-CLOUDSOLUTIONS
+          # Every upload is storage this account pays for by the hour, and a
+          # chapter's older builds are of no use once its domain points past
+          # them. The deployer forgets everything beyond the newest three of
+          # this site -- and never what a domain still points at. Uploads made
+          # before @le-space/node 0.9.9 are pruned on the next deploy of that
+          # chapter; before it, retention filtered on a field the uploads no
+          # longer carried and forgot nothing.
+          ALEPH_SITE_RETENTION_KEEP_COUNT: '3'
           ALEPH_PRIVATE_KEY: ${{ secrets.ALEPH_PRIVATE_KEY }}
         run: |
           for attempt in 1 2 3; do

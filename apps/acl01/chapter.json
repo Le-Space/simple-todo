@@ -3,7 +3,7 @@
 	"aleph": {
 		"site": "simple-todo-acl01",
 		"domain": "acl01.le-space.de",
-		"deployer": "@le-space/node@0.6.22"
+		"deployer": "@le-space/node@0.9.9"
 	},
 	"ports": {
 		"preview": 4175,
