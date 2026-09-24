@@ -87,13 +87,22 @@ replica keeps the entry it already has.
 So the app does exactly that, and says so where somebody deleting can read it.
 It does not offer an erasure it cannot perform.
 
-**Not sealed yet, and that is a real limit.** The directory lives in the list,
-so whoever the list is shared with gets it. Invoices therefore belong in a list
-of your own rather than a shared one. Sealing it needs a key both of your
-devices have, and the key handling in this chapter is still the single-device
-one it inherited (`database-keys.js`, "Phase 1"): one random key per database in
-local storage, which a second device could not read. Fixing that is a decision
-about the passkey, not a detail — see the chapter's open questions.
+**Not sealed yet — and the way it will be is decided.** The directory lives in
+the list, so whoever the list is shared with gets it. Invoices therefore belong
+in a list of your own rather than a shared one.
+
+The plan, settled on 2026-09-24: the list's own OrbitDB database gets the
+`encryption` option — `payloadEncryption` in `entry-encryption.js`, which this
+chapter already carries from `privacy01` — and the key comes from the passkey,
+not from local storage. The identity provider exports
+`extractPrfSeedFromCredential`, so the same credential that already _is_ the
+identity derives the key: one passkey opens the list on every device it is
+present on, nothing is handed over, and a list somebody else holds is blocks
+they cannot read. `database-keys.js` is the seam that changes; what it calls
+"Phase 2" is this.
+
+It is not built yet, and this paragraph is the honest description of where that
+leaves the directory in the meantime.
 
 ## A line, and what it was about
 

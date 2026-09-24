@@ -90,13 +90,22 @@ entfernt nichts aus dem Log, und jede Kopie behält, was sie schon hat.
 Genau das tut die App, und sie sagt es dort, wo jemand löscht. Sie verspricht
 keine Löschung, die sie nicht leisten kann.
 
-**Noch nicht versiegelt, und das ist eine echte Grenze.** Das Verzeichnis liegt
-in der Liste, wer die Liste bekommt, bekommt es mit. Rechnungen gehören deshalb
-in eine eigene Liste, nicht in eine geteilte. Versiegeln bräuchte einen
-Schlüssel, den beide Geräte haben, und die Schlüsselverwaltung dieses Kapitels
-ist noch die geerbte Einzelgerät-Fassung (`database-keys.js`, „Phase 1"): ein
-Zufallsschlüssel je Datenbank im Local Storage, den ein zweites Gerät nicht
-lesen könnte. Das zu ändern ist eine Entscheidung über den Passkey, kein Detail.
+**Noch nicht versiegelt — aber der Weg steht fest.** Das Verzeichnis liegt in
+der Liste, wer die Liste bekommt, bekommt es mit. Rechnungen gehören deshalb in
+eine eigene Liste, nicht in eine geteilte.
+
+Der Plan, entschieden am 24.09.2026: Die OrbitDB-Datenbank der Liste bekommt die
+`encryption`-Option — `payloadEncryption` aus `entry-encryption.js`, das dieses
+Kapitel von `privacy01` ohnehin mitbringt — und der Schlüssel kommt aus dem
+Passkey statt aus dem Local Storage. Der Identity-Provider exportiert
+`extractPrfSeedFromCredential`; damit leitet dasselbe Credential, das schon die
+Identität _ist_, auch den Schlüssel ab: Ein Passkey öffnet die Liste auf jedem
+Gerät, auf dem er vorhanden ist, es wird nichts übergeben, und wer die Liste
+sonst hat, hat unlesbare Blöcke. `database-keys.js` ist die Naht, die sich
+ändert; was dort „Phase 2" heißt, ist genau das.
+
+Gebaut ist es nicht, und dieser Absatz ist die ehrliche Beschreibung dessen, wo
+das Verzeichnis bis dahin steht.
 
 ## Eine Position, und worum es ging
 

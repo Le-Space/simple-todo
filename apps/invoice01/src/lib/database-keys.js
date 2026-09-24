@@ -10,6 +10,15 @@
 // key and handed over with the QR code that already travels between them. This
 // module is the seam that will change: callers ask for the key of a database,
 // not for local storage.
+//
+// invoice01, decided 2026-09-24: for this chapter Phase 2 is the passkey rather
+// than the QR code. The key is derived from the PRF output of the credential
+// that already carries the identity — `extractPrfSeedFromCredential` from
+// `@le-space/orbitdb-identity-provider-webauthn-did` — so one passkey opens the
+// list on every device it is present on, with no key to hand over at all. The
+// database is then sealed with `payloadEncryption` from `entry-encryption.js`,
+// as `privacy01` does. Not built yet; the customer directory is the reason it
+// will be (see `src/lib/invoice/customers.js` and `docs/invoicing.md`).
 
 import { forget, recall, remember } from '@simple-todo/todo/browser-memory.js';
 
