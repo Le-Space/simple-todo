@@ -15,7 +15,13 @@ import {
 	nextNumberFor,
 	normaliseInvoiceSettings
 } from './invoice/settings.js';
-import { cancellationFor, draftProblems, invoiceKey, issue } from './invoice/records.js';
+import {
+	cancellationFor,
+	draftProblems,
+	emptyDraft,
+	invoiceKey,
+	issue
+} from './invoice/records.js';
 import {
 	customerFromInvoice,
 	customerKey,
@@ -28,7 +34,7 @@ import { customersStore, invoiceSettingsStore, invoicesStore } from './invoice/s
  * Every action answers in the same shape, so a caller can read `ok` and then
  * `error` without asking which function it called.
  *
- * @typedef {{ ok: boolean, error?: string, problems?: any[], number?: string, draft?: any, customer?: any }} Result
+ * @typedef {{ ok: boolean, error?: string, problems?: any[], number?: string, draft?: any, customer?: any, storno?: any }} Result
  */
 
 /** @returns {{ db: any, identityId: string } | null} */
@@ -247,4 +253,34 @@ export async function deleteCustomer(id) {
 	} catch (error) {
 		return { ok: false, error: describe(error) };
 	}
+}
+
+/**
+ * Take back an invoice whose number went out twice, and prepare its replacement.
+ *
+ * Two drafts, not two invoices: issuing stays the deliberate act it is
+ * everywhere else in this chapter. What this does is remove the guesswork —
+ * the Storno for the number that clashed, and a copy of the invoice ready to go
+ * out under the next free one.
+ *
+ * @param {any} invoice the issued invoice that has to give way
+ * @returns {Promise<Result>}
+ */
+export async function reissueDuplicate(invoice) {
+	const started = await startCancellation(invoice.number);
+	if (!started.ok) return started;
+
+	const copy = {
+		...emptyDraft({ taxMode: invoice.taxMode, customer: invoice.customer }),
+		issueDate: invoice.issueDate,
+		deliveryDate: invoice.deliveryDate,
+		paymentTermsDays: invoice.paymentTermsDays,
+		notes: invoice.notes ?? '',
+		lines: (invoice.lines ?? []).map((/** @type {any} */ line) => ({
+			...line,
+			details: [...(line.details ?? [])]
+		}))
+	};
+	const written = await saveInvoiceDraft(copy);
+	return written.ok ? { ok: true, draft: copy, storno: started.draft } : written;
 }

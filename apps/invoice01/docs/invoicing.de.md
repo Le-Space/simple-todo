@@ -202,6 +202,30 @@ links. Auf einer gerenderten Seite stand deshalb „1.190,00 €bis zum 02.10.20
 Stattdessen nennt das Dokument die Währung in den Überschriften, so wie die
 Vorlage es tut.
 
+## Wenn eine Nummer zweimal hinausgeht
+
+Jede Identität stellt in ihrer eigenen Reihe aus, zwischen zwei Personen kann
+das also nicht passieren. Zwischen zwei Geräten _derselben_ Identität schon —
+ein Passkey auf Laptop und Telefon —, wenn beide offline sind und beide
+ausstellen: Jedes liest die Nummern, die es sehen kann, und keines sieht die des
+anderen. Nach einer Wiederherstellung gilt dasselbe. Und es ist eine bewusste
+Möglichkeit, sobald jemand ein Muster ohne die Kennziffer der Identität setzt —
+genau so sieht eine übernommene Reihe aus.
+
+Die App tut deshalb dreierlei, nichts davon stillschweigend:
+
+1. **Sie erkennt es.** Zwei ausgestellte Rechnungen mit einer Nummer, keine
+   davon zurückgenommen.
+2. **Sie sagt es** — einmal über der Liste und an beiden Zeilen.
+3. **Sie bietet die Korrektur an.** Die zuerst ausgestellte Rechnung behält ihre
+   Nummer, denn die hat der Kunde bereits; die spätere bekommt ein Storno und
+   eine Kopie ihrer selbst als Entwurf, auszustellen unter der nächsten freien
+   Nummer. § 31 Abs. 5 UStDV statt einer Umnummerierung, von der der Kunde nie
+   erfährt.
+
+Wer von beiden weicht, entscheidet `issuedAt` — und bei gleichem Zeitpunkt die
+Id, damit beide Geräte zur selben Antwort kommen, ohne sich fragen zu können.
+
 ## Geld
 
 Beträge sind ganze Cent, Mengen in Zehntausendsteln, und jede Zahl wird genau

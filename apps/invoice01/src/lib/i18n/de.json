@@ -176,7 +176,11 @@
 			"lineDescription": "Eine Position braucht eine Beschreibung.",
 			"lineQuantity": "Eine Position braucht eine Menge.",
 			"lineUnitPrice": "Eine Position braucht einen Preis.",
-			"lineVatRate": "Erlaubt sind 19 %, 7 % oder 0 %."
+			"lineVatRate": "Erlaubt sind 19 %, 7 % oder 0 %.",
+			"patternCounter": "Das Muster braucht genau einen Zähler, zum Beispiel {NNN}.",
+			"patternToken": "Erlaubt sind nur {YYYY}, {YY}, {MM} und {N…} als Platzhalter.",
+			"patternYear": "Ein Kreis, der jedes Jahr neu beginnt, braucht das Jahr in der Nummer — sonst entstehen doppelte Nummern.",
+			"patternMonth": "Ein Kreis, der jeden Monat neu beginnt, braucht Jahr und Monat in der Nummer."
 		},
 		"note": {
 			"kleinunternehmer": "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.",
@@ -216,7 +220,14 @@
 			"seriesStartHint": "Kommt aus einem anderen Programm eine Reihe mit, wird hier ihre nächste Nummer eingetragen, zum Beispiel 2026-005.",
 			"seriesStartInvalid": "Diese Nummer passt nicht zum Muster des Kreises.",
 			"save": "Einstellungen speichern",
-			"saved": "Einstellungen gespeichert."
+			"saved": "Einstellungen gespeichert.",
+			"pattern": "Muster der Nummer",
+			"patternHint": "{YYYY} Jahr, {YY} zweistellig, {MM} Monat, {NNN} Zähler. Alles andere steht so, wie es dasteht — zum Beispiel RE-{YYYY}-{NNN}.",
+			"reset": "Zähler beginnt neu",
+			"resetYearly": "jedes Jahr",
+			"resetMonthly": "jeden Monat",
+			"resetNever": "nie",
+			"sharedSeries": "Ohne die Kennziffer dieser Identität im Muster teilen sich alle Geräte eine Reihe. Erlaubt, und für eine übernommene Reihe oft genau richtig — wenn zwei Geräte offline gleichzeitig ausstellen, meldet die App die doppelte Nummer, statt still umzunummerieren."
 		},
 		"document": {
 			"title": "Rechnung",
@@ -292,6 +303,14 @@
 			"deleteConfirm": "{name} aus dem Verzeichnis entfernen? Der Eintrag verschwindet hier. Im Log bleibt er, und auf jedem Gerät, das die Liste schon hat.",
 			"deleteHint": "Ein gelöschter Kunde verschwindet aus dem Verzeichnis, nicht aus dem Log: Was repliziert wurde, bleibt repliziert. Ausgestellte Rechnungen behalten ohnehin ihre eigene Kopie der Anschrift — das verlangt § 147 AO und erlaubt Art. 17 Abs. 3 lit. b DSGVO.",
 			"privacyHint": "Das Verzeichnis liegt in dieser Liste. Wer die Liste bekommt, bekommt es mit. Rechnungen gehören deshalb in eine eigene Liste, nicht in eine geteilte."
+		},
+		"duplicate": {
+			"banner": "Zwei Rechnungen tragen dieselbe Nummer: {numbers}. Das passiert, wenn dieselbe Identität auf zwei Geräten offline ausgestellt hat.",
+			"mark": "Doppelte Nummer",
+			"keeps": "Behält die Nummer — sie ist beim Kunden.",
+			"giveWay": "Stornieren und neu ausstellen",
+			"explain": "Die zuerst ausgestellte Rechnung behält ihre Nummer, denn die hat der Kunde bereits. Die spätere wird storniert und mit der nächsten freien Nummer neu ausgestellt — § 31 Abs. 5 UStDV, nicht stillschweigend umnummeriert.",
+			"prepared": "Storno und Kopie liegen als Entwürfe bereit. Beide noch ausstellen."
 		}
 	}
 }

@@ -176,7 +176,11 @@
 			"lineDescription": "A line needs a description.",
 			"lineQuantity": "A line needs a quantity.",
 			"lineUnitPrice": "A line needs a price.",
-			"lineVatRate": "Allowed are 19 %, 7 % or 0 %."
+			"lineVatRate": "Allowed are 19 %, 7 % or 0 %.",
+			"patternCounter": "The pattern needs exactly one counter, for example {NNN}.",
+			"patternToken": "Only {YYYY}, {YY}, {MM} and {N…} are allowed as placeholders.",
+			"patternYear": "A circle that restarts every year needs the year in the number — otherwise it hands out the same one twice.",
+			"patternMonth": "A circle that restarts every month needs the year and the month in the number."
 		},
 		"note": {
 			"kleinunternehmer": "No VAT is charged, under §19 UStG.",
@@ -216,7 +220,14 @@
 			"seriesStartHint": "Where a series comes from another program, its next number goes here — for example 2026-005.",
 			"seriesStartInvalid": "That number does not fit this circle's pattern.",
 			"save": "Save settings",
-			"saved": "Settings saved."
+			"saved": "Settings saved.",
+			"pattern": "Number pattern",
+			"patternHint": "{YYYY} year, {YY} two digits, {MM} month, {NNN} counter. Everything else stands as written — RE-{YYYY}-{NNN}, for instance.",
+			"reset": "The counter restarts",
+			"resetYearly": "every year",
+			"resetMonthly": "every month",
+			"resetNever": "never",
+			"sharedSeries": "Without this identity's digits in the pattern, every device shares one series. That is allowed, and often exactly right for a series carried over — and if two devices issue while both are offline, the app reports the duplicate number rather than renumbering quietly."
 		},
 		"document": {
 			"title": "Invoice",
@@ -292,6 +303,14 @@
 			"deleteConfirm": "Remove {name} from the directory? The entry disappears here. It stays in the log, and on every device that already has the list.",
 			"deleteHint": "A deleted customer disappears from the directory, not from the log: what has been replicated stays replicated. Issued invoices keep their own copy of the address anyway — §147 AO requires it and Art. 17(3)(b) GDPR allows it.",
 			"privacyHint": "The directory lives in this list. Whoever gets the list gets the directory with it, which is why invoices belong in a list of your own rather than a shared one."
+		},
+		"duplicate": {
+			"banner": "Two invoices carry the same number: {numbers}. That happens when one identity issued on two devices while both were offline.",
+			"mark": "Duplicate number",
+			"keeps": "Keeps the number — the customer has it.",
+			"giveWay": "Cancel and reissue",
+			"explain": "The invoice that went out first keeps its number, because somebody is already holding it. The later one is cancelled and reissued with the next free number — §31 Abs. 5 UStDV, rather than a quiet renumbering.",
+			"prepared": "The Storno and a copy are waiting as drafts. Both still have to be issued."
 		}
 	}
 }

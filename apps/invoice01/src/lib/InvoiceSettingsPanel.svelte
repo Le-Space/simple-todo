@@ -2,7 +2,8 @@
 	import { createEventDispatcher } from 'svelte';
 	import { _ } from '$lib/i18n/index.js';
 	import { emptyIssuer } from './invoice/settings.js';
-	import { startFromNumber } from './invoice/numbering.js';
+	import { startFromNumber, validatePattern } from './invoice/numbering.js';
+	import { seriesDigits } from './invoice/series.js';
 
 	/** @type {any} */
 	export let settings;
@@ -17,6 +18,13 @@
 	let paymentTermsDays = settings.paymentTermsDays;
 	let firstNumber = '';
 	let problem = '';
+	let pattern = circle?.pattern ?? '';
+	let reset = circle?.reset ?? 'yearly';
+
+	// A pattern without this identity's digits is one series for every device.
+	// Allowed — UStAE 14.5 Abs. 10 does not require one series per device — and
+	// the duplicate detector is what makes it safe to choose.
+	$: sharesSeries = Boolean(circleKey) && !pattern.includes(seriesDigits(circleKey));
 
 	/**
 	 * A logo is stored as a PNG data URL in the list, so every device prints it.
@@ -73,16 +81,25 @@
 		/** @type {any} */
 		const patch = { issuer, paymentTermsDays };
 
+		const wanted = { ...(circle ?? {}), pattern: pattern.trim(), reset };
+		const invalid = validatePattern(wanted.pattern, wanted.reset);
+		if (invalid) {
+			problem = $_(invalid);
+			return;
+		}
+
 		// "The first number here is 2026-005" — a series carried over from
 		// another program, which the circle keeps as its floor.
-		if (firstNumber.trim() && circle) {
-			const start = startFromNumber(circle, firstNumber.trim());
+		if (firstNumber.trim()) {
+			const start = startFromNumber(wanted, firstNumber.trim());
 			if (!start) {
 				problem = $_('invoice.settings.seriesStartInvalid');
 				return;
 			}
-			patch.circles = { ...settings.circles, [circleKey]: { ...circle, start } };
+			wanted.start = start;
 		}
+
+		if (circleKey) patch.circles = { ...settings.circles, [circleKey]: wanted };
 		dispatch('save', patch);
 	}
 
@@ -303,11 +320,38 @@
 	</div>
 
 	{#if circle}
-		<div class="rounded-md bg-surface-2 p-3 text-sm">
-			<p class="font-medium text-heading">{$_('invoice.settings.series')}</p>
-			<p class="mt-1 font-mono text-xs" data-testid="invoice-series">{circle.pattern}</p>
-			<p class="mt-1 text-xs text-faint">{$_('invoice.settings.seriesHint')}</p>
-		</div>
+		<fieldset class="space-y-3 rounded-md bg-surface-2 p-3 text-sm">
+			<legend class="font-medium text-heading">{$_('invoice.settings.series')}</legend>
+			<div class="grid gap-3 sm:grid-cols-2">
+				<label class="block text-sm">
+					<span class="text-faint">{$_('invoice.settings.pattern')}</span>
+					<input
+						class="mt-1 w-full rounded-md border border-gray-300 px-2 py-1.5 font-mono dark:border-gray-600"
+						data-testid="invoice-series"
+						bind:value={pattern}
+					/>
+				</label>
+				<label class="block text-sm">
+					<span class="text-faint">{$_('invoice.settings.reset')}</span>
+					<select
+						class="mt-1 w-full rounded-md border border-gray-300 px-2 py-1.5 dark:border-gray-600"
+						data-testid="invoice-series-reset"
+						bind:value={reset}
+					>
+						<option value="yearly">{$_('invoice.settings.resetYearly')}</option>
+						<option value="monthly">{$_('invoice.settings.resetMonthly')}</option>
+						<option value="never">{$_('invoice.settings.resetNever')}</option>
+					</select>
+				</label>
+			</div>
+			<p class="text-xs text-faint">{$_('invoice.settings.patternHint')}</p>
+			<p class="text-xs text-faint">{$_('invoice.settings.seriesHint')}</p>
+			{#if sharesSeries}
+				<p class="text-xs text-amber-700 dark:text-amber-400" data-testid="invoice-series-shared">
+					{$_('invoice.settings.sharedSeries')}
+				</p>
+			{/if}
+		</fieldset>
 	{/if}
 
 	{#if problem}

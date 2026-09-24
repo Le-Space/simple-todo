@@ -193,6 +193,29 @@ narrower than the metrics promise, everything after it shifts left — a rendere
 page read "1.190,00 €bis zum 02.10.2026". The document names the currency in its
 headings instead, as the template it follows does.
 
+## When one number goes out twice
+
+Every identity issues in a series of its own, so this cannot happen between two
+people. It can happen between two devices that are the _same_ identity — one
+passkey on a laptop and a phone — when both are offline and both issue: each
+reads the numbers it can see, and neither can see the other's. The same follows
+a restore. And it is a deliberate possibility whenever somebody sets a pattern
+without the identity's digits, which is exactly what carrying a series over from
+another program looks like.
+
+The app therefore does three things, none of them quietly:
+
+1. **It detects it.** Two issued invoices with one number, neither taken back.
+2. **It says so** — once above the list, and on both rows.
+3. **It offers the correction.** The invoice that went out first keeps its
+   number, because somebody is already holding it; the later one gets a Storno
+   and a copy of itself as a draft, to be issued under the next free number.
+   §31 Abs. 5 UStDV, rather than a renumbering nobody told the customer about.
+
+Which of the two gives way is decided by `issuedAt`, and by the id where two
+devices managed the same instant — so both devices reach the same answer without
+being able to ask each other.
+
 ## Money
 
 Amounts are integer cents; quantities are scaled to ten-thousandths; each figure
