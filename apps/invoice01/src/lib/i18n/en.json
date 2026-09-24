@@ -153,7 +153,8 @@
 			"issued": "Invoice {number} issued.",
 			"lineSubtitle": "Subtitle",
 			"lineDetails": "Bullet points",
-			"lineDetailsHint": "One line each. They appear under the line, and change no figure."
+			"lineDetailsHint": "One line each. They appear under the line, and change no figure.",
+			"customerNumber": "Customer number"
 		},
 		"taxMode": {
 			"standard": "Standard taxation",
@@ -245,8 +246,8 @@
 			"lineNet": "Amount",
 			"subtotal": "Subtotal excluding VAT",
 			"vatOf": "VAT {rate} % of {base}",
-			"totalCurrency": "Total EUR",
-			"amountDue": "Amount due EUR",
+			"totalCurrency": "Total",
+			"amountDue": "Amount due",
 			"netNote": "Unit prices and amounts are net, in EUR.",
 			"vatId": "VAT id:",
 			"taxNumber": "Tax number:",
@@ -267,7 +268,8 @@
 			"giroHint": "A banking app that scans the GiroCode fills in recipient, IBAN, amount and reference by itself.",
 			"paymentTerms": "Please transfer {amount} by {date} to the account below, quoting invoice number {number} as the reference.",
 			"paymentOnReceipt": "Payable on receipt.",
-			"page": "Page {page} of {pages}"
+			"page": "Page {page} of {pages}",
+			"customerNumber": "Customer no."
 		},
 		"cancelled": {
 			"by": "Cancelled by {number}",
@@ -302,7 +304,8 @@
 			"delete": "Delete",
 			"deleteConfirm": "Remove {name} from the directory? The entry disappears here. It stays in the log, and on every device that already has the list.",
 			"deleteHint": "A deleted customer disappears from the directory, not from the log: what has been replicated stays replicated. Issued invoices keep their own copy of the address anyway — §147 AO requires it and Art. 17(3)(b) GDPR allows it.",
-			"privacyHint": "The directory lives in this list. Whoever gets the list gets the directory with it, which is why invoices belong in a list of your own rather than a shared one."
+			"privacyHint": "The directory lives in this list. Whoever gets the list gets the directory with it, which is why invoices belong in a list of your own rather than a shared one.",
+			"columnsNumber": "Customer number"
 		},
 		"duplicate": {
 			"banner": "Two invoices carry the same number: {numbers}. That happens when one identity issued on two devices while both were offline.",

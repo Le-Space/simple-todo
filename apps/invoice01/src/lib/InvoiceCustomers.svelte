@@ -41,6 +41,7 @@
 			<table class="w-full text-left text-sm">
 				<thead class="text-xs text-faint">
 					<tr>
+						<th class="py-1 pr-3">{$_('invoice.customers.columnsNumber')}</th>
 						<th class="py-1 pr-3">{$_('invoice.customers.columnsName')}</th>
 						<th class="py-1 pr-3">{$_('invoice.customers.columnsAddress')}</th>
 						<th class="py-1 pr-3">{$_('invoice.customers.columnsVatId')}</th>
@@ -50,6 +51,7 @@
 				<tbody>
 					{#each shown as customer (customer.id)}
 						<tr class="border-t border-gray-200 dark:border-gray-700" data-testid="customer-row">
+							<td class="py-2 pr-3 font-mono text-xs">{customer.number || '—'}</td>
 							<td class="py-2 pr-3">{customer.name}</td>
 							<td class="py-2 pr-3 whitespace-pre-line">{customer.address}</td>
 							<td class="py-2 pr-3 font-mono text-xs">{customer.vatId || '—'}</td>

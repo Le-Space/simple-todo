@@ -254,6 +254,7 @@ test.describe('The customer directory', () => {
 		await page.getByTestId('invoice-customer-name').fill('Webanizer AG');
 		await page.getByTestId('invoice-customer-address').fill('Schulgasse 5\n84359 Simbach am Inn');
 		await page.getByTestId('invoice-customer-vatid').fill('DE206862070');
+		await page.getByTestId('invoice-customer-number').fill('1');
 		await page.getByTestId('invoice-customer-keep').click();
 		await expect(page.getByTestId('invoice-message')).toBeVisible({ timeout });
 
@@ -267,6 +268,8 @@ test.describe('The customer directory', () => {
 		await page.getByTestId('invoice-new').click();
 		await page.getByTestId('invoice-customer-pick').selectOption({ label: 'Webanizer AG' });
 		await expect(page.getByTestId('invoice-customer-name')).toHaveValue('Webanizer AG');
+		// The customer number comes along; it is what the invoice prints in its head.
+		await expect(page.getByTestId('invoice-customer-number')).toHaveValue('1');
 		await expect(page.getByTestId('invoice-customer-address')).toHaveValue(
 			'Schulgasse 5\n84359 Simbach am Inn'
 		);
