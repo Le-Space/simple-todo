@@ -12,6 +12,29 @@ test('testing: an app change concerns that app, tests and docs included', () => 
 	assert.deepEqual(pickApps({ changed: ['apps/qr01/e2e/footer.spec.js'], all }).apps, ['qr01']);
 });
 
+test('testing: a dependency one app takes concerns that app', () => {
+	// Adding a font to one chapter moves the root lockfile. Testing all nine for
+	// that is how an unrelated two-browser spec turns a green change red.
+	const picked = pickApps({
+		changed: ['apps/escrow01/package.json', 'apps/escrow01/src/lib/x.js', 'pnpm-lock.yaml'],
+		all
+	});
+	assert.deepEqual(picked.apps, ['escrow01']);
+});
+
+test('testing: a lockfile nobody declared for is still everybody’s business', () => {
+	// A shared package moved, or somebody ran an update at the root.
+	assert.deepEqual(pickApps({ changed: ['pnpm-lock.yaml'], all }).apps, all);
+});
+
+test('testing: the lockfile beside a shared change still concerns every app', () => {
+	const picked = pickApps({
+		changed: ['apps/qr01/package.json', 'packages/ui/src/AppFooter.svelte', 'pnpm-lock.yaml'],
+		all
+	});
+	assert.deepEqual(picked.apps, all);
+});
+
 test('deploying: only the chapter whose build inputs changed', () => {
 	const picked = pickApps({
 		changed: ['apps/escrow01/src/routes/+page.svelte', 'apps/qr01/README.md'],
