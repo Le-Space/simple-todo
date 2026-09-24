@@ -87,6 +87,7 @@
     "@libp2p/websockets": "^10.1.17",
     "@multiformats/multiaddr": "^13.0.3",
     "@orbitdb/core": "^4.0.0",
+    "@pdf-lib/fontkit": "1.1.1",
     "@simple-todo/net": "workspace:*",
     "@simple-todo/todo": "workspace:*",
     "@simple-todo/ui": "workspace:*",
