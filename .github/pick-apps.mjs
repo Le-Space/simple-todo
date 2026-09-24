@@ -3,9 +3,11 @@
  * Which apps a change concerns — for testing, and for deploying.
  *
  * Testing (the default): an app's own folder concerns that app, and anything
- * else — packages, tools, the workflows, the lockfile — concerns all of them,
- * because that is exactly what the split into packages made possible to break
- * everywhere at once.
+ * else — packages, tools, the workflows — concerns all of them, because that is
+ * exactly what the split into packages made possible to break everywhere at
+ * once. The root lockfile is the exception it had to become: it moves whenever
+ * a single app takes a dependency, and testing nine chapters for that is how a
+ * green change ends up red somewhere else under load.
  *
  * Deploying (`PICK_MODE=deploy`): only an app whose own build inputs changed
  * goes live. Each chapter has its own domain and its own audience, and a push
@@ -18,6 +20,12 @@
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, readdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+
+/** The one file outside `apps/` that an app changes by itself. */
+const LOCKFILE = 'pnpm-lock.yaml';
+
+/** An app declaring its own dependencies. */
+const APP_MANIFEST = /^apps\/[^/]+\/package\.json$/;
 
 /** Paths inside an app that never reach its build. */
 const NOT_BUILT = [
@@ -41,7 +49,15 @@ export function pickApps({ changed, all, mode = 'test' }) {
 	const inside = changed.filter((f) => f.startsWith('apps/'));
 
 	if (mode !== 'deploy') {
-		if (outside.length > 0) return { apps: all, mayAffect: [] };
+		// The root lockfile moves whenever any app takes a dependency, and it
+		// would otherwise pull all nine chapters into a change that touched one.
+		// Where an app's own package.json moved with it, the lockfile is that
+		// app's business; where none did, something shared moved and everybody
+		// is still concerned.
+		const lockfileOnly = outside.length > 0 && outside.every((f) => f === LOCKFILE);
+		const declaring = inside.filter((f) => APP_MANIFEST.test(f));
+		const sharedChange = outside.length > 0 && !(lockfileOnly && declaring.length > 0);
+		if (sharedChange) return { apps: all, mayAffect: [] };
 		const touched = new Set(inside.map((f) => f.split('/')[1]));
 		return { apps: all.filter((a) => touched.has(a)), mayAffect: [] };
 	}
