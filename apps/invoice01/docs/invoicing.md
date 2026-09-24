@@ -62,6 +62,48 @@ case distinction. The five digits are derived from the DID instead. Two
 identities that land on the same five digits share one series and count past
 each other — a collision costs a shared series, never a duplicate number.
 
+## The customer directory, and what "delete" can mean
+
+Typing an address into every invoice is not an interface anybody uses twice, so
+customers are their own records beside the invoices: name, address, VAT id, and
+the tax mode and payment terms an invoice for them starts from. Pick one and the
+invoice's customer block fills in; keep the one you have just typed; or start an
+invoice straight from the directory.
+
+**An issued invoice keeps a copy, not a reference.** When a customer moves, last
+year's invoice must still show where they were when it was issued — the
+accounting rule and the log's own nature agree here, because a reference would
+rewrite history and a copy cannot.
+
+Then the uncomfortable part, which belongs in the chapter rather than in a
+footnote. A customer record is personal data. Art. 17 GDPR gives a person the
+right to have it erased; §147 AO obliges the business to keep issued invoices
+for eight years. Those do not contradict each other — retention wins for the
+invoice, erasure applies to everything that is not one — but **an append-only
+log replicated to every device cannot forget either way.** Marking a directory
+entry deleted hides it in the app and removes nothing from the log, and every
+replica keeps the entry it already has.
+
+So the app does exactly that, and says so where somebody deleting can read it.
+It does not offer an erasure it cannot perform.
+
+**Not sealed yet — and the way it will be is decided.** The directory lives in
+the list, so whoever the list is shared with gets it. Invoices therefore belong
+in a list of your own rather than a shared one.
+
+The plan, settled on 2026-09-24: the list's own OrbitDB database gets the
+`encryption` option — `payloadEncryption` in `entry-encryption.js`, which this
+chapter already carries from `privacy01` — and the key comes from the passkey,
+not from local storage. The identity provider exports
+`extractPrfSeedFromCredential`, so the same credential that already _is_ the
+identity derives the key: one passkey opens the list on every device it is
+present on, nothing is handed over, and a list somebody else holds is blocks
+they cannot read. `database-keys.js` is the seam that changes; what it calls
+"Phase 2" is this.
+
+It is not built yet, and this paragraph is the honest description of where that
+leaves the directory in the meantime.
+
 ## A line, and what it was about
 
 An invoice that a customer can check is an invoice that gets paid. Beside the

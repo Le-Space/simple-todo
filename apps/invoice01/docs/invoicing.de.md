@@ -64,6 +64,49 @@ Ziffern werden deshalb aus der DID abgeleitet. Zwei Identitäten mit denselben
 fünf Ziffern teilen sich eine Reihe und zählen aneinander vorbei: Das kostet
 eine gemeinsame Reihe, nie eine doppelte Nummer.
 
+## Das Kundenverzeichnis, und was „löschen" heißen kann
+
+Eine Anschrift in jede Rechnung zu tippen ist keine Oberfläche, die jemand
+zweimal benutzt. Kunden sind deshalb eigene Datensätze neben den Rechnungen:
+Name, Anschrift, USt-IdNr. und die Besteuerung und das Zahlungsziel, mit denen
+eine Rechnung an sie beginnt. Einen auswählen füllt den Kundenblock; den gerade
+getippten kann man behalten; und aus dem Verzeichnis heraus beginnt die nächste
+Rechnung.
+
+**Eine ausgestellte Rechnung trägt eine Kopie, keinen Verweis.** Zieht ein Kunde
+um, muss die Rechnung vom letzten Jahr weiterhin zeigen, wo er damals saß — die
+Buchhaltungsregel und die Natur des Logs sind sich hier einig: Ein Verweis würde
+Geschichte umschreiben, eine Kopie kann das nicht.
+
+Und nun der unangenehme Teil, der ins Kapitel gehört und nicht in eine Fußnote.
+Ein Kundendatensatz sind personenbezogene Daten. Art. 17 DSGVO gibt einer Person
+das Recht auf Löschung; § 147 AO verpflichtet den Betrieb, ausgestellte
+Rechnungen acht Jahre aufzubewahren. Das widerspricht sich nicht — für die
+Rechnung gewinnt die Aufbewahrung, die Löschung gilt für alles andere — aber
+**ein repliziertes Append-only-Log kann in beide Richtungen nicht vergessen.**
+Einen Verzeichniseintrag als gelöscht zu markieren verbirgt ihn in der App und
+entfernt nichts aus dem Log, und jede Kopie behält, was sie schon hat.
+
+Genau das tut die App, und sie sagt es dort, wo jemand löscht. Sie verspricht
+keine Löschung, die sie nicht leisten kann.
+
+**Noch nicht versiegelt — aber der Weg steht fest.** Das Verzeichnis liegt in
+der Liste, wer die Liste bekommt, bekommt es mit. Rechnungen gehören deshalb in
+eine eigene Liste, nicht in eine geteilte.
+
+Der Plan, entschieden am 24.09.2026: Die OrbitDB-Datenbank der Liste bekommt die
+`encryption`-Option — `payloadEncryption` aus `entry-encryption.js`, das dieses
+Kapitel von `privacy01` ohnehin mitbringt — und der Schlüssel kommt aus dem
+Passkey statt aus dem Local Storage. Der Identity-Provider exportiert
+`extractPrfSeedFromCredential`; damit leitet dasselbe Credential, das schon die
+Identität _ist_, auch den Schlüssel ab: Ein Passkey öffnet die Liste auf jedem
+Gerät, auf dem er vorhanden ist, es wird nichts übergeben, und wer die Liste
+sonst hat, hat unlesbare Blöcke. `database-keys.js` ist die Naht, die sich
+ändert; was dort „Phase 2" heißt, ist genau das.
+
+Gebaut ist es nicht, und dieser Absatz ist die ehrliche Beschreibung dessen, wo
+das Verzeichnis bis dahin steht.
+
 ## Eine Position, und worum es ging
 
 Eine Rechnung, die der Kunde nachvollziehen kann, wird bezahlt statt

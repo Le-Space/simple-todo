@@ -12,7 +12,8 @@ import { confirmDelegatedWrite } from './delegated-write-auth.js';
 import { rememberList, listRegistryStore, openListRegistry } from './list-registry.js';
 import { foldCancellations, isInvoiceKey } from './invoice/records.js';
 import { isInvoiceSettingsKey } from './invoice/settings.js';
-import { invoicesStore, invoiceSettingsStore } from './invoice/store.js';
+import { isCustomerKey } from './invoice/customers.js';
+import { customersStore, invoicesStore, invoiceSettingsStore } from './invoice/store.js';
 import { relayHttpStatusStore } from '@simple-todo/net/relay-status.js';
 import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 
@@ -327,6 +328,8 @@ async function loadTodosSnapshot() {
 		const delegationActions = [];
 		/** @type {any[]} */
 		const invoices = [];
+		/** @type {any[]} */
+		const customers = [];
 		/** @type {any} */
 		let invoiceSettings = null;
 		for (const record of /** @type {TodoRecord[]} */ (allTodos)) {
@@ -345,10 +348,15 @@ async function loadTodosSnapshot() {
 				invoiceSettings = record.value;
 				continue;
 			}
+			if (isCustomerKey(record.key)) {
+				customers.push({ ...record.value, key: record.key });
+				continue;
+			}
 			todosArray.push({ id: record.hash, key: record.key, ...record.value });
 		}
 		invoicesStore.set(foldCancellations(invoices));
 		invoiceSettingsStore.set(invoiceSettings);
+		customersStore.set(customers);
 
 		// Delegates never touch a todo's own entry; their completions and
 		// renames sit beside it as actions and are folded in here (delegation01).
@@ -453,7 +461,7 @@ function applyTodoEntry(entry, trackDuringLoad = true) {
 	if (isDelegationActionKey(key)) return false;
 	// The same for an invoice: a Storno changes how *another* entry reads, and
 	// the settings are not a list entry at all. Re-reading folds both properly.
-	if (isInvoiceKey(key) || isInvoiceSettingsKey(key)) return false;
+	if (isInvoiceKey(key) || isInvoiceSettingsKey(key) || isCustomerKey(key)) return false;
 	if (trackDuringLoad && pendingTodosLoad) todoEntriesReceivedDuringLoad.push(entry);
 
 	todosStore.update((todos) => {

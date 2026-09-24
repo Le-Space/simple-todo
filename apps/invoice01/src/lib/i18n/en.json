@@ -125,7 +125,8 @@
 			"delete": "Delete",
 			"back": "Back to the list",
 			"settings": "Settings",
-			"template": "Template"
+			"template": "Template",
+			"customers": "Customers"
 		},
 		"form": {
 			"customer": "Customer",
@@ -275,6 +276,22 @@
 			"unknownPlaceholder": "Unknown placeholder: {names}. It stays on the page as written.",
 			"frozen": "An issued invoice keeps the wording it went out with. What you change here applies to the next one.",
 			"default": "## Letter\n\nDear Sir or Madam,\n\nthank you for your order. We are charging for the services listed below.\n\n## Closing\n\nKind regards\n{{issuer.managingDirector}}"
+		},
+		"customers": {
+			"heading": "Customers",
+			"none": "No customer kept yet. Whoever gets an invoice can end up here — if you want.",
+			"pick": "From the directory",
+			"pickNone": "— pick a customer —",
+			"save": "Keep this customer",
+			"saved": "Customer kept.",
+			"search": "Search",
+			"columnsName": "Name",
+			"columnsAddress": "Address",
+			"columnsVatId": "VAT id",
+			"delete": "Delete",
+			"deleteConfirm": "Remove {name} from the directory? The entry disappears here. It stays in the log, and on every device that already has the list.",
+			"deleteHint": "A deleted customer disappears from the directory, not from the log: what has been replicated stays replicated. Issued invoices keep their own copy of the address anyway — §147 AO requires it and Art. 17(3)(b) GDPR allows it.",
+			"privacyHint": "The directory lives in this list. Whoever gets the list gets the directory with it, which is why invoices belong in a list of your own rather than a shared one."
 		}
 	}
 }

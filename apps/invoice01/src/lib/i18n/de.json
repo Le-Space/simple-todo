@@ -125,7 +125,8 @@
 			"delete": "Löschen",
 			"back": "Zurück zur Übersicht",
 			"settings": "Einstellungen",
-			"template": "Vorlage"
+			"template": "Vorlage",
+			"customers": "Kunden"
 		},
 		"form": {
 			"customer": "Kunde",
@@ -275,6 +276,22 @@
 			"unknownPlaceholder": "Unbekannter Platzhalter: {names}. Er bleibt so stehen, wie er dasteht.",
 			"frozen": "Eine ausgestellte Rechnung behält den Text, mit dem sie herausging. Änderungen hier gelten für die nächste.",
 			"default": "## Anschreiben\n\nSehr geehrte Damen und Herren,\n\nvielen Dank für Ihren Auftrag. Wir berechnen Ihnen die unten aufgeführten Leistungen.\n\n## Schluss\n\nMit freundlichen Grüßen\n{{aussteller.geschaeftsfuehrer}}"
+		},
+		"customers": {
+			"heading": "Kunden",
+			"none": "Noch kein Kunde gespeichert. Wer einmal eine Rechnung bekommt, landet hier — auf Wunsch.",
+			"pick": "Aus dem Verzeichnis",
+			"pickNone": "— Kunde wählen —",
+			"save": "Kunden merken",
+			"saved": "Kunde gespeichert.",
+			"search": "Suchen",
+			"columnsName": "Name",
+			"columnsAddress": "Anschrift",
+			"columnsVatId": "USt-IdNr.",
+			"delete": "Löschen",
+			"deleteConfirm": "{name} aus dem Verzeichnis entfernen? Der Eintrag verschwindet hier. Im Log bleibt er, und auf jedem Gerät, das die Liste schon hat.",
+			"deleteHint": "Ein gelöschter Kunde verschwindet aus dem Verzeichnis, nicht aus dem Log: Was repliziert wurde, bleibt repliziert. Ausgestellte Rechnungen behalten ohnehin ihre eigene Kopie der Anschrift — das verlangt § 147 AO und erlaubt Art. 17 Abs. 3 lit. b DSGVO.",
+			"privacyHint": "Das Verzeichnis liegt in dieser Liste. Wer die Liste bekommt, bekommt es mit. Rechnungen gehören deshalb in eine eigene Liste, nicht in eine geteilte."
 		}
 	}
 }
