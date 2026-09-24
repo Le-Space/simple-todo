@@ -50,6 +50,10 @@ cancelled, all offline, all in a list that replicates to your other devices.
   payment cannot be matched to its invoice.
 - **A series can be carried over.** "The first number here is 2026-005"
   continues the run from whatever program issued the last one.
+- **A line can explain itself.** Beside the figures, a line carries a subtitle
+  and bullet points — what it was about, and what was actually done. Neither
+  changes an amount; both are why an invoice gets checked and paid rather than
+  queried.
 - **The wording is yours.** The letter above the lines and the closing under
   them come from a small Markdown template, edited in the app beside a preview,
   downloadable and uploadable as a file. Placeholders like `{{kunde.name}}` are

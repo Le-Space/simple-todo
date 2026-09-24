@@ -149,7 +149,10 @@
 			"issue": "Issue invoice",
 			"issueHint": "Issuing assigns the number and freezes the content: from then on it can only be cancelled, not changed.",
 			"saved": "Draft saved.",
-			"issued": "Invoice {number} issued."
+			"issued": "Invoice {number} issued.",
+			"lineSubtitle": "Subtitle",
+			"lineDetails": "Bullet points",
+			"lineDetailsHint": "One line each. They appear under the line, and change no figure."
 		},
 		"taxMode": {
 			"standard": "Standard taxation",

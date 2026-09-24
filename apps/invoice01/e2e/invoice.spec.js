@@ -47,6 +47,14 @@ test.describe('Invoices', () => {
 		await expect(page.getByTestId('invoice-line-net')).toHaveText(/1\.000,00/, { timeout: 10_000 });
 		await expect(page.getByTestId('invoice-gross')).toHaveText(/1\.190,00/);
 
+		// What the line was about, and what was actually done: neither changes
+		// a figure, and both have to survive issuing.
+		await page.getByTestId('invoice-line-subtitle').fill('Doichain Core 31.1 · Aufwand 9,5 Std.');
+		await page
+			.getByTestId('invoice-line-details')
+			.fill('LWMA und DigiShield erklärt\n\nMainnet-Node synchronisiert');
+		await expect(page.getByTestId('invoice-gross')).toHaveText(/1\.190,00/);
+
 		// A second line, to prove the editor adds up rather than shows one line.
 		await page.getByTestId('invoice-add-line').click();
 		await page.getByTestId('invoice-line-description').nth(1).fill('Fahrtkosten');

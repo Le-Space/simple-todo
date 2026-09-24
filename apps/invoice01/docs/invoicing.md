@@ -62,6 +62,21 @@ case distinction. The five digits are derived from the DID instead. Two
 identities that land on the same five digits share one series and count past
 each other — a collision costs a shared series, never a duplicate number.
 
+## A line, and what it was about
+
+An invoice that a customer can check is an invoice that gets paid. Beside the
+figures, a line carries two optional things: a **subtitle** — the one-line
+context, "Doichain Core 31.1 · Aufwand 9,5 Std." — and **bullet points** saying
+what was actually done.
+
+Neither touches an amount. `computeTotals` never sees them, and a line with four
+bullets sums exactly as the same line without them. They exist because the
+alternative is an invoice that reads "Beratung, 2 Tage, 1.000,00" and an email
+thread asking what that was.
+
+A page break falls between lines rather than inside their figures, and the table
+header repeats at the top of the next page.
+
 ## The wording, as a template
 
 The layout is drawn and stays drawn. What belongs to whoever sends the invoice

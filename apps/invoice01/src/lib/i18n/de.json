@@ -149,7 +149,10 @@
 			"issue": "Rechnung ausstellen",
 			"issueHint": "Beim Ausstellen wird die Nummer vergeben, und der Inhalt lässt sich danach nicht mehr ändern — nur noch stornieren.",
 			"saved": "Entwurf gespeichert.",
-			"issued": "Rechnung {number} ausgestellt."
+			"issued": "Rechnung {number} ausgestellt.",
+			"lineSubtitle": "Unterzeile",
+			"lineDetails": "Stichpunkte",
+			"lineDetailsHint": "Eine Zeile je Punkt. Erscheinen unter der Position, ohne den Betrag zu ändern."
 		},
 		"taxMode": {
 			"standard": "Regelbesteuerung",

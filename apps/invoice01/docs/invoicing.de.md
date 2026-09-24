@@ -64,6 +64,21 @@ Ziffern werden deshalb aus der DID abgeleitet. Zwei Identitäten mit denselben
 fünf Ziffern teilen sich eine Reihe und zählen aneinander vorbei: Das kostet
 eine gemeinsame Reihe, nie eine doppelte Nummer.
 
+## Eine Position, und worum es ging
+
+Eine Rechnung, die der Kunde nachvollziehen kann, wird bezahlt statt
+hinterfragt. Neben den Zahlen trägt eine Position zwei freiwillige Dinge: eine
+**Unterzeile** — der Einzeiler mit dem Zusammenhang, „Doichain Core 31.1 ·
+Aufwand 9,5 Std." — und **Stichpunkte**, die sagen, was tatsächlich getan wurde.
+
+Beides rührt keinen Betrag an. `computeTotals` sieht es nie, und eine Position
+mit vier Stichpunkten summiert sich genau wie dieselbe Position ohne. Es gibt
+sie, weil die Alternative eine Rechnung ist, auf der „Beratung, 2 Tage,
+1.000,00" steht — und ein E-Mail-Wechsel darüber, was das war.
+
+Ein Seitenumbruch fällt zwischen zwei Positionen, nicht in die Zahlen einer
+hinein, und der Tabellenkopf wiederholt sich oben auf der nächsten Seite.
+
 ## Die Texte, als Vorlage
 
 Das Layout ist gezeichnet und bleibt es. Was demjenigen gehört, der die Rechnung
