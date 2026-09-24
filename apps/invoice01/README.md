@@ -68,9 +68,24 @@ cancelled, all offline, all in a list that replicates to your other devices.
   downloadable and uploadable as a file. Placeholders like `{{kunde.name}}` are
   filled in when the invoice is issued — and frozen there, so a template edited
   next year does not change what last year's invoice said.
+- **Four tabs, one page.** The todos, the invoices, the lists and the network
+  each get a tab, so the invoice form is not something to scroll past on the way
+  to a todo. The open tab is in the address (`#rechnungen`), and both the todos
+  and the invoices name the list they are writing to.
+- **An invoice needs a list of your own.** Anyone who knows the three words of
+  the shared list may write to it, so this chapter does not offer to keep
+  invoices and customer addresses there. Until a list of your own is open, the
+  invoice tab says why and links to the lists tab, where creating one is a
+  click. That list belongs to your identity: you write, and you decide who may
+  read it.
+- **German or English.** The whole chapter is translated, and the language is
+  chosen in the first dialog — the one screen everybody sees before anything
+  else. The network panel is the exception and still speaks English; it is
+  shared with the other chapters and is translated with them.
 
-What this chapter deliberately does not do: XRechnung or ZUGFeRD export, a
-customer directory, payment matching. [`docs/invoicing.md`](./docs/invoicing.md)
+What this chapter deliberately does not do: XRechnung or ZUGFeRD export,
+payment matching, and turning todos into invoice lines — an invoice is typed,
+not collected from the list it lives in. [`docs/invoicing.md`](./docs/invoicing.md)
 ([Deutsch](./docs/invoicing.de.md)) has the rules it follows, and the ones it
 leaves alone.
 

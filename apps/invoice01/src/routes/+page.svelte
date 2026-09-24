@@ -30,6 +30,9 @@
 	import { supportsDelegation } from '$lib/delegated-access.js';
 	import DelegatedAuthBadge from '$lib/DelegatedAuthBadge.svelte';
 	import InvoiceSection from '$lib/InvoiceSection.svelte';
+	import SectionTabs from '$lib/SectionTabs.svelte';
+	import ActiveListHeading from '$lib/ActiveListHeading.svelte';
+	import { currentSection } from '$lib/sections.js';
 	import { formatVersions } from '@simple-todo/todo/build-info.js';
 	import ConsentModal from '$lib/ConsentModal.svelte';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
@@ -352,12 +355,9 @@
 			expiresAt: delegationExpiresAt ?? null
 		});
 		if (result.ok) {
-			showToast(
-				delegateDid ? '✅ Todo added and delegated!' : '✅ Todo added successfully!',
-				'success'
-			);
+			showToast(delegateDid ? $_('todo.toast.addedDelegated') : $_('todo.toast.added'), 'success');
 		} else {
-			showToast(`❌ ${result.error ?? 'Failed to add todo'}`, 'error');
+			showToast(`❌ ${result.error ?? $_('todo.toast.addFailed')}`, 'error');
 		}
 	};
 
@@ -367,9 +367,9 @@
 	const handleDelete = async (event) => {
 		const success = await deleteTodo(event.detail.key);
 		if (success) {
-			showToast('🗑️ Todo deleted successfully!', 'success');
+			showToast($_('todo.toast.deleted'), 'success');
 		} else {
-			showToast('❌ Failed to delete todo', 'error');
+			showToast($_('todo.toast.deleteFailed'), 'error');
 		}
 	};
 
@@ -379,9 +379,9 @@
 	const handleToggleComplete = async (event) => {
 		const result = await toggleTodoComplete(event.detail.key);
 		if (result.ok) {
-			showToast('✅ Todo status updated!', 'success');
+			showToast($_('todo.toast.statusUpdated'), 'success');
 		} else {
-			showToast(`❌ ${result.error ?? 'Failed to update todo'}`, 'error');
+			showToast(`❌ ${result.error ?? $_('todo.toast.updateFailed')}`, 'error');
 		}
 	};
 
@@ -389,7 +389,7 @@
 	const handleUpdateText = async (event) => {
 		const result = await updateTodoText(event.detail.key, event.detail.text);
 		showToast(
-			result.ok ? '✅ Todo renamed!' : `❌ ${result.error ?? 'Failed to rename todo'}`,
+			result.ok ? $_('todo.toast.renamed') : `❌ ${result.error ?? $_('todo.toast.renameFailed')}`,
 			result.ok ? 'success' : 'error'
 		);
 	};
@@ -399,7 +399,9 @@
 		const { key, delegateDid, expiresAt } = event.detail;
 		const result = await delegateTodo(key, { delegateDid, expiresAt });
 		showToast(
-			result.ok ? '🤝 Todo delegated!' : `❌ ${result.error ?? 'Failed to delegate todo'}`,
+			result.ok
+				? $_('todo.toast.delegated')
+				: `❌ ${result.error ?? $_('todo.toast.delegateFailed')}`,
 			result.ok ? 'success' : 'error'
 		);
 	};
@@ -408,7 +410,7 @@
 	const handleRevokeDelegation = async (event) => {
 		const result = await revokeTodoDelegation(event.detail.key);
 		showToast(
-			result.ok ? '↩️ Delegation revoked' : `❌ ${result.error ?? 'Failed to revoke delegation'}`,
+			result.ok ? $_('todo.toast.revoked') : `❌ ${result.error ?? $_('todo.toast.revokeFailed')}`,
 			result.ok ? 'success' : 'error'
 		);
 	};
@@ -417,20 +419,10 @@
 	// delegations; private lists and lists opened by address can.
 	$: delegationEnabled = supportsDelegation($todoDBStore);
 
-	// invoice01: the chapter has two halves now. The fragment keeps them
-	// linkable and survives a reload; both stay mounted, so switching back does
-	// not throw away a half-written invoice.
-	/** @type {'todos' | 'invoices'} */
-	let section = 'todos';
-	const SECTION_FRAGMENT = { todos: '#aufgaben', invoices: '#rechnungen' };
-
-	/** @param {'todos' | 'invoices'} next */
-	function showSection(next) {
-		section = next;
-		if (typeof history !== 'undefined') {
-			history.replaceState(null, '', SECTION_FRAGMENT[next]);
-		}
-	}
+	// Which part of the page is on screen is the fragment's business
+	// (`sections.js`), so the back button, a reload and a link to one tab all
+	// work without code here. Every section stays mounted and is only hidden: a
+	// half-written invoice survives a look at the network tab.
 
 	/**
 	 * @param {{ detail: { status: 'stable' | 'dropped', detail: string, remotePeer: string | null, remoteAddr: string } }} event
@@ -482,7 +474,7 @@
 	</ConsentModal>
 {/if}
 
-<main class="container mx-auto max-w-4xl p-6">
+<main class="container mx-auto max-w-4xl px-4 pt-4 pb-28 sm:px-6 sm:pt-6 sm:pb-6">
 	<!-- Header with title and social icons -->
 	<header class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div class="flex flex-1 items-center gap-3">
@@ -490,7 +482,7 @@
 			<div>
 				<h1 class="text-2xl font-bold text-heading sm:text-3xl">Simple-Todo</h1>
 				<p class="mt-1 text-sm text-faint">
-					A local-first peer-to-peer PWA · {formatVersions({
+					{$_('header.tagline')} · {formatVersions({
 						appName: 'Simple-Todo'
 					})} · {typeof __APP_BRANCH__ !== 'undefined' ? __APP_BRANCH__ : 'local'}
 				</p>
@@ -505,21 +497,41 @@
 		</div>
 	</header>
 
-	<P2PStatusNav initialization={$initializationStore} libp2p={$libp2pStore} peerId={myPeerId}>
-		<ManualConnectForm
-			compact
-			disabled={!$initializationStore.isInitialized}
-			on:connected={handleManualConnect}
-		/>
-		<ConnectedPeers compact bind:this={connectedPeersRef} libp2p={$libp2pStore} />
-		<div class="max-w-full min-w-0 space-y-3 overflow-hidden">
-			<PeerIdCard compact peerId={myPeerId} />
-			<OwnMultiaddrs libp2p={$libp2pStore} />
-		</div>
-		<svelte:fragment slot="shared-list">
-			{#if $initializationStore.isInitialized && activeMnemonic}
+	<SectionTabs />
+
+	<section
+		data-testid="section-netzwerk"
+		hidden={$currentSection !== 'netzwerk'}
+		aria-label={$_('sections.tab.network')}
+	>
+		<P2PStatusNav initialization={$initializationStore} libp2p={$libp2pStore} peerId={myPeerId}>
+			<ManualConnectForm
+				compact
+				disabled={!$initializationStore.isInitialized}
+				on:connected={handleManualConnect}
+			/>
+			<ConnectedPeers compact bind:this={connectedPeersRef} libp2p={$libp2pStore} />
+			<div class="max-w-full min-w-0 space-y-3 overflow-hidden">
+				<PeerIdCard compact peerId={myPeerId} />
+				<OwnMultiaddrs libp2p={$libp2pStore} />
+			</div>
+		</P2PStatusNav>
+	</section>
+
+	{#if !showModal && (error || $initializationStore.error)}
+		<ErrorAlert error={error || $initializationStore.error} dismissible={true} />
+	{/if}
+
+	<section
+		data-testid="section-listen"
+		hidden={$currentSection !== 'listen'}
+		aria-label={$_('sections.tab.lists')}
+	>
+		{#if $initializationStore.isInitialized}
+			<!-- The open list first: its address, and who may write to it. -->
+			{#if activeMnemonic}
 				<SharedListDetails
-					embedded
+					open
 					mnemonic={activeMnemonic}
 					databaseAddress={$todoDBAddressStore}
 					activeList={$activeListStore}
@@ -529,34 +541,21 @@
 					}}
 				/>
 			{/if}
-		</svelte:fragment>
-	</P2PStatusNav>
+			<NewPrivateListButton />
+			<ListSwitcher />
+			<OpenDatabaseForm />
+			<PermissionsPanel />
+		{:else}
+			<p class="mt-4 text-sm text-faint">{$_('sections.lists.waiting')}</p>
+		{/if}
+	</section>
 
-	{#if !showModal && (error || $initializationStore.error)}
-		<ErrorAlert error={error || $initializationStore.error} dismissible={true} />
-	{/if}
-
-	{#if $initializationStore.isInitialized}
-		<NewPrivateListButton />
-		<ListSwitcher />
-		<OpenDatabaseForm />
-		<PermissionsPanel />
-	{/if}
-
-	<nav class="mt-6 flex gap-1 border-b border-gray-200 dark:border-gray-700" aria-label="Sections">
-		{#each [['todos', $_('invoice.todosTab')], ['invoices', $_('invoice.tab')]] as [name, label] (name)}
-			<button
-				class="-mb-px border-b-2 px-3 py-2 text-sm font-medium {section === name
-					? 'border-cyan-600 text-heading'
-					: 'border-transparent text-faint hover:text-heading'}"
-				data-testid="section-{name}"
-				aria-current={section === name ? 'page' : undefined}
-				on:click={() => showSection(/** @type {'todos' | 'invoices'} */ (name))}>{label}</button
-			>
-		{/each}
-	</nav>
-
-	<div hidden={section !== 'todos'}>
+	<section
+		data-testid="section-aufgaben"
+		hidden={$currentSection !== 'aufgaben'}
+		aria-label={$_('sections.tab.tasks')}
+	>
+		<ActiveListHeading mnemonic={activeMnemonic} />
 		<!-- Add TODO Form -->
 		<AddTodoForm
 			on:add={handleAddTodo}
@@ -575,11 +574,15 @@
 			on:delegate={handleDelegate}
 			on:revokeDelegation={handleRevokeDelegation}
 		/>
-	</div>
+	</section>
 
-	<div hidden={section !== 'invoices'}>
+	<section
+		data-testid="section-rechnungen"
+		hidden={$currentSection !== 'rechnungen'}
+		aria-label={$_('sections.tab.invoices')}
+	>
 		<InvoiceSection enabled={$initializationStore.isInitialized && delegationEnabled} />
-	</div>
+	</section>
 
 	<AppFooter />
 </main>

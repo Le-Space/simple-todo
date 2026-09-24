@@ -242,9 +242,29 @@
 	</div>
 
 	{#if !enabled}
-		<p class="mt-3 text-sm text-faint" data-testid="invoice-needs-list">
-			{$_('invoice.needsList')}
-		</p>
+		<div
+			class="mt-3 rounded-lg border border-gray-200 p-4 text-sm dark:border-gray-700"
+			data-testid="invoice-needs-list"
+		>
+			<h3 class="font-medium text-heading">{$_('invoice.needsListHeading')}</h3>
+			<p class="mt-2 text-faint">{$_('invoice.needsList')}</p>
+			<!--
+				`text-white!`, not `text-white`: app.css colours every `a` from
+				`--cyan` outside any layer, and unlayered CSS beats a Tailwind
+				utility whatever its specificity. Without the important modifier
+				this reads cyan on cyan.
+			-->
+			<a
+				href="#listen"
+				class="mt-3 inline-block rounded-md bg-cyan-600 px-3 py-1.5 text-sm font-medium text-white! no-underline hover:bg-cyan-700"
+				data-testid="invoice-needs-list-go">{$_('invoice.needsListAction')}</a
+			>
+			<p class="mt-2 text-xs text-faint">
+				{$_('invoice.needsListHint', {
+					values: { action: $_('lists.create.submit') }
+				})}
+			</p>
+		</div>
 	{:else if view === 'edit' && draft}
 		<InvoiceForm
 			bind:draft

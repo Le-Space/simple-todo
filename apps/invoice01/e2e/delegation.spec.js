@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { passConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import { openSection } from './sections.mjs';
 import { expectReadersMoment } from '@simple-todo/e2e-kit/moment.mjs';
 
 // Chapter (delegation01): a list stays owner-only, but the owner may hand ONE
@@ -430,9 +431,11 @@ async function getOwnDid(page) {
 
 /** @param {import('@playwright/test').Page} page */
 async function createPrivateList(page) {
+	await openSection(page, 'listen');
 	await page.getByTestId('new-list-create').click();
 	await expect(page.getByTestId('permissions-panel')).toBeVisible({ timeout });
 	// The list's controller accepts delegation, so the form offers it.
+	await openSection(page, 'aufgaben');
 	await expect(page.getByTestId('add-todo-delegate-toggle')).toBeVisible({ timeout });
 }
 
@@ -457,6 +460,7 @@ async function getActiveDatabaseAddress(page) {
  * @param {number} count
  */
 async function waitForPeers(page, count) {
+	// Read from the network tab without opening it: the text is there either way.
 	const details = page.getByTestId('network-details');
 	await expect
 		.poll(
@@ -477,6 +481,7 @@ async function waitForPeers(page, count) {
  */
 async function openListByAddress(page, address, peers = 2) {
 	await waitForPeers(page, peers);
+	await openSection(page, 'listen');
 	await page.getByTestId('open-db-address-input').fill(address);
 	const el = page.getByTestId('active-database-address');
 	// Opening by address fetches the manifest block from whoever has it. With
@@ -504,6 +509,7 @@ async function openListByAddress(page, address, peers = 2) {
  * @param {{ delegateDid?: string, expiresAt?: Date }} [delegation]
  */
 async function addTodoOk(page, text, delegation = {}) {
+	await openSection(page, 'aufgaben');
 	await todoInput(page).fill(text);
 	if (delegation.delegateDid) {
 		const toggle = page.getByTestId('add-todo-delegate-toggle');
@@ -525,6 +531,7 @@ async function addTodoOk(page, text, delegation = {}) {
  * @param {string} text
  */
 async function addTodoExpectDenied(page, text) {
+	await openSection(page, 'aufgaben');
 	await todoInput(page).fill(text);
 	await page.getByRole('button', { name: 'Add TODO' }).click();
 	await expect(page.getByText(/no write permission|write access/i)).toBeVisible({ timeout });
@@ -538,6 +545,7 @@ async function addTodoExpectDenied(page, text) {
  * @param {string} to
  */
 async function renameTodo(page, from, to) {
+	await openSection(page, 'aufgaben');
 	const row = rowFor(page, from);
 	await row.getByTestId('todo-edit').click();
 	await row.getByTestId('todo-edit-input').fill(to);
@@ -564,6 +572,7 @@ async function expectDelegatedWriteSigned(page, action) {
  * @param {string} text
  */
 async function expectTodo(page, text) {
+	await openSection(page, 'aufgaben');
 	await expect(page.getByText(text, { exact: true })).toBeVisible({ timeout });
 }
 

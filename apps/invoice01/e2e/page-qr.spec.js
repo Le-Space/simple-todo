@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { passConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import { expectPageQr, freshListWords, readListLink } from '@simple-todo/e2e-kit/page-qr.mjs';
+import { openSection } from './sections.mjs';
 
 const timeout = 90000;
 
@@ -33,6 +34,7 @@ test.describe('Page QR and list link', () => {
 			await owner.goto('/');
 			await passConsent(owner);
 			await expect(owner.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
+			await openSection(owner, 'listen');
 			await owner.getByTestId('new-list-name').fill(`linked-${Date.now().toString(36)}`);
 			await owner.getByTestId('new-list-create').click();
 			await expect(owner.getByTestId('new-list-created')).toBeVisible({ timeout });

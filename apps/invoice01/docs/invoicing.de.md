@@ -195,12 +195,12 @@ eingehende Zahlung zuordnen lässt.
 Ein Storno trägt keinen: Es schuldet Geld in die andere Richtung, und das kann
 keine Überweisung ausdrücken.
 
-Beträge werden ohne Euro-Zeichen gedruckt. Die PDF bettet ihre Schrift nicht
-ein, ein Betrachter setzt also seine eigene Helvetica ein — und wo deren
-Euro-Zeichen schmaler ist als die Metrik verspricht, rutscht alles dahinter nach
-links. Auf einer gerenderten Seite stand deshalb „1.190,00 €bis zum 02.10.2026".
-Stattdessen nennt das Dokument die Währung in den Überschriften, so wie die
-Vorlage es tut.
+Die PDF bringt ihre Schrift mit. Eingebettet ist ein Ausschnitt der DejaVu
+Sans, damit das Euro-Zeichen — und ein Kundenname jenseits von Latin-1 —
+gezeichnet wird statt dem überlassen zu werden, was der Betrachter einsetzt.
+Vorher rutschte hinter einer ersetzten Helvetica, deren Euro-Vorschub von der
+Metrik abweicht, alles nach links: Auf einer gerenderten Seite stand
+„1.190,00 €bis zum 02.10.2026".
 
 ## Der Kopf, und wohin das Leistungsdatum gewandert ist
 
@@ -215,8 +215,9 @@ nicht bloß in den Positionstexten.
 
 Die Beträge in der Tabelle bleiben schmucklos und der Hinweis nennt die Währung
 einmal, wie in der Vorlage; die Summe trägt das Euro-Zeichen, denn das ist die
-Zahl, nach der jemand sucht. Das Zeichen wird als eigener, selbst gesetzter
-Textlauf gezeichnet — warum das nötig ist, steht in `money.js`.
+Zahl, nach der jemand sucht. Lässt sich keine Schrift einbetten, fällt das
+Zeichen auf einen eigenen, selbst gesetzten Textlauf zurück, damit der Rest der
+Zeile stehen bleibt, wo er hingehört.
 
 ## Wenn eine Nummer zweimal hinausgeht
 
@@ -262,11 +263,10 @@ Satz, den sie tragen muss.
   inländische Unternehmen strukturierte E-Rechnungen _empfangen_ können; die
   Pflicht, sie zu _stellen_, kommt später. `money.js` rechnet bereits nach
   EN 16931, die Daten sind also bereit, wenn der Export geschrieben wird.
-- **Kein Kundenverzeichnis.** Jede Rechnung trägt ihre eigene Kopie der
-  Anschrift. Ein Verzeichnis sind personenbezogene Daten, und was ein
-  repliziertes Log vergessen kann und was nicht, verdient eine eigene Stufe
-  statt einer Fußnote.
 - **Kein Zahlungsabgleich**, und nichts wird irgendwohin verschickt.
+- **Aus Aufgaben werden keine Rechnungspositionen.** Beide liegen in derselben
+  Liste, aber eine Aufgabe trägt weder Stunden noch Satz — eine Rechnung wird
+  also getippt, nicht eingesammelt.
 
 ## Aufbewahrung, und was sich nicht löschen lässt
 
@@ -284,8 +284,8 @@ niemand aufbewahren.
 Und die ehrliche Grenze: Dies ist ein Append-only-Log, repliziert auf jedes
 Gerät, das die Liste hat. Was geschrieben ist, bleibt geschrieben, auf jeder
 Kopie. Das macht es zu einem guten Beleg und macht Löschen unmöglich; beides ist
-wahr, und das Zweite ist der Grund, warum das Kundenverzeichnis noch nicht in
-diesem Kapitel steckt.
+wahr, und das Zweite ist der Grund, warum das „Löschen" im Verzeichnis einen
+Eintrag ausblendet und das auch sagt.
 
 ## Wo es liegt
 

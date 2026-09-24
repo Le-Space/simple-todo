@@ -1,8 +1,10 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
+	import { _ } from '$lib/i18n/index.js';
 
-	export let placeholder = 'What needs to be done?';
-	export let buttonText = 'Add TODO';
+	/** Overridable, but the catalogue is the default. */
+	export let placeholder = '';
+	export let buttonText = '';
 	export let disabled = false;
 	/**
 	 * delegation01: whether the active list's access controller accepts
@@ -46,12 +48,12 @@
 </script>
 
 <div class="mb-6 rounded-lg bg-surface p-6 shadow-md">
-	<h2 class="mb-4 text-xl font-semibold">Add New TODO</h2>
+	<h2 class="mb-4 text-xl font-semibold">{$_('todo.form.heading')}</h2>
 	<div class="space-y-4">
 		<input
 			type="text"
 			bind:value={inputText}
-			{placeholder}
+			placeholder={placeholder || $_('todo.form.placeholder')}
 			{disabled}
 			class="w-full rounded-md border border-border px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-cyan-500 disabled:cursor-not-allowed disabled:bg-surface-2"
 			on:keydown={handleKeydown}
@@ -66,7 +68,7 @@
 					class="h-4 w-4 rounded text-cyan-600 focus:ring-cyan-500"
 					data-testid="add-todo-delegate-toggle"
 				/>
-				Delegate this todo to another DID
+				{$_('todo.form.delegateToggle')}
 			</label>
 		{/if}
 
@@ -74,14 +76,14 @@
 			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2" data-testid="add-todo-delegation">
 				<div>
 					<label for="add-todo-delegate-did" class="mb-1 block text-sm font-medium text-heading">
-						Delegate DID
+						{$_('todo.form.delegateDid')}
 					</label>
 					<input
 						id="add-todo-delegate-did"
 						type="text"
 						bind:value={delegateDid}
 						{disabled}
-						placeholder="did:key:… of the person who may complete it"
+						placeholder={$_('todo.form.delegateDidPlaceholder')}
 						data-testid="add-todo-delegate-did"
 						class="w-full rounded-md border border-border px-4 py-2 font-mono text-xs focus:border-transparent focus:ring-2 focus:ring-cyan-500 disabled:cursor-not-allowed disabled:bg-surface-2"
 					/>
@@ -91,7 +93,8 @@
 						for="add-todo-delegation-expiry"
 						class="mb-1 block text-sm font-medium text-heading"
 					>
-						Delegation expires at <span class="font-normal text-faint">(optional)</span>
+						{$_('todo.form.expiry')}
+						<span class="font-normal text-faint">{$_('todo.form.optional')}</span>
 					</label>
 					<input
 						id="add-todo-delegation-expiry"
@@ -103,8 +106,7 @@
 					/>
 				</div>
 				<p class="text-xs text-faint sm:col-span-2">
-					The delegate does not get write access to the list. They may only complete or rename this
-					one todo, and you can revoke that at any time.
+					{$_('todo.form.delegateHint')}
 				</p>
 			</div>
 		{/if}
@@ -115,7 +117,7 @@
 				{disabled}
 				class="rounded-md bg-coral-500 px-6 py-2 font-medium text-white transition-colors hover:bg-coral-600 disabled:cursor-not-allowed disabled:bg-faint"
 			>
-				{buttonText}
+				{buttonText || $_('todo.form.submit')}
 			</button>
 		</div>
 	</div>

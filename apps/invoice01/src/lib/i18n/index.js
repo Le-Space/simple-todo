@@ -93,3 +93,20 @@ init({
 setTranslator(_);
 
 export { _, json, locale } from 'svelte-i18n';
+
+export const SLOT = '\u0000';
+
+/**
+ * A translated sentence split around its one markup value.
+ *
+ * The languages put that value in different places ("Delegated to you by X" /
+ * "Von X an Sie delegiert"), so the sentence is translated whole, with `SLOT`
+ * as the value, and cut afterwards.
+ *
+ * @param {string} message
+ * @returns {{ before: string, after: string }}
+ */
+export function around(message) {
+	const [before = '', after = ''] = message.split(SLOT);
+	return { before, after };
+}
