@@ -66,6 +66,7 @@
 	// Read before the dialog renders and written by the selector itself, because
 	// the choice has to be settled before Helia and OrbitDB are built -- changing
 	// it afterwards would mean tearing the node down.
+	/** @type {'memory' | 'indexeddb'} As `StorageModeSelector` declares it. */
 	let storageMode = getPersistentStorageEnabled() ? 'indexeddb' : 'memory';
 	let activeMnemonic = '';
 

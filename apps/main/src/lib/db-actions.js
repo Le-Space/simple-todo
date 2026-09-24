@@ -24,6 +24,7 @@ import {
  * @typedef {TodoValue & {
  *   id: string
  *   key: string
+ *   author?: string
  * }} TodoItem
  */
 
@@ -38,6 +39,8 @@ import {
 /**
  * @typedef {{
  *   address: unknown
+ *   name?: string
+ *   access?: any
  *   all: () => Promise<TodoRecord[]>
  *   iterator?: (options?: { amount?: number }) => AsyncIterable<TodoRecord>
  *   get: (key: string) => Promise<TodoRecord | TodoValue | null | undefined>
@@ -47,6 +50,7 @@ import {
  *   log?: {
  *     values?: () => Promise<any[]>
  *     heads?: () => Promise<any[]>
+ *     get?: (hash: string) => Promise<any>
  *     joinEntry?: (entry: any) => Promise<unknown>
  *   }
  *   peers?: Set<string>
