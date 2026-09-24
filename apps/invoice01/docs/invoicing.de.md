@@ -202,6 +202,22 @@ links. Auf einer gerenderten Seite stand deshalb „1.190,00 €bis zum 02.10.20
 Stattdessen nennt das Dokument die Währung in den Überschriften, so wie die
 Vorlage es tut.
 
+## Der Kopf, und wohin das Leistungsdatum gewandert ist
+
+Im Kopf steht, wonach jemand handelt: die Nummer, das Rechnungsdatum, die
+Kundennummer, sofern es eine gibt, und der Tag, an dem das Geld fällig ist.
+
+**Das Leistungsdatum steht stattdessen unter der Tabelle.** § 14 Abs. 4 Nr. 6
+UStG verlangt den Zeitpunkt der Leistung auf der Rechnung — der Kalendermonat
+genügt —, und wo er steht, ist unsere Wahl. Ohne ihn steht der Vorsteuerabzug
+des _Empfängers_ auf dem Spiel; deshalb steht er überhaupt auf dem Beleg und
+nicht bloß in den Positionstexten.
+
+Die Beträge in der Tabelle bleiben schmucklos und der Hinweis nennt die Währung
+einmal, wie in der Vorlage; die Summe trägt das Euro-Zeichen, denn das ist die
+Zahl, nach der jemand sucht. Das Zeichen wird als eigener, selbst gesetzter
+Textlauf gezeichnet — warum das nötig ist, steht in `money.js`.
+
 ## Wenn eine Nummer zweimal hinausgeht
 
 Jede Identität stellt in ihrer eigenen Reihe aus, zwischen zwei Personen kann

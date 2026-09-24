@@ -168,6 +168,15 @@
 			/>
 		</label>
 		<label class="block text-sm">
+			<span class="text-faint">{$_('invoice.form.customerNumber')}</span>
+			<input
+				class="mt-1 w-full rounded-md border border-gray-300 px-2 py-1.5 dark:border-gray-600"
+				data-testid="invoice-customer-number"
+				value={draft.customer.number ?? ''}
+				on:input={(event) => setCustomer('number', event.currentTarget.value)}
+			/>
+		</label>
+		<label class="block text-sm">
 			<span class="text-faint">{$_('invoice.form.customerVatId')}</span>
 			<input
 				class="mt-1 w-full rounded-md border border-gray-300 px-2 py-1.5 dark:border-gray-600"

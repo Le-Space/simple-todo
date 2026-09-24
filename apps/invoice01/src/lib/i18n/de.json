@@ -153,7 +153,8 @@
 			"issued": "Rechnung {number} ausgestellt.",
 			"lineSubtitle": "Unterzeile",
 			"lineDetails": "Stichpunkte",
-			"lineDetailsHint": "Eine Zeile je Punkt. Erscheinen unter der Position, ohne den Betrag zu ändern."
+			"lineDetailsHint": "Eine Zeile je Punkt. Erscheinen unter der Position, ohne den Betrag zu ändern.",
+			"customerNumber": "Kundennummer"
 		},
 		"taxMode": {
 			"standard": "Regelbesteuerung",
@@ -245,8 +246,8 @@
 			"lineNet": "Betrag",
 			"subtotal": "Zwischensumme ohne USt.",
 			"vatOf": "USt. {rate} % von {base}",
-			"totalCurrency": "Gesamt EUR",
-			"amountDue": "Zu zahlender Betrag EUR",
+			"totalCurrency": "Gesamt",
+			"amountDue": "Zu zahlender Betrag",
 			"netNote": "Einzelpreise und Beträge netto in EUR.",
 			"vatId": "USt.-IdNr.:",
 			"taxNumber": "Steuernr.:",
@@ -267,7 +268,8 @@
 			"giroHint": "Mit dem GiroCode übernimmt Ihre Banking-App Empfänger, IBAN, Betrag und Verwendungszweck.",
 			"paymentTerms": "Bitte überweisen Sie {amount} bis zum {date} auf das unten genannte Konto und geben Sie die Rechnungsnummer {number} als Verwendungszweck an.",
 			"paymentOnReceipt": "Zahlbar sofort nach Erhalt.",
-			"page": "Seite {page} von {pages}"
+			"page": "Seite {page} von {pages}",
+			"customerNumber": "Kundennr."
 		},
 		"cancelled": {
 			"by": "Storniert durch {number}",
@@ -302,7 +304,8 @@
 			"delete": "Löschen",
 			"deleteConfirm": "{name} aus dem Verzeichnis entfernen? Der Eintrag verschwindet hier. Im Log bleibt er, und auf jedem Gerät, das die Liste schon hat.",
 			"deleteHint": "Ein gelöschter Kunde verschwindet aus dem Verzeichnis, nicht aus dem Log: Was repliziert wurde, bleibt repliziert. Ausgestellte Rechnungen behalten ohnehin ihre eigene Kopie der Anschrift — das verlangt § 147 AO und erlaubt Art. 17 Abs. 3 lit. b DSGVO.",
-			"privacyHint": "Das Verzeichnis liegt in dieser Liste. Wer die Liste bekommt, bekommt es mit. Rechnungen gehören deshalb in eine eigene Liste, nicht in eine geteilte."
+			"privacyHint": "Das Verzeichnis liegt in dieser Liste. Wer die Liste bekommt, bekommt es mit. Rechnungen gehören deshalb in eine eigene Liste, nicht in eine geteilte.",
+			"columnsNumber": "Kundennummer"
 		},
 		"duplicate": {
 			"banner": "Zwei Rechnungen tragen dieselbe Nummer: {numbers}. Das passiert, wenn dieselbe Identität auf zwei Geräten offline ausgestellt hat.",

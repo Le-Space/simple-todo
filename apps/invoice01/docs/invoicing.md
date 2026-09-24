@@ -193,6 +193,22 @@ narrower than the metrics promise, everything after it shifts left — a rendere
 page read "1.190,00 €bis zum 02.10.2026". The document names the currency in its
 headings instead, as the template it follows does.
 
+## The head, and where the delivery date went
+
+The head carries what somebody acts on: the number, the invoice date, the
+customer number where there is one, and the day the money is due.
+
+**The delivery date is under the table instead.** §14 Abs. 4 Nr. 6 UStG asks
+for the time of supply on the invoice — the calendar month is enough — and
+where it sits is ours to choose. Without it the _recipient's_ input-tax
+deduction is what is at risk, which is why it is on the document at all rather
+than left to the line descriptions.
+
+Amounts in the table stay plain and the note names the currency once, as the
+template does; the sum carries the euro sign, because that is the figure
+somebody looks for. The sign is drawn as its own positioned run — see
+`money.js` for why the font makes that necessary.
+
 ## When one number goes out twice
 
 Every identity issues in a series of its own, so this cannot happen between two
