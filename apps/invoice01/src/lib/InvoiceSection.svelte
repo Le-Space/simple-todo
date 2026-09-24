@@ -8,6 +8,7 @@
 	import { circleOf, nextNumberFor, normaliseInvoiceSettings } from './invoice/settings.js';
 	import { ownIdentityIdStore } from './db-actions.js';
 	import { invoiceFileName, invoicePdfBytes } from './invoice/pdf.js';
+	import { documentLabels } from './invoice/labels.js';
 	import {
 		deleteInvoiceDraft,
 		issueInvoiceDraft,
@@ -110,49 +111,14 @@
 		view = 'edit';
 	}
 
-	/**
-	 * The labels the document speaks, in the language the reader is reading.
-	 *
-	 * `documentModel` looks the tax-mode sentence up by the code stored on the
-	 * invoice, so those two keys go in under their code rather than their name.
-	 *
-	 * @returns {Record<string, string>}
-	 */
-	function documentLabels() {
-		/** @type {Record<string, string>} */
-		const labels = {};
-		for (const key of [
-			'title',
-			'titleCancellation',
-			'invoiceDate',
-			'deliveryDate',
-			'cancels',
-			'position',
-			'description',
-			'quantity',
-			'unitPrice',
-			'vat',
-			'lineNet',
-			'netTotal',
-			'grossTotal',
-			'vatId',
-			'iban',
-			'paymentTerms',
-			'paymentOnReceipt'
-		]) {
-			labels[key] = $_(`invoice.document.${key}`);
-		}
-		labels['invoice.note.kleinunternehmer'] = $_('invoice.note.kleinunternehmer');
-		labels['invoice.note.reverseCharge'] = $_('invoice.note.reverseCharge');
-		return labels;
-	}
-
 	/** @param {CustomEvent<any>} event */
 	async function download(event) {
 		const invoice = event.detail;
 		try {
 			busy = true;
-			const bytes = await invoicePdfBytes(invoice, documentLabels(), { locale: $locale ?? 'de' });
+			const bytes = await invoicePdfBytes(invoice, documentLabels($_), {
+				locale: $locale ?? 'de'
+			});
 			const url = URL.createObjectURL(
 				new Blob([/** @type {BlobPart} */ (bytes)], { type: 'application/pdf' })
 			);
@@ -220,6 +186,7 @@
 			{settings}
 			{busy}
 			{circle}
+			circleKey={identityId}
 			on:save={storeSettings}
 			on:back={() => (view = 'list')}
 		/>

@@ -62,6 +62,39 @@ case distinction. The five digits are derived from the DID instead. Two
 identities that land on the same five digits share one series and count past
 each other — a collision costs a shared series, never a duplicate number.
 
+## What the footer says, and where it comes from
+
+Everything on the printed invoice beyond the lines is issuer master data, kept
+in the list so every device prints the same: name and address, VAT id and tax
+number, email, phone and website, the register court and number, the managing
+director, the bank, and — for whoever wants them — a Bitcoin and an Ethereum
+address. A logo is uploaded once and stored with them.
+
+§14 Abs. 4 UStG governs the invoice's own particulars; the register entry and
+the managing director are §35a GmbHG's business, and the bank is nobody's but
+the customer's, who has to pay it somehow. All of it is optional: a line nobody
+filled in is left out rather than printed as a bare label.
+
+The logo is scaled to 600 pixels and kept as a PNG, whatever was uploaded. That
+bounds what travels with the list, and it is also how an SVG becomes something
+the PDF can embed.
+
+## The GiroCode
+
+Where a bank account is set and there is a positive amount to pay, the invoice
+carries an EPC069-12 code — the GiroCode. A banking app that scans it fills in
+recipient, IBAN, amount and reference by itself, and the reference is the
+invoice number, which is what makes a payment matchable when it arrives.
+
+A Storno carries none: it owes money the other way, and no credit transfer can
+express that.
+
+Amounts are printed without the euro sign. The PDF does not embed its font, so
+a viewer substitutes its own Helvetica, and where that one's euro glyph is
+narrower than the metrics promise, everything after it shifts left — a rendered
+page read "1.190,00 €bis zum 02.10.2026". The document names the currency in its
+headings instead, as the template it follows does.
+
 ## Money
 
 Amounts are integer cents; quantities are scaled to ten-thousandths; each figure

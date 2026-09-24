@@ -121,12 +121,46 @@ async function openPrivateList(page) {
 	await expect(page.getByTestId('permissions-panel')).toBeVisible({ timeout });
 }
 
-/** §14 Abs. 4 UStG: an invoice names who is charging. */
+/**
+ * §14 Abs. 4 UStG: an invoice names who is charging — and the footer names
+ * where the money goes, which is also what fills the GiroCode.
+ */
 async function fillIssuer(page) {
 	await page.getByTestId('invoice-settings-open').click();
 	await page.getByTestId('issuer-name').fill('Le Space UG (haftungsbeschränkt)');
 	await page.getByTestId('issuer-address').fill('Pfarrkirchener Str. 12\n84307 Eggenfelden');
 	await page.getByTestId('issuer-vatid').fill('DE313937008');
+	await page.getByTestId('register-court').fill('Amtsgericht Leipzig');
+	await page.getByTestId('register-number').fill('HRB 25885');
+	await page.getByTestId('register-director').fill('Nico Krause');
+	await page.getByTestId('bank-name').fill('Beispielbank');
+	await page.getByTestId('bank-iban').fill('DE89370400440532013000');
+	await page.getByTestId('bank-bic').fill('GENODEM1GLS');
 	await page.getByTestId('invoice-settings-save').click();
 	await expect(page.getByTestId('invoice-message')).toBeVisible({ timeout });
 }
+
+test.describe('Settings', () => {
+	test('a series carried over from another program continues where it left off', async ({
+		page
+	}) => {
+		test.setTimeout(timeout * 4);
+		await addVirtualAuthenticator(page);
+		await openReadyApp(page);
+		await openPrivateList(page);
+		await page.getByTestId('section-invoices').click();
+		await fillIssuer(page);
+
+		// "The first number here is …-042": what a migration from SumUp looks
+		// like. The circle keeps it as its floor.
+		await page.getByTestId('invoice-settings-open').click();
+		const pattern = (await page.getByTestId('invoice-series').textContent())?.trim() ?? '';
+		const first = pattern.replace('{YYYY}', '2026').replace('{NNN}', '042');
+		await page.getByTestId('series-start').fill(first);
+		await page.getByTestId('invoice-settings-save').click();
+		await expect(page.getByTestId('invoice-message')).toBeVisible({ timeout });
+
+		await page.getByTestId('invoice-new').click();
+		await expect(page.getByTestId('invoice-next-number')).toContainText('042', { timeout });
+	});
+});

@@ -64,6 +64,42 @@ Ziffern werden deshalb aus der DID abgeleitet. Zwei Identitäten mit denselben
 fünf Ziffern teilen sich eine Reihe und zählen aneinander vorbei: Das kostet
 eine gemeinsame Reihe, nie eine doppelte Nummer.
 
+## Was in der Fußzeile steht, und woher es kommt
+
+Alles auf der gedruckten Rechnung außer den Positionen sind Stammdaten des
+Ausstellers, gespeichert in der Liste, damit jedes Gerät dasselbe druckt: Name
+und Anschrift, USt-IdNr. und Steuernummer, E-Mail, Telefon und Webseite,
+Registergericht und -nummer, Geschäftsführer, die Bankverbindung und — wer mag —
+eine Bitcoin- und eine Ethereum-Adresse. Ein Logo wird einmal hochgeladen und
+dort mit abgelegt.
+
+§ 14 Abs. 4 UStG regelt die Angaben der Rechnung selbst; Registereintrag und
+Geschäftsführer sind Sache des § 35a GmbHG, und die Bankverbindung ist Sache des
+Kunden, der irgendwie bezahlen soll. Alles ist freiwillig: Eine Zeile, die
+niemand ausgefüllt hat, entfällt, statt als leeres Etikett gedruckt zu werden.
+
+Das Logo wird auf 600 Pixel verkleinert und als PNG gespeichert, egal was
+hochgeladen wurde. Das begrenzt, was mit der Liste reist, und macht aus einem
+SVG zugleich etwas, das die PDF einbetten kann.
+
+## Der GiroCode
+
+Wo eine Bankverbindung hinterlegt ist und ein positiver Betrag offensteht, trägt
+die Rechnung einen EPC069-12-Code — den GiroCode. Eine Banking-App, die ihn
+scannt, übernimmt Empfänger, IBAN, Betrag und Verwendungszweck von selbst, und
+der Verwendungszweck ist die Rechnungsnummer. Genau daran hängt, ob sich eine
+eingehende Zahlung zuordnen lässt.
+
+Ein Storno trägt keinen: Es schuldet Geld in die andere Richtung, und das kann
+keine Überweisung ausdrücken.
+
+Beträge werden ohne Euro-Zeichen gedruckt. Die PDF bettet ihre Schrift nicht
+ein, ein Betrachter setzt also seine eigene Helvetica ein — und wo deren
+Euro-Zeichen schmaler ist als die Metrik verspricht, rutscht alles dahinter nach
+links. Auf einer gerenderten Seite stand deshalb „1.190,00 €bis zum 02.10.2026".
+Stattdessen nennt das Dokument die Währung in den Überschriften, so wie die
+Vorlage es tut.
+
 ## Geld
 
 Beträge sind ganze Cent, Mengen in Zehntausendsteln, und jede Zahl wird genau

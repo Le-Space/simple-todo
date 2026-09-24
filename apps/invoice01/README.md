@@ -41,7 +41,15 @@ cancelled, all offline, all in a list that replicates to your other devices.
   cent fails EN 16931's own consistency rules, and with them every e-invoice
   validator.
 - **The PDF is drawn, not printed.** One click gives a file named after the
-  invoice, the same on every browser, with no page URL in the footer.
+  invoice, the same on every browser, with no page URL in the footer. It carries
+  the logo, the issuer's block, and on every page the foot that names the
+  register entry, the managing director and the bank.
+- **A GiroCode fills in the transfer.** Where a bank account is set, the invoice
+  carries an EPC069-12 code: a banking app that scans it takes recipient, IBAN,
+  amount and the invoice number as the reference, which is the usual reason a
+  payment cannot be matched to its invoice.
+- **A series can be carried over.** "The first number here is 2026-005"
+  continues the run from whatever program issued the last one.
 
 What this chapter deliberately does not do: XRechnung or ZUGFeRD export, a
 customer directory, payment matching. [`docs/invoicing.md`](./docs/invoicing.md)
