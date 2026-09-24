@@ -24,7 +24,8 @@
 			"e2e/footer.spec.js",
 			"e2e/page-qr.spec.js",
 			"e2e/consent-network.spec.js"
-		]
+		],
+		"check": true
 	},
 	"title": "Entries are sealed; holding the address is not reading it"
 }

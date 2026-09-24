@@ -22,7 +22,8 @@
 			"e2e/storage-choice.spec.js",
 			"e2e/footer.spec.js",
 			"e2e/page-qr.spec.js"
-		]
+		],
+		"check": true
 	},
 	"title": "A shared list behind three Spanish words"
 }

@@ -31,6 +31,7 @@ import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
  * @typedef {TodoValue & {
  *   id: string
  *   key: string
+ *   author?: string
  * }} TodoItem
  */
 
@@ -45,6 +46,8 @@ import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 /**
  * @typedef {{
  *   address: unknown
+ *   name?: string
+ *   access?: any
  *   all: () => Promise<TodoRecord[]>
  *   iterator?: (options?: { amount?: number }) => AsyncIterable<TodoRecord>
  *   get: (key: string) => Promise<TodoRecord | TodoValue | null | undefined>
@@ -54,6 +57,7 @@ import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
  *   log?: {
  *     values?: () => Promise<any[]>
  *     heads?: () => Promise<any[]>
+ *     get?: (hash: string) => Promise<any>
  *     joinEntry?: (entry: any) => Promise<unknown>
  *   }
  *   peers?: Set<string>

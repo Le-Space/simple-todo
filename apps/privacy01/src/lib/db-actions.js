@@ -25,6 +25,7 @@ import { storedDatabaseKey } from './database-keys.js';
  * @typedef {TodoValue & {
  *   id: string
  *   key: string
+ *   author?: string
  * }} TodoItem
  */
 
@@ -39,6 +40,8 @@ import { storedDatabaseKey } from './database-keys.js';
 /**
  * @typedef {{
  *   address: unknown
+ *   name?: string
+ *   access?: any
  *   all: () => Promise<TodoRecord[]>
  *   iterator?: (options?: { amount?: number }) => AsyncIterable<TodoRecord>
  *   get: (key: string) => Promise<TodoRecord | TodoValue | null | undefined>
@@ -48,6 +51,7 @@ import { storedDatabaseKey } from './database-keys.js';
  *   log?: {
  *     values?: () => Promise<any[]>
  *     heads?: () => Promise<any[]>
+ *     get?: (hash: string) => Promise<any>
  *     joinEntry?: (entry: any) => Promise<unknown>
  *   }
  *   peers?: Set<string>

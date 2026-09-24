@@ -98,6 +98,7 @@
 		in-memory, which is exactly the failure the storage choice exists to fix.
 	*/
 	/** @type {'memory' | 'indexeddb'} */
+	/** @type {'memory' | 'indexeddb'} As `StorageModeSelector` declares it. */
 	let storageMode = getPersistentStorageEnabled() ? 'indexeddb' : 'memory';
 	/** @type {string | null} */
 	let myPeerId = null;

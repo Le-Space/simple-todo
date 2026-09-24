@@ -24,7 +24,8 @@
 			"e2e/footer.spec.js",
 			"e2e/page-qr.spec.js",
 			"e2e/consent-network.spec.js"
-		]
+		],
+		"check": true
 	},
 	"title": "Who may write is decided per DID"
 }

@@ -127,6 +127,7 @@
 		in-memory, which is exactly the failure the storage choice exists to fix.
 	*/
 	/** @type {'memory' | 'indexeddb'} */
+	/** @type {'memory' | 'indexeddb'} As `StorageModeSelector` declares it. */
 	let storageMode = getPersistentStorageEnabled() ? 'indexeddb' : 'memory';
 	/** @type {string | null} */
 	let myPeerId = null;
@@ -489,7 +490,7 @@
 	// from a payout, and telling them the first lock will mint them 1,000.00
 	// reads as an explanation of the number above it. Unknown counts as empty:
 	// before the first read there is nothing to contradict.
-	$: showFundingHint = !($balanceStore.state === 'ready' && $balanceStore.units > 0n);
+	$: showFundingHint = !($balanceStore.state === 'ready' && ($balanceStore.units ?? 0n) > 0n);
 	// The balance appears where the storyboard has it: once a budget was paid
 	// out to this session. On Sepolia the account holds real test money from its
 	// first lock, so it shows as soon as the account is there.
