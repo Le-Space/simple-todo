@@ -10,6 +10,9 @@ import {
 } from './delegation.js';
 import { confirmDelegatedWrite } from './delegated-write-auth.js';
 import { rememberList, listRegistryStore, openListRegistry } from './list-registry.js';
+import { foldCancellations, isInvoiceKey } from './invoice/records.js';
+import { isInvoiceSettingsKey } from './invoice/settings.js';
+import { invoicesStore, invoiceSettingsStore } from './invoice/store.js';
 import { relayHttpStatusStore } from '@simple-todo/net/relay-status.js';
 import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 
@@ -318,13 +321,30 @@ async function loadTodosSnapshot() {
 		const todosArray = [];
 		/** @type {any[]} */
 		const delegationActions = [];
+		/** @type {any[]} */
+		const invoices = [];
+		/** @type {any} */
+		let invoiceSettings = null;
 		for (const record of /** @type {TodoRecord[]} */ (allTodos)) {
 			if (isDelegationActionKey(record.key)) {
 				delegationActions.push(record.value);
 				continue;
 			}
+			// invoice01: the list carries invoices and their settings beside the
+			// todos, so they inherit this list's access control and delegation.
+			// Neither is a todo, and neither may end up in the todo list.
+			if (isInvoiceKey(record.key)) {
+				invoices.push({ id: record.hash, key: record.key, ...record.value });
+				continue;
+			}
+			if (isInvoiceSettingsKey(record.key)) {
+				invoiceSettings = record.value;
+				continue;
+			}
 			todosArray.push({ id: record.hash, key: record.key, ...record.value });
 		}
+		invoicesStore.set(foldCancellations(invoices));
+		invoiceSettingsStore.set(invoiceSettings);
 
 		// Delegates never touch a todo's own entry; their completions and
 		// renames sit beside it as actions and are folded in here (delegation01).
@@ -427,6 +447,9 @@ function applyTodoEntry(entry, trackDuringLoad = true) {
 	// one action incrementally, let the caller re-read the log, where all of
 	// them are folded in together and in order.
 	if (isDelegationActionKey(key)) return false;
+	// The same for an invoice: a Storno changes how *another* entry reads, and
+	// the settings are not a list entry at all. Re-reading folds both properly.
+	if (isInvoiceKey(key) || isInvoiceSettingsKey(key)) return false;
 	if (trackDuringLoad && pendingTodosLoad) todoEntriesReceivedDuringLoad.push(entry);
 
 	todosStore.update((todos) => {

@@ -17,22 +17,36 @@ The custom-domain links track the current deployment of each chapter.
 
 ## 🧾 This Chapter: Invoicing (`invoice01`)
 
-Built on `delegation01`, and so far it is **foundation only**: the two
-modules an invoice cannot be written without, each with its own tests, and
-no user interface yet. The app you see is still the delegation chapter.
+Built on `delegation01`: the same local-first list, with invoices in it. A
+draft is written, issued, exported as a PDF and — when it was wrong —
+cancelled, all offline, all in a list that replicates to your other devices.
 
-- **Money is integer cents** (`src/lib/invoice/money.js`). Euro arithmetic in
-  floating point drifts, and an invoice whose lines miss their totals by one
-  cent breaks EN 16931's own consistency rules (BR-CO-10, BR-CO-15) and, with
-  them, every e-invoice validator. Quantities are scaled to ten-thousandths,
-  and each figure is rounded exactly once, half away from zero.
-- **Invoice numbers come from circles** (`src/lib/invoice/numbering.js`).
-  §14 Abs. 4 Nr. 4 UStG wants a number that identifies the invoice once and
-  only once; UStAE 14.5 Abs. 10 allows several series and does not demand a
-  gap-free sequence. A circle is a pattern plus a reset rule
-  (`RE-{YYYY}-{NNN}`, yearly), and the next number is derived from the
-  invoices already issued — never from a counter kept on the side, so a
-  second device that has replicated them continues where the first left off.
+- **An invoice lives in the list**, beside the todos, so it inherits the
+  chapter's access control: a private list is yours, and what is shared is
+  shared deliberately. The settings — who is charging, in which series — sit
+  there too, so a second device does not invent a second issuer.
+- **Every identity has its own number series.** `2026-48213-001`: the year,
+  five digits standing for the identity that issues, then the counter. §14
+  Abs. 4 Nr. 4 UStG asks for a number given out *once*, not *without gaps*, and
+  UStAE 14.5 Abs. 10 allows several series outright. So two devices can both be
+  offline and both issue, and neither has to ask the other for a number.
+- **Issuing is a deliberate act.** It assigns the number, copies in the issuer
+  and the customer as they are at that moment, stores the totals as a witness,
+  and ends the rewriting. An issued invoice is corrected by a *Storno* — its own
+  invoice, with the amounts negated and a reference to the number it takes back
+  (§31 Abs. 5 UStDV) — never by an edit, which an append-only log could not
+  honour anyway.
+- **Money is integer cents**, quantities are scaled to ten-thousandths, and each
+  figure is rounded exactly once. An invoice whose lines miss their totals by a
+  cent fails EN 16931's own consistency rules, and with them every e-invoice
+  validator.
+- **The PDF is drawn, not printed.** One click gives a file named after the
+  invoice, the same on every browser, with no page URL in the footer.
+
+What this chapter deliberately does not do: XRechnung or ZUGFeRD export, a
+customer directory, payment matching. [`docs/invoicing.md`](./docs/invoicing.md)
+([Deutsch](./docs/invoicing.de.md)) has the rules it follows, and the ones it
+leaves alone.
 
 Everything below this section is inherited and still true.
 
