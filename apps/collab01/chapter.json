@@ -23,7 +23,8 @@
 			"e2e/footer.spec.js",
 			"e2e/page-qr.spec.js"
 		],
-		"check": true
+		"check": true,
+		"lint": true
 	},
 	"title": "A shared list behind three Spanish words"
 }

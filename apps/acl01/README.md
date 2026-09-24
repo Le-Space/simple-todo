@@ -19,7 +19,7 @@ of the deployment published on July 11, 2026.
 
 ## 🔑 This Chapter: Per-DID Write Permissions (`acl01`)
 
-Built on `passkey01`. Passkey identities become *meaningful*: you can grant
+Built on `passkey01`. Passkey identities become _meaningful_: you can grant
 specific DIDs write access to a list of yours.
 
 - **Public list stays public.** The mnemonic shared list from `collab01`
@@ -35,7 +35,7 @@ specific DIDs write access to a list of yours.
   `/orbitdb/…` address (the "Open a shared list by address" form). Readers
   can replicate immediately; writing needs a grant.
 - **Denied writes fail loudly.** A write from an unauthorized identity is
-  rejected inside OrbitDB's `canAppend` gate *before* anything is appended,
+  rejected inside OrbitDB's `canAppend` gate _before_ anything is appended,
   so nothing ever looks saved — the UI shows a clear "no write permission,
   ask the owner to add your DID" message instead of crashing.
 
@@ -64,12 +64,12 @@ controller's own store will fail.
 ## 🔐 Passkey Identities (from `passkey01`)
 
 The previous chapter (`collab01`) gave every browser a random throwaway
-OrbitDB identity: entries were attributable to *a* peer, but not to *you*.
+OrbitDB identity: entries were attributable to _a_ peer, but not to _you_.
 This chapter replaces that with an opt-in **passkey-backed identity**:
 
-- **Onboarding choice** before the P2P stack starts: *create a passkey*
-  (one name, and it is only a label), *use an existing passkey* (recovery),
-  or *continue without one* (exactly the previous chapter's behaviour).
+- **Onboarding choice** before the P2P stack starts: _create a passkey_
+  (one name, and it is only a label), _use an existing passkey_ (recovery),
+  or _continue without one_ (exactly the previous chapter's behaviour).
 - **WebAuthn DID provider** from
   [`@le-space/orbitdb-identity-provider-webauthn-did`](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did):
   the DID is the passkey's own P-256 key, and OrbitDB signs entries with a
@@ -79,7 +79,7 @@ This chapter replaces that with an opt-in **passkey-backed identity**:
   can read the browser's storage can read it. Creating a passkey costs four
   WebAuthn prompts (register, `largeBlob` write, PRF, identity proof); after
   a reload the only prompt is the `largeBlob` read of the recovery below, and
-  signing never asks. (The stricter *varsig* variant — a passkey prompt for
+  signing never asks. (The stricter _varsig_ variant — a passkey prompt for
   every single write — exists in the same package and is a good follow-up
   exercise, but is not used here.)
 - **Create-or-recover flow** (`src/lib/passkey-identity.js`): identity
@@ -92,7 +92,7 @@ This chapter replaces that with an opt-in **passkey-backed identity**:
   `entry.identity` — the field OrbitDB signs itself, so it cannot be faked
   by writing a different name into the todo payload.
 - **Access control is unchanged** (`write: ['*']`): this chapter is only
-  about *who you are*, not yet about *who may write*. That is the next
+  about _who you are_, not yet about _who may write_. That is the next
   chapter (`acl01`).
 
 ### The name you type is a label, not your identity
@@ -159,7 +159,7 @@ The mnemonic list above stays public. To exercise access control, create a
 1. In browser A (owner), pick **Create a passkey** during onboarding, then
    click **Create private list**. Add a todo and copy the shown
    `/orbitdb/…` address.
-2. In browser B (guest), create a *different* passkey, paste the address into
+2. In browser B (guest), create a _different_ passkey, paste the address into
    **Open a shared list by address**, and open it. You see the owner's todo,
    but adding one is **denied** with a visible error.
 3. In browser A, copy browser B's **Passkey DID** (its header badge) into the

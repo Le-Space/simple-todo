@@ -125,7 +125,7 @@
 
 		const address = connection.remoteAddr?.toString() ?? '';
 		if (configuredRelayHttpOrigin) {
-			startRelayHealthCheck(configuredRelayHttpOrigin, connection, address);
+			startRelayHealthCheck(configuredRelayHttpOrigin, connection);
 			return;
 		}
 		const origin = relayHttpOriginForPeer(
@@ -141,11 +141,11 @@
 			return;
 		}
 
-		startRelayHealthCheck(origin, connection, address);
+		startRelayHealthCheck(origin, connection);
 	}
 
-	/** @param {string} origin @param {any} connection @param {string} address */
-	function startRelayHealthCheck(origin, connection, address) {
+	/** @param {string} origin @param {any} connection */
+	function startRelayHealthCheck(origin, connection) {
 		const peerId = connection.remotePeer?.toString() ?? '';
 		const key = `${origin}|${peerId}`;
 		if (key === relayHealthKey) return;
@@ -174,7 +174,7 @@
 			if (relayHealthKey !== key) return;
 			relayVersion = getHealthVersion(health);
 			relayHealthStatus = 'verified';
-		} catch (error) {
+		} catch {
 			if (relayHealthKey === key && (didTimeout || !controller.signal.aborted))
 				relayHealthStatus = 'unavailable';
 		} finally {

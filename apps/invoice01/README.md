@@ -53,7 +53,7 @@ the panel, and the mnemonic list stays public.
   button. Only the owner can, because only the write set may rewrite that
   entry. **Revoke** sets `revokedAt` the same way.
 - **A delegate never rewrites the todo.** Their change goes in as a separate
-  *delegation action*, keyed `delegation-action/<todoKey>/<delegateDid>/…`,
+  _delegation action_, keyed `delegation-action/<todoKey>/<delegateDid>/…`,
   signed by the delegate: either `set-completed` or `patch-fields`
   (`text`/`description`). Readers fold these into the todo they name
   (`src/lib/delegation.js`).
@@ -62,11 +62,11 @@ the panel, and the mnemonic list stays public.
   the same package de2do and `orbitdb-relay` use. It wraps the `acl01`
   controller — the write set, grant/revoke and the permissions panel are
   unchanged — and additionally lets an entry through when it is a
-  well-formed delegation action whose *signer* is the DID in its key.
+  well-formed delegation action whose _signer_ is the DID in its key.
   Anything else from a non-writer is refused, as before.
 - **Revoke and expiry are decided on read, not in the controller.** The
   controller checks the action's shape and signature; it does not look the
-  todo up. Whether the todo *currently* delegates to that signer is decided
+  todo up. Whether the todo _currently_ delegates to that signer is decided
   by the reader: an action is ignored unless the todo's delegation names its
   signer, is not revoked, and has not expired. So revoking also takes back
   what the delegate already did, and a revoked delegate's later actions are
@@ -79,7 +79,7 @@ the panel, and the mnemonic list stays public.
   the port departs from it.)
 - **Every delegated write asks for the passkey again.** Ordinary writes
   never do: the identity's signing key sits in the keystore, unencrypted
-  (see *Passkey Identities* below). A delegate changing someone else's todo
+  (see _Passkey Identities_ below). A delegate changing someone else's todo
   is the one thing this identity may do on a list it does not own, and it
   should not happen by accident. The header badge shows the prompt happen
   (`src/lib/delegated-write-auth.js`).
@@ -111,7 +111,7 @@ Alice and Bob exchange them directly (that is what the E2E test proves); the
 relay pins the owner's entries only. If Alice is offline while Bob
 completes, and they only ever meet through the relay, Bob's completion waits
 until they are online together. A relay that accepts these entries needs a
-controller whose *address* carries its type — a change to the controller
+controller whose _address_ carries its type — a change to the controller
 package, and a good follow-up exercise.
 
 ### From `privacy01`, switched off
@@ -132,11 +132,11 @@ IndexedDB, unencrypted.
    to another DID**, pasting Bob's DID (optionally with an expiry). She
    copies the list's `/orbitdb/…` address.
 2. Bob and Mallory open that address. Both see the todo; both are refused
-   when they try to add one. Bob's row is marked *delegate* and its checkbox
+   when they try to add one. Bob's row is marked _delegate_ and its checkbox
    is enabled; Mallory's is not.
 3. Bob ticks the todo. His passkey asks for confirmation, the header badge
-   shows *Delegated write signed*, and Alice's row shows *completed* with
-   *Last changed by delegate*. Bob may also **Rename** it. Anything else on
+   shows _Delegated write signed_, and Alice's row shows _completed_ with
+   _Last changed by delegate_. Bob may also **Rename** it. Anything else on
    the list is still Alice's alone.
 4. Alice clicks **Revoke**. Bob's completion disappears on both sides — the
    action still sits in the log, but no reader applies it — and his checkbox
@@ -145,7 +145,7 @@ IndexedDB, unencrypted.
 
 ## 🔑 Per-DID Write Permissions (from `acl01`)
 
-Built on `passkey01`. Passkey identities become *meaningful*: you can grant
+Built on `passkey01`. Passkey identities become _meaningful_: you can grant
 specific DIDs write access to a list of yours.
 
 - **Public list stays public.** The mnemonic shared list from `collab01`
@@ -161,7 +161,7 @@ specific DIDs write access to a list of yours.
   `/orbitdb/…` address (the "Open a shared list by address" form). Readers
   can replicate immediately; writing needs a grant.
 - **Denied writes fail loudly.** A write from an unauthorized identity is
-  rejected inside OrbitDB's `canAppend` gate *before* anything is appended,
+  rejected inside OrbitDB's `canAppend` gate _before_ anything is appended,
   so nothing ever looks saved — the UI shows a clear "no write permission,
   ask the owner to add your DID" message instead of crashing.
 
@@ -189,12 +189,12 @@ about replication through the relay.
 ## 🔐 Passkey Identities (from `passkey01`)
 
 The previous chapter (`collab01`) gave every browser a random throwaway
-OrbitDB identity: entries were attributable to *a* peer, but not to *you*.
+OrbitDB identity: entries were attributable to _a_ peer, but not to _you_.
 This chapter replaces that with an opt-in **passkey-backed identity**:
 
-- **Onboarding choice** before the P2P stack starts: *create a passkey*
-  (one name, and it is only a label), *use an existing passkey* (recovery),
-  or *continue without one* (exactly the previous chapter's behaviour).
+- **Onboarding choice** before the P2P stack starts: _create a passkey_
+  (one name, and it is only a label), _use an existing passkey_ (recovery),
+  or _continue without one_ (exactly the previous chapter's behaviour).
 - **WebAuthn DID provider** from
   [`@le-space/orbitdb-identity-provider-webauthn-did`](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did):
   the DID is the passkey's own P-256 key, and OrbitDB signs entries with a
@@ -204,7 +204,7 @@ This chapter replaces that with an opt-in **passkey-backed identity**:
   can read the browser's storage can read it. Creating a passkey costs four
   WebAuthn prompts (register, `largeBlob` write, PRF, identity proof); after
   a reload the only prompt is the `largeBlob` read of the recovery below, and
-  signing never asks. (The stricter *varsig* variant — a passkey prompt for
+  signing never asks. (The stricter _varsig_ variant — a passkey prompt for
   every single write — exists in the same package and is a good follow-up
   exercise, but is not used here.)
 - **Create-or-recover flow** (`src/lib/passkey-identity.js`): identity
@@ -217,7 +217,7 @@ This chapter replaces that with an opt-in **passkey-backed identity**:
   `entry.identity` — the field OrbitDB signs itself, so it cannot be faked
   by writing a different name into the todo payload.
 - **Access control is unchanged** (`write: ['*']`): this chapter is only
-  about *who you are*, not yet about *who may write*. That is the next
+  about _who you are_, not yet about _who may write_. That is the next
   chapter (`acl01`).
 
 ### The name you type is a label, not your identity
@@ -288,11 +288,11 @@ You need three passkeys — three browsers, or three profiles of one:
    address into **Open a shared list by address**. Both see the todo and
    both are refused when adding one. Only B's checkbox is enabled.
 3. In B, tick the todo: the passkey prompt appears, the header shows
-   *Delegated write signed*, and A's row updates. Click **Rename** on the
+   _Delegated write signed_, and A's row updates. Click **Rename** on the
    row in B and watch the new name arrive in A and C.
 4. In A, click **Revoke** on the row. The tick disappears in A and B, and
    B's checkbox is disabled. **Re-delegate** from the row to hand it back,
-   this time with an expiry a minute ahead, and watch it turn *expired*.
+   this time with an expiry a minute ahead, and watch it turn _expired_.
 
 `pnpm exec playwright test e2e/delegation.spec.js` runs this with three
 virtual authenticators.
@@ -305,7 +305,7 @@ The mnemonic list above stays public. To exercise access control, create a
 1. In browser A (owner), pick **Create a passkey** during onboarding, then
    click **Create private list**. Add a todo and copy the shown
    `/orbitdb/…` address.
-2. In browser B (guest), create a *different* passkey, paste the address into
+2. In browser B (guest), create a _different_ passkey, paste the address into
    **Open a shared list by address**, and open it. You see the owner's todo,
    but adding one is **denied** with a visible error.
 3. In browser A, copy browser B's **Passkey DID** (its header badge) into the

@@ -1,5 +1,4 @@
 import { setPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
-import { remember } from '@simple-todo/todo/browser-memory.js';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { forgetDatabaseKey, keyForDatabase } from './database-keys.js';

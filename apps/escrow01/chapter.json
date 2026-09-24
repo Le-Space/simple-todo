@@ -29,6 +29,7 @@
 			"e2e/page-qr.spec.js",
 			"e2e/consent-network.spec.js"
 		],
-		"check": true
+		"check": true,
+		"lint": true
 	}
 }

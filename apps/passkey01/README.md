@@ -20,12 +20,12 @@ of the deployment published on July 11, 2026.
 ## 🔐 This Chapter: Passkey Identities (`passkey01`)
 
 The previous chapter (`collab01`) gave every browser a random throwaway
-OrbitDB identity: entries were attributable to *a* peer, but not to *you*.
+OrbitDB identity: entries were attributable to _a_ peer, but not to _you_.
 This chapter replaces that with an opt-in **passkey-backed identity**:
 
-- **Onboarding choice** before the P2P stack starts: *create a passkey*
-  (one name, and it is only a label), *use an existing passkey* (recovery),
-  or *continue without one* (exactly the previous chapter's behaviour).
+- **Onboarding choice** before the P2P stack starts: _create a passkey_
+  (one name, and it is only a label), _use an existing passkey_ (recovery),
+  or _continue without one_ (exactly the previous chapter's behaviour).
 - **WebAuthn DID provider** from
   [`@le-space/orbitdb-identity-provider-webauthn-did`](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did):
   the DID is the passkey's own P-256 key, and OrbitDB signs entries with a
@@ -35,7 +35,7 @@ This chapter replaces that with an opt-in **passkey-backed identity**:
   can read the browser's storage can read it. Creating a passkey costs four
   WebAuthn prompts (register, `largeBlob` write, PRF, identity proof); after
   a reload the only prompt is the `largeBlob` read of the recovery below, and
-  signing never asks. (The stricter *varsig* variant — a passkey prompt for
+  signing never asks. (The stricter _varsig_ variant — a passkey prompt for
   every single write — exists in the same package and is a good follow-up
   exercise, but is not used here.)
 - **Create-or-recover flow** (`src/lib/passkey-identity.js`): identity
@@ -48,7 +48,7 @@ This chapter replaces that with an opt-in **passkey-backed identity**:
   `entry.identity` — the field OrbitDB signs itself, so it cannot be faked
   by writing a different name into the todo payload.
 - **Access control is unchanged** (`write: ['*']`): this chapter is only
-  about *who you are*, not yet about *who may write*. That is the next
+  about _who you are_, not yet about _who may write_. That is the next
   chapter (`acl01`).
 
 ### The name you type is a label, not your identity
@@ -112,9 +112,9 @@ This branch extends the basic `main` tutorial with a three-word Spanish shared-l
 1. On the onboarding screen pick **Create a passkey**, enter a name, then
    **Open shared list**. Your **Passkey DID** appears in the header (with a
    copy button).
-2. Add a todo — it shows *Created by: your DID*. Have a second browser create
+2. Add a todo — it shows _Created by: your DID_. Have a second browser create
    its own passkey; each todo is attributed to the writer's DID on both sides.
-3. **Reload** the page. The app preselects *Use an existing passkey*; confirm,
+3. **Reload** the page. The app preselects _Use an existing passkey_; confirm,
    and your DID is recovered unchanged (largeBlob, or localStorage fallback).
 4. To compare, start once more with **Continue without a passkey** — you get
    the anonymous per-browser identity from the previous chapter.
