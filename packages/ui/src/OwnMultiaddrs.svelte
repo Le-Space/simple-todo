@@ -1,5 +1,6 @@
 <script>
 	import { onDestroy } from 'svelte';
+	import { t } from './i18n.js';
 
 	/** @type {any} */
 	export let libp2p = null;
@@ -124,21 +125,23 @@
 	});
 </script>
 
-<section class="max-w-full min-w-0 overflow-hidden" data-testid="own-multiaddrs">
+<section class="min-w-0 max-w-full overflow-hidden" data-testid="own-multiaddrs">
 	<div class="mb-2 flex items-baseline justify-between gap-2">
-		<h2 class="text-sm font-semibold">My Multiaddresses</h2>
-		<span class="text-xs text-faint">{addresses.length}</span>
+		<h2 class="text-sm font-semibold">{$t('ui.multiaddrs.title', 'My Multiaddresses')}</h2>
+		<span class="text-faint text-xs">{addresses.length}</span>
 	</div>
-	<p class="mb-2 text-xs text-faint">Copy an address to connect another browser directly.</p>
+	<p class="text-faint mb-2 text-xs">
+		{$t('ui.multiaddrs.hint', 'Copy an address to connect another browser directly.')}
+	</p>
 
 	{#if addresses.length > 0}
 		<ul
-			class="max-h-28 max-w-full min-w-0 space-y-1 overflow-x-hidden overflow-y-auto pr-1"
+			class="max-h-28 min-w-0 max-w-full space-y-1 overflow-y-auto overflow-x-hidden pr-1"
 			data-testid="own-multiaddr-list"
 		>
 			{#each addresses as address, index}
 				<li
-					class="flex max-w-full min-w-0 items-center gap-1 overflow-hidden rounded-md bg-cyan-50 p-1.5 dark:bg-cyan/10"
+					class="dark:bg-cyan/10 flex min-w-0 max-w-full items-center gap-1 overflow-hidden rounded-md bg-cyan-50 p-1.5"
 				>
 					<code class="w-0 min-w-0 flex-1 truncate font-mono text-[11px]" title={address}
 						>{address}</code
@@ -146,14 +149,18 @@
 					<button
 						type="button"
 						on:click={() => copyAddress(address)}
-						class="shrink-0 rounded p-1 text-text transition-colors hover:bg-cyan-200 focus-visible:ring-2 focus-visible:ring-cyan-500 dark:hover:bg-cyan/20"
-						aria-label={`Copy multiaddress ${index + 1}`}
-						title={copiedAddress === address ? 'Copied!' : 'Copy to clipboard'}
+						class="text-text dark:hover:bg-cyan/20 shrink-0 rounded p-1 transition-colors hover:bg-cyan-200 focus-visible:ring-2 focus-visible:ring-cyan-500"
+						aria-label={$t('ui.multiaddrs.copyLabel', 'Copy multiaddress {index}', {
+							values: { index: index + 1 }
+						})}
+						title={copiedAddress === address
+							? $t('ui.copy.copied', 'Copied!')
+							: $t('ui.copy.title', 'Copy to clipboard')}
 						data-testid="copy-own-multiaddr"
 						data-multiaddr={address}
 					>
 						{#if copiedAddress === address}
-							<span class="text-xs font-semibold text-identity-600" aria-hidden="true">✓</span>
+							<span class="text-identity-600 text-xs font-semibold" aria-hidden="true">✓</span>
 						{:else}
 							<svg
 								class="h-4 w-4"
@@ -175,9 +182,11 @@
 			{/each}
 		</ul>
 		<p class="sr-only" aria-live="polite">
-			{copiedAddress ? 'Multiaddress copied to clipboard.' : ''}
+			{copiedAddress ? $t('ui.multiaddrs.copiedLive', 'Multiaddress copied to clipboard.') : ''}
 		</p>
 	{:else}
-		<p class="text-xs text-faint">Waiting for a dialable address…</p>
+		<p class="text-faint text-xs">
+			{$t('ui.multiaddrs.waiting', 'Waiting for a dialable address…')}
+		</p>
 	{/if}
 </section>

@@ -1,6 +1,8 @@
 <script>
 	// Shows the session's own DID (shortened) with a copy button. Rendered only
 	// when the user chose a passkey identity in the onboarding.
+	import { t } from './i18n.js';
+
 	export let did = '';
 
 	let copied = false;
@@ -27,7 +29,9 @@
 		data-testid="own-did-badge"
 		title={did}
 	>
-		<span class="font-semibold text-emerald-700 dark:text-emerald-300">Passkey DID</span>
+		<span class="font-semibold text-emerald-700 dark:text-emerald-300"
+			>{$t('ui.identity.passkeyDid', 'Passkey DID')}</span
+		>
 		<code class="font-mono" data-testid="own-did-value" data-did={did}>{shortDid(did)}</code>
 		<button
 			type="button"
@@ -35,7 +39,7 @@
 			class="rounded border border-emerald-300 px-1.5 py-0.5 hover:bg-emerald-100 dark:border-emerald-700 dark:hover:bg-emerald-900"
 			data-testid="own-did-copy"
 		>
-			{copied ? 'Copied ✓' : 'Copy'}
+			{copied ? $t('ui.identity.copied', 'Copied ✓') : $t('ui.identity.copy', 'Copy')}
 		</button>
 	</div>
 {/if}

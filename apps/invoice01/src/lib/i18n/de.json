@@ -457,5 +457,90 @@
 			"revoked": "↩️ Delegation zurückgenommen",
 			"revokeFailed": "Die Delegation konnte nicht zurückgenommen werden"
 		}
+	},
+	"network": {
+		"navLabel": "P2P-Start und Verbindungsstatus",
+		"status": {
+			"ready": "P2P-Netzwerk bereit",
+			"connectingRelay": "Verbindung zum Relay wird aufgebaut",
+			"waitingWebrtc": "Warte auf eine WebRTC-Verbindung",
+			"failed": "{step} ließ sich nicht starten",
+			"initializing": "{step} wird gestartet",
+			"preparing": "P2P-Netzwerk wird vorbereitet"
+		},
+		"step": {
+			"networkConfig": {
+				"label": "Netzwerkkonfiguration",
+				"description": "Prüft die konfigurierten, vom Browser erreichbaren Relay-Adressen und bereitet die libp2p-Transporte und -Dienste vor."
+			},
+			"libp2p": {
+				"label": "libp2p",
+				"description": "Erzeugt und startet den libp2p-Knoten samt Peer-Identität, Peer-Erkennung sowie Relay-, WebSocket- und WebRTC-Unterstützung."
+			},
+			"helia": {
+				"label": "Helia",
+				"description": "Startet den Helia-IPFS-Knoten auf libp2p und aktiviert den Blockaustausch und den Abruf über HTTP."
+			},
+			"orbitdb": {
+				"label": "OrbitDB",
+				"description": "Lädt oder erzeugt die dauerhafte OrbitDB-Identität und initialisiert OrbitDB mit dem Helia-Knoten."
+			},
+			"databaseSync": {
+				"label": "Datenbank + Sync",
+				"description": "Öffnet die geteilte Aufgaben-Datenbank, lädt ihr lokales Operations-Log und startet die Synchronisierung über OrbitDB-Pubsub."
+			},
+			"localTodos": {
+				"label": "Lokale Aufgaben",
+				"description": "Verbindet den lokalen Aufgabenspeicher und füllt ihn im Hintergrund aus OrbitDB, ohne die App zu blockieren."
+			},
+			"relayConnected": {
+				"label": "Relay verbunden",
+				"description": "Eine WebSocket-Verbindung zu einem Relay- oder Bootstrap-Peer steht für Peer-Erkennung, Pubsub und Circuit-Relay-Verkehr bereit.",
+				"none": "Noch ist kein Relay verbunden.",
+				"noOrigin": "Aus der Adresse des verbundenen Relays lässt sich keine HTTPS-Health-URL ableiten.",
+				"loading": "Lese die OrbitDB-Relay-Version von {origin}/health …",
+				"verifiedVersion": "OrbitDB-Relay-Version {version}; Health und Peer-ID unter {origin}/health bestätigt.",
+				"verified": "Health und Peer-ID unter {origin}/health bestätigt. Dieser Relay gibt seine OrbitDB-Relay-Version nicht an.",
+				"unverified": "{origin}/health ließ sich nicht prüfen, deshalb ist die OrbitDB-Relay-Version unbekannt."
+			},
+			"webrtcConnected": {
+				"label": "WebRTC verbunden",
+				"description": "Eine libp2p-Verbindung über WebRTC steht. Sie entsteht normalerweise, nachdem ein anderer Browser als Peer gefunden wurde."
+			}
+		},
+		"details": "Netzwerkdetails",
+		"peerCount": "{count, plural, one {# Peer} other {# Peers}}",
+		"connect": {
+			"heading": "Mit einem Relay verbinden",
+			"hint": "Wählen Sie einen aktuellen, vom Browser erreichbaren Relay, der über Aleph gefunden wurde.",
+			"discovering": "Suche Aleph-Relays und prüfe sie per Ping …",
+			"noAddresses": "Keine Relay-Adressen gefunden",
+			"loading": "Lädt …",
+			"refresh": "Aktualisieren",
+			"custom": "Eigene Multiadresse verwenden",
+			"discoveryFailed": "Die Relay-Suche über Aleph ist fehlgeschlagen: {reason}",
+			"discoveryUnavailable": "Relay-Suche nicht verfügbar",
+			"nonePinged": "Keine der {count} gefundenen Relay-Adressen hat auf einen libp2p-Ping geantwortet.",
+			"noDialable": "Es wurden keine aktuellen, vom Browser erreichbaren Relays gefunden.",
+			"refreshOrCustom": "Aktualisieren Sie die Suche oder geben Sie eine eigene Multiadresse ein.",
+			"enterAddress": "Geben Sie eine Multiadresse ein, um sich mit einem Peer zu verbinden.",
+			"mustStartWithSlash": "Eine Multiadresse muss mit „/“ beginnen.",
+			"invalid": "Ungültige Multiadresse: {reason}",
+			"needsPeerId": "Die Multiadresse muss eine Peer-ID enthalten, zum Beispiel am Ende „/p2p/<peer-id>“.",
+			"webrtcDisabled": "WebRTC ist ausgeschaltet. Verwenden Sie stattdessen eine Circuit-Relay-Multiadresse.",
+			"notInitialized": "P2P ist noch nicht gestartet.",
+			"pingNotInitialized": "Der P2P-Ping-Dienst ist noch nicht gestartet.",
+			"dialing": "Peer wird angewählt",
+			"handshake": "WebSocket wird geöffnet und der libp2p-Handshake abgeschlossen …",
+			"stable": "Verbindung stabil",
+			"stableDetail": "Die Verbindung blieb {seconds} Sekunden offen.",
+			"dropped": "Verbindung abgebrochen",
+			"droppedDetail": "Der Handshake gelang, aber die Gegenseite hat die Verbindung beim Einrichten von Relay oder Protokoll geschlossen.",
+			"nodeGone": "Der P2P-Knoten ist nicht mehr verfügbar.",
+			"connecting": "Verbinde …",
+			"connect": "Verbinden",
+			"toastConnected": "🔗 Verbunden mit {peer}",
+			"toastDropped": "⚠️ {peer} hat die Verbindung kurz nach dem Aufbau geschlossen"
+		}
 	}
 }

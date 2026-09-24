@@ -431,11 +431,11 @@
 		const peerTarget = event.detail.remotePeer || event.detail.remoteAddr;
 
 		if (event.detail.status === 'stable') {
-			showToast(`🔗 Connected to ${peerTarget}`, 'success');
+			showToast($_('network.connect.toastConnected', { values: { peer: peerTarget } }), 'success');
 			return;
 		}
 
-		showToast(`⚠️ ${peerTarget} closed the connection shortly after connect`, 'warning');
+		showToast($_('network.connect.toastDropped', { values: { peer: peerTarget } }), 'warning');
 	};
 
 	// Subscribe to the peerIdStore

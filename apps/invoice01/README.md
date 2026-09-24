@@ -78,10 +78,12 @@ cancelled, all offline, all in a list that replicates to your other devices.
   invoice tab says why and links to the lists tab, where creating one is a
   click. That list belongs to your identity: you write, and you decide who may
   read it.
-- **German or English.** The whole chapter is translated, and the language is
-  chosen in the first dialog — the one screen everybody sees before anything
-  else. The network panel is the exception and still speaks English; it is
-  shared with the other chapters and is translated with them.
+- **German or English.** The whole chapter is translated — the invoices, the
+  todos, the lists and the network panel — and the language is chosen in the
+  first dialog, the one screen everybody sees before anything else. The startup
+  steps name themselves by key (`network.step.*`), so `p2p.js` reports progress
+  without knowing which language is on screen, and the shared components in
+  `packages/ui` carry their own wording in both languages.
 
 What this chapter deliberately does not do: XRechnung or ZUGFeRD export,
 payment matching, and turning todos into invoice lines — an invoice is typed,

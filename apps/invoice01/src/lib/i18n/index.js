@@ -1,3 +1,5 @@
+import { get } from 'svelte/store';
+
 import { recall, remember } from '@simple-todo/todo/browser-memory.js';
 import { _, addMessages, init, getLocaleFromNavigator, locale as i18nLocale } from 'svelte-i18n';
 import { setTranslator } from '@simple-todo/ui/i18n.js';
@@ -93,6 +95,22 @@ init({
 setTranslator(_);
 
 export { _, json, locale } from 'svelte-i18n';
+
+/**
+ * A message in the language on screen, for code that is not a component: the
+ * details `p2p.js` reports about a connection it just tried.
+ *
+ * Read once, when the message is made. A message on screen stays in the
+ * language it was raised in if somebody switches while it is showing; it is
+ * gone a moment later anyway, and the next one is raised in the new language.
+ *
+ * @param {string} id
+ * @param {Record<string, string | number>} [values]
+ * @returns {string}
+ */
+export function translate(id, values) {
+	return get(_)(id, values ? { values } : undefined);
+}
 
 export const SLOT = '\u0000';
 
