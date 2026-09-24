@@ -16,13 +16,19 @@ import {
 	normaliseInvoiceSettings
 } from './invoice/settings.js';
 import { cancellationFor, draftProblems, invoiceKey, issue } from './invoice/records.js';
-import { invoiceSettingsStore, invoicesStore } from './invoice/store.js';
+import {
+	customerFromInvoice,
+	customerKey,
+	customerProblems,
+	markDeleted
+} from './invoice/customers.js';
+import { customersStore, invoiceSettingsStore, invoicesStore } from './invoice/store.js';
 
 /**
  * Every action answers in the same shape, so a caller can read `ok` and then
  * `error` without asking which function it called.
  *
- * @typedef {{ ok: boolean, error?: string, problems?: import('./invoice/records.js').Problem[], number?: string, draft?: any }} Result
+ * @typedef {{ ok: boolean, error?: string, problems?: any[], number?: string, draft?: any, customer?: any }} Result
  */
 
 /** @returns {{ db: any, identityId: string } | null} */
@@ -191,4 +197,54 @@ function describe(error) {
 	return /not append|denied|permission/i.test(message)
 		? 'Your identity has no write permission for this list.'
 		: message;
+}
+
+/**
+ * Keep a customer in the directory, or update the one that is there.
+ *
+ * @param {{ name?: string, address?: string, vatId?: string }} block what the
+ *   invoice's customer fields say
+ * @param {{ id?: string }} [options] the entry to update, if this is one
+ * @returns {Promise<Result>}
+ */
+export async function saveCustomer(block, { id } = {}) {
+	const context = ready();
+	if (!context) return { ok: false, error: 'The list is not open yet.' };
+
+	const problems = customerProblems(block);
+	if (problems.length > 0) return { ok: false, error: problems[0].code, problems };
+
+	const existing = id ? get(customersStore).find((customer) => customer.id === id) : null;
+	const entry = customerFromInvoice(block, existing ?? {});
+	try {
+		await context.db.put(customerKey(entry.id), entry);
+		return { ok: true, customer: entry };
+	} catch (error) {
+		return { ok: false, error: describe(error) };
+	}
+}
+
+/**
+ * Mark a customer deleted.
+ *
+ * Deliberately not a `del`: the entry is hidden here, and the log keeps what it
+ * already replicated. Saying otherwise would be the one dishonest thing this
+ * chapter could do about personal data — see `docs/invoicing.md`.
+ *
+ * @param {string} id
+ * @returns {Promise<Result>}
+ */
+export async function deleteCustomer(id) {
+	const context = ready();
+	if (!context) return { ok: false, error: 'The list is not open yet.' };
+
+	const entry = get(customersStore).find((customer) => customer.id === id);
+	if (!entry) return { ok: false, error: 'This customer is not in the list.' };
+
+	try {
+		await context.db.put(customerKey(id), markDeleted(entry));
+		return { ok: true };
+	} catch (error) {
+		return { ok: false, error: describe(error) };
+	}
 }

@@ -3,6 +3,7 @@
 	import { _ } from '$lib/i18n/index.js';
 	import { computeTotals, formatEuro, parseEuroToCents, parseQuantity } from './invoice/money.js';
 	import { emptyLine } from './invoice/records.js';
+	import { activeCustomers } from './invoice/customers.js';
 
 	/** The draft being written. Replaced on every change, never mutated in place.
 	 * @type {any} */
@@ -12,6 +13,11 @@
 	export let problems = [];
 	export let nextNumber = '';
 	export let busy = false;
+	/** The directory, for picking instead of typing.
+	 * @type {any[]} */
+	export let customers = [];
+
+	$: pickable = activeCustomers(customers);
 
 	const dispatch = createEventDispatcher();
 
@@ -133,6 +139,25 @@
 
 	<fieldset class="grid gap-3 sm:grid-cols-2">
 		<legend class="mb-1 text-sm font-medium text-heading">{$_('invoice.form.customer')}</legend>
+		{#if pickable.length > 0}
+			<label class="block text-sm sm:col-span-2">
+				<span class="text-faint">{$_('invoice.customers.pick')}</span>
+				<select
+					class="mt-1 w-full rounded-md border border-gray-300 px-2 py-1.5 dark:border-gray-600"
+					data-testid="invoice-customer-pick"
+					value=""
+					on:change={(event) => {
+						dispatch('pickCustomer', event.currentTarget.value);
+						event.currentTarget.value = '';
+					}}
+				>
+					<option value="">{$_('invoice.customers.pickNone')}</option>
+					{#each pickable as customer (customer.id)}
+						<option value={customer.id}>{customer.name}</option>
+					{/each}
+				</select>
+			</label>
+		{/if}
 		<label class="block text-sm">
 			<span class="text-faint">{$_('invoice.form.customerName')}</span>
 			<input
@@ -161,6 +186,14 @@
 				on:input={(event) => setCustomer('address', event.currentTarget.value)}
 			></textarea>
 		</label>
+		<div class="sm:col-span-2">
+			<button
+				type="button"
+				class="rounded-md border border-gray-300 px-3 py-1 text-xs dark:border-gray-600"
+				data-testid="invoice-customer-keep"
+				on:click={() => dispatch('saveCustomer')}>{$_('invoice.customers.save')}</button
+			>
+		</div>
 	</fieldset>
 
 	<div class="grid gap-3 sm:grid-cols-4">

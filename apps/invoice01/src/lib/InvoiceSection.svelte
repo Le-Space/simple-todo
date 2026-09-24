@@ -4,16 +4,20 @@
 	import InvoiceList from './InvoiceList.svelte';
 	import InvoiceSettingsPanel from './InvoiceSettingsPanel.svelte';
 	import InvoiceTemplateEditor from './InvoiceTemplateEditor.svelte';
-	import { invoiceSettingsStore, invoicesStore } from './invoice/store.js';
+	import InvoiceCustomers from './InvoiceCustomers.svelte';
+	import { customersStore, invoiceSettingsStore, invoicesStore } from './invoice/store.js';
 	import { emptyDraft } from './invoice/records.js';
 	import { circleOf, nextNumberFor, normaliseInvoiceSettings } from './invoice/settings.js';
 	import { templateContext } from './invoice/template.js';
 	import { ownIdentityIdStore } from './db-actions.js';
 	import { invoiceFileName, invoicePdfBytes } from './invoice/pdf.js';
 	import { documentLabels } from './invoice/labels.js';
+	import { invoiceCustomerFrom } from './invoice/customers.js';
 	import {
+		deleteCustomer,
 		deleteInvoiceDraft,
 		issueInvoiceDraft,
+		saveCustomer,
 		saveInvoiceDraft,
 		saveInvoiceSettings,
 		startCancellation
@@ -22,7 +26,7 @@
 	/** Writing invoices needs a list this identity may write to. */
 	export let enabled = false;
 
-	/** @type {'list' | 'edit' | 'settings' | 'template'} */
+	/** @type {'list' | 'edit' | 'settings' | 'template' | 'customers'} */
 	let view = 'list';
 	/** @type {any} */
 	let draft = null;
@@ -108,6 +112,51 @@
 		view = 'list';
 	}
 
+	/** Fill the customer block from the directory. @param {CustomEvent<string>} event */
+	function pickCustomer(event) {
+		const customer = $customersStore.find((entry) => entry.id === event.detail);
+		if (!customer) return;
+		draft = {
+			...draft,
+			customer: invoiceCustomerFrom(customer),
+			// What this customer agreed, where they agreed something.
+			taxMode: customer.taxMode ?? draft.taxMode,
+			paymentTermsDays: customer.paymentTermsDays ?? draft.paymentTermsDays
+		};
+	}
+
+	/** Keep whoever is being invoiced, so nobody types this address twice. */
+	async function keepCustomer() {
+		busy = true;
+		const existing = $customersStore.find(
+			(entry) => !entry.deletedAt && entry.name === draft.customer.name
+		);
+		const result = await saveCustomer(draft.customer, { id: existing?.id });
+		busy = false;
+		if (!result.ok) return (error = result.error ?? '');
+		message = $_('invoice.customers.saved');
+		error = '';
+	}
+
+	/** @param {CustomEvent<any>} event */
+	async function removeCustomer(event) {
+		busy = true;
+		const result = await deleteCustomer(event.detail.id);
+		busy = false;
+		if (!result.ok) error = result.error ?? '';
+	}
+
+	/** An invoice for somebody already in the directory. @param {CustomEvent<any>} event */
+	function invoiceFor(event) {
+		newInvoice();
+		draft = {
+			...draft,
+			customer: invoiceCustomerFrom(event.detail),
+			taxMode: event.detail.taxMode ?? draft.taxMode,
+			paymentTermsDays: event.detail.paymentTermsDays ?? draft.paymentTermsDays
+		};
+	}
+
 	/** @param {CustomEvent<any>} event */
 	async function remove(event) {
 		const result = await deleteInvoiceDraft(event.detail.id);
@@ -180,6 +229,11 @@
 				>
 				<button
 					class="rounded-md border border-gray-300 px-3 py-1.5 text-sm dark:border-gray-600"
+					data-testid="invoice-customers-open"
+					on:click={() => (view = 'customers')}>{$_('invoice.actions.customers')}</button
+				>
+				<button
+					class="rounded-md border border-gray-300 px-3 py-1.5 text-sm dark:border-gray-600"
 					data-testid="invoice-template-open"
 					on:click={() => (view = 'template')}>{$_('invoice.actions.template')}</button
 				>
@@ -197,8 +251,19 @@
 			{problems}
 			{busy}
 			nextNumber={draft.state === 'draft' ? nextNumber : ''}
+			customers={$customersStore}
 			on:save={save}
 			on:issue={issue}
+			on:pickCustomer={pickCustomer}
+			on:saveCustomer={keepCustomer}
+			on:back={() => (view = 'list')}
+		/>
+	{:else if view === 'customers'}
+		<InvoiceCustomers
+			customers={$customersStore}
+			{busy}
+			on:use={invoiceFor}
+			on:delete={removeCustomer}
 			on:back={() => (view = 'list')}
 		/>
 	{:else if view === 'template'}

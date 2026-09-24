@@ -64,6 +64,40 @@ Ziffern werden deshalb aus der DID abgeleitet. Zwei Identitäten mit denselben
 fünf Ziffern teilen sich eine Reihe und zählen aneinander vorbei: Das kostet
 eine gemeinsame Reihe, nie eine doppelte Nummer.
 
+## Das Kundenverzeichnis, und was „löschen" heißen kann
+
+Eine Anschrift in jede Rechnung zu tippen ist keine Oberfläche, die jemand
+zweimal benutzt. Kunden sind deshalb eigene Datensätze neben den Rechnungen:
+Name, Anschrift, USt-IdNr. und die Besteuerung und das Zahlungsziel, mit denen
+eine Rechnung an sie beginnt. Einen auswählen füllt den Kundenblock; den gerade
+getippten kann man behalten; und aus dem Verzeichnis heraus beginnt die nächste
+Rechnung.
+
+**Eine ausgestellte Rechnung trägt eine Kopie, keinen Verweis.** Zieht ein Kunde
+um, muss die Rechnung vom letzten Jahr weiterhin zeigen, wo er damals saß — die
+Buchhaltungsregel und die Natur des Logs sind sich hier einig: Ein Verweis würde
+Geschichte umschreiben, eine Kopie kann das nicht.
+
+Und nun der unangenehme Teil, der ins Kapitel gehört und nicht in eine Fußnote.
+Ein Kundendatensatz sind personenbezogene Daten. Art. 17 DSGVO gibt einer Person
+das Recht auf Löschung; § 147 AO verpflichtet den Betrieb, ausgestellte
+Rechnungen acht Jahre aufzubewahren. Das widerspricht sich nicht — für die
+Rechnung gewinnt die Aufbewahrung, die Löschung gilt für alles andere — aber
+**ein repliziertes Append-only-Log kann in beide Richtungen nicht vergessen.**
+Einen Verzeichniseintrag als gelöscht zu markieren verbirgt ihn in der App und
+entfernt nichts aus dem Log, und jede Kopie behält, was sie schon hat.
+
+Genau das tut die App, und sie sagt es dort, wo jemand löscht. Sie verspricht
+keine Löschung, die sie nicht leisten kann.
+
+**Noch nicht versiegelt, und das ist eine echte Grenze.** Das Verzeichnis liegt
+in der Liste, wer die Liste bekommt, bekommt es mit. Rechnungen gehören deshalb
+in eine eigene Liste, nicht in eine geteilte. Versiegeln bräuchte einen
+Schlüssel, den beide Geräte haben, und die Schlüsselverwaltung dieses Kapitels
+ist noch die geerbte Einzelgerät-Fassung (`database-keys.js`, „Phase 1"): ein
+Zufallsschlüssel je Datenbank im Local Storage, den ein zweites Gerät nicht
+lesen könnte. Das zu ändern ist eine Entscheidung über den Passkey, kein Detail.
+
 ## Eine Position, und worum es ging
 
 Eine Rechnung, die der Kunde nachvollziehen kann, wird bezahlt statt

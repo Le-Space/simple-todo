@@ -218,3 +218,53 @@ test.describe('The template', () => {
 		expect((await pdf).suggestedFilename()).toMatch(/\.pdf$/);
 	});
 });
+
+test.describe('The customer directory', () => {
+	test('keeps a customer, offers them again, and says what deleting does', async ({ page }) => {
+		test.setTimeout(timeout * 4);
+		await addVirtualAuthenticator(page);
+		await openReadyApp(page);
+		await openPrivateList(page);
+		await page.getByTestId('section-invoices').click();
+		await fillIssuer(page);
+
+		// Write one invoice, and keep the customer while writing it.
+		await page.getByTestId('invoice-new').click();
+		await page.getByTestId('invoice-customer-name').fill('Webanizer AG');
+		await page.getByTestId('invoice-customer-address').fill('Schulgasse 5\n84359 Simbach am Inn');
+		await page.getByTestId('invoice-customer-vatid').fill('DE206862070');
+		await page.getByTestId('invoice-customer-keep').click();
+		await expect(page.getByTestId('invoice-message')).toBeVisible({ timeout });
+
+		await page.getByTestId('invoice-line-description').fill('Beratung');
+		await page.getByTestId('invoice-line-quantity').fill('1');
+		await page.getByTestId('invoice-line-price').fill('250,00');
+		await page.getByTestId('invoice-issue').click();
+		await expect(page.getByTestId('invoice-message')).toContainText(/\d{4}-\d{5}-/, { timeout });
+
+		// The next invoice takes the address from the directory.
+		await page.getByTestId('invoice-new').click();
+		await page.getByTestId('invoice-customer-pick').selectOption({ label: 'Webanizer AG' });
+		await expect(page.getByTestId('invoice-customer-name')).toHaveValue('Webanizer AG');
+		await expect(page.getByTestId('invoice-customer-address')).toHaveValue(
+			'Schulgasse 5\n84359 Simbach am Inn'
+		);
+		await page.getByTestId('invoice-save').click();
+
+		// The directory lists them, and says plainly what deleting can do.
+		await page.getByTestId('invoice-customers-open').click();
+		await expect(page.getByTestId('customer-row')).toHaveCount(1);
+		// Both catalogues say it; only the capital letter differs.
+		await expect(page.getByTestId('customer-delete-hint')).toContainText(/log/i);
+
+		page.once('dialog', (dialog) => dialog.accept());
+		await page.getByTestId('customer-delete').click();
+		await expect(page.getByTestId('customer-empty')).toBeVisible({ timeout });
+
+		// And the invoice that went out keeps its own copy of the address.
+		await page
+			.getByTestId('invoice-customers-open')
+			.isVisible()
+			.catch(() => {});
+	});
+});

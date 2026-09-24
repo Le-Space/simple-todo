@@ -54,6 +54,10 @@ cancelled, all offline, all in a list that replicates to your other devices.
   and bullet points — what it was about, and what was actually done. Neither
   changes an amount; both are why an invoice gets checked and paid rather than
   queried.
+- **Customers are kept, not retyped.** A directory beside the invoices: pick
+  one and the block fills in, keep the one you just typed, write the next
+  invoice straight from the list. An issued invoice still carries its own copy
+  of the address, so last year's shows where they were then.
 - **The wording is yours.** The letter above the lines and the closing under
   them come from a small Markdown template, edited in the app beside a preview,
   downloadable and uploadable as a file. Placeholders like `{{kunde.name}}` are
