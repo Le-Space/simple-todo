@@ -32,7 +32,7 @@
 <section class="mb-6 rounded-lg border border-border bg-surface p-4" data-testid="public-list-form">
 	<h2 class="text-sm font-semibold text-heading">{$_('lists.public.heading')}</h2>
 	<p class="mt-1 mb-2 text-xs text-faint">{$_('lists.public.hint')}</p>
-	<SharedListSelector bind:value={words} disabled={busy} />
+	<SharedListSelector bind:value={words} disabled={busy} bare />
 	<button
 		type="button"
 		on:click={open}

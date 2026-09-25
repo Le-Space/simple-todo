@@ -361,7 +361,7 @@
 			"forgetTitle": "Nur aus dieser Übersicht entfernen; die Datenbank selbst bleibt unverändert"
 		},
 		"open": {
-			"heading": "Geteilte Liste über ihre Adresse öffnen",
+			"heading": "Liste über ihre Adresse öffnen",
 			"hint": "Fügen Sie die vollständige OrbitDB-Adresse ein, die Ihnen jemand geschickt hat. Lesen können Sie die Liste sofort. Schreiben können Sie erst, wenn die Person, die sie angelegt hat, Ihnen Schreibrechte erteilt.",
 			"submit": "Liste öffnen",
 			"busy": "Wird geöffnet …"
@@ -381,10 +381,10 @@
 			"private": "Private Liste",
 			"guest": "Geöffnete Liste",
 			"writingTo": "Sie schreiben in die Liste {name}. Die Merkwörter unten gehören weiterhin zur öffentlichen geteilten Liste.",
-			"mnemonicLabel": "Öffentliche Merkwörter / Name der OrbitDB-Datenbank",
+			"mnemonicLabel": "Merkwörter dieser Liste",
 			"copy": "Kopieren",
 			"copied": "Kopiert!",
-			"addressLabel": "OrbitDB-Adresse",
+			"addressLabel": "Adresse zum Weitergeben",
 			"anyone": "Wer diese Merkwörter kennt, kann dieselbe öffentliche Datenbank öffnen und darin schreiben, sobald eine Verbindung besteht.",
 			"replication": "Die Merkwörter wählen dieselbe Datenbank aus. Damit Änderungen sofort ankommen, braucht es außerdem eine Verbindung zu einem anderen Browser.",
 			"openAnother": "Andere geteilte Liste öffnen"
