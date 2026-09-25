@@ -51,6 +51,7 @@
 		"identityExisting": "Use an existing passkey",
 		"identityAnonymous": "Continue without a passkey",
 		"identityAnonymousHint": "Use a random per-browser identity, exactly like the previous chapter.",
+		"identityLabelDefault": "Invoices",
 		"identityLabelPlaceholder": "name for this passkey (e.g. Alice)",
 		"identityLabelHint": "Only a label for the passkey picker. Your identity comes from the key, not from this name — two people on this device may use the same one.",
 		"element": {
@@ -338,8 +339,8 @@
 	"lists": {
 		"create": {
 			"heading": "Create a private list",
-			"hint": "Only your identity can write to it. Share its address and grant other DIDs below.",
-			"namePlaceholder": "list name (optional)",
+			"hint": "Only your identity can write to it. Without a name it gets three Spanish words to recognise it by. Share its address and grant other DIDs below.",
+			"namePlaceholder": "Name of the list — leave empty for three words",
 			"submit": "Create private list",
 			"busy": "Creating…",
 			"created": "Created {name} — you are now writing to it.",

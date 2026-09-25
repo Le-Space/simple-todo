@@ -51,6 +51,7 @@
 		"identityExisting": "Vorhandenen Passkey verwenden",
 		"identityAnonymous": "Ohne Passkey fortfahren",
 		"identityAnonymousHint": "Eine zufällige Identität nur für diesen Browser, genau wie im vorigen Kapitel.",
+		"identityLabelDefault": "Rechnungen",
 		"identityLabelPlaceholder": "Name für diesen Passkey (z. B. Alice)",
 		"identityLabelHint": "Nur eine Bezeichnung für die Passkey-Auswahl. Ihre Identität ergibt sich aus dem Schlüssel, nicht aus diesem Namen. Zwei Personen auf diesem Gerät dürfen denselben Namen verwenden.",
 		"element": {
@@ -338,8 +339,8 @@
 	"lists": {
 		"create": {
 			"heading": "Private Liste anlegen",
-			"hint": "In die neue Liste darf nur Ihre Identität schreiben. Geben Sie deren Adresse weiter und erteilen Sie anderen DIDs weiter unten Schreibrechte.",
-			"namePlaceholder": "Name der Liste (optional)",
+			"hint": "In die neue Liste darf nur Ihre Identität schreiben. Ohne Namen bekommt sie drei spanische Wörter, an denen Sie sie wiedererkennen. Geben Sie ihre Adresse weiter und erteilen Sie anderen DIDs weiter unten Schreibrechte.",
+			"namePlaceholder": "Name der Liste — leer lassen für drei Wörter",
 			"submit": "Private Liste anlegen",
 			"busy": "Wird angelegt …",
 			"created": "Die Liste {name} ist angelegt, und Sie schreiben jetzt hinein.",

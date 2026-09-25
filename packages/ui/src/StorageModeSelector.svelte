@@ -32,7 +32,17 @@
 
 	let persistent = mode === 'indexeddb';
 
-	$: setPersistentStorageEnabled(persistent);
+	/*
+		Written when somebody chooses, not when the dialog is merely shown.
+
+		The reactive statement used to run once on mount and store whatever was
+		preselected. Where a chapter preselects "keep it" — invoice01 does, an
+		invoicing tool that forgets on reload is not one — that wrote to the
+		device before anybody had agreed to anything, which is the one promise
+		this dialog makes. The choice is stored by whoever proceeds, from `mode`.
+	*/
+	let chosen = false;
+	$: if (chosen) setPersistentStorageEnabled(persistent);
 	$: mode = persistent ? 'indexeddb' : 'memory';
 </script>
 
@@ -46,6 +56,7 @@
 			type="radio"
 			bind:group={persistent}
 			value={false}
+			on:change={() => (chosen = true)}
 			data-testid="storage-mode-memory"
 			class="mt-1"
 		/>
@@ -65,6 +76,7 @@
 			type="radio"
 			bind:group={persistent}
 			value={true}
+			on:change={() => (chosen = true)}
 			data-testid="storage-mode-indexeddb"
 			class="mt-1"
 		/>

@@ -52,7 +52,10 @@
 	import SharedListSelector from '$lib/SharedListSelector.svelte';
 	import StorageModeSelector from '@simple-todo/ui/StorageModeSelector.svelte';
 	import { RELAY_FAB_POSITION_KEY } from '@simple-todo/ui/relay-fab.js';
-	import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
+	import {
+		getPersistentStorageEnabled,
+		setPersistentStorageEnabled
+	} from '@simple-todo/todo/storage-mode.js';
 	import { honourStorageChoice } from '@simple-todo/todo/browser-memory.js';
 
 	// This chapter offers the choice, so what the app writes follows it. Said
@@ -82,9 +85,19 @@
 	const CONSENT_KEY = `consentAccepted@${typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}`;
 	const IDENTITY_MODE_KEY = 'simpleTodo.identityMode';
 
+	/*
+		invoice01 starts at "create a passkey", where the earlier chapters start
+		anonymous. The number circle is derived from the identity
+		(`seriesDigits(identityId)`), so a throwaway identity means a different
+		series of invoice numbers on the next visit — which is the one thing §14
+		Abs. 4 Nr. 4 UStG asks a numbering scheme not to do.
+
+		The label is filled in, so the recommended path needs no typing: it names
+		the passkey in the browser's picker and nothing else.
+	*/
 	/** @type {'create' | 'existing' | 'anonymous'} */
-	let identityMode = 'anonymous';
-	let passkeyLabel = '';
+	let identityMode = 'create';
+	let passkeyLabel = get(_)('consent.identityLabelDefault');
 
 	/** @type {string | null} */
 	let toastMessage = null;
@@ -102,8 +115,22 @@
 		in-memory, which is exactly the failure the storage choice exists to fix.
 	*/
 	/** @type {'memory' | 'indexeddb'} */
+	/*
+		invoice01 starts at "keep it in this browser". An invoicing tool that
+		forgets on reload is not one.
+
+		A choice made earlier still wins. "In memory only" is stored as *nothing*
+		on purpose (see `storage-mode.js`), so it cannot be told apart from never
+		having been asked — except where this browser also carries a remembered
+		consent, which is the one case where the dialog does not come back to ask.
+		There the earlier answer stands.
+	*/
 	/** @type {'memory' | 'indexeddb'} As `StorageModeSelector` declares it. */
-	let storageMode = getPersistentStorageEnabled() ? 'indexeddb' : 'memory';
+	let storageMode = getPersistentStorageEnabled()
+		? 'indexeddb'
+		: recall(CONSENT_KEY) === 'true'
+			? 'memory'
+			: 'indexeddb';
 	/** @type {string | null} */
 	let myPeerId = null;
 	let selectedMnemonic = '';
@@ -187,6 +214,9 @@
 		// The dialog shows this now, so a stale one would accuse the attempt that
 		// is only just starting.
 		error = null;
+		// Now, not when the dialog appeared: the storage choice is only a choice
+		// once somebody proceeds with it. The selector reports it; this writes it.
+		setPersistentStorageEnabled(storageMode === 'indexeddb');
 		const canonicalMnemonic = normalizeSpanishMnemonic(selectedMnemonic);
 		selectedMnemonic = canonicalMnemonic;
 		try {
