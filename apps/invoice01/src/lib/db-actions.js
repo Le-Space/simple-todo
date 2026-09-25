@@ -239,6 +239,47 @@ export async function initializeDatabase(orbitdb, todoDB, meta = {}) {
 }
 
 /**
+ * Hand a list to the relay, so somebody else can find it.
+ *
+ * Opening a list somebody sent you fetches its manifest over bitswap, from a
+ * peer that has it. Two browsers used to meet in the public three-word list
+ * before either shared an address, and the fetch went over that acquaintance.
+ * A list of your own has no such meeting place: the relay connects both sides
+ * but holds nothing it was never told about, and the link fails with "the list
+ * could not be opened".
+ *
+ * `/pinning/sync` opens any address on request — the relay knows this
+ * chapter's access controller — so telling it once, when the list is made, is
+ * enough for the manifest to be somewhere a stranger can reach. Measured: with
+ * this call, two browsers that never shared a list still open each other's by
+ * link and by address.
+ *
+ * Best effort and never awaited by its caller: a relay that is away must not
+ * hold up the list somebody just made. Without it the list still works, it is
+ * only harder for others to open.
+ *
+ * @param {string} address
+ */
+async function tellRelayAboutList(address) {
+	const { origin } = get(relayHttpStatusStore);
+	if (!origin || !address) return;
+	try {
+		const response = await fetch(`${origin}/pinning/sync`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ dbAddress: address })
+		});
+		if (!response.ok) {
+			console.warn('Relay would not take the list:', address, response.status);
+			return;
+		}
+		console.info('Relay holds the list now:', address);
+	} catch (error) {
+		console.warn('Relay could not be told about the list:', address, error);
+	}
+}
+
+/**
  * Open an OrbitDB todo database by address and make it the active todo list.
  *
  * @param {string} address
@@ -341,6 +382,10 @@ export async function createPrivateTodoList(name = 'private-todos') {
 	setupDatabaseListeners(privateDB);
 	await loadTodos();
 	const address = getDatabaseAddress(privateDB) || '';
+	// The relay first: a list nobody else can find is not much of a list to
+	// share, and this is the moment its address comes into being.
+	void tellRelayAboutList(address);
+
 	// Record it, so the list survives a reload and shows up in the switcher.
 	// Best effort: a failing registry must not lose the list the user just made.
 	try {
