@@ -19,7 +19,7 @@ import {
 } from '@orbitdb/core';
 import { OrbitDBWebAuthnIdentityProviderFunction } from '@le-space/orbitdb-identity-provider-webauthn-did';
 import { registerDelegatedAccessController } from './delegated-access.js';
-import { withSyncErrorHandling } from './database-sync-errors.js';
+import { wrapInstance } from './instance-wrappers.js';
 import * as dagCbor from '@ipld/dag-cbor';
 import * as dagJson from '@ipld/dag-json';
 import * as json from 'multiformats/codecs/json';
@@ -28,7 +28,6 @@ import { multiaddr } from '@multiformats/multiaddr';
 import { createLibp2pConfig } from '@simple-todo/net/libp2p-config.js';
 import { createMemoryIdentities } from '@simple-todo/todo/memory-identities.js';
 import { seedRestoredSigningKey } from '@simple-todo/todo/restored-signing-key.js';
-import { keepLogsWhereTheChoiceSays } from '@simple-todo/todo/keep-logs-in-memory.js';
 import { forgetByPrefix, recall, remember } from '@simple-todo/todo/browser-memory.js';
 import {
 	createLogStorages,
@@ -337,20 +336,18 @@ async function createOrbitDBInstance(heliaNode) {
 	passkeyCredentialStore.set(activePasskeyCredential);
 	if (!activePasskeyCredential) {
 		ownDidStore.set(null);
-		return withSyncErrorHandling(
-			keepLogsWhereTheChoiceSays(
-				await createOrbitDB({
-					ipfs: heliaNode,
-					id: getOrCreateOrbitDBIdentityId(),
-					// Without identities of our own, `createOrbitDB` builds a keystore
-					// under `./orbitdb/keystore`, which browser-level writes to
-					// IndexedDB -- the signing key, on a device that was promised
-					// nothing would be kept.
-					...(getPersistentStorageEnabled()
-						? { directory: PERSISTENT_STORAGE_PATHS.orbitdb }
-						: { identities: await createMemoryIdentities(heliaNode) })
-				})
-			)
+		return wrapInstance(
+			await createOrbitDB({
+				ipfs: heliaNode,
+				id: getOrCreateOrbitDBIdentityId(),
+				// Without identities of our own, `createOrbitDB` builds a keystore
+				// under `./orbitdb/keystore`, which browser-level writes to
+				// IndexedDB -- the signing key, on a device that was promised
+				// nothing would be kept.
+				...(getPersistentStorageEnabled()
+					? { directory: PERSISTENT_STORAGE_PATHS.orbitdb }
+					: { identities: await createMemoryIdentities(heliaNode) })
+			})
 		);
 	}
 
@@ -407,7 +404,7 @@ async function createOrbitDBInstance(heliaNode) {
 	// `@param {module:Identities} [params.identities]` and the destructuring in
 	// `@orbitdb/core/src/orbitdb.js`. Only the bundled declaration omits it.
 	// @ts-expect-error incomplete upstream types, not a wrong call
-	return withSyncErrorHandling(await createOrbitDB({ ipfs: heliaNode, identities, identity }));
+	return wrapInstance(await createOrbitDB({ ipfs: heliaNode, identities, identity }));
 }
 
 /**
