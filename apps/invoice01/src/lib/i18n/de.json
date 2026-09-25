@@ -10,7 +10,7 @@
 		"warningHeading": "Noch früh",
 		"warningBody": "Dies ist eine lauffähige Demonstration, kein fertiges Produkt. Es tut, was es sagt, und das Format kann sich noch ändern - bewahren Sie alles, um das es Ihnen leidtäte, also auch woanders auf.",
 		"accept": "Ich habe das gelesen und bin einverstanden",
-		"proceed": "Geteilte Liste öffnen",
+		"proceed": "Loslegen",
 		"proceedDisabled": "Drei spanische Wörter eingeben, um fortzufahren",
 		"proceedNeedsAccept": "Zuerst den Hinweis bestätigen",
 		"remember": "Auf diesem Gerät nicht mehr anzeigen",
@@ -361,7 +361,7 @@
 			"forgetTitle": "Nur aus dieser Übersicht entfernen; die Datenbank selbst bleibt unverändert"
 		},
 		"open": {
-			"heading": "Geteilte Liste über ihre Adresse öffnen",
+			"heading": "Liste über ihre Adresse öffnen",
 			"hint": "Fügen Sie die vollständige OrbitDB-Adresse ein, die Ihnen jemand geschickt hat. Lesen können Sie die Liste sofort. Schreiben können Sie erst, wenn die Person, die sie angelegt hat, Ihnen Schreibrechte erteilt.",
 			"submit": "Liste öffnen",
 			"busy": "Wird geöffnet …"
@@ -381,13 +381,19 @@
 			"private": "Private Liste",
 			"guest": "Geöffnete Liste",
 			"writingTo": "Sie schreiben in die Liste {name}. Die Merkwörter unten gehören weiterhin zur öffentlichen geteilten Liste.",
-			"mnemonicLabel": "Öffentliche Merkwörter / Name der OrbitDB-Datenbank",
+			"mnemonicLabel": "Merkwörter dieser Liste",
 			"copy": "Kopieren",
 			"copied": "Kopiert!",
-			"addressLabel": "OrbitDB-Adresse",
+			"addressLabel": "Adresse zum Weitergeben",
 			"anyone": "Wer diese Merkwörter kennt, kann dieselbe öffentliche Datenbank öffnen und darin schreiben, sobald eine Verbindung besteht.",
 			"replication": "Die Merkwörter wählen dieselbe Datenbank aus. Damit Änderungen sofort ankommen, braucht es außerdem eine Verbindung zu einem anderen Browser.",
 			"openAnother": "Andere geteilte Liste öffnen"
+		},
+		"public": {
+			"heading": "Öffentliche Liste öffnen",
+			"hint": "Drei spanische Wörter statt einer Adresse. Wer sie kennt, darf die Liste lesen und beschreiben — Rechnungen und Kundenanschriften gehören deshalb nicht hinein.",
+			"submit": "Öffnen",
+			"busy": "Wird geöffnet …"
 		}
 	},
 	"header": {

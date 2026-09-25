@@ -73,11 +73,18 @@ cancelled, all offline, all in a list that replicates to your other devices.
   to a todo. The open tab is in the address (`#rechnungen`), and both the todos
   and the invoices name the list they are writing to.
 - **An invoice needs a list of your own.** Anyone who knows the three words of
-  the shared list may write to it, so this chapter does not offer to keep
-  invoices and customer addresses there. Until a list of your own is open, the
-  invoice tab says why and links to the lists tab, where creating one is a
-  click. That list belongs to your identity: you write, and you decide who may
-  read it.
+  the public list may write to it, so this chapter does not keep invoices and
+  customer addresses there. Until a list of your own is open, the invoice tab
+  says why and links to the lists tab, where creating one is a click and the
+  new list is named with three words you can tell from the next one. **The open
+  list is remembered**, so a bookmark comes back to the list you were working
+  in rather than to the public one.
+- **Two questions on the first screen, both already answered.** Where the todos
+  are kept ("in this browser", because a tool that forgets on reload is not an
+  invoicing tool) and who you are ("create a passkey", because the number circle
+  is derived from the identity). Both can be changed; neither has to be. The
+  three words are no longer among them: joining a public list is a deliberate
+  act in the lists tab, next to the other ways to open one.
 - **German or English.** The whole chapter is translated — the invoices, the
   todos, the lists and the network panel — and the language is chosen in the
   first dialog, the one screen everybody sees before anything else. The startup

@@ -10,6 +10,7 @@ import {
 } from './delegation.js';
 import { confirmDelegatedWrite } from './delegated-write-auth.js';
 import { rememberList, listRegistryStore, openListRegistry } from './list-registry.js';
+import { recall, remember } from '@simple-todo/todo/browser-memory.js';
 import { foldCancellations, isInvoiceKey } from './invoice/records.js';
 import { isInvoiceSettingsKey } from './invoice/settings.js';
 import { isCustomerKey } from './invoice/customers.js';
@@ -162,17 +163,66 @@ function setActiveTodoDatabase(todoDB, meta) {
 	const address = getDatabaseAddress(todoDB);
 	todoDBStore.set(todoDB);
 	todoDBAddressStore.set(address);
-	if (meta) activeListStore.set({ kind: meta.kind, name: meta.name ?? '', address });
+	if (!meta) return;
+	const list = { kind: meta.kind, name: meta.name ?? '', address };
+	activeListStore.set(list);
+	rememberActiveList(list);
+}
+
+/**
+ * Where the open list is kept between visits.
+ *
+ * The address bar already carries it (`#db=…`), which is why a reload finds
+ * its way back — but a bookmark, a fresh tab or the domain typed by hand do
+ * not, and those used to land on the public three-word list rather than on the
+ * list somebody was working in.
+ *
+ * Through `remember`, so the storage choice decides: a session that keeps
+ * nothing keeps this either, and starts a list of its own next time.
+ */
+export const ACTIVE_LIST_KEY = 'simpleTodo.activeList';
+
+/** @param {ActiveList} list */
+function rememberActiveList(list) {
+	if (!list.address) return;
+	try {
+		remember(ACTIVE_LIST_KEY, JSON.stringify(list));
+	} catch {
+		// A browser that cannot remember opens a new list next time, which is
+		// survivable; failing the write here would take the current one down.
+	}
+}
+
+/**
+ * The list this browser had open when it was last here, if it kept anything.
+ *
+ * @returns {ActiveList | null}
+ */
+export function recallActiveList() {
+	try {
+		const raw = recall(ACTIVE_LIST_KEY);
+		if (!raw) return null;
+		const list = JSON.parse(raw);
+		return typeof list?.address === 'string' && list.address.startsWith('/orbitdb/') ? list : null;
+	} catch {
+		return null;
+	}
 }
 
 // Initialize database and load existing todos
 /**
  * @param {any} orbitdb
  * @param {TodoDatabase} todoDB
+ * @param {{ kind?: 'shared' | 'private' | 'guest', name?: string }} [meta] what
+ *   was opened. Defaults to the public three-word list, which is what the
+ *   earlier chapters open and what a `#list=…` link asks for.
  */
-export async function initializeDatabase(orbitdb, todoDB) {
+export async function initializeDatabase(orbitdb, todoDB, meta = {}) {
 	orbitdbStore.set(orbitdb);
-	setActiveTodoDatabase(todoDB, { kind: 'shared', name: todoDB?.name ?? '' });
+	setActiveTodoDatabase(todoDB, {
+		kind: meta.kind ?? 'shared',
+		name: meta.name ?? todoDB?.name ?? ''
+	});
 
 	// OrbitDB's non-indexed keyvalue.all() traverses the complete append-only
 	// history. Hydrate the UI in the background instead of blocking app startup.
@@ -186,6 +236,47 @@ export async function initializeDatabase(orbitdb, todoDB) {
 	void openListRegistry(orbitdb).catch((error) => {
 		console.warn('List registry unavailable:', error);
 	});
+}
+
+/**
+ * Hand a list to the relay, so somebody else can find it.
+ *
+ * Opening a list somebody sent you fetches its manifest over bitswap, from a
+ * peer that has it. Two browsers used to meet in the public three-word list
+ * before either shared an address, and the fetch went over that acquaintance.
+ * A list of your own has no such meeting place: the relay connects both sides
+ * but holds nothing it was never told about, and the link fails with "the list
+ * could not be opened".
+ *
+ * `/pinning/sync` opens any address on request — the relay knows this
+ * chapter's access controller — so telling it once, when the list is made, is
+ * enough for the manifest to be somewhere a stranger can reach. Measured: with
+ * this call, two browsers that never shared a list still open each other's by
+ * link and by address.
+ *
+ * Best effort and never awaited by its caller: a relay that is away must not
+ * hold up the list somebody just made. Without it the list still works, it is
+ * only harder for others to open.
+ *
+ * @param {string} address
+ */
+async function tellRelayAboutList(address) {
+	const { origin } = get(relayHttpStatusStore);
+	if (!origin || !address) return;
+	try {
+		const response = await fetch(`${origin}/pinning/sync`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ dbAddress: address })
+		});
+		if (!response.ok) {
+			console.warn('Relay would not take the list:', address, response.status);
+			return;
+		}
+		console.info('Relay holds the list now:', address);
+	} catch (error) {
+		console.warn('Relay could not be told about the list:', address, error);
+	}
 }
 
 /**
@@ -291,6 +382,10 @@ export async function createPrivateTodoList(name = 'private-todos') {
 	setupDatabaseListeners(privateDB);
 	await loadTodos();
 	const address = getDatabaseAddress(privateDB) || '';
+	// The relay first: a list nobody else can find is not much of a list to
+	// share, and this is the moment its address comes into being.
+	void tellRelayAboutList(address);
+
 	// Record it, so the list survives a reload and shows up in the switcher.
 	// Best effort: a failing registry must not lose the list the user just made.
 	try {

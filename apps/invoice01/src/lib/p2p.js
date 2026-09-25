@@ -18,7 +18,10 @@ import {
 	useIdentityProvider
 } from '@orbitdb/core';
 import { OrbitDBWebAuthnIdentityProviderFunction } from '@le-space/orbitdb-identity-provider-webauthn-did';
-import { registerDelegatedAccessController } from './delegated-access.js';
+import {
+	registerDelegatedAccessController,
+	DelegatedListAccessController
+} from './delegated-access.js';
 import * as dagCbor from '@ipld/dag-cbor';
 import * as dagJson from '@ipld/dag-json';
 import * as json from 'multiformats/codecs/json';
@@ -177,7 +180,7 @@ function createHeliaWithLibp2p(libp2pNode, stores = {}) {
  * This function should be called only after the user has accepted the consent modal
  */
 export async function initializeP2P(
-	options = /** @type {{ todoDbAddress?: string, todoDbName?: string, passkeyCredential?: any }} */ ({})
+	options = /** @type {{ todoDbAddress?: string, todoDbName?: string, todoDbPrivate?: boolean, passkeyCredential?: any }} */ ({})
 ) {
 	if (Object.prototype.hasOwnProperty.call(options, 'passkeyCredential')) {
 		activePasskeyCredential = options.passkeyCredential ?? null;
@@ -213,7 +216,9 @@ export async function initializeP2P(
 		console.log('🛬 Creating OrbitDB instance...');
 		orbitdb = await createOrbitDBInstance(helia);
 		setInitializationProgress(4);
-		todoDB = await openInitialTodoDatabase(options.todoDbAddress, options.todoDbName);
+		todoDB = await openInitialTodoDatabase(options.todoDbAddress, options.todoDbName, {
+			private: options.todoDbPrivate === true
+		});
 
 		console.log('✅ Database opened successfully with OrbitDBAccessController:', {
 			address: todoDB.address,
@@ -223,7 +228,17 @@ export async function initializeP2P(
 
 		// Initialize database stores and actions
 		setInitializationProgress(5);
-		await initializeDatabase(orbitdb, todoDB);
+		// What kind of list this is, so the app can name it and come back to it:
+		// opened by address it is somebody's list, started privately it is this
+		// identity's, and otherwise it is the public three-word one.
+		await initializeDatabase(orbitdb, todoDB, {
+			kind: options.todoDbAddress?.trim()
+				? 'guest'
+				: options.todoDbPrivate === true
+					? 'private'
+					: 'shared',
+			name: options.todoDbPrivate === true ? (options.todoDbName ?? '') : undefined
+		});
 
 		// Mark initialization as complete
 		initializationStore.set({
@@ -292,8 +307,11 @@ async function stopP2P() {
 /**
  * @param {string | undefined} address
  * @param {string | undefined} databaseName
+ * @param {{ private?: boolean }} [options] `private` opens a list only this
+ *   identity may write to — what invoice01 starts with, because an invoice
+ *   belongs to whoever issues it and not to everybody who knows three words.
  */
-async function openInitialTodoDatabase(address, databaseName) {
+async function openInitialTodoDatabase(address, databaseName, options = {}) {
 	const normalizedAddress = address?.trim() ?? '';
 
 	if (normalizedAddress.startsWith('/orbitdb/')) {
@@ -311,10 +329,13 @@ async function openInitialTodoDatabase(address, databaseName) {
 		type: 'keyvalue', //Stores data as key-value pairs supports basic operations: put(), get(), delete()
 		create: true, // Allows the database to be created if it doesn't exist
 		sync: true, // Enables automatic synchronization with other peers
-		// The mnemonic default list stays public (write: ['*']) so the shared-list
-		// collaboration from collab01 keeps working. Access-controlled lists are
-		// created explicitly as *private lists* (see createPrivateTodoList).
-		AccessController: IPFSAccessController({ write: ['*'] }),
+		// The three-word list stays public (write: ['*']) so the shared-list
+		// collaboration from collab01 keeps working. A list of one's own carries
+		// this identity's controller instead — same words, a different address,
+		// and nobody else writing to it.
+		AccessController: options.private
+			? DelegatedListAccessController({ write: [orbitdb.identity.id] })
+			: IPFSAccessController({ write: ['*'] }),
 		// Memory-only when that is what was chosen. Without this an in-memory
 		// session still left `orbitdb/<address>/log/_heads/` and `.../_index/`
 		// in IndexedDB, because `Database` defaults both to LevelStorage.

@@ -7,6 +7,11 @@
 
 	export let value = '';
 	export let disabled = false;
+	/**
+	 * Without its own heading and explanation — for a place that has already
+	 * said what this is. The dialog needs them; the lists tab says it above.
+	 */
+	export let bare = false;
 
 	let copied = false;
 	let touched = false;
@@ -42,12 +47,14 @@
 	class="rounded-lg border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan/30 dark:bg-cyan/10"
 	data-testid="shared-list-selector"
 >
-	<label for="shared-list-mnemonic" class="block text-sm font-semibold text-heading">
-		{$_('consent.mnemonicLabel')}
-	</label>
-	<p id="shared-list-help" class="mt-1 text-xs leading-relaxed text-text">
-		{$_('consent.mnemonicHelp')}
-	</p>
+	{#if !bare}
+		<label for="shared-list-mnemonic" class="block text-sm font-semibold text-heading">
+			{$_('consent.mnemonicLabel')}
+		</label>
+		<p id="shared-list-help" class="mt-1 text-xs leading-relaxed text-text">
+			{$_('consent.mnemonicHelp')}
+		</p>
+	{/if}
 	<input
 		id="shared-list-mnemonic"
 		data-testid="shared-list-mnemonic-input"

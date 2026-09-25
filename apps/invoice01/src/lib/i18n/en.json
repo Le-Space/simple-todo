@@ -10,7 +10,7 @@
 		"warningHeading": "Early days",
 		"warningBody": "This is a working demonstration rather than a finished product. It does what it says, and the format may still change - so keep anything you would be sorry to lose somewhere else as well.",
 		"accept": "I have read this and accept it",
-		"proceed": "Open shared list",
+		"proceed": "Get started",
 		"proceedDisabled": "Enter three Spanish words to continue",
 		"proceedNeedsAccept": "Confirm the notice first",
 		"remember": "Don't show this again on this device",
@@ -361,7 +361,7 @@
 			"forgetTitle": "Remove from this list of lists; the database itself is untouched"
 		},
 		"open": {
-			"heading": "Open a shared list by address",
+			"heading": "Open a list by its address",
 			"hint": "Paste the full OrbitDB address someone shared with you. You can read it right away — writing needs a permission grant from the owner.",
 			"submit": "Open list",
 			"busy": "Opening…"
@@ -381,13 +381,19 @@
 			"private": "Private list",
 			"guest": "Opened list",
 			"writingTo": "You are writing to {name}. The mnemonic below still refers to the public shared list.",
-			"mnemonicLabel": "Public mnemonic / OrbitDB database name",
+			"mnemonicLabel": "This list’s three words",
 			"copy": "Copy",
 			"copied": "Copied!",
-			"addressLabel": "OrbitDB address",
+			"addressLabel": "Address to pass on",
 			"anyone": "Anyone who knows this share code can open the same public database and edit it once connected.",
 			"replication": "The mnemonic selects the same database. Live replication also requires a connection to another browser peer.",
 			"openAnother": "Open another shared list"
+		},
+		"public": {
+			"heading": "Open a public list",
+			"hint": "Three Spanish words instead of an address. Anyone who knows them may read the list and write to it — which is why invoices and customer addresses do not belong there.",
+			"submit": "Open",
+			"busy": "Opening …"
 		}
 	},
 	"header": {

@@ -33,6 +33,7 @@
 	import SectionTabs from '$lib/SectionTabs.svelte';
 	import ActiveListHeading from '$lib/ActiveListHeading.svelte';
 	import { currentSection } from '$lib/sections.js';
+	import { recallActiveList } from '$lib/db-actions.js';
 	import { placeRelayButtonForThisScreen } from '$lib/relay-fab-position.js';
 	import { formatVersions } from '@simple-todo/todo/build-info.js';
 	import ConsentModal from '$lib/ConsentModal.svelte';
@@ -49,7 +50,7 @@
 	import ConnectedPeers from '@simple-todo/ui/ConnectedPeers.svelte';
 	import PeerIdCard from '@simple-todo/ui/PeerIdCard.svelte';
 	import OwnMultiaddrs from '@simple-todo/ui/OwnMultiaddrs.svelte';
-	import SharedListSelector from '$lib/SharedListSelector.svelte';
+	import OpenPublicListForm from '$lib/OpenPublicListForm.svelte';
 	import StorageModeSelector from '@simple-todo/ui/StorageModeSelector.svelte';
 	import { RELAY_FAB_POSITION_KEY } from '@simple-todo/ui/relay-fab.js';
 	import {
@@ -149,19 +150,37 @@
 	});
 	onMount(() => listLink.listen());
 
-	/** @param {string} address */
+	/**
+	 * Open the list a link named.
+	 *
+	 * Retried, because the first attempt happens moments after the app started:
+	 * the manifest of somebody else's list has to be fetched from whoever has
+	 * it, and this browser may not have found them yet. It used to matter less,
+	 * when every browser started in the same public list and had met the others
+	 * there; now each starts in a list of its own, and a link is the first thing
+	 * they have in common.
+	 *
+	 * @param {string} address
+	 */
 	async function openLinkedList(address) {
-		try {
-			await loadTodoDatabase(address);
-		} catch (err) {
-			const reason = err instanceof Error ? err.message : String(err);
-			showToast(
-				get(t)('ui.listLink.openFailed', 'The list from the link could not be opened: {reason}', {
-					reason
-				}),
-				'error'
-			);
+		const waits = [0, 3000, 8000];
+		let lastError = null;
+		for (const wait of waits) {
+			if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
+			try {
+				await loadTodoDatabase(address);
+				return;
+			} catch (err) {
+				lastError = err;
+			}
 		}
+		const reason = lastError instanceof Error ? lastError.message : String(lastError);
+		showToast(
+			get(t)('ui.listLink.openFailed', 'The list from the link could not be opened: {reason}', {
+				reason
+			}),
+			'error'
+		);
 	}
 
 	$: if ($initializationStore.isInitialized && activeMnemonic) {
@@ -171,7 +190,6 @@
 				: { address: $activeListStore.address || $todoDBAddressStore }
 		);
 	}
-	$: mnemonicValid = isValidSpanishMnemonic(selectedMnemonic);
 
 	// Modal state
 	let showModal = true;
@@ -210,6 +228,91 @@
 		showToast($_('consent.prfMissing'), 'warning', 12_000);
 	}
 
+	/**
+	 * Which list this visit opens.
+	 *
+	 * A link names one, or this browser had one open, or there is none yet — and
+	 * then this chapter starts one of its own rather than the public three-word
+	 * list the earlier chapters start with. An invoice belongs to whoever issues
+	 * it; a list anybody can write to is not where it goes.
+	 *
+	 * @param {string} words the public three-word list this browser would open
+	 * @returns {{ todoDbAddress?: string, todoDbName?: string, todoDbPrivate?: boolean }}
+	 */
+	function listToOpen(words) {
+		// A `#list=` link names a public list by its words, which is a name and
+		// opens locally. A `#db=` link names somebody else's list by address, and
+		// that one is *not* opened here: its manifest has to be fetched from
+		// whoever has it, and at this point libp2p has only just started. It is
+		// what `listLink.openLinked()` does a moment later, with the app up.
+		if (listLink.initial.words)
+			return { todoDbName: normalizeSpanishMnemonic(listLink.initial.words) };
+		const remembered = recallActiveList();
+		// The list this browser had open, by address: its blocks are here, so
+		// opening it needs nobody. A bookmark used to land in the public list
+		// instead, which is where somebody's invoices went missing.
+		if (remembered && !listLink.initial.address) return { todoDbAddress: remembered.address };
+		/*
+			And otherwise the public three-word list, as in every chapter before
+			this one.
+
+			Starting each browser in a list of its own was measured and taken back
+			out: two browsers used to meet here before either sent the other an
+			address, and without that meeting place, opening somebody's list by
+			link or address became slow and unreliable. A list of your own is one
+			click away in the lists tab; making it the start needs the relay to
+			hold private lists first.
+		*/
+		return { todoDbName: words };
+	}
+
+	let openingPublicList = false;
+
+	/**
+	 * Open the public three-word list somebody typed in the lists tab.
+	 *
+	 * @param {{ detail: { words: string } }} event
+	 */
+	const handleOpenPublicList = async (event) => {
+		const canonical = normalizeSpanishMnemonic(event.detail.words);
+		openingPublicList = true;
+		try {
+			await restartP2PLazy({ todoDbName: canonical });
+			selectedMnemonic = canonical;
+			activeMnemonic = canonical;
+			try {
+				remember(SPANISH_MNEMONIC_STORAGE_KEY, canonical);
+			} catch {
+				// ignore storage errors
+			}
+		} catch (err) {
+			showToast(`❌ ${err instanceof Error ? err.message : String(err)}`, 'error');
+		} finally {
+			openingPublicList = false;
+		}
+	};
+
+	/**
+	 * Start, and do not let a remembered list that cannot be opened stop it.
+	 *
+	 * The address is this browser's own, so it normally opens from what is
+	 * already here — but a cleared cache, a half-written log or a list somebody
+	 * deleted would otherwise leave the app on its dialog with an error.
+	 *
+	 * @param {{ todoDbAddress?: string, todoDbName?: string }} choice
+	 * @param {string} words the public list to fall back to
+	 * @param {any} passkeyCredential
+	 */
+	async function startWithFallback(choice, words, passkeyCredential) {
+		try {
+			await startP2P({ ...choice, passkeyCredential });
+		} catch (err) {
+			if (!choice.todoDbAddress) throw err;
+			console.warn('Remembered list could not be opened, falling back:', err);
+			await startP2P({ todoDbName: words, passkeyCredential });
+		}
+	}
+
 	const handleModalClose = async () => {
 		// The dialog shows this now, so a stale one would accuse the attempt that
 		// is only just starting.
@@ -220,7 +323,11 @@
 		const canonicalMnemonic = normalizeSpanishMnemonic(selectedMnemonic);
 		selectedMnemonic = canonicalMnemonic;
 		try {
-			remember(SPANISH_MNEMONIC_STORAGE_KEY, canonicalMnemonic);
+			// Only where the public list is what gets opened. The words used to be
+			// stored on every start, from a dialog that asked for them; now they
+			// are stored by whoever opens a public list, and storing them here as
+			// well would name a list this visit never went near.
+			if (listLink.initial.words) remember(SPANISH_MNEMONIC_STORAGE_KEY, canonicalMnemonic);
 			if (rememberDecision) {
 				remember(CONSENT_KEY, 'true');
 			}
@@ -257,7 +364,11 @@
 			if ($initializationStore.isInitialized) {
 				await restartP2PLazy({ todoDbName: canonicalMnemonic });
 			} else {
-				await startP2P({ todoDbName: canonicalMnemonic, passkeyCredential });
+				await startWithFallback(
+					listToOpen(canonicalMnemonic),
+					canonicalMnemonic,
+					passkeyCredential
+				);
 			}
 			activeMnemonic = canonicalMnemonic;
 			void listLink.openLinked();
@@ -327,7 +438,7 @@
 			} else if (recall(CONSENT_KEY) === 'true') {
 				showModal = false;
 				activeMnemonic = normalizeSpanishMnemonic(selectedMnemonic);
-				await startP2P({ todoDbName: activeMnemonic, passkeyCredential: null });
+				await startWithFallback(listToOpen(activeMnemonic), activeMnemonic, null);
 				void listLink.openLinked();
 			}
 		} catch {
@@ -494,7 +605,6 @@
 	<ConsentModal
 		bind:show={showModal}
 		bind:rememberDecision
-		canProceed={mnemonicValid}
 		identity={identityMode}
 		storage={storageMode}
 		{error}
@@ -503,7 +613,6 @@
 	>
 		<svelte:fragment slot="before-confirmation">
 			<StorageModeSelector bind:mode={storageMode} />
-			<SharedListSelector bind:value={selectedMnemonic} />
 			<PasskeyOnboarding bind:mode={identityMode} bind:label={passkeyLabel} />
 		</svelte:fragment>
 	</ConsentModal>
@@ -571,12 +680,17 @@
 					databaseAddress={$todoDBAddressStore}
 					activeList={$activeListStore}
 					on:change={() => {
-						selectedMnemonic = activeMnemonic;
-						showModal = true;
+						document
+							.querySelector('[data-testid="public-list-words"]')
+							?.scrollIntoView({ block: 'center' });
+						/** @type {HTMLInputElement | null} */ (
+							document.querySelector('[data-testid="public-list-words"]')
+						)?.focus();
 					}}
 				/>
 			{/if}
 			<NewPrivateListButton />
+			<OpenPublicListForm busy={openingPublicList} on:open={handleOpenPublicList} />
 			<ListSwitcher />
 			<OpenDatabaseForm />
 			<PermissionsPanel />

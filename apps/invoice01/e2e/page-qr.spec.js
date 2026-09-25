@@ -12,8 +12,8 @@ test.describe('Page QR and list link', () => {
 		test.setTimeout(timeout * 2);
 		const words = freshListWords();
 		await page.goto(`/#list=${encodeURIComponent(words)}`);
-		// The words arrive in the dialog, where the reader sees them before joining.
-		await expect(page.getByTestId('shared-list-mnemonic-input')).toHaveValue(words);
+		// The dialog no longer asks about lists; the link's words are what the app
+		// opens, which the next assertion reads off the open list itself.
 		await passConsent(page);
 
 		await expect(page.getByTestId('active-shared-list-name')).toHaveText(words, { timeout });

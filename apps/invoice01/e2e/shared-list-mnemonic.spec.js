@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { acceptNotice, consentModal, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import { acceptNotice, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import { openSection } from './sections.mjs';
+import { openPublicList } from './public-list.mjs';
 
 const testUrl = '/';
 const timeout = 90000;
@@ -23,28 +24,26 @@ test.describe('Spanish mnemonic shared todo lists', () => {
 		const bobTodo = `mnemonic-${runId}-from-bob`;
 
 		try {
-			const aliceModal = await openSelection(alice);
-			const selector = aliceModal.getByTestId('shared-list-selector');
+			// Everybody starts in a list of their own; the public one is opened in
+			// the lists tab, which is where the words live now.
+			await Promise.all([alice, bob, isolated].map((page) => openApp(page)));
+
+			await openSection(alice, 'listen');
+			const selector = alice.getByTestId('shared-list-selector');
 			await selector.getByRole('button', { name: 'Generate new' }).click();
 			const aliceMnemonic = await selector.getByTestId('shared-list-mnemonic-input').inputValue();
 			await selector.getByRole('button', { name: 'Copy', exact: true }).click();
 			await expect(selector.getByRole('button', { name: 'Copied!', exact: true })).toBeVisible();
 			const copiedMnemonic = await alice.evaluate(() => navigator.clipboard.readText());
 			expect(copiedMnemonic).toBe(aliceMnemonic);
+			await alice.getByTestId('public-list-open').click();
 
-			const [bobModal, isolatedModal] = await Promise.all([
-				openSelection(bob),
-				openSelection(isolated)
-			]);
-			await bobModal.getByTestId('shared-list-mnemonic-input').fill(copiedMnemonic);
 			const isolatedMnemonic =
 				copiedMnemonic === 'agua-aire-alba' ? 'sol-camino-verde' : 'agua-aire-alba';
-			await isolatedModal.getByTestId('shared-list-mnemonic-input').fill(isolatedMnemonic);
-
 			await Promise.all([
-				openSelectedList(alice),
-				openSelectedList(bob),
-				openSelectedList(isolated)
+				openPublicList(alice, copiedMnemonic, { timeout }),
+				openPublicList(bob, copiedMnemonic, { timeout }),
+				openPublicList(isolated, isolatedMnemonic, { timeout })
 			]);
 
 			await Promise.all([alice, bob, isolated].map((page) => openSection(page, 'listen')));
@@ -101,19 +100,19 @@ test.describe('Spanish mnemonic shared todo lists', () => {
 	});
 });
 
-/** @param {import('@playwright/test').Page} page */
-async function openSelection(page) {
+/**
+ * Through the first screen and into this browser's own list.
+ *
+ * @param {import('@playwright/test').Page} page
+ */
+async function openApp(page) {
 	await page.goto(testUrl);
 	await waitForConsent(page);
-	await expect(consentModal(page).getByTestId('shared-list-mnemonic-input')).toHaveValue(
-		/.+-.+-.+/
-	);
+	// This spec is about lists, not identities, and has no virtual
+	// authenticator — so away from the chapter's default, which creates a
+	// passkey and would leave the dialog standing.
+	await page.getByTestId('identity-mode-anonymous').check();
 	await acceptNotice(page);
-	return consentModal(page);
-}
-
-/** @param {import('@playwright/test').Page} page */
-async function openSelectedList(page) {
 	await page.getByTestId('consent-proceed').click();
 	await page.waitForFunction(
 		() => document.querySelector('[data-testid="consent-modal"]')?.isOpen !== true

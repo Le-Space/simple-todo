@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { passConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import { openSection } from './sections.mjs';
+import { openPublicList } from './public-list.mjs';
 
 // Chapter (acl01), issue #114: creating a private list used to leave no trace in
 // the UI. The list was created and became active, but its name was never
@@ -84,6 +85,13 @@ test.describe('private list visibility (#114)', () => {
 		expect(await page.getByTestId('active-list-name').textContent()).toContain(
 			mnemonic?.replace(/^·\s+/, '')
 		);
+
+		// Another public list is reachable from this tab, where the three words
+		// used to sit on the first screen: the heading follows it.
+		const publicWords = 'brisa-arena-sal';
+		await openPublicList(page, publicWords, { timeout });
+		await expect(page.getByTestId('active-list-label')).toHaveText(`· ${publicWords}`);
+		await expect(page.getByTestId('active-list-kind')).toHaveText('Shared list');
 
 		const listName = `named-${Date.now().toString(36)}`;
 		await page.getByTestId('new-list-name').fill(listName);
