@@ -129,8 +129,13 @@ export async function passConsent(
 		asks for a passkey and the test has no virtual authenticator, the proceed
 		click fails and the wait at the end of this function sits there for the
 		test's whole budget. A spec that wants the chapter's own default says so.
+
+		Only where the dialog offers the choice: `main` has no identity chooser at
+		all, and waiting for a control that chapter never renders is what a pinned
+		default must not do.
 	*/
-	await page.getByTestId(`identity-mode-${identity}`).check();
+	const identityControl = page.getByTestId(`identity-mode-${identity}`);
+	if ((await identityControl.count()) > 0) await identityControl.check();
 	if (label !== undefined) {
 		await page.getByTestId('passkey-label').fill(label);
 	}

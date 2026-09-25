@@ -339,7 +339,7 @@
 	"lists": {
 		"create": {
 			"heading": "Create a private list",
-			"hint": "Only your identity may write to the new list. Without a name it gets three Spanish words to recognise it by. Share its address, and grant other DIDs write access below.",
+			"hint": "Only your identity can write to it. Without a name it gets three Spanish words to recognise it by. Share its address and grant other DIDs below.",
 			"namePlaceholder": "Name of the list — leave empty for three words",
 			"submit": "Create private list",
 			"busy": "Creating…",
