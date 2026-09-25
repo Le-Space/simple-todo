@@ -52,6 +52,7 @@
 		"identityAnonymous": "Ohne Passkey fortfahren",
 		"identityAnonymousHint": "Eine zufällige Identität nur für diesen Browser, genau wie im vorigen Kapitel.",
 		"identityLabelPlaceholder": "Name für diesen Passkey (z. B. Alice)",
+		"identityLabelHint": "Nur eine Bezeichnung für die Passkey-Auswahl. Ihre Identität ergibt sich aus dem Schlüssel, nicht aus diesem Namen. Zwei Personen auf diesem Gerät dürfen denselben Namen verwenden.",
 		"element": {
 			"checkHeading": "Dieser Browser, in diesem Netz",
 			"checking": "Prüfe, was dieses Netz zulässt…",
@@ -104,7 +105,7 @@
 		"new": "Neue Rechnung",
 		"none": "Noch keine Rechnung. Die erste legt den Nummernkreis dieses Geräts an.",
 		"nextNumber": "Nächste Nummer: {number}",
-		"needsList": "Zum Schreiben von Rechnungen zuerst eine eigene Liste öffnen.",
+		"needsList": "Die geteilte Liste — die mit den drei Wörtern — darf jeder beschreiben, der sie kennt. Dort stünden Ihre Rechnungen und Kundenanschriften für alle offen. Eine eigene Liste gehört Ihrer Identität: Nur Sie schreiben hinein, und Sie entscheiden, wer sie sehen darf.",
 		"state": {
 			"draft": "Entwurf",
 			"issued": "Ausgestellt",
@@ -314,6 +315,232 @@
 			"giveWay": "Stornieren und neu ausstellen",
 			"explain": "Die zuerst ausgestellte Rechnung behält ihre Nummer, denn die hat der Kunde bereits. Die spätere wird storniert und mit der nächsten freien Nummer neu ausgestellt — § 31 Abs. 5 UStDV, nicht stillschweigend umnummeriert.",
 			"prepared": "Storno und Kopie liegen als Entwürfe bereit. Beide noch ausstellen."
+		},
+		"needsListHeading": "Rechnungen brauchen eine eigene Liste",
+		"needsListAction": "Zu den Listen",
+		"needsListHint": "Unter „Listen“ → „{action}“. Die Rechnungen liegen dann in derselben Liste wie deren Aufgaben."
+	},
+	"sections": {
+		"label": "Bereiche",
+		"tab": {
+			"tasks": "Aufgaben",
+			"invoices": "Rechnungen",
+			"lists": "Listen",
+			"network": "Netzwerk"
+		},
+		"lists": {
+			"waiting": "Ihre Listen erscheinen hier, sobald die App gestartet ist."
+		},
+		"list": {
+			"switch": "Liste wechseln"
+		}
+	},
+	"lists": {
+		"create": {
+			"heading": "Private Liste anlegen",
+			"hint": "In die neue Liste darf nur Ihre Identität schreiben. Geben Sie deren Adresse weiter und erteilen Sie anderen DIDs weiter unten Schreibrechte.",
+			"namePlaceholder": "Name der Liste (optional)",
+			"submit": "Private Liste anlegen",
+			"busy": "Wird angelegt …",
+			"created": "Die Liste {name} ist angelegt, und Sie schreiben jetzt hinein.",
+			"share": "Geben Sie diese Adresse weiter, damit andere die Liste öffnen können. Lesen können sie sofort, schreiben erst mit Schreibrechten, die Sie weiter unten erteilen.",
+			"copy": "Kopieren",
+			"copied": "Kopiert"
+		},
+		"switcher": {
+			"heading": "Ihre Listen",
+			"hint": "Sie liegen in Ihrer eigenen OrbitDB-Registry. Deshalb sind sie nach dem Neuladen wieder da und folgen Ihrem Passkey auf ein anderes Gerät.",
+			"unnamed": "Liste ohne Namen",
+			"role": {
+				"owner": "Eigentümer",
+				"guest": "Gast"
+			},
+			"open": "geöffnet",
+			"forget": "Vergessen",
+			"forgetTitle": "Nur aus dieser Übersicht entfernen; die Datenbank selbst bleibt unverändert"
+		},
+		"open": {
+			"heading": "Geteilte Liste über ihre Adresse öffnen",
+			"hint": "Fügen Sie die vollständige OrbitDB-Adresse ein, die Ihnen jemand geschickt hat. Lesen können Sie die Liste sofort. Schreiben können Sie erst, wenn die Person, die sie angelegt hat, Ihnen Schreibrechte erteilt.",
+			"submit": "Liste öffnen",
+			"busy": "Wird geöffnet …"
+		},
+		"permissions": {
+			"heading": "Schreibrechte",
+			"hint": "Diese DIDs dürfen in die Liste schreiben. Schreibrechte erteilen oder entziehen kann nur, wer die Liste verwaltet, also wer sie angelegt hat.",
+			"you": "(Sie)",
+			"remove": "Entfernen",
+			"placeholder": "did:key:… der Identität, die schreiben darf",
+			"add": "DID hinzufügen",
+			"grantFailed": "Die Schreibrechte ließen sich nicht erteilen: {reason}",
+			"revokeFailed": "Die Schreibrechte ließen sich nicht entziehen: {reason}"
+		},
+		"active": {
+			"shared": "Geteilte Liste",
+			"private": "Private Liste",
+			"guest": "Geöffnete Liste",
+			"writingTo": "Sie schreiben in die Liste {name}. Die Merkwörter unten gehören weiterhin zur öffentlichen geteilten Liste.",
+			"mnemonicLabel": "Öffentliche Merkwörter / Name der OrbitDB-Datenbank",
+			"copy": "Kopieren",
+			"copied": "Kopiert!",
+			"addressLabel": "OrbitDB-Adresse",
+			"anyone": "Wer diese Merkwörter kennt, kann dieselbe öffentliche Datenbank öffnen und darin schreiben, sobald eine Verbindung besteht.",
+			"replication": "Die Merkwörter wählen dieselbe Datenbank aus. Damit Änderungen sofort ankommen, braucht es außerdem eine Verbindung zu einem anderen Browser.",
+			"openAnother": "Andere geteilte Liste öffnen"
+		}
+	},
+	"header": {
+		"backToTodos": "Zurück zu den Aufgaben",
+		"tagline": "Eine Peer-to-Peer-PWA nach dem Local-first-Prinzip"
+	},
+	"todo": {
+		"form": {
+			"heading": "Neue Aufgabe",
+			"placeholder": "Was ist zu tun?",
+			"submit": "Aufgabe anlegen",
+			"delegateToggle": "An eine andere DID delegieren",
+			"delegateDid": "DID des Delegierten",
+			"delegateDidPlaceholder": "did:key:… der Person, die die Aufgabe erledigen darf",
+			"expiry": "Frist",
+			"optional": "(optional)",
+			"delegateHint": "Die delegierte Person bekommt keinen Schreibzugriff auf die Liste. Sie darf nur diese eine Aufgabe erledigen oder umbenennen, und Sie können das jederzeit zurücknehmen."
+		},
+		"item": {
+			"toggle": "Als erledigt markieren oder wieder öffnen",
+			"toggleNotAllowed": "Erledigen kann diese Aufgabe nur, wer sie angelegt hat oder an wen sie delegiert ist",
+			"save": "Speichern",
+			"cancel": "Abbrechen",
+			"assignedTo": "Zugewiesen an:",
+			"unassigned": "Nicht zugewiesen",
+			"createdBy": "Angelegt von:",
+			"delegatedTo": "Delegiert an {did}",
+			"delegatedToYou": "Von {did} an Sie delegiert",
+			"completedBy": "Erledigt von {did}",
+			"lastChangedBy": "Zuletzt geändert von der delegierten DID: {did}",
+			"until": "Frist {date}",
+			"status": {
+				"active": "aktiv",
+				"revoked": "zurückgenommen",
+				"expired": "abgelaufen"
+			},
+			"rename": "Umbenennen",
+			"delegate": "Delegieren",
+			"redelegate": "Neu delegieren",
+			"revoke": "Zurücknehmen",
+			"delete": "Löschen",
+			"delegatePlaceholder": "did:key:… der delegierten Person",
+			"expiryTitle": "Frist (optional)",
+			"replication": {
+				"label": "Replikation auf dem Relay:",
+				"pending": "Wartet darauf, dass der Relay diesen OrbitDB-Eintrag repliziert.",
+				"pinned": "Der Relay hat bestätigt, dass er genau diesen OrbitDB-Eintrag repliziert und bei sich gespeichert hat.",
+				"unavailable": "Für diesen Eintrag liegt derzeit kein genauer Nachweis vor, dass der Relay ihn repliziert hat.",
+				"unknown": "Für diesen bestehenden Eintrag wurde nicht beobachtet, ob der Relay ihn repliziert hat."
+			}
+		},
+		"list": {
+			"title": "Aufgaben",
+			"empty": "Noch keine Aufgaben. Legen Sie oben eine an."
+		},
+		"toast": {
+			"added": "✅ Aufgabe angelegt",
+			"addedDelegated": "✅ Aufgabe angelegt und delegiert",
+			"addFailed": "Die Aufgabe konnte nicht angelegt werden",
+			"deleted": "🗑️ Aufgabe gelöscht",
+			"deleteFailed": "❌ Die Aufgabe konnte nicht gelöscht werden",
+			"statusUpdated": "✅ Status der Aufgabe geändert",
+			"updateFailed": "Die Aufgabe konnte nicht geändert werden",
+			"renamed": "✅ Aufgabe umbenannt",
+			"renameFailed": "Die Aufgabe konnte nicht umbenannt werden",
+			"delegated": "🤝 Aufgabe delegiert",
+			"delegateFailed": "Die Aufgabe konnte nicht delegiert werden",
+			"revoked": "↩️ Delegation zurückgenommen",
+			"revokeFailed": "Die Delegation konnte nicht zurückgenommen werden"
+		}
+	},
+	"network": {
+		"navLabel": "P2P-Start und Verbindungsstatus",
+		"status": {
+			"ready": "P2P-Netzwerk bereit",
+			"connectingRelay": "Verbindung zum Relay wird aufgebaut",
+			"waitingWebrtc": "Warte auf eine WebRTC-Verbindung",
+			"failed": "{step} ließ sich nicht starten",
+			"initializing": "{step} wird gestartet",
+			"preparing": "P2P-Netzwerk wird vorbereitet"
+		},
+		"step": {
+			"networkConfig": {
+				"label": "Netzwerkkonfiguration",
+				"description": "Prüft die konfigurierten, vom Browser erreichbaren Relay-Adressen und bereitet die libp2p-Transporte und -Dienste vor."
+			},
+			"libp2p": {
+				"label": "libp2p",
+				"description": "Erzeugt und startet den libp2p-Knoten samt Peer-Identität, Peer-Erkennung sowie Relay-, WebSocket- und WebRTC-Unterstützung."
+			},
+			"helia": {
+				"label": "Helia",
+				"description": "Startet den Helia-IPFS-Knoten auf libp2p und aktiviert den Blockaustausch und den Abruf über HTTP."
+			},
+			"orbitdb": {
+				"label": "OrbitDB",
+				"description": "Lädt oder erzeugt die dauerhafte OrbitDB-Identität und initialisiert OrbitDB mit dem Helia-Knoten."
+			},
+			"databaseSync": {
+				"label": "Datenbank + Sync",
+				"description": "Öffnet die geteilte Aufgaben-Datenbank, lädt ihr lokales Operations-Log und startet die Synchronisierung über OrbitDB-Pubsub."
+			},
+			"localTodos": {
+				"label": "Lokale Aufgaben",
+				"description": "Verbindet den lokalen Aufgabenspeicher und füllt ihn im Hintergrund aus OrbitDB, ohne die App zu blockieren."
+			},
+			"relayConnected": {
+				"label": "Relay verbunden",
+				"description": "Eine WebSocket-Verbindung zu einem Relay- oder Bootstrap-Peer steht für Peer-Erkennung, Pubsub und Circuit-Relay-Verkehr bereit.",
+				"none": "Noch ist kein Relay verbunden.",
+				"noOrigin": "Aus der Adresse des verbundenen Relays lässt sich keine HTTPS-Health-URL ableiten.",
+				"loading": "Lese die OrbitDB-Relay-Version von {origin}/health …",
+				"verifiedVersion": "OrbitDB-Relay-Version {version}; Health und Peer-ID unter {origin}/health bestätigt.",
+				"verified": "Health und Peer-ID unter {origin}/health bestätigt. Dieser Relay gibt seine OrbitDB-Relay-Version nicht an.",
+				"unverified": "{origin}/health ließ sich nicht prüfen, deshalb ist die OrbitDB-Relay-Version unbekannt."
+			},
+			"webrtcConnected": {
+				"label": "WebRTC verbunden",
+				"description": "Eine libp2p-Verbindung über WebRTC steht. Sie entsteht normalerweise, nachdem ein anderer Browser als Peer gefunden wurde."
+			}
+		},
+		"details": "Netzwerkdetails",
+		"peerCount": "{count, plural, one {# Peer} other {# Peers}}",
+		"connect": {
+			"heading": "Mit einem Relay verbinden",
+			"hint": "Wählen Sie einen aktuellen, vom Browser erreichbaren Relay, der über Aleph gefunden wurde.",
+			"discovering": "Suche Aleph-Relays und prüfe sie per Ping …",
+			"noAddresses": "Keine Relay-Adressen gefunden",
+			"loading": "Lädt …",
+			"refresh": "Aktualisieren",
+			"custom": "Eigene Multiadresse verwenden",
+			"discoveryFailed": "Die Relay-Suche über Aleph ist fehlgeschlagen: {reason}",
+			"discoveryUnavailable": "Relay-Suche nicht verfügbar",
+			"nonePinged": "Keine der {count} gefundenen Relay-Adressen hat auf einen libp2p-Ping geantwortet.",
+			"noDialable": "Es wurden keine aktuellen, vom Browser erreichbaren Relays gefunden.",
+			"refreshOrCustom": "Aktualisieren Sie die Suche oder geben Sie eine eigene Multiadresse ein.",
+			"enterAddress": "Geben Sie eine Multiadresse ein, um sich mit einem Peer zu verbinden.",
+			"mustStartWithSlash": "Eine Multiadresse muss mit „/“ beginnen.",
+			"invalid": "Ungültige Multiadresse: {reason}",
+			"needsPeerId": "Die Multiadresse muss eine Peer-ID enthalten, zum Beispiel am Ende „/p2p/<peer-id>“.",
+			"webrtcDisabled": "WebRTC ist ausgeschaltet. Verwenden Sie stattdessen eine Circuit-Relay-Multiadresse.",
+			"notInitialized": "P2P ist noch nicht gestartet.",
+			"pingNotInitialized": "Der P2P-Ping-Dienst ist noch nicht gestartet.",
+			"dialing": "Peer wird angewählt",
+			"handshake": "WebSocket wird geöffnet und der libp2p-Handshake abgeschlossen …",
+			"stable": "Verbindung stabil",
+			"stableDetail": "Die Verbindung blieb {seconds} Sekunden offen.",
+			"dropped": "Verbindung abgebrochen",
+			"droppedDetail": "Der Handshake gelang, aber die Gegenseite hat die Verbindung beim Einrichten von Relay oder Protokoll geschlossen.",
+			"nodeGone": "Der P2P-Knoten ist nicht mehr verfügbar.",
+			"connecting": "Verbinde …",
+			"connect": "Verbinden",
+			"toastConnected": "🔗 Verbunden mit {peer}",
+			"toastDropped": "⚠️ {peer} hat die Verbindung kurz nach dem Aufbau geschlossen"
 		}
 	}
 }

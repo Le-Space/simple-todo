@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { openSection } from './sections.mjs';
 
 import { test, expect } from '@playwright/test';
 import {
@@ -273,6 +274,8 @@ test.describe('Consent screen', () => {
 		await page.waitForTimeout(3000);
 		expect(await isConsentOpen(page)).toBe(false);
 
+		// The list's details live with the lists now, not beside the network.
+		await openSection(page, 'listen');
 		const sharedListDetails = page.getByTestId('shared-list-details');
 		await expect(sharedListDetails).toBeVisible({ timeout });
 		await sharedListDetails.getByText('Shared list', { exact: true }).click();

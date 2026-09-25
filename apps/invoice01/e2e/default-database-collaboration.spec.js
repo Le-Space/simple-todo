@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { passConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import { openSection } from './sections.mjs';
 
 const testUrl = '/';
 const collaborationTimeout = 90000;
@@ -72,6 +73,7 @@ async function openReadyApp(page) {
  * @param {string} text
  */
 async function addTodo(page, text) {
+	await openSection(page, 'aufgaben');
 	await getTodoInput(page).fill(text);
 	await page.getByRole('button', { name: 'Add TODO' }).click();
 	await expectTodo(page, text);
@@ -82,6 +84,7 @@ async function addTodo(page, text) {
  * @param {string} text
  */
 async function expectTodo(page, text) {
+	await openSection(page, 'aufgaben');
 	await expect(page.getByText(text, { exact: true })).toBeVisible({
 		timeout: collaborationTimeout
 	});
@@ -89,6 +92,7 @@ async function expectTodo(page, text) {
 
 /** @param {import('@playwright/test').Page} page */
 async function expectTodoRelayTooltip(page) {
+	await openSection(page, 'aufgaben');
 	await page.getByTestId('todo-relay-status').first().hover();
 	await expect(page.getByTestId('todo-relay-tooltip')).toBeVisible();
 	await expect(page.getByTestId('todo-relay-tooltip')).toContainText('Relay replication:');
@@ -101,6 +105,7 @@ async function expectTodoRelayTooltip(page) {
  * @param {string} text
  */
 async function expectTodoRelayPinned(page, text) {
+	await openSection(page, 'aufgaben');
 	const todoItem = page.getByTestId('todo-item').filter({
 		has: page.getByText(text, { exact: true })
 	});
@@ -155,6 +160,7 @@ async function expectWebRTCConnection(page, remotePeerId) {
 		)
 		.toBe(true);
 
+	await openSection(page, 'netzwerk');
 	const networkDetails = page.getByTestId('network-details');
 	if ((await networkDetails.getAttribute('open')) === null) {
 		await networkDetails.getByText('Network details', { exact: true }).click();
@@ -169,6 +175,7 @@ async function expectWebRTCConnection(page, remotePeerId) {
 
 /** @param {import('@playwright/test').Page} page */
 async function expectNetworkReady(page) {
+	await openSection(page, 'netzwerk');
 	const steps = page.getByTestId('p2p-status-step');
 	await expect(steps).toHaveCount(8);
 	await expect(page.locator('[data-testid="p2p-status-step"][data-status="complete"]')).toHaveCount(

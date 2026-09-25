@@ -44,6 +44,34 @@ export const uiMessages = {
 			listLink: {
 				rejected: 'The link names a list this page cannot open, so it starts with its own.',
 				openFailed: 'The list from the link could not be opened: {reason}'
+			},
+			identity: {
+				passkeyDid: 'Passkey DID',
+				copy: 'Copy',
+				copied: 'Copied ✓'
+			},
+			peers: {
+				title: 'Connected Peers',
+				empty: 'No peers connected yet.',
+				online: 'Online',
+				disconnect: 'Disconnect peer'
+			},
+			peerId: {
+				title: 'My Peer ID',
+				description: 'Share this ID with others to assign TODOs to you.',
+				loading: 'Loading...'
+			},
+			multiaddrs: {
+				title: 'My Multiaddresses',
+				hint: 'Copy an address to connect another browser directly.',
+				copyLabel: 'Copy multiaddress {index}',
+				copiedLive: 'Multiaddress copied to clipboard.',
+				waiting: 'Waiting for a dialable address…'
+			},
+			copy: {
+				title: 'Copy to clipboard',
+				copied: 'Copied!',
+				copiedToClipboard: 'Copied to clipboard!'
 			}
 		}
 	},
@@ -71,8 +99,37 @@ export const uiMessages = {
 				hintList: 'Mit dem Telefon scannen — öffnet diese Seite und diese Liste.'
 			},
 			listLink: {
-				rejected: 'Der Link nennt eine Liste, die diese Seite nicht öffnen kann; sie beginnt mit ihrer eigenen.',
+				rejected:
+					'Der Link nennt eine Liste, die diese Seite nicht öffnen kann; sie beginnt mit ihrer eigenen.',
 				openFailed: 'Die Liste aus dem Link ließ sich nicht öffnen: {reason}'
+			},
+			identity: {
+				passkeyDid: 'Passkey-DID',
+				copy: 'Kopieren',
+				copied: 'Kopiert ✓'
+			},
+			peers: {
+				title: 'Verbundene Peers',
+				empty: 'Noch keine Peers verbunden.',
+				online: 'Online',
+				disconnect: 'Verbindung zu diesem Peer trennen'
+			},
+			peerId: {
+				title: 'Meine Peer-ID',
+				description: 'Geben Sie diese ID weiter, damit andere Ihnen Aufgaben zuweisen können.',
+				loading: 'Wird geladen …'
+			},
+			multiaddrs: {
+				title: 'Meine Multiadressen',
+				hint: 'Kopieren Sie eine Adresse, um einen anderen Browser direkt zu verbinden.',
+				copyLabel: 'Multiadresse {index} kopieren',
+				copiedLive: 'Multiadresse in die Zwischenablage kopiert.',
+				waiting: 'Warte auf eine erreichbare Adresse …'
+			},
+			copy: {
+				title: 'In die Zwischenablage kopieren',
+				copied: 'Kopiert!',
+				copiedToClipboard: 'In die Zwischenablage kopiert!'
 			}
 		}
 	}

@@ -52,6 +52,7 @@
 		"identityAnonymous": "Continue without a passkey",
 		"identityAnonymousHint": "Use a random per-browser identity, exactly like the previous chapter.",
 		"identityLabelPlaceholder": "name for this passkey (e.g. Alice)",
+		"identityLabelHint": "Only a label for the passkey picker. Your identity comes from the key, not from this name — two people on this device may use the same one.",
 		"element": {
 			"checkHeading": "This browser, on this network",
 			"checking": "Checking what this network allows…",
@@ -104,7 +105,7 @@
 		"new": "New invoice",
 		"none": "No invoice yet. The first one opens this device's number series.",
 		"nextNumber": "Next number: {number}",
-		"needsList": "Open a list of your own before writing invoices.",
+		"needsList": "The shared list — the one with the three words — is writable by anyone who knows them. Your invoices and customer addresses would be open to all of them. A list of your own belongs to your identity: only you write to it, and you decide who may see it.",
 		"state": {
 			"draft": "Draft",
 			"issued": "Issued",
@@ -314,6 +315,232 @@
 			"giveWay": "Cancel and reissue",
 			"explain": "The invoice that went out first keeps its number, because somebody is already holding it. The later one is cancelled and reissued with the next free number — §31 Abs. 5 UStDV, rather than a quiet renumbering.",
 			"prepared": "The Storno and a copy are waiting as drafts. Both still have to be issued."
+		},
+		"needsListHeading": "Invoices need a list of your own",
+		"needsListAction": "Go to the lists",
+		"needsListHint": "Under “Lists” → “{action}”. The invoices then live in the same list as that list’s todos."
+	},
+	"sections": {
+		"label": "Sections",
+		"tab": {
+			"tasks": "Todos",
+			"invoices": "Invoices",
+			"lists": "Lists",
+			"network": "Network"
+		},
+		"lists": {
+			"waiting": "Your lists appear here once the app has started."
+		},
+		"list": {
+			"switch": "Switch list"
+		}
+	},
+	"lists": {
+		"create": {
+			"heading": "Create a private list",
+			"hint": "Only your identity can write to it. Share its address and grant other DIDs below.",
+			"namePlaceholder": "list name (optional)",
+			"submit": "Create private list",
+			"busy": "Creating…",
+			"created": "Created {name} — you are now writing to it.",
+			"share": "Share this address so others can open the list. They can read it right away; writing needs a grant below.",
+			"copy": "Copy",
+			"copied": "Copied"
+		},
+		"switcher": {
+			"heading": "Your lists",
+			"hint": "Kept in your own OrbitDB registry, so they come back after a reload and follow your passkey to another device.",
+			"unnamed": "unnamed list",
+			"role": {
+				"owner": "owner",
+				"guest": "guest"
+			},
+			"open": "open",
+			"forget": "Forget",
+			"forgetTitle": "Remove from this list of lists; the database itself is untouched"
+		},
+		"open": {
+			"heading": "Open a shared list by address",
+			"hint": "Paste the full OrbitDB address someone shared with you. You can read it right away — writing needs a permission grant from the owner.",
+			"submit": "Open list",
+			"busy": "Opening…"
+		},
+		"permissions": {
+			"heading": "Write permissions",
+			"hint": "DIDs allowed to write to this list. Only list admins (the creator) can grant or revoke.",
+			"you": "(you)",
+			"remove": "Remove",
+			"placeholder": "did:key:… of the identity to allow",
+			"add": "Add DID",
+			"grantFailed": "Grant failed: {reason}",
+			"revokeFailed": "Revoke failed: {reason}"
+		},
+		"active": {
+			"shared": "Shared list",
+			"private": "Private list",
+			"guest": "Opened list",
+			"writingTo": "You are writing to {name}. The mnemonic below still refers to the public shared list.",
+			"mnemonicLabel": "Public mnemonic / OrbitDB database name",
+			"copy": "Copy",
+			"copied": "Copied!",
+			"addressLabel": "OrbitDB address",
+			"anyone": "Anyone who knows this share code can open the same public database and edit it once connected.",
+			"replication": "The mnemonic selects the same database. Live replication also requires a connection to another browser peer.",
+			"openAnother": "Open another shared list"
+		}
+	},
+	"header": {
+		"backToTodos": "Back to the todos",
+		"tagline": "A local-first peer-to-peer PWA"
+	},
+	"todo": {
+		"form": {
+			"heading": "Add New TODO",
+			"placeholder": "What needs to be done?",
+			"submit": "Add TODO",
+			"delegateToggle": "Delegate this todo to another DID",
+			"delegateDid": "Delegate DID",
+			"delegateDidPlaceholder": "did:key:… of the person who may complete it",
+			"expiry": "Delegation expires at",
+			"optional": "(optional)",
+			"delegateHint": "The delegate does not get write access to the list. They may only complete or rename this one todo, and you can revoke that at any time."
+		},
+		"item": {
+			"toggle": "Toggle completion",
+			"toggleNotAllowed": "Only the owner or the delegate of this todo can complete it",
+			"save": "Save",
+			"cancel": "Cancel",
+			"assignedTo": "Assigned to:",
+			"unassigned": "Unassigned",
+			"createdBy": "Created by:",
+			"delegatedTo": "Delegated to {did}",
+			"delegatedToYou": "Delegated to you by {did}",
+			"completedBy": "Completed by {did}",
+			"lastChangedBy": "Last changed by delegate: {did}",
+			"until": "until {date}",
+			"status": {
+				"active": "active",
+				"revoked": "revoked",
+				"expired": "expired"
+			},
+			"rename": "Rename",
+			"delegate": "Delegate",
+			"redelegate": "Re-delegate",
+			"revoke": "Revoke",
+			"delete": "Delete",
+			"delegatePlaceholder": "did:key:… of the delegate",
+			"expiryTitle": "Expires at (optional)",
+			"replication": {
+				"label": "Relay replication:",
+				"pending": "Waiting for this OrbitDB entry to be replicated by the relay.",
+				"pinned": "The relay confirmed that this exact OrbitDB entry was replicated and stored locally.",
+				"unavailable": "No exact relay replication proof is currently available for this entry.",
+				"unknown": "Relay replication status was not observed for this existing entry."
+			}
+		},
+		"list": {
+			"title": "TODO Items",
+			"empty": "No TODOs yet. Add one above!"
+		},
+		"toast": {
+			"added": "✅ Todo added successfully!",
+			"addedDelegated": "✅ Todo added and delegated!",
+			"addFailed": "Failed to add todo",
+			"deleted": "🗑️ Todo deleted successfully!",
+			"deleteFailed": "❌ Failed to delete todo",
+			"statusUpdated": "✅ Todo status updated!",
+			"updateFailed": "Failed to update todo",
+			"renamed": "✅ Todo renamed!",
+			"renameFailed": "Failed to rename todo",
+			"delegated": "🤝 Todo delegated!",
+			"delegateFailed": "Failed to delegate todo",
+			"revoked": "↩️ Delegation revoked",
+			"revokeFailed": "Failed to revoke delegation"
+		}
+	},
+	"network": {
+		"navLabel": "P2P initialization and connection status",
+		"status": {
+			"ready": "P2P network ready",
+			"connectingRelay": "Connecting to relay",
+			"waitingWebrtc": "Waiting for WebRTC connection",
+			"failed": "Failed to initialize {step}",
+			"initializing": "Initializing {step}",
+			"preparing": "Preparing P2P network"
+		},
+		"step": {
+			"networkConfig": {
+				"label": "Network config",
+				"description": "Validates the configured browser-reachable relay addresses and prepares the libp2p transports and services."
+			},
+			"libp2p": {
+				"label": "libp2p",
+				"description": "Creates and starts the libp2p node, including its peer identity, discovery, relay, WebSocket and WebRTC support."
+			},
+			"helia": {
+				"label": "Helia",
+				"description": "Starts the Helia IPFS node on top of libp2p and enables block exchange and HTTP retrieval."
+			},
+			"orbitdb": {
+				"label": "OrbitDB",
+				"description": "Loads or creates the persistent OrbitDB identity and initializes OrbitDB using the Helia node."
+			},
+			"databaseSync": {
+				"label": "Database + sync",
+				"description": "Opens the shared todo database, loads its local operation log and starts OrbitDB pubsub synchronization."
+			},
+			"localTodos": {
+				"label": "Local todos",
+				"description": "Connects the local todo store and starts hydrating it from OrbitDB in the background without blocking the application."
+			},
+			"relayConnected": {
+				"label": "Relay connected",
+				"description": "A live WebSocket connection to a relay/bootstrap peer is available for discovery, pubsub and circuit relay traffic.",
+				"none": "No relay is connected yet.",
+				"noOrigin": "No HTTPS health URL can be derived from the connected relay address.",
+				"loading": "Reading the OrbitDB relay version from {origin}/health…",
+				"verifiedVersion": "OrbitDB relay version {version}; health and peer ID verified at {origin}/health.",
+				"verified": "Health and peer ID verified at {origin}/health. This relay does not expose its OrbitDB relay version.",
+				"unverified": "{origin}/health could not be verified, so its OrbitDB relay version is unavailable."
+			},
+			"webrtcConnected": {
+				"label": "WebRTC connected",
+				"description": "A live libp2p connection using WebRTC is available. This normally appears after another browser peer has been discovered."
+			}
+		},
+		"details": "Network details",
+		"peerCount": "{count, plural, one {# peer} other {# peers}}",
+		"connect": {
+			"heading": "Connect to relay",
+			"hint": "Choose a current browser-reachable relay discovered through Aleph.",
+			"discovering": "Discovering and pinging Aleph relays…",
+			"noAddresses": "No relay addresses discovered",
+			"loading": "Loading…",
+			"refresh": "Refresh",
+			"custom": "Use a custom multiaddress",
+			"discoveryFailed": "Aleph relay discovery failed: {reason}",
+			"discoveryUnavailable": "Relay discovery unavailable",
+			"nonePinged": "None of the {count} discovered relay addresses answered a libp2p ping.",
+			"noDialable": "No current browser-dialable relays were found.",
+			"refreshOrCustom": "Refresh or enter a custom multiaddress.",
+			"enterAddress": "Enter a multiaddress to connect to a peer.",
+			"mustStartWithSlash": "A multiaddress must start with \"/\".",
+			"invalid": "Invalid multiaddress: {reason}",
+			"needsPeerId": "The multiaddress must include a peer id, for example ending with \"/p2p/<peer-id>\".",
+			"webrtcDisabled": "WebRTC is disabled. Use a relay circuit multiaddress instead.",
+			"notInitialized": "P2P is not initialized yet.",
+			"pingNotInitialized": "P2P ping service is not initialized yet.",
+			"dialing": "Dialing peer",
+			"handshake": "Opening the websocket and completing the libp2p handshake...",
+			"stable": "Connection stable",
+			"stableDetail": "Connection stayed open for {seconds} seconds.",
+			"dropped": "Connection dropped",
+			"droppedDetail": "Handshake succeeded, but the remote peer closed the connection during relay or protocol setup.",
+			"nodeGone": "P2P node is no longer available.",
+			"connecting": "Connecting...",
+			"connect": "Connect",
+			"toastConnected": "🔗 Connected to {peer}",
+			"toastDropped": "⚠️ {peer} closed the connection shortly after connect"
 		}
 	}
 }

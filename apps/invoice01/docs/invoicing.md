@@ -187,11 +187,11 @@ invoice number, which is what makes a payment matchable when it arrives.
 A Storno carries none: it owes money the other way, and no credit transfer can
 express that.
 
-Amounts are printed without the euro sign. The PDF does not embed its font, so
-a viewer substitutes its own Helvetica, and where that one's euro glyph is
-narrower than the metrics promise, everything after it shifts left — a rendered
-page read "1.190,00 €bis zum 02.10.2026". The document names the currency in its
-headings instead, as the template it follows does.
+The PDF carries its own font. A subset of DejaVu Sans is embedded, so the euro
+sign, and a customer whose name leaves Latin-1, are drawn rather than left to
+whatever the viewer substitutes. Before that, a substituted Helvetica whose euro
+advance differs from the metrics shifted everything after it: a rendered page
+read "1.190,00 €bis zum 02.10.2026".
 
 ## The head, and where the delivery date went
 
@@ -206,8 +206,8 @@ than left to the line descriptions.
 
 Amounts in the table stay plain and the note names the currency once, as the
 template does; the sum carries the euro sign, because that is the figure
-somebody looks for. The sign is drawn as its own positioned run — see
-`money.js` for why the font makes that necessary.
+somebody looks for. Where no font could be embedded, the sign falls back to its
+own positioned run, so the rest of the line stays where it belongs.
 
 ## When one number goes out twice
 
@@ -250,10 +250,9 @@ named with their VAT id). Each carries the sentence it is obliged to carry.
   business must be able to _receive_ a structured e-invoice; the duty to _issue_
   one is phased in afterwards. `money.js` already computes to EN 16931's rules,
   so the data is ready when the export is written.
-- **No customer directory.** Every invoice carries its own copy of the address.
-  A directory is personal data, and what a replicated log can and cannot forget
-  deserves its own stage rather than a footnote.
 - **No payment matching**, and nothing is sent anywhere.
+- **Todos do not become invoice lines.** Both live in the same list, but a todo
+  carries no hours and no rate, so an invoice is typed rather than collected.
 
 ## Retention, and what cannot be deleted
 
@@ -270,7 +269,7 @@ it. A draft can be deleted, because nothing obliges anyone to keep it.
 And the honest limit: this is an append-only log replicated to every device that
 has the list. What is written stays written, on every replica. That is what makes
 it good evidence and what makes deletion impossible; both halves are true, and
-the second one is the reason the customer directory is not in this chapter yet.
+the second one is why the directory's "delete" hides an entry and says so.
 
 ## Where it lives
 

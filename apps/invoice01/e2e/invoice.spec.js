@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { passConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import { addVirtualAuthenticator } from '@simple-todo/e2e-kit/webauthn.mjs';
+import { openSection } from './sections.mjs';
 
 /**
  * Writing an invoice, from an empty list to a PDF.
@@ -25,7 +26,7 @@ test.describe('Invoices', () => {
 		await addVirtualAuthenticator(page);
 		await openReadyApp(page);
 		await openPrivateList(page);
-		await page.getByTestId('section-invoices').click();
+		await openSection(page, 'rechnungen');
 
 		// Nothing yet, and the reason is stated rather than implied.
 		await expect(page.getByTestId('invoice-empty')).toBeVisible({ timeout });
@@ -87,7 +88,7 @@ test.describe('Invoices', () => {
 		await addVirtualAuthenticator(page);
 		await openReadyApp(page);
 		await openPrivateList(page);
-		await page.getByTestId('section-invoices').click();
+		await openSection(page, 'rechnungen');
 		await fillIssuer(page);
 
 		await page.getByTestId('invoice-new').click();
@@ -124,6 +125,9 @@ async function openReadyApp(page) {
 
 /** Invoices need a list this identity owns; the shared list is everyone's. */
 async function openPrivateList(page) {
+	// The lists live behind their own tab now, and a hidden section is not
+	// something anybody — or Playwright — can type into.
+	await openSection(page, 'listen');
 	await page.getByTestId('new-list-name').fill(`invoices-${Date.now().toString(36)}`);
 	await page.getByTestId('new-list-create').click();
 	await expect(page.getByTestId('permissions-panel')).toBeVisible({ timeout });
@@ -156,7 +160,7 @@ test.describe('Settings', () => {
 		await addVirtualAuthenticator(page);
 		await openReadyApp(page);
 		await openPrivateList(page);
-		await page.getByTestId('section-invoices').click();
+		await openSection(page, 'rechnungen');
 		await fillIssuer(page);
 
 		// What migrating from another program looks like: the pattern that
@@ -182,7 +186,7 @@ test.describe('Settings', () => {
 		await addVirtualAuthenticator(page);
 		await openReadyApp(page);
 		await openPrivateList(page);
-		await page.getByTestId('section-invoices').click();
+		await openSection(page, 'rechnungen');
 
 		await page.getByTestId('invoice-settings-open').click();
 		// Restarts every year, and carries no year: RE-001 in 2026 and again in
@@ -200,7 +204,7 @@ test.describe('The template', () => {
 		await addVirtualAuthenticator(page);
 		await openReadyApp(page);
 		await openPrivateList(page);
-		await page.getByTestId('section-invoices').click();
+		await openSection(page, 'rechnungen');
 		await fillIssuer(page);
 
 		await page.getByTestId('invoice-template-open').click();
@@ -246,7 +250,7 @@ test.describe('The customer directory', () => {
 		await addVirtualAuthenticator(page);
 		await openReadyApp(page);
 		await openPrivateList(page);
-		await page.getByTestId('section-invoices').click();
+		await openSection(page, 'rechnungen');
 		await fillIssuer(page);
 
 		// Write one invoice, and keep the customer while writing it.

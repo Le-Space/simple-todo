@@ -3,6 +3,7 @@
 	import { writable } from 'svelte/store';
 	import { formatPeerId } from '@simple-todo/todo/utils.js';
 	import TransportBadge from './TransportBadge.svelte';
+	import { t } from './i18n.js';
 
 	/**
 	 * @typedef {{ peerId: string, transports: string[] }} PeerEntry
@@ -17,8 +18,10 @@
 	// Plugin interface - only needs libp2p instance
 	/** @type {any} */
 	export let libp2p = null;
-	export let title = 'Connected Peers';
-	export let emptyMessage = 'No peers connected yet.';
+	/** @type {string | null} */
+	export let title = null;
+	/** @type {string | null} */
+	export let emptyMessage = null;
 	export let showOnlineIndicator = true;
 	export let autoConnect = true;
 	export let compact = false;
@@ -421,7 +424,7 @@
 		class:text-sm={compact}
 		class="font-semibold"
 	>
-		{title} ({$peers.length})
+		{title ?? $t('ui.peers.title', 'Connected Peers')} ({$peers.length})
 	</h2>
 	{#if $peers.length > 0}
 		<div
@@ -438,9 +441,12 @@
 					data-peer-id={peer.peerId}
 				>
 					{#if showOnlineIndicator}
-						<div class="h-2 w-2 rounded-full bg-identity-500" title="Online"></div>
+						<div
+							class="bg-identity-500 h-2 w-2 rounded-full"
+							title={$t('ui.peers.online', 'Online')}
+						></div>
 					{/if}
-					<code class="min-w-0 truncate rounded bg-surface-2 px-2 py-1 text-xs" title={peer.peerId}
+					<code class="bg-surface-2 min-w-0 truncate rounded px-2 py-1 text-xs" title={peer.peerId}
 						>{formatPeerId(peer.peerId)}</code
 					>
 					{#each peer.transports as transport (transport)}
@@ -450,8 +456,8 @@
 					<!-- Optional: Add action buttons -->
 					<button
 						on:click={() => disconnectPeer(peer.peerId)}
-						class="text-xs text-danger-600 hover:text-danger-800"
-						title="Disconnect peer"
+						class="text-danger-600 hover:text-danger-800 text-xs"
+						title={$t('ui.peers.disconnect', 'Disconnect peer')}
 					>
 						✕
 					</button>
@@ -459,6 +465,8 @@
 			{/each}
 		</div>
 	{:else}
-		<p class:h-28={compact} class="text-xs text-faint">{emptyMessage}</p>
+		<p class:h-28={compact} class="text-faint text-xs">
+			{emptyMessage ?? $t('ui.peers.empty', 'No peers connected yet.')}
+		</p>
 	{/if}
 </div>
