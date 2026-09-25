@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { openPublicList } from './public-list.mjs';
 import { acceptNotice, consentModal, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
 
 // Chapter (passkey01): Alice and Bob each register a WebAuthn passkey in
@@ -105,6 +106,9 @@ async function openReadyAppWithNewPasskey(page, { label }) {
 		() => document.querySelector('[data-testid="consent-modal"]')?.isOpen !== true
 	);
 	await expectAppReady(page);
+	// Both browsers start in a list of their own now, so the list they share is
+	// one they open — where a person opens it.
+	await openPublicList(page, sharedMnemonic, { timeout: collaborationTimeout });
 }
 
 /** @param {import('@playwright/test').Page} page */
@@ -128,7 +132,6 @@ async function fillConsentModal(page) {
 	// authenticator instead; `passkey-restore.spec.js` covers that path (#9).
 	await page.getByTestId('storage-mode-indexeddb').check();
 
-	await consentModal(page).getByTestId('shared-list-mnemonic-input').fill(sharedMnemonic);
 	// Ticked here rather than at the click, so this helper still hands back a
 	// dialog its callers can leave whenever they choose to.
 	await acceptNotice(page);

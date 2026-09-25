@@ -10,6 +10,7 @@ import {
 } from './delegation.js';
 import { confirmDelegatedWrite } from './delegated-write-auth.js';
 import { rememberList, listRegistryStore, openListRegistry } from './list-registry.js';
+import { recall, remember } from '@simple-todo/todo/browser-memory.js';
 import { foldCancellations, isInvoiceKey } from './invoice/records.js';
 import { isInvoiceSettingsKey } from './invoice/settings.js';
 import { isCustomerKey } from './invoice/customers.js';
@@ -162,17 +163,66 @@ function setActiveTodoDatabase(todoDB, meta) {
 	const address = getDatabaseAddress(todoDB);
 	todoDBStore.set(todoDB);
 	todoDBAddressStore.set(address);
-	if (meta) activeListStore.set({ kind: meta.kind, name: meta.name ?? '', address });
+	if (!meta) return;
+	const list = { kind: meta.kind, name: meta.name ?? '', address };
+	activeListStore.set(list);
+	rememberActiveList(list);
+}
+
+/**
+ * Where the open list is kept between visits.
+ *
+ * The address bar already carries it (`#db=…`), which is why a reload finds
+ * its way back — but a bookmark, a fresh tab or the domain typed by hand do
+ * not, and those used to land on the public three-word list rather than on the
+ * list somebody was working in.
+ *
+ * Through `remember`, so the storage choice decides: a session that keeps
+ * nothing keeps this either, and starts a list of its own next time.
+ */
+export const ACTIVE_LIST_KEY = 'simpleTodo.activeList';
+
+/** @param {ActiveList} list */
+function rememberActiveList(list) {
+	if (!list.address) return;
+	try {
+		remember(ACTIVE_LIST_KEY, JSON.stringify(list));
+	} catch {
+		// A browser that cannot remember opens a new list next time, which is
+		// survivable; failing the write here would take the current one down.
+	}
+}
+
+/**
+ * The list this browser had open when it was last here, if it kept anything.
+ *
+ * @returns {ActiveList | null}
+ */
+export function recallActiveList() {
+	try {
+		const raw = recall(ACTIVE_LIST_KEY);
+		if (!raw) return null;
+		const list = JSON.parse(raw);
+		return typeof list?.address === 'string' && list.address.startsWith('/orbitdb/') ? list : null;
+	} catch {
+		return null;
+	}
 }
 
 // Initialize database and load existing todos
 /**
  * @param {any} orbitdb
  * @param {TodoDatabase} todoDB
+ * @param {{ kind?: 'shared' | 'private' | 'guest', name?: string }} [meta] what
+ *   was opened. Defaults to the public three-word list, which is what the
+ *   earlier chapters open and what a `#list=…` link asks for.
  */
-export async function initializeDatabase(orbitdb, todoDB) {
+export async function initializeDatabase(orbitdb, todoDB, meta = {}) {
 	orbitdbStore.set(orbitdb);
-	setActiveTodoDatabase(todoDB, { kind: 'shared', name: todoDB?.name ?? '' });
+	setActiveTodoDatabase(todoDB, {
+		kind: meta.kind ?? 'shared',
+		name: meta.name ?? todoDB?.name ?? ''
+	});
 
 	// OrbitDB's non-indexed keyvalue.all() traverses the complete append-only
 	// history. Hydrate the UI in the background instead of blocking app startup.

@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { passConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import { openSection } from './sections.mjs';
+import { openPublicList } from './public-list.mjs';
 
 const testUrl = '/';
 const collaborationTimeout = 90000;
@@ -63,9 +64,13 @@ test.describe('Default todo database collaboration', () => {
 async function openReadyApp(page) {
 	await page.goto(testUrl);
 
-	await passConsent(page, { mnemonic: sharedMnemonic });
+	await passConsent(page);
 	await expect(getTodoInput(page)).toBeVisible();
 	await expect(getTodoInput(page)).toBeEnabled({ timeout: collaborationTimeout });
+	// This chapter starts every browser in a list of its own, so two of them
+	// meet on the public list only if somebody opens it — which is what the
+	// lists tab is for.
+	await openPublicList(page, sharedMnemonic, { timeout: collaborationTimeout });
 }
 
 /**

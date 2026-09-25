@@ -10,7 +10,7 @@
 		"warningHeading": "Early days",
 		"warningBody": "This is a working demonstration rather than a finished product. It does what it says, and the format may still change - so keep anything you would be sorry to lose somewhere else as well.",
 		"accept": "I have read this and accept it",
-		"proceed": "Open shared list",
+		"proceed": "Get started",
 		"proceedDisabled": "Enter three Spanish words to continue",
 		"proceedNeedsAccept": "Confirm the notice first",
 		"remember": "Don't show this again on this device",
@@ -388,6 +388,12 @@
 			"anyone": "Anyone who knows this share code can open the same public database and edit it once connected.",
 			"replication": "The mnemonic selects the same database. Live replication also requires a connection to another browser peer.",
 			"openAnother": "Open another shared list"
+		},
+		"public": {
+			"heading": "Open a public list",
+			"hint": "Three Spanish words instead of an address. Anyone who knows them may read the list and write to it — which is why invoices and customer addresses do not belong there.",
+			"submit": "Open",
+			"busy": "Opening …"
 		}
 	},
 	"header": {

@@ -50,22 +50,18 @@ test.describe('Consent screen', () => {
 		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 	});
 
-	test('names the requirement that is actually holding the button', async ({ page }) => {
-		// One label for two blockers sent people to a field that was already
-		// filled: the mnemonic arrives generated and valid, so what holds the
-		// button is the tick further down.
+	test('names the one requirement that is holding the button', async ({ page }) => {
+		// There used to be two: an invalid mnemonic and the tick. The three words
+		// moved to the lists tab, where opening a public list is a deliberate act,
+		// so the tick is all that holds this button — and the label says so.
 		await page.goto('/');
 		await waitForConsent(page);
 
 		const proceed = page.getByTestId('consent-proceed');
 		await expect(proceed).toHaveText('Confirm the notice first');
 
-		await page.getByTestId('shared-list-mnemonic-input').fill('not a mnemonic at all');
-		await expect(proceed).toHaveText('Enter three Spanish words to continue');
-
-		await page.getByTestId('shared-list-mnemonic-input').fill('brisa-arena-sal');
 		await acceptNotice(page);
-		await expect(proceed).toHaveText('Open shared list');
+		await expect(proceed).toHaveText('Get started');
 		await expect(proceed).toBeEnabled();
 	});
 
@@ -267,26 +263,29 @@ test.describe('Consent screen', () => {
 		// things: in memory mode nothing survives the reload by design (#9).
 		await passConsent(page, { remember: true, persistent: true });
 
-		const savedMnemonic = await page.evaluate(() =>
-			localStorage.getItem('simpleTodo.sharedListMnemonic.v1')
-		);
-		expect(savedMnemonic).toMatch(/^.+-.+-.+$/);
-
 		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
-		await page.reload();
+
+		// The list this visit started, so the reload can be held against it. It is
+		// a list of this browser's own now, not the public one everybody lands in.
+		await openSection(page, 'listen');
+		const address = await page.getByTestId('active-database-address').textContent();
+		expect(address).toMatch(/^\/orbitdb\//);
+
+		// Not `reload()`: that keeps the fragment, and the fragment carries the
+		// open list. Coming back to the bare address is what a bookmark does.
+		await page.goto('/');
 
 		// The dialog is asked, not measured: the host is 0x0 once it upgrades.
 		await page.waitForTimeout(3000);
 		expect(await isConsentOpen(page)).toBe(false);
+		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 
-		// The list's details live with the lists now, not beside the network.
+		// Same list, with nothing in the address bar saying so: what is remembered
+		// is the decision *and* the list it was made in.
 		await openSection(page, 'listen');
-		const sharedListDetails = page.getByTestId('shared-list-details');
-		await expect(sharedListDetails).toBeVisible({ timeout });
-		await sharedListDetails.getByText('Shared list', { exact: true }).click();
-		await expect(sharedListDetails.getByTestId('active-shared-list-name')).toHaveText(
-			savedMnemonic ?? ''
-		);
+		await expect(page.getByTestId('active-database-address')).toHaveText(address ?? '', {
+			timeout
+		});
 
 		await page.evaluate(() => localStorage.clear());
 	});

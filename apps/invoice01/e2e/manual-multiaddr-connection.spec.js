@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { passConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import { openSection } from './sections.mjs';
+import { openPublicList } from './public-list.mjs';
 
 const testUrl = '/';
 const connectionTimeout = 90000;
@@ -91,10 +92,12 @@ test.describe('Manual browser connection using a copied own multiaddress', () =>
 /** @param {import('@playwright/test').Page} page */
 async function openReadyApp(page) {
 	await page.goto(testUrl);
-	await passConsent(page, { mnemonic: sharedMnemonic });
+	await passConsent(page);
 	await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({
 		timeout: connectionTimeout
 	});
+	// Both browsers on the same public list, opened where a person opens it.
+	await openPublicList(page, sharedMnemonic, { timeout: connectionTimeout });
 }
 
 /** @param {import('@playwright/test').Page} page */
