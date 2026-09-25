@@ -16,6 +16,7 @@ import { isCustomerKey } from './invoice/customers.js';
 import { customersStore, invoicesStore, invoiceSettingsStore } from './invoice/store.js';
 import { relayHttpStatusStore } from '@simple-todo/net/relay-status.js';
 import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
+import { generateSpanishMnemonic } from '@simple-todo/todo/spanish-mnemonic.js';
 
 /**
  * @typedef {{
@@ -267,8 +268,16 @@ export async function createPrivateTodoList(name = 'private-todos') {
 	const orbitdb = get(orbitdbStore);
 	if (!orbitdb) throw new Error('OrbitDB is not initialized yet.');
 
+	/*
+		A list nobody names gets three Spanish words rather than "private-todos" —
+		the same words the shared list uses, but here they are a *name*, not a way
+		in. The address is the manifest's, and the manifest carries this identity's
+		access controller: somebody who guesses the words arrives at a different
+		address, and at nothing.
+	*/
+	const words = name.trim() || generateSpanishMnemonic();
 	const suffix = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-	const dbName = `${name.trim() || 'private-todos'}-${suffix}`;
+	const dbName = `${words}-${suffix}`;
 	const privateDB = await orbitdb.open(dbName, {
 		type: 'keyvalue',
 		create: true,
@@ -277,7 +286,7 @@ export async function createPrivateTodoList(name = 'private-todos') {
 		...(await createLogStorages())
 	});
 
-	const listName = name.trim() || 'private-todos';
+	const listName = words;
 	setActiveTodoDatabase(privateDB, { kind: 'private', name: listName });
 	setupDatabaseListeners(privateDB);
 	await loadTodos();
