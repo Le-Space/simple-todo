@@ -114,16 +114,23 @@ export async function rememberDecision(page) {
  */
 export async function passConsent(
 	page,
-	{ identity, label, mnemonic, persistent, relay, remember = false } = {}
+	{ identity = 'anonymous', label, mnemonic, persistent, relay, remember = false } = {}
 ) {
 	await waitForConsent(page);
 
 	if (mnemonic !== undefined) {
 		await page.getByTestId('shared-list-mnemonic-input').fill(mnemonic);
 	}
-	if (identity !== undefined) {
-		await page.getByTestId(`identity-mode-${identity}`).check();
-	}
+	/*
+		Pinned, not left to the app: chapters differ in what they preselect —
+		invoice01 starts on "create a passkey", because its invoice numbers hang
+		off the identity — and a spec that does not say which identity it wants
+		would otherwise follow whatever that chapter chose. Where the dialog then
+		asks for a passkey and the test has no virtual authenticator, the proceed
+		click fails and the wait at the end of this function sits there for the
+		test's whole budget. A spec that wants the chapter's own default says so.
+	*/
+	await page.getByTestId(`identity-mode-${identity}`).check();
 	if (label !== undefined) {
 		await page.getByTestId('passkey-label').fill(label);
 	}

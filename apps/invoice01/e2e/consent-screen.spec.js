@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { openSection } from './sections.mjs';
 
 import { test, expect } from '@playwright/test';
+import { addVirtualAuthenticator } from '@simple-todo/e2e-kit/webauthn.mjs';
 import {
 	acceptNotice,
 	consentModal,
@@ -32,6 +33,9 @@ const en = JSON.parse(
 
 test.describe('Consent screen', () => {
 	test('will not let you out until the statement is accepted', async ({ page }) => {
+		// The dialog now starts on "create a passkey", so the way out leads
+		// through WebAuthn.
+		await addVirtualAuthenticator(page);
 		await page.goto('/');
 		await waitForConsent(page);
 
@@ -173,7 +177,8 @@ test.describe('Consent screen', () => {
 		await waitForConsent(page);
 
 		const before = await clauses(page);
-		await page.getByTestId('identity-mode-create').check();
+		// Away from the default, which is "create a passkey" in this chapter.
+		await page.getByTestId('identity-mode-anonymous').check();
 		await expect
 			.poll(async () => (await clauses(page)).filter((c, i) => c !== before[i]).length)
 			.toBe(1);
