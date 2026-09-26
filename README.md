@@ -1,5 +1,7 @@
 # simple-todo
 
+[![Sponsor](https://img.shields.io/github/sponsors/Le-Space?label=Sponsor&logo=githubsponsors&color=EA4AAA)](https://github.com/sponsors/Le-Space)
+
 A peer-to-peer todo list that runs entirely in the browser — OrbitDB over libp2p,
 no server holding the data. The project is a tutorial: each chapter adds one idea
 to the one before it, and each chapter is a complete app you can run.
