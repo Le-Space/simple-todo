@@ -28,11 +28,11 @@ describe('the settings entry', () => {
 describe('normaliseInvoiceSettings', () => {
 	it('keeps what the list already holds', () => {
 		const stored = {
-			issuer: { name: 'Le Space UG', address: 'Eggenfelden' },
+			issuer: { name: 'Beispiel UG', address: 'Musterstadt' },
 			paymentTermsDays: 30
 		};
 		const settings = normaliseInvoiceSettings(stored, ALICE);
-		expect(settings.issuer.name).toBe('Le Space UG');
+		expect(settings.issuer.name).toBe('Beispiel UG');
 		expect(settings.paymentTermsDays).toBe(30);
 	});
 
@@ -40,7 +40,7 @@ describe('normaliseInvoiceSettings', () => {
 		// The issuer grew a bank, a register entry and crypto addresses after
 		// the first invoices were written. Reading those settings back must not
 		// produce an issuer without a bank.
-		const stored = { issuer: { name: 'Le Space UG', address: 'Eggenfelden' } };
+		const stored = { issuer: { name: 'Beispiel UG', address: 'Musterstadt' } };
 		const { issuer } = normaliseInvoiceSettings(stored, ALICE);
 		expect(issuer.bank).toEqual({ name: '', iban: '', bic: '' });
 		expect(issuer.register).toEqual({ court: '', number: '', managingDirector: '' });
@@ -49,7 +49,7 @@ describe('normaliseInvoiceSettings', () => {
 	});
 
 	it('keeps a bank somebody has already filled in', () => {
-		const stored = { issuer: { name: 'Le Space UG', bank: { iban: 'DE00 0000' } } };
+		const stored = { issuer: { name: 'Beispiel UG', bank: { iban: 'DE00 0000' } } };
 		const { issuer } = normaliseInvoiceSettings(stored, ALICE);
 		expect(issuer.bank.iban).toBe('DE00 0000');
 		expect(issuer.bank.bic).toBe('');

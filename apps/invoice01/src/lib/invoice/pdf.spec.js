@@ -13,23 +13,31 @@ const LABELS = documentLabels(
 );
 
 const ISSUER = {
-	name: 'Le Space UG (haftungsbeschränkt)',
-	address: 'Lichtenberg 44\n84307 Eggenfelden',
+	name: 'Beispiel UG (haftungsbeschränkt)',
+	address: 'Beispielallee 12\n12345 Musterstadt',
 	vatId: 'DE000000000',
 	taxNumber: '',
 	email: 'buchhaltung@example.org',
 	phone: '+49 000 0000',
 	web: 'https://example.org',
-	bank: { name: 'GLS Bank', iban: 'DE89370400440532013000', bic: 'GENODEM1GLS' },
+	bank: { name: 'Beispielbank', iban: 'DE89370400440532013000', bic: 'COBADEFFXXX' },
 	crypto: { btc: 'bc1qexample', eth: '' },
-	register: { court: 'Amtsgericht Leipzig', number: 'HRB 25885', managingDirector: 'Nico Krause' },
+	register: {
+		court: 'Amtsgericht Musterstadt',
+		number: 'HRB 100200',
+		managingDirector: 'Jonas Reuter'
+	},
 	logo: ''
 };
 
 const invoice = issue(
 	{
 		...emptyDraft({ issueDate: '2026-09-24' }),
-		customer: { name: 'Müller & Söhne GmbH', address: 'Kölner Straße 1\n50667 Köln', vatId: '' },
+		customer: {
+			name: 'Müller & Söhne GmbH',
+			address: 'Marktplatz 7\n12345 Musterstadt',
+			vatId: ''
+		},
 		lines: [
 			emptyLine({
 				description: 'Tagessatz — Beratung',

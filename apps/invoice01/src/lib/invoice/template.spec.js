@@ -40,8 +40,8 @@ describe('parseTemplate', () => {
 describe('fillPlaceholders', () => {
 	const context = {
 		nummer: '2026-48213-001',
-		kunde: { name: 'Webanizer AG' },
-		aussteller: { geschaeftsfuehrer: 'Nico Krause' }
+		kunde: { name: 'Beispiel AG' },
+		aussteller: { geschaeftsfuehrer: 'Jonas Reuter' }
 	};
 
 	it('fills in what it knows, in German or English spelling', () => {
@@ -49,7 +49,7 @@ describe('fillPlaceholders', () => {
 			'Rechnung {{nummer}} für {{kunde.name}}, {{ aussteller.geschaeftsfuehrer }}',
 			context
 		);
-		expect(text).toBe('Rechnung 2026-48213-001 für Webanizer AG, Nico Krause');
+		expect(text).toBe('Rechnung 2026-48213-001 für Beispiel AG, Jonas Reuter');
 	});
 
 	it('leaves a typo standing and reports it', () => {
@@ -71,16 +71,16 @@ describe('templateContext', () => {
 			totals: [{ label: 'Zu zahlender Betrag EUR', value: '1.190,00', due: true }]
 		};
 		const invoice = {
-			customer: { name: 'Webanizer AG', address: 'Schulgasse 5\n84359 Simbach', vatId: '' },
-			issuer: { name: 'Le Space UG', register: { managingDirector: 'Nico Krause' }, bank: {} }
+			customer: { name: 'Beispiel AG', address: 'Beispielweg 3\n12345 Musterstadt', vatId: '' },
+			issuer: { name: 'Beispiel UG', register: { managingDirector: 'Jonas Reuter' }, bank: {} }
 		};
 		const context = templateContext(model, invoice);
 		expect(context.nummer).toBe('2026-48213-001');
 		expect(context.number).toBe('2026-48213-001');
 		expect(context.betrag).toBe('1.190,00');
 		expect(context.faellig).toBe('08.10.2026');
-		expect(context.kunde.anschrift).toBe('Schulgasse 5, 84359 Simbach');
-		expect(context.aussteller.geschaeftsfuehrer).toBe('Nico Krause');
+		expect(context.kunde.anschrift).toBe('Beispielweg 3, 12345 Musterstadt');
+		expect(context.aussteller.geschaeftsfuehrer).toBe('Jonas Reuter');
 	});
 });
 
@@ -102,11 +102,11 @@ describe('renderBlock', () => {
 
 	it('keeps a line break somebody typed', () => {
 		// Strict Markdown would join these two, which turns "Mit freundlichen
-		// Grüßen / Nico Krause" into one line. Nobody writing a letter means that.
-		const lines = renderBlock('Mit freundlichen Grüßen\nNico Krause');
+		// Grüßen / Jonas Reuter" into one line. Nobody writing a letter means that.
+		const lines = renderBlock('Mit freundlichen Grüßen\nJonas Reuter');
 		expect(lines.map((item) => item.runs[0].text)).toEqual([
 			'Mit freundlichen Grüßen',
-			'Nico Krause'
+			'Jonas Reuter'
 		]);
 	});
 
