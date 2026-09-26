@@ -30,7 +30,7 @@ const invoice = (/** @type {any} */ values) => ({
 	issuedAt: values.issuedAt,
 	issueDate: '2026-09-24',
 	taxMode: 'standard',
-	customer: { name: values.customer ?? 'Webanizer AG', address: 'Lohmar', vatId: '' },
+	customer: { name: values.customer ?? 'Beispiel AG', address: 'Musterstadt', vatId: '' },
 	lines: [line],
 	...values
 });

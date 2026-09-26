@@ -13,8 +13,8 @@ import {
 } from './records.js';
 
 const ISSUER = {
-	name: 'Le Space UG (haftungsbeschränkt)',
-	address: 'Eggenfelden',
+	name: 'Beispiel UG (haftungsbeschränkt)',
+	address: 'Musterstadt',
 	vatId: 'DE000000000'
 };
 
@@ -24,7 +24,7 @@ const codes = (/** @type {{ code: string }[]} */ problems) => problems.map((p) =
 function readyDraft(/** @type {Partial<ReturnType<typeof emptyDraft>>} */ changes = {}) {
 	return {
 		...emptyDraft(),
-		customer: { name: 'Webanizer AG', address: 'Lohmar', vatId: '' },
+		customer: { name: 'Beispiel AG', address: 'Musterstadt', vatId: '' },
 		lines: [
 			emptyLine({ description: 'Tagessatz', quantity: 2, unit: 'Tage', unitPriceCents: 50_000 })
 		],
@@ -132,7 +132,7 @@ describe('issue', () => {
 		const draft = readyDraft();
 		const invoice = issue(draft, { number: '2026-48213-001', issuer: ISSUER, issuedBy: 'did' });
 		draft.customer.address = 'Somewhere else';
-		expect(invoice.customer.address).toBe('Lohmar');
+		expect(invoice.customer.address).toBe('Musterstadt');
 	});
 
 	it('carries the note its tax mode requires', () => {
@@ -179,7 +179,7 @@ describe('cancellationFor', () => {
 		expect(storno.cancels).toBe('2026-48213-001');
 		expect(storno.state).toBe('draft');
 		expect(storno.lines[0].quantity).toBe(-2);
-		expect(storno.customer.name).toBe('Webanizer AG');
+		expect(storno.customer.name).toBe('Beispiel AG');
 	});
 
 	it('cancels nothing that was never issued', () => {
