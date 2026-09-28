@@ -13,7 +13,7 @@ import {
 import { emptyDraft, emptyLine, issue } from './records.js';
 
 const directory = [
-	emptyCustomer({ id: 'c1', name: 'Webanizer AG', address: 'Lohmar', vatId: 'DE206862070' }),
+	emptyCustomer({ id: 'c1', name: 'Beispiel AG', address: 'Musterstadt', vatId: 'DE987654321' }),
 	emptyCustomer({ id: 'c2', name: 'Acme GmbH', address: 'Berlin', vatId: '' }),
 	emptyCustomer({ id: 'c3', name: 'Alt & Weg KG', address: 'Nirgendwo', deletedAt: '2026-01-01' })
 ];
@@ -40,7 +40,7 @@ describe('the directory', () => {
 	it('offers what is there, by name, and leaves out what was deleted', () => {
 		expect(activeCustomers(directory).map((customer) => customer.name)).toEqual([
 			'Acme GmbH',
-			'Webanizer AG'
+			'Beispiel AG'
 		]);
 	});
 
@@ -52,9 +52,9 @@ describe('the directory', () => {
 	});
 
 	it('finds by name, address or VAT id', () => {
-		expect(matchCustomers(directory, 'webanizer').map((c) => c.id)).toEqual(['c1']);
+		expect(matchCustomers(directory, 'beispiel').map((c) => c.id)).toEqual(['c1']);
 		expect(matchCustomers(directory, 'berlin').map((c) => c.id)).toEqual(['c2']);
-		expect(matchCustomers(directory, 'DE2068').map((c) => c.id)).toEqual(['c1']);
+		expect(matchCustomers(directory, 'DE9876').map((c) => c.id)).toEqual(['c1']);
 		expect(matchCustomers(directory, '   ').map((c) => c.id)).toEqual(['c2', 'c1']);
 		// A deleted entry stays out of the picker, whatever is typed.
 		expect(matchCustomers(directory, 'Alt')).toEqual([]);
@@ -65,9 +65,9 @@ describe('between the directory and the invoice', () => {
 	it('fills an invoice’s customer block from an entry', () => {
 		expect(invoiceCustomerFrom(directory[0])).toEqual({
 			number: '',
-			name: 'Webanizer AG',
-			address: 'Lohmar',
-			vatId: 'DE206862070'
+			name: 'Beispiel AG',
+			address: 'Musterstadt',
+			vatId: 'DE987654321'
 		});
 	});
 
@@ -95,12 +95,12 @@ describe('between the directory and the invoice', () => {
 			},
 			{
 				number: '2026-1-001',
-				issuer: { name: 'Le Space UG', address: 'Eggenfelden' },
+				issuer: { name: 'Beispiel UG', address: 'Musterstadt' },
 				issuedBy: 'did'
 			}
 		);
 		const moved = { ...directory[0], address: 'Köln' };
-		expect(invoice.customer.address).toBe('Lohmar');
+		expect(invoice.customer.address).toBe('Musterstadt');
 		expect(moved.address).toBe('Köln');
 	});
 });

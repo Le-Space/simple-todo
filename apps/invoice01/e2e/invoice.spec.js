@@ -39,7 +39,7 @@ test.describe('Invoices', () => {
 		expect(number).toMatch(/\d{4}-\d{5}-001/);
 
 		await page.getByTestId('invoice-customer-name').fill('Müller & Söhne GmbH');
-		await page.getByTestId('invoice-customer-address').fill('Kölner Straße 9\n50667 Köln');
+		await page.getByTestId('invoice-customer-address').fill('Marktplatz 7\n12345 Musterstadt');
 		await page.getByTestId('invoice-line-description').fill('Tagessatz Entwicklung');
 		await page.getByTestId('invoice-line-quantity').fill('2');
 		await page.getByTestId('invoice-line-price').fill('500,00');
@@ -139,15 +139,15 @@ async function openPrivateList(page) {
  */
 async function fillIssuer(page) {
 	await page.getByTestId('invoice-settings-open').click();
-	await page.getByTestId('issuer-name').fill('Le Space UG (haftungsbeschränkt)');
-	await page.getByTestId('issuer-address').fill('Pfarrkirchener Str. 12\n84307 Eggenfelden');
-	await page.getByTestId('issuer-vatid').fill('DE313937008');
-	await page.getByTestId('register-court').fill('Amtsgericht Leipzig');
-	await page.getByTestId('register-number').fill('HRB 25885');
-	await page.getByTestId('register-director').fill('Nico Krause');
+	await page.getByTestId('issuer-name').fill('Beispiel UG (haftungsbeschränkt)');
+	await page.getByTestId('issuer-address').fill('Beispielallee 12\n12345 Musterstadt');
+	await page.getByTestId('issuer-vatid').fill('DE123456789');
+	await page.getByTestId('register-court').fill('Amtsgericht Musterstadt');
+	await page.getByTestId('register-number').fill('HRB 100200');
+	await page.getByTestId('register-director').fill('Jonas Reuter');
 	await page.getByTestId('bank-name').fill('Beispielbank');
 	await page.getByTestId('bank-iban').fill('DE89370400440532013000');
-	await page.getByTestId('bank-bic').fill('GENODEM1GLS');
+	await page.getByTestId('bank-bic').fill('COBADEFFXXX');
 	await page.getByTestId('invoice-settings-save').click();
 	await expect(page.getByTestId('invoice-message')).toBeVisible({ timeout });
 }
@@ -255,9 +255,9 @@ test.describe('The customer directory', () => {
 
 		// Write one invoice, and keep the customer while writing it.
 		await page.getByTestId('invoice-new').click();
-		await page.getByTestId('invoice-customer-name').fill('Webanizer AG');
-		await page.getByTestId('invoice-customer-address').fill('Schulgasse 5\n84359 Simbach am Inn');
-		await page.getByTestId('invoice-customer-vatid').fill('DE206862070');
+		await page.getByTestId('invoice-customer-name').fill('Beispiel AG');
+		await page.getByTestId('invoice-customer-address').fill('Beispielweg 3\n12345 Musterstadt');
+		await page.getByTestId('invoice-customer-vatid').fill('DE987654321');
 		await page.getByTestId('invoice-customer-number').fill('1');
 		await page.getByTestId('invoice-customer-keep').click();
 		await expect(page.getByTestId('invoice-message')).toBeVisible({ timeout });
@@ -270,12 +270,12 @@ test.describe('The customer directory', () => {
 
 		// The next invoice takes the address from the directory.
 		await page.getByTestId('invoice-new').click();
-		await page.getByTestId('invoice-customer-pick').selectOption({ label: 'Webanizer AG' });
-		await expect(page.getByTestId('invoice-customer-name')).toHaveValue('Webanizer AG');
+		await page.getByTestId('invoice-customer-pick').selectOption({ label: 'Beispiel AG' });
+		await expect(page.getByTestId('invoice-customer-name')).toHaveValue('Beispiel AG');
 		// The customer number comes along; it is what the invoice prints in its head.
 		await expect(page.getByTestId('invoice-customer-number')).toHaveValue('1');
 		await expect(page.getByTestId('invoice-customer-address')).toHaveValue(
-			'Schulgasse 5\n84359 Simbach am Inn'
+			'Beispielweg 3\n12345 Musterstadt'
 		);
 		await page.getByTestId('invoice-save').click();
 

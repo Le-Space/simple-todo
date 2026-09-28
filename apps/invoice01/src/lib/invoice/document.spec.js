@@ -48,23 +48,27 @@ const LABELS = {
 };
 
 const ISSUER = {
-	name: 'Le Space UG',
-	address: 'Lichtenberg 44\n84307 Eggenfelden',
+	name: 'Beispiel UG',
+	address: 'Beispielallee 12\n12345 Musterstadt',
 	vatId: 'DE000000000',
 	taxNumber: '',
 	email: 'buchhaltung@example.org',
 	phone: '+49 000 000',
 	web: 'https://example.org',
-	bank: { name: 'GLS Bank', iban: 'DE89370400440532013000', bic: 'GENODEM1GLS' },
+	bank: { name: 'Beispielbank', iban: 'DE89370400440532013000', bic: 'COBADEFFXXX' },
 	crypto: { btc: 'bc1qexample', eth: '' },
-	register: { court: 'Amtsgericht Leipzig', number: 'HRB 25885', managingDirector: 'Nico Krause' },
+	register: {
+		court: 'Amtsgericht Musterstadt',
+		number: 'HRB 100200',
+		managingDirector: 'Jonas Reuter'
+	},
 	logo: ''
 };
 
 function issued(/** @type {any} */ changes = {}) {
 	const draft = {
 		...emptyDraft({ issueDate: '2026-09-24' }),
-		customer: { name: 'Webanizer AG', address: 'Schulgasse 5\n84359 Simbach am Inn', vatId: '' },
+		customer: { name: 'Beispiel AG', address: 'Beispielweg 3\n12345 Musterstadt', vatId: '' },
 		lines: [
 			emptyLine({ description: 'Tagessatz', quantity: 2, unit: 'Tage', unitPriceCents: 50_000 })
 		],
@@ -93,10 +97,10 @@ describe('dates', () => {
 describe('the header', () => {
 	it('names the issuer, the register entry and how to reach them', () => {
 		const { header } = documentModel(issued(), LABELS);
-		expect(header[0]).toEqual({ label: '', value: 'Le Space UG', strong: true });
+		expect(header[0]).toEqual({ label: '', value: 'Beispiel UG', strong: true });
 		expect(header).toContainEqual({
 			label: 'Handelsregister:',
-			value: 'Amtsgericht Leipzig, HRB 25885'
+			value: 'Amtsgericht Musterstadt, HRB 100200'
 		});
 		expect(header).toContainEqual({ label: 'USt.-IdNr.:', value: 'DE000000000' });
 		expect(header).toContainEqual({ label: 'Webseite:', value: 'https://example.org' });
@@ -110,8 +114,8 @@ describe('the header', () => {
 	it('splits an address into the lines it was typed as', () => {
 		// A stray newline reaches the PDF as a '?'.
 		const { recipient, sender } = documentModel(issued(), LABELS);
-		expect(recipient).toEqual(['Webanizer AG', 'Schulgasse 5', '84359 Simbach am Inn']);
-		expect(sender).toBe('Le Space UG · Lichtenberg 44 · 84307 Eggenfelden');
+		expect(recipient).toEqual(['Beispiel AG', 'Beispielweg 3', '12345 Musterstadt']);
+		expect(sender).toBe('Beispiel UG · Beispielallee 12 · 12345 Musterstadt');
 	});
 });
 
@@ -189,7 +193,7 @@ describe('the invoice itself', () => {
 
 	it('names the customer number where the customer has one', () => {
 		const withNumber = issued({
-			customer: { number: '1', name: 'Webanizer AG', address: 'Lohmar', vatId: '' }
+			customer: { number: '1', name: 'Beispiel AG', address: 'Musterstadt', vatId: '' }
 		});
 		expect(documentModel(withNumber, LABELS).meta).toContainEqual(['Kundennr.', '1']);
 		// And says nothing where they have none, rather than printing a blank.
@@ -256,8 +260,8 @@ describe('the footer', () => {
 	it('carries the three lines every page of the template carries', () => {
 		const { footer } = documentModel(issued(), LABELS);
 		const text = footer.map((line) => line.map((cell) => `${cell.label} ${cell.value}`.trim()));
-		expect(text[0]).toContain('Le Space UG');
-		expect(text[1]).toContain('Geschäftsführer: Nico Krause');
+		expect(text[0]).toContain('Beispiel UG');
+		expect(text[1]).toContain('Geschäftsführer: Jonas Reuter');
 		expect(text[2]).toContain('IBAN: DE89 3704 0044 0532 0130 00');
 	});
 

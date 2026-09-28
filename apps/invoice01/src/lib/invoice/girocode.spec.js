@@ -3,7 +3,7 @@ import { giroCodePayload, remittanceFor } from './girocode.js';
 
 const transfer = {
 	iban: 'DE89 3704 0044 0532 0130 00',
-	name: 'Le Space UG (haftungsbeschränkt)',
+	name: 'Beispiel UG (haftungsbeschränkt)',
 	bic: 'COBADEFFXXX',
 	amountCents: 119_000,
 	reference: 'Rechnung 2026-48213-001'
@@ -15,7 +15,7 @@ describe('giroCodePayload', () => {
 		expect(lines).toHaveLength(12);
 		expect(lines.slice(0, 4)).toEqual(['BCD', '002', '1', 'SCT']);
 		expect(lines[4]).toBe('COBADEFFXXX');
-		expect(lines[5]).toBe('Le Space UG (haftungsbeschränkt)');
+		expect(lines[5]).toBe('Beispiel UG (haftungsbeschränkt)');
 		expect(lines[6]).toBe('DE89370400440532013000');
 		expect(lines[7]).toBe('EUR1190.00');
 		expect(lines[10]).toBe('Rechnung 2026-48213-001');

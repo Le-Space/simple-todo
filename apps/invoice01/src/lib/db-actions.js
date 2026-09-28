@@ -239,6 +239,42 @@ export async function initializeDatabase(orbitdb, todoDB, meta = {}) {
 }
 
 /**
+ * The relay's HTTP origin, once there is one.
+ *
+ * A list is made seconds after the app starts, and the origin is not known
+ * then: `P2PStatusNav` writes it only after libp2p has a connection to the
+ * relay, which in a measured local run happened at 2.4 s — while the list was
+ * created at 1.1 s. So the first version of this handoff read an empty origin
+ * and returned without telling anybody, every single time. The call was right;
+ * its timing was not.
+ *
+ * Waits rather than gives up, and only for as long as somebody might still
+ * share the list in this session. A relay that never arrives costs nothing but
+ * this promise.
+ *
+ * @param {number} [limitMs]
+ * @returns {Promise<string>} the origin, or '' when none appeared in time
+ */
+function waitForRelayOrigin(limitMs = 30_000) {
+	const { origin } = get(relayHttpStatusStore);
+	if (origin) return Promise.resolve(origin);
+	return new Promise((resolve) => {
+		const stop = setTimeout(() => {
+			unsubscribe();
+			resolve('');
+		}, limitMs);
+		const unsubscribe = relayHttpStatusStore.subscribe((status) => {
+			if (!status?.origin) return;
+			clearTimeout(stop);
+			// `subscribe` calls back before it returns, so `unsubscribe` may not
+			// exist yet; the microtask is what makes both paths the same.
+			queueMicrotask(() => unsubscribe());
+			resolve(status.origin);
+		});
+	});
+}
+
+/**
  * Hand a list to the relay, so somebody else can find it.
  *
  * Opening a list somebody sent you fetches its manifest over bitswap, from a
@@ -261,8 +297,15 @@ export async function initializeDatabase(orbitdb, todoDB, meta = {}) {
  * @param {string} address
  */
 async function tellRelayAboutList(address) {
-	const { origin } = get(relayHttpStatusStore);
-	if (!origin || !address) return;
+	if (!address) return;
+	const origin = await waitForRelayOrigin();
+	if (!origin) {
+		console.info(
+			'No relay heard about the list; others can still open it if they meet you:',
+			address
+		);
+		return;
+	}
 	try {
 		const response = await fetch(`${origin}/pinning/sync`, {
 			method: 'POST',
