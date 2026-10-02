@@ -3,14 +3,15 @@
 This chapter says the passkey is the wallet. That is true, and it hides something: once you look,
 "the passkey" is four different keys. One lives in the authenticator. One is derived from it. One is
 created and thrown away in the same minute. And one is neither derived nor held in hardware — an
-ordinary random key that sits in this browser's `localStorage`.
+ordinary random key, which this browser keeps in `localStorage`, sealed under a key the passkey
+derives.
 
 The question that started this page was whether the account signs with the passkey's own P-256 key
 or with a key freshly derived from the passkey's PRF output every time. It signs with the credential
 key itself: every user operation carries a WebAuthn assertion over the operation's hash, and Sepolia
 verifies it. PRF derives the signing key for the todo list, and nothing on the chain. The key worth
 worrying about is the fourth one, the read key for Zama's decryption — and this page says why it
-exists, what upstream changed in August 2026, and what we will do about it.
+exists, what upstream changed in August 2026, what we did about it, and what comes next.
 
 What the account is and how it sends transactions is in [passkey-account.md](passkey-account.md).
 What leaks despite the encryption is in [security.md](security.md). Where the money comes from is in
@@ -34,13 +35,15 @@ Each section has a simple explanation and a technical one.
 | the passkey itself           | the authenticator, and nowhere else                                  | everything the account does: lock, release, renew | never; losing it loses the account                                |
 | the signing key for the list | this browser, derived from the passkey; kept on disk if data is kept | sign todos, so others see who wrote them          | with the tab, or never if kept; the same passkey derives it again |
 | the setup key                | memory, for one minute                                               | put the account's code in place, once             | thrown away as soon as the passkey is registered                  |
-| the read key                 | this browser's storage, in plain text                                | ask Zama to decrypt amounts this account may see  | after 24 hours                                                    |
+| the read key                 | this browser's storage, sealed; opened in memory once per visit      | ask Zama to decrypt amounts this account may see  | after 24 hours                                                    |
 
 Only the first one can move money, and it never leaves the hardware. The third one is gone. The
-other two can be written down in plain text, and that is what this page is about. The read key
-always is, for 24 hours; whoever copies it can read amounts and nothing else. The list signing key
-is written down only if the reader chose to keep data on the first screen; whoever copies it can
-write todos as that identity, and move nothing.
+other two live in this browser, and that is what this page is about. The read key is stored sealed
+since 2026-10-02 ([#56](https://github.com/Le-Space/simple-todo/pull/56)): a copied browser profile
+holds nothing that reads, but once a visit has opened it, a compromised page could read amounts for
+up to 24 hours, and nothing else. The list signing key is written down in plain text if the reader
+chose to keep data on the first screen; whoever copies it can write todos as that identity, and move
+nothing.
 
 ### Keys: technical
 
@@ -51,13 +54,14 @@ flowchart LR
   end
   subgraph browser["This browser"]
     sign["List signing key<br/>secp256k1, HKDF from PRF<br/>keystore: memory or IndexedDB"]
-    read["Read key<br/>secp256k1, random<br/>localStorage, 24 h"]
+    read["Read key<br/>secp256k1, random<br/>sealed in localStorage, 24 h"]
   end
   setup["Setup key<br/>secp256k1, random<br/>discarded"]
   cred -->|"assertion per user operation"| chain["Sepolia: lock, release, renew"]
   cred -.->|"PRF output, HKDF-SHA256"| sign
   sign -->|"signs entries"| list["the todo list (OrbitDB)"]
   setup -->|"EIP-7702 authorization + first batch"| chain
+  cred -.->|"PRF output, HKDF-SHA256: sealing key"| read
   read -->|"EIP-712 permit"| zama["Zama: decrypt an amount"]
 ```
 
@@ -77,14 +81,15 @@ flowchart LR
    signs the EIP-7702 authorization and the first batch, then `discard()` drops every reference.
    Calibur keeps that address as a root key it cannot revoke — the limit is written down in
    [passkey-account.md](passkey-account.md#limits-technical).
-4. **The read key.** secp256k1 from `generatePrivateKey()`, created in
-   [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) 142 (setup) and 459
-   (renewal), stored as `session: { address, privateKey }` in
+4. **The read key.** secp256k1 from the wallet's `createZamaSessionKey()`, created in
+   [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) 192 (setup) and 643
+   (renewal), stored sealed as `session: { address, sealed }` in
    [`src/lib/chain/account-store.js`](../src/lib/chain/account-store.js) under
-   `simpleTodo.chainAccount.v1.<DID>`. The account delegates user decryption to it per contract and
-   until an expiry; it signs EIP-712 permits and is not registered in Calibur, so it can move
-   nothing. Details, including what the delegation makes public, in
-   [The read key](passkey-account.md#read-key-technical).
+   `simpleTodo.chainAccount.v1.<DID>`, with a sealing key HKDF derives from the passkey's PRF output
+   ([`src/lib/chain/read-key-seal.js`](../src/lib/chain/read-key-seal.js)). The account delegates
+   user decryption to it per contract and until an expiry; it signs EIP-712 permits and is not
+   registered in Calibur, so it can move nothing. Details, including what the delegation makes
+   public, in [The read key](passkey-account.md#read-key-technical).
 
 Nothing in the wallet path is derived from PRF, and nothing in the PRF path touches the chain. The
 two are separate on purpose: a key that signs money should be one the browser cannot read, and a key
@@ -106,7 +111,7 @@ was set up with. No key in the browser could produce it.
 passkey sign those 32 bytes with `signP256Challenge(descriptor, hexToBytes(hash))`, and returns
 `encodeUserOperationSignature({ keyHash, signature: encodeWebAuthnAuth(assertion) })`. The
 descriptor comes from `getP256CredentialDescriptor(credential)`
-([`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js) 118-119) and carries
+([`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js) 121-122) and carries
 `credentialId`, `rawCredentialId`, `x`, `y`, `rpId` and `userVerification: 'required'` — the public
 half only. On chain, Calibur verifies the assertion with webauthn-sol's `WebAuthnAuth`
 ([security.md](security.md#passkey-wallet-technical)).
@@ -124,9 +129,11 @@ Until now it could not: Zama's version on Sepolia accepts only signatures of cla
 So the app creates an extra key, gives it a time-limited power of attorney for reading, and that key
 signs the permissions. It cannot lock, release or transfer anything.
 
-The cost is that this key has to be written down, because a read should not cost a fingerprint. It
-sits in the browser's storage in plain text for up to 24 hours. Whoever gets at that browser profile
-can read amounts in that window — and move nothing.
+The cost is that this key has to be kept between visits, because a read should not cost a
+fingerprint each time. Since 2026-10-02 it is kept sealed: after a reload, "Show amounts" opens it
+with one touch, and from then on reads ask nothing. A copy of the browser profile holds nothing that
+reads; a page compromised while the key is open could read amounts for up to 24 hours — and move
+nothing.
 
 ### Read key: technical
 
@@ -141,19 +148,21 @@ cUSDTMock, with `READ_KEY_TTL_SECONDS` = 24 h from
 A second key sits next to it and is easy to miss: the SDK's **transport key pair** (ML-KEM), whose
 public half is bound into the permit and whose private half reconstructs the plaintext from the KMS
 shares. Here it costs nothing on disk:
-[`src/lib/chain/zama-client.js`](../src/lib/chain/zama-client.js) hands the SDK `storage: new
-MemoryStorage()`, so the transport key pair and the permit live as long as the page. The SDK's own
-default would be IndexedDB with a 30-day TTL (`transportKeyPairTTL`, `permitTTL`). Memory only is
-cheap today because the read key signs every fresh permit without a prompt; it stops being cheap
-once the passkey signs the permits (step 3 below). Zama's security guide is explicit about where
-such bytes belong when they are kept:
+[`src/lib/chain/zama-client.js`](../src/lib/chain/zama-client.js) hands the SDK
+`storage: new MemoryStorage()`, so the transport key pair and the permit live as long as the page.
+The SDK's own default would be IndexedDB with a 30-day TTL (`transportKeyPairTTL`, `permitTTL`).
+Memory only is cheap today because the read key signs every fresh permit without a prompt; it stops
+being cheap once the passkey signs the permits (step 3 below). Zama's security guide is explicit
+about where such bytes belong when they are kept:
 
 > **Acceptable:** encrypted storage, a secure enclave, or the browser credential store.
 > **Risky:** plain `localStorage`, which is readable by any script on the domain.
 > **Never:** URL parameters, cookies, or unencrypted server-side storage.
 
 Our contract-scoped delegation and our 24 hours follow the rest of that guide ("keep permit scope
-minimal", "short `durationSeconds`"). The storage medium is the part it would call risky.
+minimal", "short `durationSeconds`"). Since [#56](https://github.com/Le-Space/simple-todo/pull/56)
+the storage medium does too: the read key is kept in encrypted storage, never in plain
+`localStorage`.
 
 ## What Zama changed in v0.14
 
@@ -177,11 +186,12 @@ From the fhevm v0.14.0 release notes (2026-08-14):
 > signatures, and context-ID validation on the unified path.
 
 In the SDK this is `verifyErc1271UserDecrypt`: a 65-byte signature is still checked locally with
-`ecrecover`, anything else by a STATICCALL to `IERC1271(userAddress).isValidSignature(digest,
-signature)`, accepted only on the magic value `0x1626ba7e`; the KMS re-verifies independently and
-stays authoritative. The permit itself moved to `signUnifiedDecryptionPermit`, with
-`canUseUnifiedDecryptionPermit` as the capability probe and `durationDays` replaced by
-`durationSeconds`. The v0.14.1 line adds "make the ERC-1271 Safe suite viable on Sepolia".
+`ecrecover`, anything else by a STATICCALL to
+`IERC1271(userAddress).isValidSignature(digest, signature)`, accepted only on the magic value
+`0x1626ba7e`; the KMS re-verifies independently and stays authoritative. The permit itself moved to
+`signUnifiedDecryptionPermit`, with `canUseUnifiedDecryptionPermit` as the capability probe and
+`durationDays` replaced by `durationSeconds`. The v0.14.1 line adds "make the ERC-1271 Safe suite
+viable on Sepolia".
 
 Calibur can hold the other end of that, with one condition. Its key types are `P256`,
 `WebAuthnP256` and `Secp256k1`, and its `isValidSignature` (`src/Calibur.sol` 144) takes a raw 64-
@@ -224,13 +234,14 @@ The capability probe, not a date, is the trigger for the next step.
 Three ways out, in the order they make sense. The roadmap with its steps and done-criteria is
 [Le-Space/simple-todo#54](https://github.com/Le-Space/simple-todo/issues/54).
 
-1. **Seal the read key with a key derived from the passkey.** Independent of Zama, available now,
-   and the same sealing is what step 3 needs to keep a permit and its transport key pair across a
-   reload. Both halves already
-   exist in our own packages: the wallet's `createZamaSessionKey()` returns a `seal(sealingKey)` and
-   `openZamaSessionKey(sealed, sealingKey)` takes it back, with the address bound to the ciphertext
-   as associated data; the identity provider has `wrapSKWithPRF` / `unwrapSKWithPRF`. The app simply
-   does not use them yet.
+1. **Seal the read key with a key derived from the passkey — done in
+   [#56](https://github.com/Le-Space/simple-todo/pull/56), 2026-10-02.** Independent of Zama, and
+   the same sealing is what step 3 needs to keep a permit and its transport key pair across a
+   reload. It uses the wallet's `createZamaSessionKey()` and its `seal(sealingKey)`, and
+   `openZamaSessionKey(sealed, sealingKey)` takes the key back, with the address bound to the
+   ciphertext as associated data. The sealing key is HKDF-SHA256 over the passkey's PRF output
+   ([`src/lib/chain/read-key-seal.js`](../src/lib/chain/read-key-seal.js)). Reads never ask on their
+   own: after a reload "Show amounts" opens the key with one touch.
 2. **A key the browser cannot read.** WebCrypto can hold a non-extractable `CryptoKey` in IndexedDB,
    which signs but never exports — the usual hardening in the account-abstraction world. It does not
    help against an active XSS, which can still _use_ the key, and WebCrypto has no secp256k1 — its
@@ -255,28 +266,32 @@ Two conclusions worth writing down, because they are easy to get wrong:
   with a different HKDF info. Whether that costs a prompt depends on the storage choice: in memory
   mode every session already reads the PRF output to derive the list signing key, but the provider
   does not hand that output out, and `extractPrfSeedFromCredential` makes an assertion of its own.
-  One touch for both is possible if the app reads PRF once, derives both keys, and puts the signing
-  key into the keystore before the provider looks — the pattern `seedRestoredSigningKey` already
-  uses after a restore. That read must pass the fixed PRF input (`credential.prfInput`); without it
-  `extractPrfSeedFromCredential` falls back to random bytes, and the sealing key would never come
-  back. When data is kept, the provider finds the signing key in the keystore and asks the passkey
-  for nothing (`ensureDerivedSigningKey` returns `'existing'`), so opening the sealed read key costs
-  one touch per session, the first time an amount is shown. Today that read costs none; this is the
-  price. Where PRF is unavailable the read key has to stay in memory for the session instead.
+  One touch for both would be possible if the app read PRF once, derived both keys, and put the
+  signing key into the keystore before the provider looks — the pattern `seedRestoredSigningKey`
+  already uses after a restore. [#56](https://github.com/Le-Space/simple-todo/pull/56) does not do
+  that: opening the read key always takes a touch of its own. That read must pass the fixed PRF
+  input (`credential.prfInput`); without it `extractPrfSeedFromCredential` falls back to random
+  bytes, and the sealing key would never come back. When data is kept, the provider finds the
+  signing key in the keystore and asks the passkey for nothing (`ensureDerivedSigningKey` returns
+  `'existing'`), so opening the sealed read key costs one touch per session, on "Show amounts".
+  Before [#56](https://github.com/Le-Space/simple-todo/pull/56) that read cost none; this is the
+  price. Where PRF is unavailable the read key stays in memory for the session instead.
 
 This answers item 6 of [passkey-account.md](passkey-account.md#open-issues) ("Zama v0.14: wait for
 it and check whether the passkey itself can permit decryptions"): the mechanism exists, the route
-does not yet. Item 3 ("Read key: seal it instead of storing it in plain text") is now the first step
-rather than a wish.
+does not yet. Item 3, sealing the read key, is done
+([#56](https://github.com/Le-Space/simple-todo/pull/56)).
 
 ## Sources
 
 Code:
 
-- [`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js) 118-119: the credential
+- [`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js) 121-122: the credential
   descriptor handed to the wallet
-- [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) 142, 459: the read key at
+- [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) 192, 643: the read key at
   setup and at renewal
+- [`src/lib/chain/read-key-seal.js`](../src/lib/chain/read-key-seal.js): the sealing key from the
+  passkey's PRF output
 - [`src/lib/chain/account-store.js`](../src/lib/chain/account-store.js): what this browser keeps
 - [`src/lib/chain/config.js`](../src/lib/chain/config.js): `READ_KEY_TTL_SECONDS`
 - [`src/lib/p2p.js`](../src/lib/p2p.js) 362-385: the PRF-derived signing key for the list and where
