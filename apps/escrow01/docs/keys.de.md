@@ -14,8 +14,8 @@ vierten machen, den Leseschlüssel für Zamas Entschlüsselung — und diese Sei
 existiert, was sich im August 2026 bei Zama geändert hat und wie wir damit umgehen.
 
 Was das Konto ist und wie es Transaktionen sendet, steht in
-[passkey-account.de.md](passkey-account.de.md). Was trotz Verschlüsselung nach außen dringt, steht in
-[security.de.md](security.de.md). Woher das Geld kommt, steht in
+[passkey-account.de.md](passkey-account.de.md). Was trotz Verschlüsselung nach außen dringt, steht
+in [security.de.md](security.de.md). Woher das Geld kommt, steht in
 [money-flow.de.md](money-flow.de.md).
 
 Jeder Abschnitt hat eine einfache Erklärung und eine technische.
@@ -91,10 +91,10 @@ flowchart LR
    registriert, kann also nichts bewegen. Einzelheiten, auch was die Delegation öffentlich macht, in
    [Der Leseschlüssel](passkey-account.de.md#leseschlüssel-technisch).
 
-Nichts im Wallet-Pfad wird aus PRF abgeleitet, und nichts im PRF-Pfad berührt die Kette. Die Trennung
-ist Absicht: ein Schlüssel, der Geld signiert, sollte einer sein, den der Browser nicht lesen kann,
-und ein Schlüssel, der tausende Listeneinträge signiert, sollte nicht jedes Mal einen Fingerabdruck
-verlangen.
+Nichts im Wallet-Pfad wird aus PRF abgeleitet, und nichts im PRF-Pfad berührt die Kette. Die
+Trennung ist Absicht: ein Schlüssel, der Geld signiert, sollte einer sein, den der Browser nicht
+lesen kann, und ein Schlüssel, der tausende Listeneinträge signiert, sollte nicht jedes Mal einen
+Fingerabdruck verlangen.
 
 ## Was eine Transaktion signiert
 
@@ -148,12 +148,12 @@ Treuhand und für cUSDTMock, mit `READ_KEY_TTL_SECONDS` = 24 h aus
 Ein zweiter Schlüssel liegt daneben und wird leicht übersehen: das **Transport-Schlüsselpaar** des
 SDK (ML-KEM), dessen öffentlicher Teil ins Permit eingebunden wird und dessen privater Teil aus den
 KMS-Anteilen den Klartext rekonstruiert. Auf der Platte kostet es hier nichts:
-[`src/lib/chain/zama-client.js`](../src/lib/chain/zama-client.js) gibt dem SDK
-`storage: new MemoryStorage()`, Transport-Schlüsselpaar und Permit leben also so lange wie die Seite.
-Der eigene Standard des SDK wäre IndexedDB mit 30 Tagen (`transportKeyPairTTL`, `permitTTL`). Nur im
-Speicher zu bleiben ist heute billig, weil der Leseschlüssel jedes frische Permit ohne Abfrage
-signiert; es hört auf, billig zu sein, sobald der Passkey die Permits signiert (Schritt 3 unten).
-Zamas Sicherheitsleitfaden ist deutlich, wohin solche Bytes gehören, wenn man sie behält:
+[`src/lib/chain/zama-client.js`](../src/lib/chain/zama-client.js) gibt dem SDK `storage: new
+MemoryStorage()`, Transport-Schlüsselpaar und Permit leben also so lange wie die Seite. Der eigene
+Standard des SDK wäre IndexedDB mit 30 Tagen (`transportKeyPairTTL`, `permitTTL`). Nur im Speicher
+zu bleiben ist heute billig, weil der Leseschlüssel jedes frische Permit ohne Abfrage signiert; es
+hört auf, billig zu sein, sobald der Passkey die Permits signiert (Schritt 3 unten). Zamas
+Sicherheitsleitfaden ist deutlich, wohin solche Bytes gehören, wenn man sie behält:
 
 > **Acceptable:** encrypted storage, a secure enclave, or the browser credential store.
 > **Risky:** plain `localStorage`, which is readable by any script on the domain.
@@ -168,13 +168,14 @@ nennen würde.
 ### v0.14: einfach
 
 Seit August 2026 kann Zamas Protokoll auch eine Signatur prüfen, die von einem Smart Account kommt
-und nicht von einem einfachen Schlüssel. Genau das fehlte: das Passkey-Konto könnte die Leseerlaubnis
-dann selbst signieren, und der zusätzliche Schlüssel wäre überhaupt nicht nötig. Zama testet das
-gegen Safe-Konten, Smart Accounts sind also ein vorgesehener Fall und kein Trick.
+und nicht von einem einfachen Schlüssel. Genau das fehlte: das Passkey-Konto könnte die
+Leseerlaubnis dann selbst signieren, und der zusätzliche Schlüssel wäre überhaupt nicht nötig. Zama
+testet das gegen Safe-Konten, Smart Accounts sind also ein vorgesehener Fall und kein Trick.
 
-Für uns ist es noch nicht nutzbar. Der Teil, der auf unserer Kette laufen muss, ist nicht ausgerollt,
-und die SDK-Version, von der wir abhängen, enthält den neuen Code nicht. Der Leseschlüssel bleibt
-also vorläufig — nicht als Fehler, sondern als Umweg um eine Grenze, die gerade fällt.
+Für uns ist es noch nicht nutzbar. Der Teil, der auf unserer Kette laufen muss, ist nicht
+ausgerollt, und die SDK-Version, von der wir abhängen, enthält den neuen Code nicht. Der
+Leseschlüssel bleibt also vorläufig — nicht als Fehler, sondern als Umweg um eine Grenze, die gerade
+fällt.
 
 ### v0.14: technisch
 
@@ -185,16 +186,15 @@ Aus den Release Notes von fhevm v0.14.0 (2026-08-14):
 > signatures, and context-ID validation on the unified path.
 
 Im SDK heißt das `verifyErc1271UserDecrypt`: eine 65-Byte-Signatur wird weiterhin lokal mit
-`ecrecover` geprüft, alles andere per STATICCALL auf
-`IERC1271(userAddress).isValidSignature(digest, signature)` und nur beim Magic Value `0x1626ba7e`
-akzeptiert; das KMS prüft unabhängig nach und bleibt die maßgebliche Stelle. Das Permit selbst ist zu
-`signUnifiedDecryptionPermit` gewandert, mit `canUseUnifiedDecryptionPermit` als Fähigkeitsprobe und
-`durationSeconds` anstelle von `durationDays`. Die v0.14.1-Linie ergänzt „make the ERC-1271 Safe
-suite viable on Sepolia".
+`ecrecover` geprüft, alles andere per STATICCALL auf `IERC1271(userAddress).isValidSignature(digest,
+signature)` und nur beim Magic Value `0x1626ba7e` akzeptiert; das KMS prüft unabhängig nach und
+bleibt die maßgebliche Stelle. Das Permit selbst ist zu `signUnifiedDecryptionPermit` gewandert, mit
+`canUseUnifiedDecryptionPermit` als Fähigkeitsprobe und `durationSeconds` anstelle von
+`durationDays`. Die v0.14.1-Linie ergänzt „make the ERC-1271 Safe suite viable on Sepolia".
 
 Calibur kann das andere Ende davon halten: seine Schlüssel sind Secp256k1, P-256 oder WebAuthnP256,
-und sein `isValidSignature` akzeptiert ECDSA von `address(this)` sowie verschachtelte Typed-Data- und
-Personal-Signaturen nach ERC-7739. Ob eine Calibur-WebAuthn-Signatur Zamas Prüfung in der Praxis
+und sein `isValidSignature` akzeptiert ECDSA von `address(this)` sowie verschachtelte Typed-Data-
+und Personal-Signaturen nach ERC-7739. Ob eine Calibur-WebAuthn-Signatur Zamas Prüfung in der Praxis
 besteht, ist ungetestet — es lässt sich nicht testen, solange die Route fehlt.
 
 ## Gemessen am 2026-10-02
@@ -221,39 +221,53 @@ Der Auslöser für den nächsten Schritt ist die Fähigkeitsprobe, kein Datum.
 
 ## Wie wir weiter verfahren
 
-Drei Wege, in der Reihenfolge, in der sie sinnvoll sind:
+Drei Wege, in der Reihenfolge, in der sie sinnvoll sind. Die Roadmap mit Schritten und
+Abnahmekriterien steht in
+[Le-Space/simple-todo#54](https://github.com/Le-Space/simple-todo/issues/54).
 
 1. **Den Leseschlüssel mit einem aus dem Passkey abgeleiteten Schlüssel versiegeln.** Unabhängig von
    Zama, heute machbar, und dieselbe Versiegelung braucht Schritt 3, um ein Permit samt
-   Transport-Schlüsselpaar über ein Neuladen zu retten. Beide Hälften gibt es schon in unseren eigenen Paketen: `createZamaSessionKey()` der
-   Wallet liefert ein `seal(sealingKey)`, `openZamaSessionKey(sealed, sealingKey)` nimmt es zurück,
-   mit der Adresse als Associated Data an den Chiffretext gebunden; der Identity-Provider hat
-   `wrapSKWithPRF` / `unwrapSKWithPRF`. Die App benutzt beides nur noch nicht.
+   Transport-Schlüsselpaar über ein Neuladen zu retten. Beide Hälften gibt es schon in unseren
+   eigenen Paketen: `createZamaSessionKey()` der Wallet liefert ein `seal(sealingKey)`,
+   `openZamaSessionKey(sealed, sealingKey)` nimmt es zurück, mit der Adresse als Associated Data an
+   den Chiffretext gebunden; der Identity-Provider hat `wrapSKWithPRF` / `unwrapSKWithPRF`. Die App
+   benutzt beides nur noch nicht.
 2. **Ein Schlüssel, den der Browser nicht lesen kann.** WebCrypto kann einen nicht exportierbaren
    `CryptoKey` in IndexedDB halten, der signiert, aber nie exportiert — die übliche Härtung in der
    Account-Abstraction-Welt. Gegen ein aktives XSS hilft das nicht, das den Schlüssel weiterhin
-   _benutzen_ kann, und WebCrypto kennt kein secp256k1, nur P-256. Dieser Weg wird also erst mit
-   Schritt 3 möglich, über Caliburs eigenständigen P-256-Schlüsseltyp.
+   _benutzen_ kann, und WebCrypto kennt kein secp256k1 — seine ECDSA-Kurven sind die NIST-Kurven,
+   und von denen nimmt Calibur P-256. Dieser Weg wird also erst mit Schritt 3 möglich, über Caliburs
+   eigenständigen P-256-Schlüsseltyp.
 3. **Gar kein Leseschlüssel.** Sobald `canUseUnifiedDecryptionPermit` für Sepolia `true` meldet,
    signiert das Passkey-Konto das Permit selbst per ERC-1271, und sowohl der Schlüssel als auch die
    ACL-Delegation fallen weg. Eine Passkey-Bestätigung pro Permit, nicht pro Lesevorgang — und pro
    Seitenaufruf, solange das Permit nur im Speicher lebt. Darum trägt die Versiegelung aus Schritt 1
-   weiter: ein versiegeltes Permit samt Transport-Schlüsselpaar im `GenericStorage` des SDK übersteht
-   das Neuladen.
+   weiter: ein versiegeltes Permit samt Transport-Schlüsselpaar im `GenericStorage` des SDK
+   übersteht das Neuladen.
 
 Zwei Schlussfolgerungen, die festgehalten gehören, weil man sie leicht falsch zieht:
 
-- **PRF gehört hierher als Verschlüsselungsschlüssel, nicht als Signierschlüssel.** Den Leseschlüssel
-  selbst aus PRF abzuleiten gäbe auf jedem Gerät dieselbe Adresse, was bequem ist, aber die
-  Eigenschaft „pro Gerät, befristet" fällt weg, und der Schlüssel liegt im Moment der Ableitung im
-  Speicher. Einen AES-GCM-Schlüssel abzuleiten und das Abgelegte zu verschlüsseln erhält beide
-  Eigenschaften, und derselbe Schlüssel kann später ein behaltenes Permit versiegeln.
+- **PRF gehört hierher als Verschlüsselungsschlüssel, nicht als Signierschlüssel.** Den
+  Leseschlüssel selbst aus PRF abzuleiten gäbe auf jedem Gerät dieselbe Adresse, was bequem ist,
+  aber die Eigenschaft „pro Gerät, befristet" fällt weg, und der Schlüssel liegt im Moment der
+  Ableitung im Speicher. Einen AES-GCM-Schlüssel abzuleiten und das Abgelegte zu verschlüsseln
+  erhält beide Eigenschaften, und derselbe Schlüssel kann später ein behaltenes Permit versiegeln.
 - **Die Kontexte in HKDF trennen, nicht im PRF-Eingabewert.** Der PRF-Eingabewert des Providers ist
   pro Relying Party fest (`orbitdb-identity-provider-webauthn-did:prf:v2`), und ein zweiter
-  Eingabewert bedeutet eine zweite Assertion, also eine weitere Abfrage. Den Siegelschlüssel aus
-  _derselben_ PRF-Antwort mit einer anderen HKDF-Info abzuleiten kostet keine zusätzliche Abfrage,
-  weil die Sitzung diese Antwort schon für die Identität liest. Wo PRF nicht verfügbar ist, muss der
-  Schlüssel stattdessen für die Sitzung im Speicher bleiben.
+  Eingabewert bedeutet eine zweite Assertion, also eine weitere Abfrage. Der Siegelschlüssel kommt
+  aus _derselben_ PRF-Antwort mit einer anderen HKDF-Info. Ob das eine Abfrage kostet, hängt von der
+  Speicherwahl ab: im Arbeitsspeicher-Modus liest jede Sitzung die PRF-Antwort ohnehin, um den
+  Signierschlüssel der Liste abzuleiten, aber der Provider gibt diese Antwort nicht heraus, und
+  `extractPrfSeedFromCredential` macht eine eigene Assertion. Eine Berührung für beides geht, wenn
+  die App PRF einmal selbst liest, beide Schlüssel ableitet und den Signierschlüssel in den Keystore
+  legt, bevor der Provider nachsieht — das Muster, das `seedRestoredSigningKey` nach einer
+  Wiederherstellung schon benutzt. Dieser Lesevorgang muss den festen PRF-Eingabewert mitgeben
+  (`credential.prfInput`); ohne ihn greift `extractPrfSeedFromCredential` zu Zufallsbytes, und der
+  Siegelschlüssel käme nie wieder. Werden Daten behalten, findet der Provider den Signierschlüssel
+  im Keystore und fragt den Passkey gar nicht (`ensureDerivedSigningKey` liefert `'existing'`); das
+  Öffnen des versiegelten Leseschlüssels kostet dann eine Berührung pro Sitzung, beim ersten
+  angezeigten Betrag. Heute kostet dieses Lesen keine; das ist der Preis. Wo PRF nicht verfügbar
+  ist, muss der Leseschlüssel stattdessen für die Sitzung im Speicher bleiben.
 
 Damit ist Punkt 6 in [passkey-account.de.md](passkey-account.de.md#offene-punkte) beantwortet
 („Zama v0.14 abwarten und prüfen, ob der Passkey selbst Entschlüsselungen erlauben kann"): der
@@ -277,8 +291,9 @@ Code:
   209-220 (`signUserOperation`), `src/setup.js` 200 (der Einrichtungsschlüssel), `src/zama.js`
   (`createZamaSessionKey`, `openZamaSessionKey`, `getRevokeDelegationForUserDecryptionCalls`)
 - `@le-space/orbitdb-identity-provider-webauthn-did` 0.8.0: `src/keystore/encryption.js`
-  (`wrapSKWithPRF`, `unwrapSKWithPRF`), `src/keystore/derived-signing-key.js` (HKDF-SHA256),
-  `src/webauthn/prf-input.js` (`PRF_INPUT_INFO`)
+  (`wrapSKWithPRF`, `unwrapSKWithPRF`), `src/keystore/derived-signing-key.js` (HKDF-SHA256,
+  `ensureDerivedSigningKey`), `src/webauthn/prf-input.js` (`PRF_INPUT_INFO`),
+  `src/standalone/webauthn/credential.js` (`extractPrfSeedFromCredential`)
 
 Zama und Umfeld, gelesen am 2026-10-02:
 
@@ -294,5 +309,6 @@ Zama und Umfeld, gelesen am 2026-10-02:
 - [Uniswap-Calibur-Audit](https://www.openzeppelin.com/news/uniswap-calibur-audit),
   [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271),
   [ERC-7739](https://ethereum-magicians.org/t/erc-7739-readable-typed-signatures-for-smart-accounts/20513)
-- [Yubico: Developer's Guide to PRF](https://developers.yubico.com/WebAuthn/Concepts/PRF_Extension/Developers_Guide_to_PRF.html),
+- [Yubico: Developer's Guide to
+  PRF](https://developers.yubico.com/WebAuthn/Concepts/PRF_Extension/Developers_Guide_to_PRF.html),
   [Corbado über Passkeys und PRF](https://www.corbado.com/blog/passkeys-prf-webauthn)

@@ -39,8 +39,8 @@ Each section has a simple explanation and a technical one.
 Only the first one can move money, and it never leaves the hardware. The third one is gone. The
 other two can be written down in plain text, and that is what this page is about. The read key
 always is, for 24 hours; whoever copies it can read amounts and nothing else. The list signing key
-is written down only if the reader chose to keep data on the first screen; whoever copies it can write todos as
-that identity, and move nothing.
+is written down only if the reader chose to keep data on the first screen; whoever copies it can
+write todos as that identity, and move nothing.
 
 ### Keys: technical
 
@@ -65,11 +65,11 @@ flowchart LR
    ([passkey-account.md](passkey-account.md#overview-technical)) and the account's admin key in
    Calibur. The private half never leaves the device and is not extractable, so every signature is
    an assertion the authenticator produces after user verification.
-2. **The list signing key.** secp256k1, as OrbitDB's keystore wants it, derived by the provider:
-   PRF output → HKDF-SHA256 with an info string that carries the DID. With PRF the same passkey
-   derives the same key on any device; without PRF the keystore generates one instead. Where it is
-   kept follows the storage choice: in memory it goes with the tab; if the reader chose to keep data,
-   it sits unencrypted in OrbitDB's keystore in IndexedDB and later sessions sign without asking the
+2. **The list signing key.** secp256k1, as OrbitDB's keystore wants it, derived by the provider: PRF
+   output → HKDF-SHA256 with an info string that carries the DID. With PRF the same passkey derives
+   the same key on any device; without PRF the keystore generates one instead. Where it is kept
+   follows the storage choice: in memory it goes with the tab; if the reader chose to keep data, it
+   sits unencrypted in OrbitDB's keystore in IndexedDB and later sessions sign without asking the
    passkey ([`src/lib/p2p.js`](../src/lib/p2p.js) 362-385). It signs database entries, never a
    transaction.
 3. **The setup key.** secp256k1 from `generatePrivateKey()`, created in the wallet package's
@@ -140,12 +140,13 @@ cUSDTMock, with `READ_KEY_TTL_SECONDS` = 24 h from
 
 A second key sits next to it and is easy to miss: the SDK's **transport key pair** (ML-KEM), whose
 public half is bound into the permit and whose private half reconstructs the plaintext from the KMS
-shares. Here it costs nothing on disk: [`src/lib/chain/zama-client.js`](../src/lib/chain/zama-client.js)
-hands the SDK `storage: new MemoryStorage()`, so the transport key pair and the permit live as long as
-the page. The SDK's own default would be IndexedDB with a 30-day TTL (`transportKeyPairTTL`,
-`permitTTL`). Memory only is cheap today because the read key signs every fresh permit without a
-prompt; it stops being cheap once the passkey signs the permits (step 3 below). Zama's security
-guide is explicit about where such bytes belong when they are kept:
+shares. Here it costs nothing on disk:
+[`src/lib/chain/zama-client.js`](../src/lib/chain/zama-client.js) hands the SDK `storage: new
+MemoryStorage()`, so the transport key pair and the permit live as long as the page. The SDK's own
+default would be IndexedDB with a 30-day TTL (`transportKeyPairTTL`, `permitTTL`). Memory only is
+cheap today because the read key signs every fresh permit without a prompt; it stops being cheap
+once the passkey signs the permits (step 3 below). Zama's security guide is explicit about where
+such bytes belong when they are kept:
 
 > **Acceptable:** encrypted storage, a secure enclave, or the browser credential store.
 > **Risky:** plain `localStorage`, which is readable by any script on the domain.
@@ -210,7 +211,8 @@ The capability probe, not a date, is the trigger for the next step.
 
 ## How we proceed
 
-Three ways out, in the order they make sense:
+Three ways out, in the order they make sense. The roadmap with its steps and done-criteria is
+[Le-Space/simple-todo#54](https://github.com/Le-Space/simple-todo/issues/54).
 
 1. **Seal the read key with a key derived from the passkey.** Independent of Zama, available now,
    and the same sealing is what step 3 needs to keep a permit and its transport key pair across a
@@ -221,9 +223,9 @@ Three ways out, in the order they make sense:
    does not use them yet.
 2. **A key the browser cannot read.** WebCrypto can hold a non-extractable `CryptoKey` in IndexedDB,
    which signs but never exports — the usual hardening in the account-abstraction world. It does not
-   help against an active XSS, which can still _use_ the key, and WebCrypto has no secp256k1, only
-   P-256. So this one only becomes possible together with step 3, through Calibur's standalone P-256
-   key type.
+   help against an active XSS, which can still _use_ the key, and WebCrypto has no secp256k1 — its
+   ECDSA curves are the NIST ones, and of those Calibur takes P-256. So this one only becomes
+   possible together with step 3, through Calibur's standalone P-256 key type.
 3. **No read key at all.** Once `canUseUnifiedDecryptionPermit` reports true for Sepolia, the
    passkey account signs the permit itself over ERC-1271, and both the key and the ACL delegation go
    away. One passkey confirmation per permit, not per read — and per page load as long as the permit
@@ -238,10 +240,18 @@ Two conclusions worth writing down, because they are easy to get wrong:
   encrypting what we store keeps both properties, and the same key can later seal a kept permit.
 - **Separate the contexts in HKDF, not in the PRF input.** The provider's PRF input is fixed per
   relying party (`orbitdb-identity-provider-webauthn-did:prf:v2`), and a second PRF input would mean
-  a second assertion, which means another prompt. Deriving the sealing key from the _same_ PRF
-  output with a different HKDF info costs no extra prompt, because the session already reads that
-  output to build the identity. Where PRF is unavailable the key has to stay in memory for the
-  session instead.
+  a second assertion, which means another prompt. The sealing key comes from the _same_ PRF output
+  with a different HKDF info. Whether that costs a prompt depends on the storage choice: in memory
+  mode every session already reads the PRF output to derive the list signing key, but the provider
+  does not hand that output out, and `extractPrfSeedFromCredential` makes an assertion of its own.
+  One touch for both is possible if the app reads PRF once, derives both keys, and puts the signing
+  key into the keystore before the provider looks — the pattern `seedRestoredSigningKey` already
+  uses after a restore. That read must pass the fixed PRF input (`credential.prfInput`); without it
+  `extractPrfSeedFromCredential` falls back to random bytes, and the sealing key would never come
+  back. When data is kept, the provider finds the signing key in the keystore and asks the passkey
+  for nothing (`ensureDerivedSigningKey` returns `'existing'`), so opening the sealed read key costs
+  one touch per session, the first time an amount is shown. Today that read costs none; this is the
+  price. Where PRF is unavailable the read key has to stay in memory for the session instead.
 
 This answers item 6 of [passkey-account.md](passkey-account.md#open-issues) ("Zama v0.14: wait for
 it and check whether the passkey itself can permit decryptions"): the mechanism exists, the route
@@ -265,8 +275,9 @@ Code:
   209-220 (`signUserOperation`), `src/setup.js` 200 (the setup key), `src/zama.js`
   (`createZamaSessionKey`, `openZamaSessionKey`, `getRevokeDelegationForUserDecryptionCalls`)
 - `@le-space/orbitdb-identity-provider-webauthn-did` 0.8.0: `src/keystore/encryption.js`
-  (`wrapSKWithPRF`, `unwrapSKWithPRF`), `src/keystore/derived-signing-key.js` (HKDF-SHA256),
-  `src/webauthn/prf-input.js` (`PRF_INPUT_INFO`)
+  (`wrapSKWithPRF`, `unwrapSKWithPRF`), `src/keystore/derived-signing-key.js` (HKDF-SHA256,
+  `ensureDerivedSigningKey`), `src/webauthn/prf-input.js` (`PRF_INPUT_INFO`),
+  `src/standalone/webauthn/credential.js` (`extractPrfSeedFromCredential`)
 
 Upstream, read on 2026-10-02:
 
@@ -282,5 +293,6 @@ Upstream, read on 2026-10-02:
 - [Uniswap Calibur audit](https://www.openzeppelin.com/news/uniswap-calibur-audit),
   [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271),
   [ERC-7739](https://ethereum-magicians.org/t/erc-7739-readable-typed-signatures-for-smart-accounts/20513)
-- [Yubico: developer's guide to PRF](https://developers.yubico.com/WebAuthn/Concepts/PRF_Extension/Developers_Guide_to_PRF.html),
+- [Yubico: developer's guide to
+  PRF](https://developers.yubico.com/WebAuthn/Concepts/PRF_Extension/Developers_Guide_to_PRF.html),
   [Corbado on passkeys and PRF](https://www.corbado.com/blog/passkeys-prf-webauthn)
