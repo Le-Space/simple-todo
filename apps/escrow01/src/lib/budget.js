@@ -36,6 +36,11 @@ export const BUDGET_ERROR_CODES = /** @type {const} */ ([
 	'passkey-cancelled',
 	'insufficient-balance',
 	'read-access-expired',
+	// escrow01 on Sepolia: the read key is stored sealed and not opened yet in
+	// this session; reading on its own never asks the passkey.
+	'read-access-locked',
+	// escrow01 on Sepolia: the passkey has no PRF, so nothing can be sealed.
+	'passkey-without-prf',
 	'escrow-exists',
 	'escrow-not-found',
 	'escrow-closed',

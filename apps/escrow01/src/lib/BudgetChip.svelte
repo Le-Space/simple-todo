@@ -35,9 +35,11 @@
 			? $_('budget.chip.decrypting')
 			: $amount.state === 'expired'
 				? $_('budget.chip.expired')
-				: $amount.state === 'hidden'
-					? $_('budget.chip.hidden')
-					: '';
+				: $amount.state === 'locked'
+					? $_('budget.chip.locked')
+					: $amount.state === 'hidden'
+						? $_('budget.chip.hidden')
+						: '';
 </script>
 
 {#if status !== 'none'}

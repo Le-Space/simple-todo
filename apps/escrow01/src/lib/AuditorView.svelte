@@ -12,13 +12,14 @@
 		budgetService,
 		readKeyStore,
 		refreshReadKey,
-		renewReadAccess
+		renewReadAccess,
+		unlockReadAccess
 	} from './budget-store.js';
 	import { shortId } from '@simple-todo/todo/utils.js';
 
 	/** @type {import('./budget-service.js').AuditorEscrow[]} */
 	let rows = [];
-	/** @type {'loading' | 'ready' | 'expired' | 'error'} */
+	/** @type {'loading' | 'ready' | 'expired' | 'locked' | 'error'} */
 	let state = 'loading';
 	let renewing = false;
 
@@ -28,9 +29,15 @@
 			rows = await budgetService.listEscrowsForAuditor();
 			state = 'ready';
 		} catch (error) {
-			state = budgetErrorCode(error) === 'read-access-expired' ? 'expired' : 'error';
-			// So a renewal from anywhere on the page is noticed here.
-			if (state === 'expired') void refreshReadKey();
+			const code = budgetErrorCode(error);
+			state =
+				code === 'read-access-expired'
+					? 'expired'
+					: code === 'read-access-locked'
+						? 'locked'
+						: 'error';
+			// So a renewal or an unlock from anywhere on the page is noticed here.
+			if (state === 'expired' || state === 'locked') void refreshReadKey();
 		}
 	}
 
@@ -43,12 +50,21 @@
 		}
 	}
 
+	async function unlock() {
+		renewing = true;
+		try {
+			if ((await unlockReadAccess()).ok) await load();
+		} finally {
+			renewing = false;
+		}
+	}
+
 	// Read access renewed elsewhere on the page counts here too.
 	$: readKeyValid = $readKeyStore?.state === 'valid';
 	$: if (readKeyValid) reloadIfExpired();
 
 	function reloadIfExpired() {
-		if (state === 'expired') void load();
+		if (state === 'expired' || state === 'locked') void load();
 	}
 
 	/** @param {import('./budget-service.js').BudgetParty} party */
@@ -74,7 +90,30 @@
 
 <TechnicalExplanation step="auditor" simulated={!budgetInfo.confidential} className="mb-6" />
 
-{#if state === 'expired'}
+{#if state === 'locked'}
+	<ErrorAlert
+		type="info"
+		inlineTitle
+		title={$_('budget.notice.lockedTitle')}
+		error={$_('budget.notice.locked')}
+	>
+		<svelte:fragment slot="actions">
+			<button
+				type="button"
+				on:click={unlock}
+				disabled={renewing}
+				class="rounded-md bg-coral-700 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-white hover:bg-coral-800 disabled:opacity-50"
+				data-testid="auditor-unlock-read">{$_('budget.notice.unlock')}</button
+			>
+		</svelte:fragment>
+		<TechnicalExplanation
+			slot="details"
+			step="readLocked"
+			simulated={!budgetInfo.confidential}
+			className="mt-3"
+		/>
+	</ErrorAlert>
+{:else if state === 'expired'}
 	<ErrorAlert
 		type="info"
 		inlineTitle

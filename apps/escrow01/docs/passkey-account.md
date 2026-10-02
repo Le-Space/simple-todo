@@ -53,8 +53,9 @@ In the app, one passkey does three things:
    whose admin key is the passkey. The account needs no ETH: Openfort pays the gas.
 3. **It confirms every payment.** Locking and releasing ask the passkey exactly once each.
 
-Reading amounts does not need the passkey. For that the browser holds a read key that may have this
-account's amounts decrypted for 24 hours, but cannot move money ([The read key](#read-key-simple)).
+Reading amounts needs the passkey at most once per visit. For that the browser holds a read key that
+may have this account's amounts decrypted for 24 hours, but cannot move money; it is stored sealed and
+opens only with the passkey ([The read key](#read-key-simple)).
 
 ### Overview: technical
 
@@ -65,7 +66,7 @@ flowchart LR
     App["App<br/>budget-service-zama.js"]
     Wallet["passkey-wallet<br/>(Calibur encodings)"]
     SDK["Zama SDK<br/>(TFHE and TKMS WASM)"]
-    Store["localStorage<br/>address, read key"]
+    Store["localStorage<br/>address, sealed read key"]
   end
   subgraph Central["Central services (companies, replaceable)"]
     Openfort["Openfort<br/>bundler + paymaster"]
@@ -127,13 +128,13 @@ Ethereum Sepolia, gray peer-to-peer. Who runs what is in
 
 The keys involved:
 
-| Key           | Kind                    | Where it lives                                                         | What it may do                                                   | For how long                                                  |
-| ------------- | ----------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------- |
-| Passkey       | P-256                   | in the authenticator (device or syncing password manager)              | admin of the account: every payment, adding and revoking keys    | until it is revoked in the account                            |
-| Setup key     | secp256k1               | in memory only, during setup                                           | the account's root key, forever ([Limits](#limits-technical))    | the app discards it after setup                               |
-| Read key      | secp256k1               | `localStorage` in plain text, under `simpleTodo.chainAccount.v1.<DID>` | Zama decryption of what the account may read in escrow and token | 24 hours (ACL delegation), then renewed with one passkey step |
-| Transport key | ML-KEM-512              | the page's memory                                                      | opens the KMS's response shares                                  | while the page is open                                        |
-| Openfort key  | publishable `pk_test_…` | in the shipped JavaScript                                              | have user operations sponsored under Openfort's rule             | until it is rotated                                           |
+| Key           | Kind                    | Where it lives                                                                                             | What it may do                                                   | For how long                                                  |
+| ------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------- |
+| Passkey       | P-256                   | in the authenticator (device or syncing password manager)                                                  | admin of the account: every payment, adding and revoking keys    | until it is revoked in the account                            |
+| Setup key     | secp256k1               | in memory only, during setup                                                                               | the account's root key, forever ([Limits](#limits-technical))    | the app discards it after setup                               |
+| Read key      | secp256k1               | `localStorage`, sealed under a key from the passkey's PRF output, under `simpleTodo.chainAccount.v1.<DID>` | Zama decryption of what the account may read in escrow and token | 24 hours (ACL delegation), then renewed with one passkey step |
+| Transport key | ML-KEM-512              | the page's memory                                                                                          | opens the KMS's response shares                                  | while the page is open                                        |
+| Openfort key  | publishable `pk_test_…` | in the shipped JavaScript                                                                                  | have user operations sponsored under Openfort's rule             | until it is rotated                                           |
 
 ## Who runs what: central or decentralized
 
@@ -238,12 +239,15 @@ contract itself holds neither.
 
 ### Setup: simple
 
-As soon as a passkey is signed in, the app sets up an account in the background without asking. For
-that it creates a throwaway key that uses the new account exactly once: it switches the account to
-Calibur, registers the passkey as admin, and lets the browser's read key decrypt amounts for 24 hours.
-Then the app forgets the throwaway key. Openfort pays the gas. This takes about 20 seconds, after
-which the address shows in the "Konto" (Account) tab. The app publishes it under the DID in OrbitDB so
-others can give that account budgets.
+As soon as a passkey is signed in, the app sets up an account in the background, with no transaction
+to confirm. For that it creates a throwaway key that uses the new account exactly once: it switches
+the account to Calibur, registers the passkey as admin, and lets the browser's read key decrypt
+amounts for 24 hours. Then the app forgets the throwaway key. Openfort pays the gas. This takes about
+20 seconds, after which the address shows in the "Konto" (Account) tab. The app publishes it under the
+DID in OrbitDB so others can give that account budgets.
+
+To keep the read key for later visits, the passkey is asked once more right after: its answer seals
+the read key in this browser.
 
 ### Setup: technical
 
@@ -268,7 +272,7 @@ sequenceDiagram
   end
 
   Note over App: passkey signed in or restored,<br/>public key x, y known
-  App->>App: create the read key (secp256k1)
+  App->>App: create the read key (secp256k1, createZamaSessionKey)
   App->>W: createCaliburPasskeySetup(passkey, calls)
   W->>W: create the setup key (secp256k1, in memory only)<br/>its address becomes the account
   W->>W: sign the EIP-7702 authorization: code of Calibur v1.0.0
@@ -290,7 +294,8 @@ sequenceDiagram
   App->>RPC: getCode, isRegistered, getKeySettings (asked again for up to 30 s)
   RPC-->>App: Calibur v1.0.0, registered, admin
   App->>W: discard(): drop the setup key
-  App->>App: localStorage: address, read key, expiry, transaction
+  App->>App: PRF from the passkey (one touch), HKDF:<br/>sealing key, seal the read key (AES-GCM)
+  App->>App: localStorage: address, sealed read key, expiry, transaction
   App->>DB: put("account", address, chain ID)<br/>only the own DID may write
 ```
 
@@ -312,9 +317,11 @@ sequenceDiagram
    v1.0.0 and has the passkey registered as admin. Public RPCs sit behind load balancers, and the node
    that answers can be a block behind; the app therefore asks again for up to 30 seconds. On
    2026-09-17 a run without this retry reported a correctly set up account as failed.
-5. **Store and publish.** `discard()` drops the setup key. The record in `localStorage` holds address,
-   read key, expiry, setup transaction and time; the account directory gets the address
-   ([Account lookup](#account-lookup-technical)).
+5. **Seal, store and publish.** `discard()` drops the setup key. One passkey touch derives the sealing
+   key and seals the read key ([The read key](#read-key-technical)). The record in `localStorage` holds
+   address, sealed read key, expiry, setup transaction and time; the account directory gets the
+   address ([Account lookup](#account-lookup-technical)). A declined touch or a passkey without PRF
+   leaves the account as it is; the read key then holds for this session only.
 6. **A second device** with the same passkey finds the published account and takes it over, but has no
    read key. The app then asks for a new one, with one passkey step.
 
@@ -604,7 +611,9 @@ sequenceDiagram
 6. **When the read key has expired**, the app shows "Read access expired." and the button "Renew with
    passkey": one user operation with two new delegations to a new read key, one passkey step
    (`renewReadKey`). The key is new every time, because the ACL accepts the same delegation only once
-   per block and an old key should not outlive its renewal.
+   per block and an old key should not outlive its renewal. A read key that has not expired but is
+   still sealed after a reload shows "Amounts are hidden." and "Show amounts" instead: one passkey
+   touch opens it in memory, and nothing is sent (`unlockReadKey`).
 7. **The auditor view** on Sepolia lists the escrow's `Locked` events, at most 50, for any identity.
    It decrypts amounts only when this session's account is the registered auditor, and shows "•••"
    otherwise. The registered auditor is a development key without a passkey, so the app always shows
@@ -622,36 +631,68 @@ creates an additional key in the browser, the read key, and the account grants i
 Think of it as a time-limited power of attorney for account statements: whoever holds it sees the
 amounts but cannot transfer, lock or release anything. Only the passkey can do that.
 
-- **Granted** when the account is set up, without asking.
-- **Reading** never asks the passkey. So Bob sees his amounts without touching his finger every time.
-- **After 24 hours** the power of attorney expires. The app shows "Read access expired."; after "Renew
-  with passkey" and one confirmation a new read key holds for another 24 hours. A second device that has
-  no read key yet shows the same.
+The browser keeps the read key only sealed: encrypted under a key the passkey itself derives, which is
+never stored. A copy of the browser profile holds nothing that reads.
 
-**Why 24 hours:** the read key sits unencrypted in the browser. Whoever gets at this browser profile,
-through malware or an unlocked laptop, can read amounts until the power of attorney expires. A short
-term limits that time, a long one saves confirmations. The 24 hours are an app setting for the demo,
-not a Zama requirement, and can be changed.
+- **Granted** when the account is set up. The passkey is asked once, to seal the read key.
+- **Opened** once per visit. After a reload amounts show "•••", with the note "Amounts are hidden." and
+  the button "Show amounts": one touch, and nothing is sent. Nothing asks the passkey on its own.
+- **Reading** after that never asks the passkey. So Bob sees his amounts without touching his finger
+  every time.
+- **After 24 hours** the power of attorney expires. The app shows "Read access expired."; after "Renew
+  with passkey" a new read key holds for another 24 hours. A second device that has no read key yet
+  shows the same.
+
+**Why still 24 hours:** sealed, the read key no longer leaves with a copied browser profile. While a
+visit has it open, though, a compromised page could use it. A short term limits that time, a long one
+saves renewals. The 24 hours are an app setting for the demo, not a Zama requirement, and can be
+changed.
 
 ```mermaid
 stateDiagram-v2
-  state "Valid" as valid
+  state "Open" as valid
+  state "Sealed" as locked
   state "Expired" as expired
   state "Missing" as missing
-  [*] --> valid: account set up, no passkey prompt
+  [*] --> valid: account set up, sealed with one touch
+  [*] --> locked: reload in the same browser
   [*] --> missing: second device with the same passkey
+  locked --> valid: Show amounts, one touch
   valid --> valid: read an amount, no passkey
   valid --> expired: 24 hours later
+  locked --> expired: 24 hours later
   expired --> valid: Renew with passkey
   missing --> valid: Renew with passkey
 ```
 
 ### Read key: technical
 
-- **Key.** secp256k1, created with viem's `generatePrivateKey` in `ensureAccount` (setup) and in
-  `renewReadKey` (renewal), new each time. It is stored in plain text in the account record in
-  `localStorage` under `simpleTodo.chainAccount.v1.<DID>`, as `session: { address, privateKey }` with
-  `readKeyExpiresAt` in Unix seconds.
+- **Key.** secp256k1, created with the wallet package's `createZamaSessionKey()` in `ensureAccount`
+  (setup) and in `renewReadKey` (renewal), new each time. The app never holds it as text: the wallet
+  keeps the private key inside a viem account and offers `seal(sealingKey)`.
+- **Sealing key.** One WebAuthn assertion with the PRF extension, through
+  `extractPrfSeedFromCredential` with the provider's fixed input for this relying party
+  (`prfInputForRelyingParty`) and user verification required. HKDF-SHA256 over the answer, info
+  `simple-todo:escrow01:read-key-seal:v1`, gives a non-extractable AES-GCM-256 key
+  ([`src/lib/chain/read-key-seal.js`](../src/lib/chain/read-key-seal.js)). The same PRF answer also
+  yields the list's signing key; the HKDF info keeps the two apart. The sealing key lives in memory
+  for the session, so one touch serves every seal and open after it.
+- **What is stored.** The account record in `localStorage` under `simpleTodo.chainAccount.v1.<DID>`
+  holds `session: { address, sealed }` with `readKeyExpiresAt` in Unix seconds. `sealed` is the
+  wallet's `SealedZamaSessionKey`: AES-GCM, a random 12-byte IV, the address bound as associated data.
+  `toStored` in [`account-store.js`](../src/lib/chain/account-store.js) writes only the record's own
+  fields, so a plain key cannot slip in.
+- **When the passkey is asked.** Reads that happen on their own — the balance on start, a budget
+  chip — never ask: a sealed key makes them throw `read-access-locked`. "Show amounts"
+  (`unlockReadKey`) and a lock open it (`openReadKey`), because somebody asked for those. A renewal
+  derives the sealing key before it sends anything, so a declined touch sends nothing.
+- **Without PRF, or a declined touch at setup.** The account stands. The read key holds for this
+  session only and is stored as `sealed: null`, so the next visit counts it as missing and offers a
+  renewal.
+- **From before the seal.** A record that still holds `privateKey` is read once, at the first load
+  after the update: the key serves that session, and the record is rewritten without it.
+- **A seal that does not open** — another PRF answer, or altered storage — is dropped: the state
+  turns to missing, and the app offers a renewal instead of the same button failing again.
 - **Power of attorney.** `ACL.delegateForUserDecryption(read key, contract, expiry)`, once each for the
   escrow and for cUSDTMock. At setup the call sits in the batch the setup key signs, without a passkey
   prompt; at renewal it is a user operation the passkey signs. The key is new each time, because the
@@ -661,9 +702,9 @@ stateDiagram-v2
   [`src/lib/chain/config.js`](../src/lib/chain/config.js). A changed value applies to new read keys;
   existing delegations keep their date. ACL v0.4.0 only requires a date in the future, so the term can
   be chosen freely.
-- **Who enforces the end.** The app compares `readKeyExpiresAt` with the clock (`readKeyState`: `valid`,
-  `expired`, `missing`) and then shows "Read access expired.". The expiry is enforced through the chain,
-  though: the KMS connectors check `ACL.isHandleDelegatedForUserDecryption` on Sepolia, and
+- **Who enforces the end.** The app compares `readKeyExpiresAt` with the clock (`readKeyState`:
+  `valid`, `locked`, `expired`, `missing`) and then shows "Read access expired.". The expiry is
+  enforced through the chain, though: the KMS connectors check `ACL.isHandleDelegatedForUserDecryption` on Sepolia, and
   `@zama-fhe/sdk` already checks before the request that the delegation is active. The signed permit
   has a time window of its own; the chain lets it read only while the delegation holds.
 - **What it can do.** Sign EIP-712 permits of type `DelegatedUserDecryptRequestVerification` for
@@ -678,9 +719,8 @@ stateDiagram-v2
   v0.14 also checks permits through ERC-1271; whether a Calibur passkey signature passes there has not
   been checked.
 - **What the app does not do.** It offers no revocation (`revokeDelegationForUserDecryption`, in the
-  wallet package `getRevokeDelegationForUserDecryptionCalls`); the power of attorney ends only by expiry.
-  The wallet package could seal the key with AES-GCM (`seal`, e.g. with a key derived from the passkey's
-  PRF output); the app does not use that yet ([Open issues](#open-issues)).
+  wallet package `getRevokeDelegationForUserDecryptionCalls`); the power of attorney ends only by expiry
+  ([Open issues](#open-issues)).
 
 ## Release and payout
 
@@ -761,19 +801,20 @@ otherwise it reports that the delegate has no account for budgets yet, before th
 
 ## What is stored where
 
-| Data                                                               | Where                                            | Who can see it                       |
-| ------------------------------------------------------------------ | ------------------------------------------------ | ------------------------------------ |
-| the passkey's private key                                          | authenticator                                    | nobody                               |
-| address, read key (private, plain text), expiry, setup transaction | the browser's `localStorage`                     | whoever gets at this browser profile |
-| address per DID                                                    | OrbitDB account directory                        | anyone who opens the database        |
-| budget status, `todoRef`, transaction hashes, no amount            | the todo's OrbitDB list                          | whoever can read the list            |
-| handles of locked amounts and balances                             | storage of escrow and token on Sepolia           | everyone                             |
-| ciphertexts                                                        | Zama's coprocessors, committed on the gateway    | the operators, encrypted only        |
-| FHE decryption key                                                 | KMS, as shares on 13 nodes                       | no single node                       |
-| link between account and read key                                  | `DelegatedForUserDecryption` event on Sepolia    | everyone                             |
-| decryption requests                                                | gateway chain                                    | everyone                             |
-| starting funds of 1,000.00                                         | calldata and events of `mint`, `approve`, `wrap` | everyone                             |
-| plain value of an amount                                           | memory of the browser that decrypted it          | the person at that browser           |
+| Data                                                    | Where                                            | Who can see it                                                           |
+| ------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------ |
+| the passkey's private key                               | authenticator                                    | nobody                                                                   |
+| address, read key (sealed), expiry, setup transaction   | the browser's `localStorage`                     | whoever gets at this browser profile; the read key only with the passkey |
+| the opened read key, the sealing key                    | the memory of this tab, for the visit            | the page while it runs                                                   |
+| address per DID                                         | OrbitDB account directory                        | anyone who opens the database                                            |
+| budget status, `todoRef`, transaction hashes, no amount | the todo's OrbitDB list                          | whoever can read the list                                                |
+| handles of locked amounts and balances                  | storage of escrow and token on Sepolia           | everyone                                                                 |
+| ciphertexts                                             | Zama's coprocessors, committed on the gateway    | the operators, encrypted only                                            |
+| FHE decryption key                                      | KMS, as shares on 13 nodes                       | no single node                                                           |
+| link between account and read key                       | `DelegatedForUserDecryption` event on Sepolia    | everyone                                                                 |
+| decryption requests                                     | gateway chain                                    | everyone                                                                 |
+| starting funds of 1,000.00                              | calldata and events of `mint`, `approve`, `wrap` | everyone                                                                 |
+| plain value of an amount                                | memory of the browser that decrypted it          | the person at that browser                                               |
 
 ## Limits
 
@@ -786,8 +827,8 @@ otherwise it reports that the delegate has no account for budgets yet, before th
   identity and the same account, in two touches and with nothing stored.
 - The chain does not check whether the passkey really asked for fingerprint or PIN; only the app
   requires it.
-- The read key sits unencrypted in the browser. Whoever gets at the browser profile can read amounts
-  for up to 24 hours, but move nothing.
+- The read key is stored sealed and opens only with the passkey. Once a visit has opened it, a
+  compromised page could read amounts for up to 24 hours, but move nothing.
 - The Openfort key is in the app. Whoever reads it out can have any operation on Sepolia sponsored at
   the expense of this Openfort project.
 
@@ -805,9 +846,10 @@ otherwise it reports that the delegate has no account for budgets yet, before th
   passkey still takes the account with it.
 - **User verification.** `KeyLib.verify` passes `requireUV: false`; the app requests
   `userVerification: 'required'`.
-- **Read key.** Plain text in `localStorage`, valid for up to 24 hours, publicly linked to the account.
-  The wallet package can seal it with AES-GCM (`seal`, e.g. with a key derived from the passkey's PRF
-  output); the app does not use that yet.
+- **Read key.** Sealed in `localStorage` (AES-GCM under a key from the passkey's PRF output), opened in
+  memory for one visit, valid for up to 24 hours, publicly linked to the account. A passkey without PRF
+  cannot seal: its read key lasts one visit. The sealing key stays in memory for the visit, so a page
+  compromised while it runs can open and use the read key.
 - **Openfort.** Rule `ply_1b76dd29-…` has a single condition: `sponsorEvmTransaction` on chain
   11155111, with no restriction to contracts or functions. The publishable key is in the shipped
   JavaScript. Running outside the testnet needs rules on escrow, token and ACL, rate limits, and a
@@ -886,7 +928,9 @@ EntryPoint and paymaster; the lock alone cost 682,630 gas in the smoke test of 2
    against v1.1.0 (Foundry harness and fork test), and existing accounts need a new authorization that
    only their root key can sign. New accounts on v1.1.0 would be the simpler path.
 2. **Openfort rule**: restrict it to the demo's contracts and cap the budget.
-3. **Read key**: seal it instead of storing it in plain text.
+3. **Read key**: sealed since 2026-10-02, under a key from the passkey's PRF output. Left: revoke the
+   previous delegation on renewal
+   ([Le-Space/simple-todo#54](https://github.com/Le-Space/simple-todo/issues/54), step 2).
 4. **Recovery for a lost passkey**: a second admin key or a hook, before real money is involved.
    Another device with the same passkey needs none of that since 0.8.0.
 5. **Publish the packages** and replace the tarballs.

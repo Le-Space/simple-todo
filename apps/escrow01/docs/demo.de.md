@@ -33,7 +33,9 @@ Aussagen, die heute nicht stimmen würden:
   Generalschlüssel ([Grenzen](passkey-account.de.md#grenzen-technisch)). Ein Passkey, den es noch
   gibt, ist etwas anderes: Auf einem zweiten Gerät gibt er dieselbe Identität und dasselbe Konto in
   zwei Berührungen zurück.
-- „Der Leseschlüssel ist geschützt.“ Nein: Er liegt bis zu 24 Stunden im Klartext im Browser.
+- „Der Leseschlüssel lässt sich nicht missbrauchen.“ Nicht ganz: Er liegt versiegelt und öffnet sich
+  nur mit dem Passkey, aber hat ein Besuch ihn geöffnet, könnte eine kompromittierte Seite ihn bis zu
+  24 Stunden lang benutzen.
 
 ## Am Tag vorher prüfen
 
@@ -345,8 +347,9 @@ schlug die Nutzer-Entschlüsselung Anfang September 2026 zweimal zeitweise fehl.
   Admin-Schlüssel eines Calibur-Kontos. Der ursprüngliche Einrichtungsschlüssel lässt sich nie
   entfernen (Calibur akzeptiert ihn immer als Root-Key, und nach EIP-7702 kann er das Konto ohnehin
   neu delegieren); die App verwirft ihn nach der Einrichtung. Die Nutzerverifikation des Passkeys wird
-  on-chain nicht erzwungen. Fürs Lesen hält der Browser einen Sitzungsschlüssel bis zu 24 Stunden im
-  Klartext, weil Zamas aktuelle Version nur ECDSA-Signaturen annimmt. Eine Wiederherstellung ohne den
+  on-chain nicht erzwungen. Fürs Lesen hält der Browser einen Leseschlüssel bis zu 24 Stunden, weil
+  Zamas aktuelle Version nur ECDSA-Signaturen annimmt; er liegt versiegelt unter einem Schlüssel, den
+  der Passkey ableitet, und wird einmal pro Besuch geöffnet. Eine Wiederherstellung ohne den
   Passkey gibt es nicht; mit ihm braucht ein zweites Gerät nichts weiter.
 - **Openfort-Schlüssel:** ein publishable Schlüssel in der ausgelieferten Seite. Wer ihn ausliest, kann
   auf Sepolia Operationen auf Kosten des Openfort-Projekts sponsern lassen, aber für kein Konto
@@ -378,9 +381,11 @@ Chain; die App kann dann aber nicht sperren, freigeben oder lesen
 
 Eine befristete Vollmacht für Kontoauszüge: ein zusätzlicher Schlüssel im Browser, dem das
 Passkey-Konto erlaubt, seine Beträge bei Zama entschlüsseln zu lassen. Nötig ist er, weil Zamas
-aktuelle Version keine Passkey-Unterschriften annimmt. Er kann nur lesen, nichts bewegen. Weil er
-unverschlüsselt im Browser liegt, gilt die Vollmacht in der App 24 Stunden und wird danach mit einem
-Passkey-Schritt erneuert. Die Frist ist eine Einstellung der App, keine Vorgabe von Zama, und
+aktuelle Version keine Passkey-Unterschriften annimmt. Er kann nur lesen, nichts bewegen. Der Browser
+bewahrt ihn versiegelt auf, unter einem Schlüssel, den der Passkey ableitet und niemand speichert;
+nach einem Neuladen öffnet „Beträge anzeigen“ ihn mit einer Berührung. Weil eine kompromittierte Seite
+einen geöffneten Schlüssel trotzdem benutzen könnte, gilt die Vollmacht in der App 24 Stunden und wird
+danach mit einem Passkey-Schritt erneuert. Die Frist ist eine Einstellung der App, keine Vorgabe von Zama, und
 durchgesetzt wird sie über die Chain ([Der Leseschlüssel](passkey-account.de.md#leseschlüssel-einfach)).
 
 ### Ist das reif für Mainnet?
@@ -389,8 +394,8 @@ Nein, es ist eine Testnetz-Vorführung. Zamas Host-Verträge auf Ethereum Mainne
 Version v0.13 und denselben verifizierten Quellcode wie auf Sepolia. Offen sind: Die App kennt nur
 Sepolia und hängt an unveröffentlichten Paketen, die Treuhand ist nicht auditiert, die Prüfstelle ist
 ein Entwicklerschlüssel, das Passkey-Konto lässt sich ohne seinen Passkey nicht wiederherstellen und nutzt Calibur v1.0.0 statt
-des neueren v1.1.0, das Sponsoring ist nicht auf die Verträge der Demo beschränkt, der Leseschlüssel
-liegt im Klartext im Browser, Version v0.14 ist veröffentlicht, aber noch nicht bereitgestellt, und der
+des neueren v1.1.0, das Sponsoring ist nicht auf die Verträge der Demo beschränkt, ein geöffneter
+Leseschlüssel lebt im Speicher der Seite, Version v0.14 ist veröffentlicht, aber noch nicht bereitgestellt, und der
 InputVerifier auf Mainnet nimmt eine verschlüsselte Eingabe mit der Signatur eines einzigen
 registrierten Coprozessor-Schlüssels an (auf Sepolia 3 von 5); wie Zama diesen Schlüssel betreibt, ist
 von außen nicht sichtbar. Nichts aus diesem Kapitel lief auf Mainnet.

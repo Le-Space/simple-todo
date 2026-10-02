@@ -28,9 +28,10 @@ import {
 /** @typedef {import('./budget.js').Budget} Budget */
 /** @typedef {import('./db-actions.js').TodoItem} TodoItem */
 /**
- * @typedef {{ state: 'idle' | 'decrypting' | 'ready' | 'hidden' | 'expired', units: bigint | null }} AmountState
+ * @typedef {{ state: 'idle' | 'decrypting' | 'ready' | 'hidden' | 'expired' | 'locked', units: bigint | null }} AmountState
  *   `hidden`: this session cannot read it — not a party to the escrow, or an
  *   escrow this browser never saw (the fake keeps them in memory only).
+ *   `locked`: the read key is sealed and this session has not opened it.
  */
 /**
  * @typedef {{ action: 'lock' | 'release', code: string, todoKey: string }} BudgetNotice
@@ -44,6 +45,22 @@ const DECRYPTING = { state: 'decrypting', units: null };
 const HIDDEN = { state: 'hidden', units: null };
 /** @type {AmountState} */
 const EXPIRED = { state: 'expired', units: null };
+/** @type {AmountState} */
+const LOCKED = { state: 'locked', units: null };
+
+/**
+ * What a failed read shows: the read key ran out, is still sealed, or this
+ * session may not see the amount. The first two also refresh the read key's
+ * status, so its notice appears.
+ *
+ * @param {unknown} error
+ * @returns {AmountState}
+ */
+function unreadable(error) {
+	const code = budgetErrorCode(error);
+	if (code === 'read-access-expired' || code === 'read-access-locked') void refreshReadKey();
+	return code === 'read-access-expired' ? EXPIRED : code === 'read-access-locked' ? LOCKED : HIDDEN;
+}
 
 /**
  * The session's account on the chain, for the account tab: none until a
@@ -149,9 +166,7 @@ export function readAmount(creatorDid, todoRef) {
 		try {
 			state = { state: 'ready', units: await budgetService.decryptAmount({ todoRef, creatorDid }) };
 		} catch (error) {
-			const expired = budgetErrorCode(error) === 'read-access-expired';
-			if (expired) void refreshReadKey();
-			state = expired ? EXPIRED : HIDDEN;
+			state = unreadable(error);
 		}
 		setAmount(key, state);
 		decryptsInFlight.delete(key);
@@ -210,12 +225,37 @@ export async function renewReadAccess() {
 	} catch (error) {
 		return { ok: false, code: budgetErrorCode(error) };
 	}
-	// What could not be read a moment ago can be now.
+	rereadUnreadable();
+	return { ok: true };
+}
+
+/**
+ * "Show amounts": open the sealed read key with the passkey, once for this
+ * session.
+ *
+ * @returns {Promise<{ ok: boolean, code?: string }>}
+ */
+export async function unlockReadAccess() {
+	try {
+		readKeyStore.set(await budgetService.unlockReadKey());
+	} catch (error) {
+		void refreshReadKey();
+		return { ok: false, code: budgetErrorCode(error) };
+	}
+	rereadUnreadable();
+	return { ok: true };
+}
+
+/** What could not be read a moment ago can be now. */
+function rereadUnreadable() {
 	amounts.update((all) =>
-		Object.fromEntries(Object.entries(all).filter(([, entry]) => entry.state !== 'expired'))
+		Object.fromEntries(
+			Object.entries(all).filter(
+				([, entry]) => entry.state !== 'expired' && entry.state !== 'locked'
+			)
+		)
 	);
 	void refreshBalance();
-	return { ok: true };
 }
 
 export const balanceStore = writable(/** @type {AmountState} */ (IDLE));
@@ -230,9 +270,7 @@ export async function refreshBalance() {
 	try {
 		next = { state: 'ready', units: await budgetService.balance() };
 	} catch (error) {
-		const expired = budgetErrorCode(error) === 'read-access-expired';
-		if (expired) void refreshReadKey();
-		next = expired ? EXPIRED : HIDDEN;
+		next = unreadable(error);
 	}
 	if (request === balanceRequests) balanceStore.set(next);
 }
@@ -436,6 +474,12 @@ if (typeof window !== 'undefined' && budgetService.info.kind === 'fake') {
 	/** @type {any} */ (window).simpleTodoBudgetDemo = {
 		expireReadKey() {
 			budgetService.demo.expireReadKey();
+			amounts.set({});
+			void refreshReadKey();
+			void refreshBalance();
+		},
+		lockReadKey() {
+			budgetService.demo.lockReadKey();
 			amounts.set({});
 			void refreshReadKey();
 			void refreshBalance();

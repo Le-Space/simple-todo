@@ -262,4 +262,30 @@ describe('the fake budget service', () => {
 		alice.demo.expireReadKey();
 		expect((await alice.readKeyStatus()).state).toBe('expired');
 	});
+
+	it('hides amounts behind a sealed read key, as a reload on Sepolia does, until it is opened', async () => {
+		const w = world();
+		const todoRef = await w.alice.createTodoRef({ todoKey: 'todo_1' });
+		await w.alice.lock({ todoRef, beneficiaryDid: bob, amount: cUSDT(500), deadline: null });
+		w.bob.demo.lockReadKey();
+
+		expect((await w.bob.readKeyStatus()).state).toBe('locked');
+		expect(await codeOf(() => w.bob.decryptAmount({ todoRef, creatorDid: alice }))).toBe(
+			'read-access-locked'
+		);
+		expect(await codeOf(() => w.bob.balance())).toBe('read-access-locked');
+
+		expect((await w.bob.unlockReadKey()).state).toBe('valid');
+		expect(w.prompts.at(-1)).toBe(`${bob}:budget-read-unlock`);
+		expect(await w.bob.decryptAmount({ todoRef, creatorDid: alice })).toBe(cUSDT(500));
+	});
+
+	it('opens a sealed read key before a lock, with its own confirmation', async () => {
+		const w = world();
+		w.alice.demo.lockReadKey();
+		const todoRef = await w.alice.createTodoRef({ todoKey: 'todo_1' });
+		await w.alice.lock({ todoRef, beneficiaryDid: bob, amount: cUSDT(1), deadline: null });
+		expect(w.prompts).toEqual([`${alice}:budget-read-unlock`, `${alice}:budget-lock`]);
+		expect((await w.alice.readKeyStatus()).state).toBe('valid');
+	});
 });

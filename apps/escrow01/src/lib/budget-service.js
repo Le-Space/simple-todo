@@ -17,13 +17,15 @@
  *
  * Amounts are `bigint` base units of the token (`info.token.decimals`).
  *
- * @typedef {'valid' | 'expired' | 'missing'} ReadKeyState
+ * @typedef {'valid' | 'locked' | 'expired' | 'missing'} ReadKeyState
  *
  * @typedef {{ state: ReadKeyState, expiresAt: string | null }} ReadKeyStatus
  *   The read key decrypts amounts on this device. The passkey authorises it,
  *   it may only decrypt, and it expires (Zama's user decryption works this
  *   way today). An expired key makes every read throw `read-access-expired`
- *   until `renewReadKey()`.
+ *   until `renewReadKey()`. A `locked` key is still valid but stored sealed:
+ *   reads throw `read-access-locked` until `unlockReadKey()` opens it with the
+ *   passkey, once per session.
  *
  * @typedef {{ did: string | null, account: string | null, label?: string | null }} BudgetParty
  *   The chain knows accounts; the app knows DIDs. Either may be missing.
@@ -66,6 +68,7 @@
  *   listEscrowsForAuditor: () => Promise<AuditorEscrow[]>
  *   readKeyStatus: () => Promise<ReadKeyStatus>
  *   renewReadKey: () => Promise<ReadKeyStatus>
+ *   unlockReadKey: () => Promise<ReadKeyStatus>
  * }} BudgetService
  *
  * - `createTodoRef` — the escrow's public reference for a todo: a salted hash,
@@ -81,7 +84,7 @@
  * - `balance` — my confidential balance, decrypted; `unavailable` when this
  *   service cannot know it.
  * - `listEscrowsForAuditor` — every escrow with its amount, for the auditor.
- * - `readKeyStatus` / `renewReadKey` — the read key above.
+ * - `readKeyStatus` / `renewReadKey` / `unlockReadKey` — the read key above.
  */
 
 import { createFakeBudgetService } from './budget-service-fake.js';
@@ -199,6 +202,7 @@ function createLazyZamaService({ identity, endpoints, credential, orbitdb, promp
 		listEscrowsForAuditor: call('listEscrowsForAuditor'),
 		readKeyStatus: call('readKeyStatus'),
 		renewReadKey: call('renewReadKey'),
+		unlockReadKey: call('unlockReadKey'),
 		prepareAccount: call('prepareAccount')
 	};
 }

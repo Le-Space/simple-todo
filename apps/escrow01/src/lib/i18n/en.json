@@ -86,6 +86,8 @@
 		"lockConfirmed": "Lock confirmed",
 		"releaseConfirmed": "Release confirmed",
 		"readKeyRenewed": "Read access renewed",
+		"readKeySealed": "Read access kept on this device",
+		"readKeyUnlocked": "Amounts shown",
 		"failed": "Passkey confirmation failed"
 	},
 	"onboarding": {
@@ -199,7 +201,8 @@
 		"chip": {
 			"hidden": "This browser cannot read the amount.",
 			"decrypting": "Decrypting the amount…",
-			"expired": "Read access expired."
+			"expired": "Read access expired.",
+			"locked": "Hidden until the amounts are shown with the passkey."
 		},
 		"item": {
 			"release": "Release budget",
@@ -229,6 +232,9 @@
 			"expiredTitle": "Read access expired.",
 			"expired": "Confirm with your passkey to see the amounts again.",
 			"renew": "Renew with passkey",
+			"lockedTitle": "Amounts are hidden.",
+			"locked": "Confirm with your passkey to show them on this device. Nothing is sent.",
+			"unlock": "Show amounts",
 			"cancelledTitle": "Passkey confirmation cancelled.",
 			"cancelled": "Nothing was signed and nothing was sent.",
 			"retry": "Confirm again"

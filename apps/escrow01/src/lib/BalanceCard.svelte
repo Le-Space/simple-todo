@@ -36,6 +36,8 @@
 				</p>
 			{:else if balance.state === 'expired'}
 				<p class="mt-1 text-sm text-text">{$_('budget.notice.expiredTitle')}</p>
+			{:else if balance.state === 'locked'}
+				<p class="mt-1 text-sm text-text">{$_('budget.notice.lockedTitle')}</p>
 			{:else if balance.state === 'hidden'}
 				<p class="mt-1 text-sm text-text">{$_('budget.balance.hidden')}</p>
 			{:else}
