@@ -68,6 +68,8 @@ the escrow half of [de2do](https://github.com/NiKrause/de2do).
   used here, from handles to threshold decryption
 - [docs/money-flow.md](docs/money-flow.md): where the test money comes from, whose token contracts
   these are, and what of a lock and a release is public, with one sequence diagram end to end
+- [docs/keys.md](docs/keys.md): the four keys behind one passkey, why the read key exists, what
+  Zama v0.14 changes about it, and how we proceed, with sources
 - [docs/smoke-test.md](docs/smoke-test.md): the Sepolia run of 2026-09-16, step by step
 - [docs/security.md](docs/security.md): threat model, leaks, trust assumptions, open issues
 - [docs/demo.de.md](docs/demo.de.md) ([English](docs/demo.md)): the bank demo

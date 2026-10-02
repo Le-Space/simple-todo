@@ -18,6 +18,13 @@ to the one before it, and each chapter is a complete app you can run.
 | `escrow01` | Confidential budgets on Sepolia with Zama FHE | [escrow01.le-space.de](https://escrow01.le-space.de) |
 | `invoice01` | Invoices on top of delegation | [invoice01.le-space.de](https://invoice01.le-space.de) |
 
+**Four keys, one passkey.** In `escrow01` the passkey is the wallet, but four keys do the work: the
+passkey's own P-256 key signs every transaction, a key derived from its PRF output signs the list, a
+setup key is thrown away, and a random read key lets Zama decrypt amounts. Why the read key exists,
+what Zama's v0.14 changes about it and what we do next:
+[apps/escrow01/docs/keys.md](apps/escrow01/docs/keys.md)
+([Deutsch](apps/escrow01/docs/keys.de.md)).
+
 ## A list, on another device
 
 The QR icon in every chapter's header shows the page as a code. The open list
