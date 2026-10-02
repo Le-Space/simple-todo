@@ -1,7 +1,7 @@
 # Simple Todo - A Local-First Peer-to-Peer PWA Tutorial
 
-[![Main E2E](https://github.com/NiKrause/simple-todo/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/NiKrause/simple-todo/actions/workflows/deploy.yml?query=branch%3Amain)
-[![Remote browser replication](https://github.com/NiKrause/simple-todo/actions/workflows/remote-replication.yml/badge.svg?branch=main)](https://github.com/NiKrause/simple-todo/actions/workflows/remote-replication.yml)
+[![Deploy](https://github.com/Le-Space/simple-todo/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/Le-Space/simple-todo/actions/workflows/deploy.yml?query=branch%3Amain)
+[![CI](https://github.com/Le-Space/simple-todo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Le-Space/simple-todo/actions/workflows/ci.yml?query=branch%3Amain)
 
 A basic decentralized, local-first, peer-to-peer todo application built with **libp2p**, **IPFS**, and **OrbitDB**. This app demonstrates how modern Web3 technologies can create truly decentralized applications that work entirely in the browser.
 
@@ -24,7 +24,7 @@ This is a **browser-only** local-first peer-to-peer todo application that operat
 
 The `main` branch is the basic shared-list demo. Every browser opens the same default OrbitDB database (`simple-todos`); users only load the app URL, accept consent, and add todos. There is no manual OrbitDB address exchange in this branch. A Playwright E2E test verifies the default flow with Alice and Bob in separate browser contexts: each adds three todos, and both browsers must see all six replicated items.
 
-> **Another tutorial path:** The [`collab01`](https://github.com/NiKrause/simple-todo/tree/collab01) branch demonstrates explicit collaboration: users can create or load a todo database by its OrbitDB address, share it with another peer, and replicate changes through the relay.
+> **Another tutorial path:** The [`collab01`](https://github.com/Le-Space/simple-todo/tree/main/apps/collab01) branch demonstrates explicit collaboration: users can create or load a todo database by its OrbitDB address, share it with another peer, and replicate changes through the relay.
 
 ### Key Features
 
@@ -180,7 +180,7 @@ The tutorial covers:
 
 ```bash
 # Clone repository
-git clone https://github.com/NiKrause/simple-todo.git
+git clone https://github.com/Le-Space/simple-todo.git
 # checkout main branch
 git checkout main
 
