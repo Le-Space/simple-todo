@@ -317,7 +317,7 @@ Code:
 - [`src/lib/p2p.js`](../src/lib/p2p.js) 362-385: der aus PRF abgeleitete Signierschlüssel der Liste
   und wo er liegt
 - [`src/lib/chain/zama-client.js`](../src/lib/chain/zama-client.js): das SDK mit `MemoryStorage`
-- `@le-space/passkey-wallet` (Tarball in [`vendor/`](../vendor), Commit `cde6878`): `src/account.js`
+- `@le-space/passkey-wallet` 0.1.0 (der Code aus Commit `cde6878`): `src/account.js`
   209-220 (`signUserOperation`), `src/setup.js` 200 (der Einrichtungsschlüssel), `src/zama.js`
   (`createZamaSessionKey`, `openZamaSessionKey`, `getRevokeDelegationForUserDecryptionCalls`)
 - `@le-space/orbitdb-identity-provider-webauthn-did` 0.8.0: `src/keystore/encryption.js`

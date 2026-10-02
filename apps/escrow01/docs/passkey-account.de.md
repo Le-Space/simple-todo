@@ -19,7 +19,7 @@ Arbeitsspeicher; auch die Tests laufen gegen sie.
 | Kontovertrag          | Calibur v1.0.0, ein Smart Contract von Uniswap Labs (MIT-Lizenz), `0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00` (Sepolia und Mainnet)       |
 | ERC-4337              | EntryPoint v0.8, `0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108`                                                                              |
 | Bundler und Paymaster | Openfort, `https://api.openfort.io/rpc/11155111`; Paymaster-Vertrag `0x8888fee873e7035789db91c16b5dddbad7214cda`                           |
-| Wallet-Code           | `@le-space/passkey-wallet`, unveröffentlicht, als Tarball in [`vendor/`](../vendor) (Commit `cde6878`)                                     |
+| Wallet-Code           | `@le-space/passkey-wallet` 0.1.0 von npm, gebaut in `packages/passkey-wallet` im Repository des Providers                                  |
 | Passkey-Schlüssel     | `@le-space/orbitdb-identity-provider-webauthn-did` 0.8.0 von npm, mit `getP256CredentialDescriptor` und `restoreIdentityFromAuthenticator` |
 | Zama-Client           | `@zama-fhe/sdk` 3.6.0 auf `@fhevm/sdk` 0.13.2                                                                                              |
 
@@ -934,11 +934,10 @@ Die `pol_…`-ID aus der zweiten Ausgabe gehört in `VITE_OPENFORT_POLICY_ID`.
 
 Weitere Voraussetzungen im Repository:
 
-- **Ein unveröffentlichtes Paket.** `vendor/le-space-passkey-wallet-0.0.0-cde6878.tgz` ist per
-  `git archive` aus dem genannten Commit gepackt und in `package.json` als `file:`-Abhängigkeit
-  eingetragen. Ist es auf npm, ersetzt eine Versionsnummer den Tarball. Der Provider hat diesen Weg
-  am 2026-09-23 genommen: Seine P-256-Primitive sind als 0.8.0 erschienen, und das Kapitel holt sie
-  von npm.
+- **Beide Passkey-Pakete von npm.** Bis zum 2026-10-02 lag das Wallet als Tarball in `vendor/`,
+  gepackt aus Commit `cde6878`; jetzt erscheint es als `@le-space/passkey-wallet` 0.1.0 aus dem
+  Repository des Providers, mit demselben Code und mit Tests. Der Provider ist diesen Weg am
+  2026-09-23 mit 0.8.0 gegangen.
 - **Vite** braucht `worker: { format: 'es' }` ([`vite.config.js`](../vite.config.js)): Der
   Keystore-Worker des Providers importiert Module.
 
@@ -1002,7 +1001,7 @@ Repository, Branch `escrow01`:
 - Tests: [`src/lib/budget-service-zama.spec.js`](../src/lib/budget-service-zama.spec.js),
   [`src/lib/chain/did-key.spec.js`](../src/lib/chain/did-key.spec.js).
 
-`@le-space/passkey-wallet`, Commit `cde6878` (Tarball in `vendor/`): `README.md` (Aufbau, Root-Key,
+`@le-space/passkey-wallet` 0.1.0 (der Code aus Commit `cde6878`): `README.md` (Aufbau, Root-Key,
 Gasmessung), `src/setup.js` (`createCaliburPasskeySetup`, `getCaliburKeyState`, `revertOnFailure`
 438), `src/calibur.js` (`toWebAuthnP256Key`, `getKeyHash`, `encodeExecuteUserOpCallData`),
 `src/account.js` (`DEFAULT_VERIFICATION_GAS_LIMIT` 79). Provider `8366ed8`:

@@ -392,7 +392,7 @@ durchgesetzt wird sie über die Chain ([Der Leseschlüssel](passkey-account.de.m
 
 Nein, es ist eine Testnetz-Vorführung. Zamas Host-Verträge auf Ethereum Mainnet haben dieselbe
 Version v0.13 und denselben verifizierten Quellcode wie auf Sepolia. Offen sind: Die App kennt nur
-Sepolia und hängt an unveröffentlichten Paketen, die Treuhand ist nicht auditiert, die Prüfstelle ist
+Sepolia, die Treuhand ist nicht auditiert, die Prüfstelle ist
 ein Entwicklerschlüssel, das Passkey-Konto lässt sich ohne seinen Passkey nicht wiederherstellen und nutzt Calibur v1.0.0 statt
 des neueren v1.1.0, das Sponsoring ist nicht auf die Verträge der Demo beschränkt, ein geöffneter
 Leseschlüssel lebt im Speicher der Seite, Version v0.14 ist veröffentlicht, aber noch nicht bereitgestellt, und der

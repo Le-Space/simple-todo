@@ -753,8 +753,8 @@ importers:
         specifier: 0.8.0
         version: 0.8.0(@orbitdb/core@4.0.0)
       '@le-space/passkey-wallet':
-        specifier: file:vendor/le-space-passkey-wallet-0.0.0-cde6878.tgz
-        version: file:apps/escrow01/vendor/le-space-passkey-wallet-0.0.0-cde6878.tgz(@le-space/orbitdb-identity-provider-webauthn-did@0.8.0(@orbitdb/core@4.0.0))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))
+        specifier: 0.1.0
+        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.8.0(@orbitdb/core@4.0.0))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))
       '@le-space/ui':
         specifier: 0.9.6
         version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -3254,9 +3254,8 @@ packages:
     peerDependencies:
       '@orbitdb/core': ^4.0.0
 
-  '@le-space/passkey-wallet@file:apps/escrow01/vendor/le-space-passkey-wallet-0.0.0-cde6878.tgz':
-    resolution: {integrity: sha512-o1zvW6WZHzRcHr7OyajH0BT/C+B9Jck0kZS/j4DZc/SQlcoDhqOoki6j6SdIRIR52e+9jDbOnC1qEskgfMW8eg==, tarball: file:apps/escrow01/vendor/le-space-passkey-wallet-0.0.0-cde6878.tgz}
-    version: 0.0.0-cde6878
+  '@le-space/passkey-wallet@0.1.0':
+    resolution: {integrity: sha512-yWyHhEpkekE161qtOwGd1CSwQt4NrQ1R6q7WbQUmAijPzoZQwVJzroooFj+VbHLnjWE16/PABoI+39B7O152Jg==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       '@le-space/orbitdb-identity-provider-webauthn-did': 0.7.0
@@ -9059,7 +9058,7 @@ snapshots:
       iso-webauthn-varsig: '@le-space/iso-webauthn-varsig@0.3.0'
       multiformats: 14.0.5
 
-  '@le-space/passkey-wallet@file:apps/escrow01/vendor/le-space-passkey-wallet-0.0.0-cde6878.tgz(@le-space/orbitdb-identity-provider-webauthn-did@0.8.0(@orbitdb/core@4.0.0))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))':
+  '@le-space/passkey-wallet@0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.8.0(@orbitdb/core@4.0.0))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))':
     dependencies:
       '@le-space/orbitdb-identity-provider-webauthn-did': 0.8.0(@orbitdb/core@4.0.0)
       viem: 2.56.8(typescript@5.9.2)(zod@4.6.5)
