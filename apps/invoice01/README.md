@@ -72,13 +72,17 @@ cancelled, all offline, all in a list that replicates to your other devices.
   each get a tab, so the invoice form is not something to scroll past on the way
   to a todo. The open tab is in the address (`#rechnungen`), and both the todos
   and the invoices name the list they are writing to.
-- **An invoice needs a list of your own.** Anyone who knows the three words of
-  the public list may write to it, so this chapter does not keep invoices and
-  customer addresses there. Until a list of your own is open, the invoice tab
-  says why and links to the lists tab, where creating one is a click and the
-  new list is named with three words you can tell from the next one. **The open
-  list is remembered**, so a bookmark comes back to the list you were working
-  in rather than to the public one.
+- **A list of your own, from the first screen on.** Anyone who knows the three
+  words of the public list may write to it, so this chapter does not keep
+  invoices and customer addresses there — it starts you in a list only your
+  identity may write to, named with three words so you can tell it from the
+  next one, and **remembers it**, so a bookmark comes back to the list you were
+  working in. The public list is one click away in the lists tab.
+- **The relay is told about a list when it is made.** Opening a list somebody
+  sent you fetches its manifest from a peer that has it, and two browsers that
+  each start in their own list have never met. One call to `/pinning/sync` at
+  the moment the list exists gives the manifest a home a stranger can reach —
+  which is what makes a list of your own shareable at all.
 - **Two questions on the first screen, both already answered.** Where the todos
   are kept ("in this browser", because a tool that forgets on reload is not an
   invoicing tool) and who you are ("create a passkey", because the number circle

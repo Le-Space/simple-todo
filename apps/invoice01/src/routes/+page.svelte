@@ -253,17 +253,21 @@
 		// instead, which is where somebody's invoices went missing.
 		if (remembered && !listLink.initial.address) return { todoDbAddress: remembered.address };
 		/*
-			And otherwise the public three-word list, as in every chapter before
-			this one.
+			And otherwise a list of this browser's own, named with three words.
 
-			Starting each browser in a list of its own was measured and taken back
-			out: two browsers used to meet here before either sent the other an
-			address, and without that meeting place, opening somebody's list by
-			link or address became slow and unreliable. A list of your own is one
-			click away in the lists tab; making it the start needs the relay to
-			hold private lists first.
+			Which is where an invoicing tool should start: the public list is
+			writable by anybody who knows its words, and invoices do not go there.
+			It took the relay knowing about a list the moment it exists
+			(`tellRelayAboutList`) to make this work — without that, two browsers
+			that never shared the public list could not open each other's by link,
+			because the relay connects them but holds nothing it was never told
+			about. The public list stays one click away in the lists tab.
+
+			`words` is the public list this browser would otherwise have opened;
+			a `#list=` link and the lists tab still use it.
 		*/
-		return { todoDbName: words };
+		void words;
+		return { todoDbName: generateSpanishMnemonic(), todoDbPrivate: true };
 	}
 
 	let openingPublicList = false;

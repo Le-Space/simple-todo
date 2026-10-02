@@ -71,14 +71,14 @@ test.describe('private list visibility (#114)', () => {
 		await addVirtualAuthenticator(page);
 		await openReadyApp(page);
 
-		// Before: the public list every visitor lands in, named by its words above
-		// the todos.
+		// Before: this chapter starts in a list of this browser's own, named by
+		// three words above the todos — not the public list the earlier chapters
+		// land in.
 		const heading = page.getByTestId('active-list-heading');
 		await expect(heading).toBeVisible();
-		await expect(heading).toHaveAttribute('data-kind', 'shared');
-		await expect(heading).toContainText('Shared list');
+		await expect(heading).toHaveAttribute('data-kind', 'private');
 		await openSection(page, 'listen');
-		await expect(page.getByTestId('active-list-kind')).toHaveText('Shared list');
+		await expect(page.getByTestId('active-list-kind')).toHaveText('Private list');
 		const mnemonic = (await page.getByTestId('active-list-label').textContent())?.trim();
 		expect(mnemonic).toMatch(/^·\s+\S+-\S+-\S+$/);
 
@@ -86,8 +86,8 @@ test.describe('private list visibility (#114)', () => {
 			mnemonic?.replace(/^·\s+/, '')
 		);
 
-		// Another public list is reachable from this tab, where the three words
-		// used to sit on the first screen: the heading follows it.
+		// The public list is reachable from this tab, where the three words used
+		// to sit on the first screen: the heading follows it.
 		const publicWords = 'brisa-arena-sal';
 		await openPublicList(page, publicWords, { timeout });
 		await expect(page.getByTestId('active-list-label')).toHaveText(`· ${publicWords}`);
