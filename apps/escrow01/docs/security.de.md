@@ -371,8 +371,10 @@ ist, kann niemand wiederherstellen, und der Schlüssel, der das Gas bezahlt, ist
   kein Entschlüsselungs-Permit signieren. Der Workaround der App ist ein secp256k1-Sitzungsschlüssel,
   der Leseschlüssel, den das Konto mit `ACL.delegateForUserDecryption(sessionKey, contract, expiry)`
   autorisiert, einmal pro Vertrag (Token und Treuhand), für 24 Stunden: im Stapel der Einrichtung und
-  bei jeder Erneuerung mit einem neuen Schlüssel. Der Schlüssel liegt im Klartext in `localStorage` des
-  Browsers. Das Event `DelegatedForUserDecryption` macht die Verknüpfung zwischen Konto und
+  bei jeder Erneuerung mit einem neuen Schlüssel. Der Schlüssel liegt versiegelt in `localStorage` des
+  Browsers (AES-GCM unter einem Schlüssel, den HKDF aus dem PRF-Wert des Passkeys ableitet) und wird
+  einmal pro Besuch im Speicher geöffnet; eine Seite, die währenddessen kompromittiert ist, kann ihn
+  benutzen ([Der Leseschlüssel](passkey-account.de.md#leseschlüssel-technisch)). Das Event `DelegatedForUserDecryption` macht die Verknüpfung zwischen Konto und
   Sitzungsschlüssel öffentlich, und der Sitzungsschlüssel kann bis zum Ablauf oder zu einem Widerruf
   alles lesen, was das Konto in diesen Verträgen lesen darf.
 - **v0.14** ergänzt für seine neue, vereinheitlichte Anfrage eine ERC-1271-Verifikation im
@@ -410,7 +412,7 @@ ist, kann niemand wiederherstellen, und der Schlüssel, der das Gas bezahlt, ist
 4. Die App hat keine Schaltfläche für die Rückzahlung, und ihr Sepolia-Modus hängt an einem
    unveröffentlichten Paket, das als Tarball beiliegt.
 5. Passkey-Wallet: dauerhafter Root-Key, keine Nutzerverifikation on-chain, öffentliche Verknüpfung
-   zwischen Konto und Sitzungsschlüssel, der Sitzungsschlüssel im Klartext in `localStorage`, keine
+   zwischen Konto und Sitzungsschlüssel, ein geöffneter Sitzungsschlüssel im Speicher der Seite für den Besuch, keine
    Wiederherstellung bei verlorenem Passkey, Calibur v1.0.0 statt v1.1.0.
 6. Mainnet-Reife: ein einziger Coprozessor-Signierer für die Input-Attestierung im Mainnet,
    API-Schlüssel und Gebühren des Relayers, Migration auf v0.14, kein Audit.

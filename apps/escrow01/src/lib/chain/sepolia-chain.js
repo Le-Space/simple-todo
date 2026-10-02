@@ -17,7 +17,6 @@ import {
 	toWebAuthnP256Key
 } from '@le-space/passkey-wallet';
 import { encodeFunctionData, getAddress, isAddressEqual } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
 import { ESCROW_STATUS, escrowAbi, tokenAbi, underlyingAbi } from './abis.js';
 import { createOpenfortBundler, createSepoliaClient } from './clients.js';
 import {
@@ -32,6 +31,10 @@ import { createZamaClient } from './zama-client.js';
 
 /** @typedef {`0x${string}`} Hex */
 /** @typedef {{ to: Hex, value?: bigint, data: Hex }} Call */
+/**
+ * @typedef {{ address: Hex, account: import('viem').LocalAccount }} ReadKey
+ *   The read key, opened: Zama's SDK signs its permits with `account`.
+ */
 /**
  * @typedef {{
  *   beneficiary: Hex
@@ -77,14 +80,14 @@ export function createSepoliaChain({ endpoints }) {
 	/** @type {Map<string, Promise<import('./zama-client.js').ZamaClient>>} */
 	const zamaBySession = new Map();
 
-	/** @param {{ address: Hex, privateKey: Hex }} session */
+	/** @param {ReadKey} session */
 	function zamaFor(session) {
 		let zama = zamaBySession.get(session.address);
 		if (!zama) {
 			zama = createZamaClient({
 				publicClient: client,
 				rpcUrl: endpoints.rpcUrls[0],
-				sessionAccount: privateKeyToAccount(session.privateKey)
+				sessionAccount: session.account
 			});
 			zama.catch(() => zamaBySession.delete(session.address));
 			zamaBySession.set(session.address, zama);
@@ -243,7 +246,7 @@ export function createSepoliaChain({ endpoints }) {
 		},
 
 		/**
-		 * @param {{ amount: bigint, account: Hex, session: { address: Hex, privateKey: Hex } }} input
+		 * @param {{ amount: bigint, account: Hex, session: ReadKey }} input
 		 */
 		async encryptAmount({ amount, account, session }) {
 			const zama = await zamaFor(session);
@@ -255,7 +258,7 @@ export function createSepoliaChain({ endpoints }) {
 		 *   handles: Hex[]
 		 *   contractAddress: Hex
 		 *   account: Hex
-		 *   session: { address: Hex, privateKey: Hex }
+		 *   session: ReadKey
 		 * }} input
 		 */
 		async decrypt({ handles, contractAddress, account, session }) {

@@ -111,3 +111,43 @@ test('the delegate form on a row says where budgets are set', async ({ page }) =
 	await expect(page.getByTestId('todo-delegate-budget-note')).toBeVisible();
 	await expect(page.getByTestId('add-todo-budget')).toHaveCount(0);
 });
+
+test('amounts behind a sealed read key stay hidden until the passkey shows them', async ({
+	page
+}) => {
+	test.setTimeout(300_000);
+	await addVirtualAuthenticator(page);
+
+	await page.goto('/');
+	await waitForConsent(page);
+	await passConsent(page, { identity: 'create', label: 'Payer' });
+	await expect(todoInput(page)).toBeEnabled({ timeout });
+	await openPrivateList(page);
+
+	const text = `sealed-todo-${Date.now().toString(36)}`;
+	await todoInput(page).fill(text);
+	await page.getByTestId('add-todo-delegate-toggle').check();
+	await page.getByTestId('add-todo-delegate-did').fill(BOB);
+	await page.getByTestId('add-todo-budget').fill('500,00');
+	await page.getByTestId('add-todo-submit').click();
+	const chip = page.getByTestId('todo-budget');
+	await expect(chip).toHaveAttribute('data-status', 'funded', { timeout });
+	await expect(chip).toContainText(/500[.,]00/);
+
+	// What a reload on Sepolia leaves: the read key stored sealed and not
+	// opened. The fake has a lever for it, because a real reload would also
+	// forget the fake's whole ledger.
+	await page.evaluate(() => /** @type {any} */ (window).simpleTodoBudgetDemo.lockReadKey());
+
+	// Nothing asks the passkey on its own: the amount is hidden, and the notice
+	// offers the one touch that shows it.
+	await expect(page.getByTestId('budget-read-locked')).toBeVisible({ timeout });
+	await expect(page.getByTestId('budget-read-expired')).toHaveCount(0);
+	await expect(chip).toHaveAttribute('data-amount-state', 'locked', { timeout });
+	await expect(chip).not.toContainText(/500[.,]00/);
+
+	await page.getByTestId('budget-unlock-read').click();
+	await expect(page.getByTestId('budget-read-locked')).toHaveCount(0, { timeout });
+	await expect(chip).toHaveAttribute('data-amount-state', 'ready', { timeout });
+	await expect(chip).toContainText(/500[.,]00/);
+});

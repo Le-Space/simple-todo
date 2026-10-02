@@ -1,8 +1,8 @@
 <script>
 	// What a budget action is waiting for, or why it did not happen (escrow01),
 	// each in one plain sentence: the passkey prompt for a lock, a balance that
-	// was too low, a decryption under way, read access that ran out, a passkey
-	// prompt that was cancelled. In the technical view the three that stay on
+	// was too low, a decryption under way, read access that ran out or is still
+	// sealed, a passkey prompt that was cancelled. In the technical view the three that stay on
 	// screen carry the step behind them.
 	import { onDestroy, onMount } from 'svelte';
 	import { _ } from '$lib/i18n/index.js';
@@ -19,7 +19,8 @@
 		readKeyStore,
 		refreshReadKey,
 		renewReadAccess,
-		retryBudgetNotice
+		retryBudgetNotice,
+		unlockReadAccess
 	} from './budget-store.js';
 
 	/** Whether any budget is in play here; read access only matters then. */
@@ -36,7 +37,14 @@
 	$: auth = $delegatedWriteAuthStore;
 	$: notice = $budgetNoticeStore;
 	$: awaitingLock = auth.state === 'awaiting' && auth.action === 'budget-lock';
-	$: expired = active && $readKeyStore?.state !== undefined && $readKeyStore.state !== 'valid';
+	// Sealed is not expired: the same key opens with one touch and nothing is
+	// sent, so it gets its own sentence and its own button.
+	$: locked = active && $readKeyStore?.state === 'locked';
+	$: expired =
+		active &&
+		$readKeyStore?.state !== undefined &&
+		$readKeyStore.state !== 'valid' &&
+		$readKeyStore.state !== 'locked';
 	// The lock went through and holds an encrypted 0, which is not a lock that
 	// failed to happen: its own title, its own sentence.
 	$: underfunded = notice?.action === 'lock' && notice.code === 'insufficient-balance';
@@ -61,6 +69,15 @@
 		renewing = true;
 		try {
 			await renewReadAccess();
+		} finally {
+			renewing = false;
+		}
+	}
+
+	async function unlock() {
+		renewing = true;
+		try {
+			await unlockReadAccess();
 		} finally {
 			renewing = false;
 		}
@@ -154,6 +171,33 @@
 			></span>
 			{$_('budget.notice.decrypting')}
 		</p>
+	{/if}
+
+	{#if locked}
+		<div data-testid="budget-read-locked">
+			<ErrorAlert
+				type="info"
+				inlineTitle
+				title={$_('budget.notice.lockedTitle')}
+				error={$_('budget.notice.locked')}
+			>
+				<svelte:fragment slot="actions">
+					<button
+						type="button"
+						on:click={unlock}
+						disabled={renewing}
+						class="rounded-md bg-coral-700 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-white hover:bg-coral-800 disabled:opacity-50"
+						data-testid="budget-unlock-read">{$_('budget.notice.unlock')}</button
+					>
+				</svelte:fragment>
+				<TechnicalExplanation
+					slot="details"
+					step="readLocked"
+					simulated={!budgetInfo.confidential}
+					className="mt-3"
+				/>
+			</ErrorAlert>
+		</div>
 	{/if}
 
 	{#if expired}

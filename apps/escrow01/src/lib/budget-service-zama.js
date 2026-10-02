@@ -11,8 +11,14 @@
  * - Sending. Every lock, release and read-key renewal is one user operation
  *   the passkey signs: one WebAuthn prompt, gas paid by Openfort's paymaster.
  * - Amounts. Encrypted in the browser for the escrow and this account, read
- *   back through a session key the account delegated Zama user decryption
- *   to. The chain and OrbitDB never see a plain amount.
+ *   back through a read key the account delegated Zama user decryption to.
+ *   The chain and OrbitDB never see a plain amount.
+ * - The read key is stored sealed, under a key the passkey derives from its
+ *   PRF output (chain/read-key-seal.js), and opened in memory for one session.
+ *   Reads that happen on their own never ask the passkey: a key that is still
+ *   sealed makes them throw `read-access-locked`, and "Show amounts"
+ *   (`unlockReadKey`) or a lock opens it with one touch. That touch derives
+ *   the sealing key, which then serves every seal and open of the session.
  * - Money. The test token has a public mint; an account is funded with
  *   1,000.00 in the same user operation as its first lock, as the fake
  *   credits it on the first lock too.
@@ -34,13 +40,22 @@ import {
 	TOKEN_SYMBOL
 } from './chain/config.js';
 import { ZERO_HANDLE } from './chain/abis.js';
-import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
+import { deriveSealingKey, readPrfSeed } from './chain/read-key-seal.js';
+import { createZamaSessionKey, openZamaSessionKey } from '@le-space/passkey-wallet';
+import { privateKeyToAccount } from 'viem/accounts';
 
 const UINT64_MAX = (1n << 64n) - 1n;
 
 /**
  * @typedef {'none' | 'creating' | 'ready' | 'failed'} AccountPhase
  * @typedef {{ phase: AccountPhase, address: string | null, error: string | null }} AccountStatus
+ * @typedef {{
+ *   address: `0x${string}`
+ *   account: import('viem').LocalAccount
+ *   seal?: (sealingKey: CryptoKey) => Promise<import('./chain/account-store.js').SealedReadKey>
+ * }} ReadKey
+ *   A read key opened in this session. `seal` is missing on a key that came
+ *   from a record in plain text: it is used, not stored again.
  */
 
 /**
@@ -53,9 +68,12 @@ const UINT64_MAX = (1n << 64n) - 1n;
  *   prompt?: (action: string, run: (hooks: { onPrompt: () => void, onSigned: () => void }) => Promise<any>) => Promise<any>
  *   onAccount?: (status: AccountStatus) => void
  *   lookupTimeoutMs?: number
+ *   readSealingSeed?: () => Promise<Uint8Array | null>
  * }} options
  *   `prompt` wraps a passkey-signed operation so the UI can show the prompt;
- *   `onAccount` hears the account's phase for the account tab.
+ *   `onAccount` hears the account's phase for the account tab;
+ *   `readSealingSeed` asks the passkey for its PRF output (one touch), null
+ *   when it has none.
  */
 export function createZamaBudgetService({
 	identity,
@@ -65,7 +83,8 @@ export function createZamaBudgetService({
 	accounts = createAccountStore(),
 	prompt = (_action, run) => run({ onPrompt: () => {}, onSigned: () => {} }),
 	onAccount = () => {},
-	lookupTimeoutMs = 20_000
+	lookupTimeoutMs = 20_000,
+	readSealingSeed
 }) {
 	/** @type {import('./budget-service.js').BudgetServiceInfo} */
 	const info = {
@@ -81,6 +100,16 @@ export function createZamaBudgetService({
 
 	/** One account creation per DID at a time. @type {Map<string, Promise<import('./chain/account-store.js').ChainAccountRecord>>} */
 	const creating = new Map();
+	/** The read key opened in this session, by DID; stored only sealed. @type {Map<string, ReadKey>} */
+	const opened = new Map();
+	/**
+	 * The sealing key derived in this session, by DID, or the request for it:
+	 * two callers at once share one passkey prompt, as a second WebAuthn
+	 * request would be refused anyway.
+	 *
+	 * @type {Map<string, Promise<CryptoKey>>}
+	 */
+	const sealingKeys = new Map();
 
 	function me() {
 		const did = identity();
@@ -98,11 +127,32 @@ export function createZamaBudgetService({
 		return found;
 	}
 
+	/** The passkey's PRF output, asked with the relying party the passkey signs for. */
+	const askSealingSeed = readSealingSeed ?? (() => readPrfSeed(credential(), descriptor().rpId));
+
+	/**
+	 * The stored record. One from before the seal hands its plain key over
+	 * here: used for this session, and gone from storage at once.
+	 *
+	 * @param {string} did
+	 */
+	function load(did) {
+		const record = accounts.load(did, CHAIN_ID);
+		if (!record?.legacyPrivateKey) return record;
+		const { legacyPrivateKey, ...rest } = record;
+		const account = privateKeyToAccount(legacyPrivateKey);
+		if (record.session && sameAddress(account.address, record.session.address)) {
+			opened.set(did, { address: account.address, account });
+		}
+		accounts.save(did, rest);
+		return rest;
+	}
+
 	/** @param {string} did @param {string} message */
 	function reportFailure(did, message) {
 		onAccount({
 			phase: 'failed',
-			address: accounts.load(did, CHAIN_ID)?.address ?? null,
+			address: load(did)?.address ?? null,
 			error: message
 		});
 	}
@@ -115,7 +165,7 @@ export function createZamaBudgetService({
 	 */
 	async function ensureAccount() {
 		const did = me();
-		const known = accounts.load(did, CHAIN_ID);
+		const known = load(did);
 		if (known) {
 			onAccount({ phase: 'ready', address: known.address, error: null });
 			return known;
@@ -139,19 +189,21 @@ export function createZamaBudgetService({
 					accounts.save(did, record);
 					return record;
 				}
-				const sessionKey = /** @type {`0x${string}`} */ (generatePrivateKey());
-				const sessionAccount = privateKeyToAccount(sessionKey);
+				const readKey = createZamaSessionKey();
 				const readUntil = (await chain.blockTimestamp()) + READ_KEY_TTL_SECONDS;
 				const { address, setupTx } = await chain.createAccount({
 					descriptor: descriptor(),
-					sessionAddress: sessionAccount.address,
+					sessionAddress: readKey.address,
 					readUntil
 				});
+				opened.set(did, readKey);
+				// Sealed after the account exists, so a declined touch costs only the
+				// next session's read access, never the account.
 				/** @type {import('./chain/account-store.js').ChainAccountRecord} */
 				const record = {
 					chainId: CHAIN_ID,
 					address,
-					session: { address: sessionAccount.address, privateKey: sessionKey },
+					session: { address: readKey.address, sealed: await sealQuietly(did, readKey) },
 					readKeyExpiresAt: Number(readUntil),
 					setupTx,
 					createdAt: new Date().toISOString()
@@ -204,19 +256,143 @@ export function createZamaBudgetService({
 		return published.address;
 	}
 
-	/** @param {import('./chain/account-store.js').ChainAccountRecord} record */
-	function readKeyState(record) {
+	/**
+	 * @param {string} did
+	 * @param {import('./chain/account-store.js').ChainAccountRecord} record
+	 * @returns {import('./budget-service.js').ReadKeyState}
+	 */
+	function readKeyState(did, record) {
 		if (!record.session || record.readKeyExpiresAt === null) return 'missing';
-		return Date.now() / 1000 < record.readKeyExpiresAt ? 'valid' : 'expired';
+		if (Date.now() / 1000 >= record.readKeyExpiresAt) return 'expired';
+		const open = opened.get(did);
+		if (open && sameAddress(open.address, record.session.address)) return 'valid';
+		// Delegated, but kept only in a memory that is gone: nothing here opens.
+		return record.session.sealed ? 'locked' : 'missing';
 	}
 
-	/** @param {import('./chain/account-store.js').ChainAccountRecord} record */
-	function requireReadKey(record) {
-		const state = readKeyState(record);
-		if (state !== 'valid' || !record.session) {
-			throw new BudgetError('read-access-expired', 'The read key has expired or is missing.');
+	/**
+	 * The open read key, without asking the passkey: for reads that happen on
+	 * their own.
+	 *
+	 * @param {string} did
+	 * @param {import('./chain/account-store.js').ChainAccountRecord} record
+	 */
+	function requireReadKey(did, record) {
+		const state = readKeyState(did, record);
+		const open = opened.get(did);
+		if (state === 'valid' && open) return open;
+		if (state === 'locked') {
+			throw new BudgetError('read-access-locked', 'The read key is sealed and not open yet.');
 		}
-		return record.session;
+		throw new BudgetError('read-access-expired', 'The read key has expired or is missing.');
+	}
+
+	/**
+	 * The open read key, opening a sealed one with one passkey touch: for what
+	 * somebody asked for.
+	 *
+	 * @param {string} did
+	 * @param {import('./chain/account-store.js').ChainAccountRecord} record
+	 */
+	async function openReadKey(did, record) {
+		if (readKeyState(did, record) !== 'locked' || !record.session?.sealed) {
+			return requireReadKey(did, record);
+		}
+		const sealingKey = await sealingKeyFor(did, 'budget-read-unlock');
+		/** @type {ReadKey} */
+		let readKey;
+		try {
+			readKey = await openZamaSessionKey(record.session.sealed, sealingKey);
+		} catch {
+			// Sealed under another PRF answer, or altered: as good as no key. The
+			// seal is dropped, so the state turns to missing and a renewal is
+			// offered instead of the same button failing again.
+			accounts.save(did, { ...record, session: { ...record.session, sealed: null } });
+			throw new BudgetError('read-access-expired', 'The stored read key does not open.');
+		}
+		opened.set(did, readKey);
+		return readKey;
+	}
+
+	/**
+	 * The session's sealing key, asking the passkey for its PRF output the
+	 * first time.
+	 *
+	 * @param {string} did
+	 * @param {'budget-read-seal' | 'budget-read-unlock'} action
+	 * @returns {Promise<CryptoKey>}
+	 */
+	function sealingKeyFor(did, action) {
+		let request = sealingKeys.get(did);
+		if (!request) {
+			request = deriveFromPasskey(action);
+			sealingKeys.set(did, request);
+			// A refused or failed request is not kept: the next one asks again.
+			const pending = request;
+			pending.catch(() => {
+				if (sealingKeys.get(did) === pending) sealingKeys.delete(did);
+			});
+		}
+		return request;
+	}
+
+	/** @param {'budget-read-seal' | 'budget-read-unlock'} action */
+	async function deriveFromPasskey(action) {
+		/** @type {Uint8Array | null} */
+		let seed;
+		try {
+			seed = await prompt(action, async ({ onPrompt, onSigned }) => {
+				onPrompt();
+				const value = await askSealingSeed();
+				onSigned();
+				return value;
+			});
+		} catch (error) {
+			if (error instanceof BudgetError) throw error;
+			if (wasCancelled(error)) {
+				throw new BudgetError('passkey-cancelled', 'The passkey confirmation was cancelled.');
+			}
+			throw new BudgetError('unavailable', describe(error));
+		}
+		if (!seed) {
+			throw new BudgetError(
+				'passkey-without-prf',
+				'This passkey derives no key (no PRF), so the read key cannot be sealed.'
+			);
+		}
+		return deriveSealingKey(seed);
+	}
+
+	/**
+	 * The read key sealed for storage, or null when the passkey could not or
+	 * would not: the key then holds for this session only.
+	 *
+	 * @param {string} did
+	 * @param {ReadKey} readKey
+	 */
+	async function sealQuietly(did, readKey) {
+		if (!readKey.seal) return null;
+		try {
+			return await readKey.seal(await sealingKeyFor(did, 'budget-read-seal'));
+		} catch (error) {
+			console.warn('The read key is kept in memory for this session only:', error);
+			return null;
+		}
+	}
+
+	/**
+	 * @param {string} did
+	 * @param {import('./chain/account-store.js').ChainAccountRecord} record
+	 * @returns {import('./budget-service.js').ReadKeyStatus}
+	 */
+	function statusOf(did, record) {
+		return {
+			state: readKeyState(did, record),
+			expiresAt:
+				record.readKeyExpiresAt === null
+					? null
+					: new Date(record.readKeyExpiresAt * 1000).toISOString()
+		};
 	}
 
 	/**
@@ -247,12 +423,13 @@ export function createZamaBudgetService({
 	}
 
 	/**
+	 * @param {string} did
 	 * @param {import('./chain/account-store.js').ChainAccountRecord} record
 	 * @param {`0x${string}`[]} handles
 	 * @param {`0x${string}`} contractAddress
 	 */
-	async function decrypt(record, handles, contractAddress) {
-		const session = requireReadKey(record);
+	async function decrypt(did, record, handles, contractAddress) {
+		const session = requireReadKey(did, record);
 		try {
 			return await chain.decrypt({ handles, contractAddress, account: record.address, session });
 		} catch (error) {
@@ -285,8 +462,10 @@ export function createZamaBudgetService({
 			if (typeof amount !== 'bigint' || amount <= 0n || amount > UINT64_MAX) {
 				throw new BudgetError('invalid-amount', 'The amount must be positive and fit a uint64.');
 			}
-			const record = await ensureAccount();
+			// The beneficiary first: a lock that cannot happen asks nothing, not
+			// even the touch that seals a new account's read key.
 			const beneficiary = await accountOf(beneficiaryDid, 'beneficiary-without-account');
+			const record = await ensureAccount();
 			const hex = /** @type {`0x${string}`} */ (todoRef);
 
 			const now = await chain.blockTimestamp();
@@ -302,8 +481,9 @@ export function createZamaBudgetService({
 			}
 
 			// Encrypted here, for this escrow and this account only: the proof is
-			// bound to both, so nobody can replay it elsewhere.
-			const session = requireReadKey(record);
+			// bound to both, so nobody can replay it elsewhere. A sealed read key
+			// opens here: somebody asked for this lock.
+			const session = await openReadKey(did, record);
 			let input;
 			try {
 				input = await chain.encryptAmount({ amount, account: record.address, session });
@@ -346,7 +526,7 @@ export function createZamaBudgetService({
 			// A confidential transfer from too small a balance moves an encrypted
 			// 0 and does not revert. Only reading what arrived tells.
 			await chain.waitBlocks(2n);
-			const values = await decrypt(record, [escrow.amount], ESCROW_ADDRESS);
+			const values = await decrypt(did, record, [escrow.amount], ESCROW_ADDRESS);
 			if ((values.get(escrow.amount.toLowerCase()) ?? 0n) === 0n) {
 				throw new BudgetError(
 					'insufficient-balance',
@@ -376,7 +556,7 @@ export function createZamaBudgetService({
 		async decryptAmount({ todoRef, creatorDid }) {
 			const did = me();
 			const record = await ensureAccount();
-			requireReadKey(record);
+			requireReadKey(did, record);
 			const creator =
 				creatorDid === did ? record.address : await accountOf(creatorDid, 'escrow-not-found');
 			const escrow = await chain.readEscrow(creator, /** @type {`0x${string}`} */ (todoRef));
@@ -390,26 +570,26 @@ export function createZamaBudgetService({
 					'Only the creator, the beneficiary and the auditor may read this.'
 				);
 			}
-			const values = await decrypt(record, [escrow.amount], ESCROW_ADDRESS);
+			const values = await decrypt(did, record, [escrow.amount], ESCROW_ADDRESS);
 			const value = values.get(escrow.amount.toLowerCase());
 			if (value === undefined) throw new BudgetError('unavailable', 'Zama returned no value.');
 			return value;
 		},
 
 		async balance() {
-			me();
+			const did = me();
 			const record = await ensureAccount();
-			requireReadKey(record);
+			requireReadKey(did, record);
 			const handle = await chain.balanceHandle(record.address);
 			if (handle === ZERO_HANDLE) return 0n;
-			const values = await decrypt(record, [handle], TOKEN_ADDRESS);
+			const values = await decrypt(did, record, [handle], TOKEN_ADDRESS);
 			const value = values.get(handle.toLowerCase());
 			if (value === undefined) throw new BudgetError('unavailable', 'Zama returned no value.');
 			return value;
 		},
 
 		async listEscrowsForAuditor() {
-			me();
+			const did = me();
 			const record = await ensureAccount();
 			const auditor = chain.sameAddress(record.address, AUDITOR_ADDRESS);
 			const events = await chain.lockedEvents();
@@ -418,7 +598,7 @@ export function createZamaBudgetService({
 				const escrow = await chain.readEscrow(event.creator, event.todoRef);
 				let amount = null;
 				if (auditor) {
-					const values = await decrypt(record, [escrow.amount], ESCROW_ADDRESS);
+					const values = await decrypt(did, record, [escrow.amount], ESCROW_ADDRESS);
 					amount = values.get(escrow.amount.toLowerCase()) ?? null;
 				}
 				rows.push({
@@ -440,42 +620,57 @@ export function createZamaBudgetService({
 			// Asked on every start, also before the passkey session exists.
 			const did = identity();
 			if (!did || !did.startsWith('did:')) return { state: 'missing', expiresAt: null };
-			const record = accounts.load(did, CHAIN_ID);
+			const record = load(did);
 			if (!record) return { state: 'missing', expiresAt: null };
-			return {
-				state: readKeyState(record),
-				expiresAt:
-					record.readKeyExpiresAt === null
-						? null
-						: new Date(record.readKeyExpiresAt * 1000).toISOString()
-			};
+			return statusOf(did, record);
 		},
 
 		async renewReadKey() {
 			const did = me();
 			const record = await ensureAccount();
-			// A new session key each time: the ACL refuses the same delegation
-			// twice in one block, and an old key should not outlive its renewal.
-			const sessionKey = /** @type {`0x${string}`} */ (generatePrivateKey());
-			const sessionAccount = privateKeyToAccount(sessionKey);
+			// The sealing key first: a declined touch then stops the renewal before
+			// anything is sent. A passkey without PRF still renews, for this
+			// session only.
+			/** @type {CryptoKey | null} */
+			let sealingKey = null;
+			try {
+				sealingKey = await sealingKeyFor(did, 'budget-read-seal');
+			} catch (error) {
+				if (!(error instanceof BudgetError) || error.code !== 'passkey-without-prf') throw error;
+			}
+			// A new read key each time: the ACL refuses the same delegation twice
+			// in one block, and an old key should not outlive its renewal.
+			const readKey = createZamaSessionKey();
 			const readUntil = (await chain.blockTimestamp()) + READ_KEY_TTL_SECONDS;
 			const receipt = await send(
 				'budget-read-key',
 				record,
 				chain.calls.readKey({
 					account: record.address,
-					sessionAddress: sessionAccount.address,
+					sessionAddress: readKey.address,
 					readUntil
 				})
 			);
 			if (!receipt.success) throw new BudgetError('unknown', 'The read key renewal reverted.');
+			opened.set(did, readKey);
+			/** @type {import('./chain/account-store.js').ChainAccountRecord} */
 			const next = {
 				...record,
-				session: { address: sessionAccount.address, privateKey: sessionKey },
+				session: {
+					address: readKey.address,
+					sealed: sealingKey ? await readKey.seal(sealingKey) : null
+				},
 				readKeyExpiresAt: Number(readUntil)
 			};
 			accounts.save(did, next);
-			return { state: 'valid', expiresAt: new Date(Number(readUntil) * 1000).toISOString() };
+			return statusOf(did, next);
+		},
+
+		async unlockReadKey() {
+			const did = me();
+			const record = await ensureAccount();
+			await openReadKey(did, record);
+			return statusOf(did, record);
 		},
 
 		/** Create or find the account in the background, for a passkey session. */
@@ -504,6 +699,11 @@ export function wasCancelled(error) {
 		current = current.cause;
 	}
 	return false;
+}
+
+/** @param {string} a @param {string} b */
+function sameAddress(a, b) {
+	return a.toLowerCase() === b.toLowerCase();
 }
 
 /** @param {Uint8Array} bytes */

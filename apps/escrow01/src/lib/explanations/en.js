@@ -307,7 +307,7 @@ export default {
 				heading: 'Why a second key',
 				points: [
 					'Zama v0.13 accepts only ECDSA permits (65-byte signatures), so a passkey account cannot sign a decryption permit itself.',
-					'So the browser holds a secp256k1 read key that the account authorizes once per contract, for the token and for the escrow; it sits in plain text in `localStorage`.'
+					'So the browser holds a secp256k1 read key that the account authorizes once per contract, for the token and for the escrow; `localStorage` keeps it only sealed, under a key derived from the passkey.'
 				],
 				sources: ['security.passkeyWallet', 'zama.versions', 'account.reading']
 			},
@@ -332,11 +332,44 @@ export default {
 			{
 				heading: 'In this app',
 				points: [
-					'On Sepolia the read key holds for 24 hours. “Renew with passkey” sends one user operation with two new delegations to a new read key: one passkey step.',
-					'The 24 hours are an app setting (`READ_KEY_TTL_SECONDS`), not a Zama requirement: the read key sits in the browser in plain text, and a short term limits how long someone with access to the browser profile could read along.',
+					'On Sepolia the read key holds for 24 hours. “Renew with passkey” first derives the sealing key (one passkey step, skipped if this session already has it), then sends one user operation with two new delegations to a new read key (one passkey step).',
+					'The 24 hours are an app setting (`READ_KEY_TTL_SECONDS`), not a Zama requirement: the read key is stored sealed, and a short term still limits how long a key opened in a compromised page could read along.',
 					'The fake simulates the expiry: `simpleTodoBudgetDemo.expireReadKey()` in the console.'
 				],
 				sources: ['account.readKey', 'account.reading', 'demo.scene9']
+			}
+		]
+	},
+
+	readLocked: {
+		title: 'A sealed read key: open it with the passkey',
+		sections: [
+			{
+				heading: 'What is stored',
+				points: [
+					'The read key is a secp256k1 key the account delegated Zama user decryption to; `localStorage` keeps it as a `SealedZamaSessionKey`: AES-GCM, a random IV, its address bound as associated data.',
+					'The sealing key comes from the passkey: its PRF output for the fixed input of this relying party, then HKDF-SHA256 with the info `simple-todo:escrow01:read-key-seal:v1`. It is not extractable and lives in memory for one session.',
+					"The same PRF output also yields the list signing key; HKDF's info keeps the two keys apart."
+				],
+				sources: ['account.readKey', 'security.passkeyWallet']
+			},
+			{
+				heading: 'Why a button',
+				points: [
+					'Balance and amounts are read when the page loads. A sealed key would turn every load into a passkey prompt nobody asked for, so reads on their own stop at `read-access-locked`.',
+					'“Show amounts” asks the passkey once (`extractPrfSeedFromCredential`, user verification required) and opens the key in memory. Nothing is sent, nothing is published.',
+					'A lock opens the key the same way if it is still sealed: it needs the read key to encrypt the amount and to read back what arrived.'
+				],
+				sources: ['account.readKey', 'account.reading']
+			},
+			{
+				heading: 'In this app',
+				points: [
+					'One touch per session derives the sealing key; every seal and open after it in that session needs no other.',
+					'A passkey without PRF cannot seal: a new read key then holds for the session only.',
+					'The fake simulates it: `simpleTodoBudgetDemo.lockReadKey()` in the console.'
+				],
+				sources: ['account.readKey', 'demo.scene9']
 			}
 		]
 	},

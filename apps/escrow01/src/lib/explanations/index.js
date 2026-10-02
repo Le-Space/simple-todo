@@ -15,7 +15,7 @@
  */
 
 /**
- * @typedef {'lock' | 'locked' | 'underfunded' | 'release' | 'refund' | 'balance' | 'auditor' | 'readExpired' | 'cancelled' | 'demo'} StepId
+ * @typedef {'lock' | 'locked' | 'underfunded' | 'release' | 'refund' | 'balance' | 'auditor' | 'readExpired' | 'readLocked' | 'cancelled' | 'demo'} StepId
  *
  * @typedef {'escrow' | 'wrap' | 'setOperator' | 'lock' | 'underfundedLock' | 'release'} EvidenceId
  *
@@ -46,6 +46,7 @@ export const STEPS = /** @type {const} */ ([
 	'balance',
 	'auditor',
 	'readExpired',
+	'readLocked',
 	'cancelled',
 	'demo'
 ]);

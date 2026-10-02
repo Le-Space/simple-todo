@@ -38,6 +38,8 @@ the escrow half of [de2do](https://github.com/NiKrause/de2do).
   EIP-7702; a lock or a release is one user operation the passkey signs,
   with gas sponsored by Openfort, and amounts are encrypted and decrypted in the browser. A run on
   2026-09-17 did all of it between two browsers ([docs/passkey-account.md](docs/passkey-account.md)).
+  Amounts are read through a read key the account delegates decryption to; the browser keeps it only
+  sealed, under a key the passkey derives, and "Show amounts" opens it once per visit.
 - **Without that configuration, a fake.** It encrypts nothing and forgets its escrows on reload; the
   Account tab says "Demo without a chain". The tests run against it.
 - **OrbitDB stores no amounts.** A todo's `budget` field holds status, token, escrow, `todoRef`,

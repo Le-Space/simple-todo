@@ -31,7 +31,8 @@ Statements that would not be true today:
   passkey, and the discarded setup key technically remains a master key
   ([Limits](passkey-account.md#limits-technical)). A passkey that still exists is another matter:
   on a second device it gives back the same identity and the same account in two touches.
-- "The read key is protected." No: it sits in the browser in plain text for up to 24 hours.
+- "The read key cannot be misused." Not quite: it is stored sealed and opens only with the passkey,
+  but once a visit has opened it, a compromised page could use it for up to 24 hours.
 
 ## Checks the day before
 
@@ -336,8 +337,8 @@ service level agreement. On Sepolia, user decryption failed for a time twice in 
   key of a Calibur account. The original setup key can never be removed (Calibur always accepts it as
   root key, and under EIP-7702 it can re-delegate the account anyway); the app discards it after
   setup. The passkey's user verification is not enforced on chain. For reading, the browser keeps a
-  session key in plain text for up to 24 hours, because Zama's current version accepts only ECDSA
-  signatures. There is no recovery without the passkey; with it, a second device needs nothing else.
+  read key for up to 24 hours, because Zama's current version accepts only ECDSA signatures; it is
+  stored sealed under a key the passkey derives, and opened once per visit. There is no recovery without the passkey; with it, a second device needs nothing else.
 - **Openfort key:** a publishable key in the shipped page. Whoever reads it out can have operations on
   Sepolia sponsored at the Openfort project's expense, but cannot sign for any account.
 
@@ -365,8 +366,10 @@ lock, release or read ([Who runs what](passkey-account.md#who-runs-what-central-
 
 A time-limited power of attorney for account statements: an extra key in the browser that the passkey
 account allows to have its amounts decrypted by Zama. It is needed because Zama's current version
-accepts no passkey signatures. It can only read, not move anything. Because it sits unencrypted in the
-browser, the app grants it for 24 hours and renews it afterwards with one passkey step. The term is an
+accepts no passkey signatures. It can only read, not move anything. The browser keeps it sealed, under
+a key the passkey derives and nobody stores; after a reload "Show amounts" opens it with one touch.
+Because an opened key could still be used by a compromised page, the app grants it for 24 hours and
+renews it afterwards with one passkey step. The term is an
 app setting, not a Zama requirement, and it is enforced through the chain
 ([The read key](passkey-account.md#read-key-simple)).
 
@@ -376,7 +379,7 @@ No, it is a testnet demonstration. Zama's host contracts on Ethereum mainnet hav
 v0.13 and the same verified source as on Sepolia. Open points: the app knows only Sepolia and depends
 on unpublished packages, the escrow is not audited, the auditor is a development key, the passkey
 account cannot be recovered without its passkey and uses Calibur v1.0.0 instead of the newer v1.1.0, the sponsorship is not
-restricted to the demo's contracts, the read key sits in the browser in plain text, version v0.14 is
+restricted to the demo's contracts, an opened read key lives in the page's memory, version v0.14 is
 released but not yet deployed, and mainnet's InputVerifier accepts an encrypted input with the
 signature of a single registered coprocessor key (3 of 5 on Sepolia); how Zama operates that key is not
 visible from outside. Nothing from this chapter ran on mainnet.

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { budgetErrorCode } from './budget.js';
 import { createZamaBudgetService, wasCancelled } from './budget-service-zama.js';
+import { getAddress } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
 import { createAccountStore, parseRecord } from './chain/account-store.js';
 import { parsePublished } from './chain/account-directory.js';
 import {
@@ -178,23 +180,57 @@ function fakeDirectory() {
 
 function memoryStorage() {
 	const values = new Map();
-	return () => ({
+	const storage = () => ({
 		getItem: (/** @type {string} */ key) => values.get(key) ?? null,
 		setItem: (/** @type {string} */ key, /** @type {string} */ value) =>
 			void values.set(key, value),
 		removeItem: (/** @type {string} */ key) => void values.delete(key)
 	});
+	return Object.assign(storage, { values });
+}
+
+/**
+ * The passkey's PRF output, as one authenticator answers: the same 32 bytes for
+ * the same passkey every time. `mode` stands in for a passkey without PRF, a
+ * declined touch, or another passkey altogether.
+ *
+ * @param {string} did
+ */
+function fakePrf(did) {
+	const control = {
+		/** @type {'answer' | 'none' | 'cancel' | 'other'} */
+		mode: 'answer',
+		asked: 0,
+		async read() {
+			control.asked += 1;
+			if (control.mode === 'none') return null;
+			if (control.mode === 'cancel') {
+				throw Object.assign(new Error('The operation either timed out or was not allowed.'), {
+					name: 'NotAllowedError'
+				});
+			}
+			const tag = control.mode === 'other' ? `${did}:another passkey` : did;
+			return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(tag)));
+		}
+	};
+	return control;
 }
 
 /** Alice and Bob on one fake chain, each with a service of their own. */
 function world() {
 	const { chain, state } = fakeChain();
 	const { directory, entries } = fakeDirectory();
-	/** @param {string} did */
-	const serviceFor = (did) => {
+	/**
+	 * A session of `did`. Pass the `storage` of an earlier one for the same
+	 * browser after a reload: what was stored stays, what was in memory is gone.
+	 *
+	 * @param {string} did
+	 * @param {{ storage?: ReturnType<typeof memoryStorage>, prf?: ReturnType<typeof fakePrf> }} [options]
+	 */
+	const serviceFor = (did, { storage = memoryStorage(), prf = fakePrf(did) } = {}) => {
 		/** @type {string[]} */
 		const prompts = [];
-		const accounts = createAccountStore(memoryStorage());
+		const accounts = createAccountStore(storage);
 		const service = createZamaBudgetService({
 			identity: () => did,
 			credential: () => ({ did }),
@@ -205,12 +241,17 @@ function world() {
 				prompts.push(action);
 				return run({ onPrompt: () => {}, onSigned: () => {} });
 			},
-			lookupTimeoutMs: 0
+			lookupTimeoutMs: 0,
+			readSealingSeed: () => prf.read()
 		});
-		return { service, prompts, accounts };
+		return { service, prompts, accounts, storage, prf };
 	};
 	return { chain, state, entries, alice: serviceFor(ALICE), bob: serviceFor(BOB), serviceFor };
 }
+
+/** Everything a browser keeps for its accounts, as text. */
+const storedText = (/** @type {ReturnType<typeof memoryStorage>} */ storage) =>
+	[...storage.values.values()].join('\n');
 
 /** @param {Promise<unknown>} promise */
 async function codeOf(promise) {
@@ -223,12 +264,14 @@ async function codeOf(promise) {
 }
 
 describe('the Sepolia budget service', () => {
-	it('sets up an account without a prompt and publishes it under the DID', async () => {
+	it('sets up an account without a chain prompt, seals its read key with one touch, and publishes it', async () => {
 		const w = world();
 		await w.bob.service.prepareAccount();
 
 		expect(w.state.created).toHaveLength(1);
-		expect(w.bob.prompts).toEqual([]);
+		// No user operation to sign: only the touch that derives the sealing key.
+		expect(w.bob.prompts).toEqual(['budget-read-seal']);
+		expect(w.bob.accounts.load(BOB, CHAIN_ID)?.session?.sealed?.algorithm).toBe('AES-GCM');
 		expect(w.entries.get(BOB)?.address).toBe(w.state.created[0]);
 		// A second start finds it and creates nothing.
 		await w.bob.service.prepareAccount();
@@ -255,7 +298,8 @@ describe('the Sepolia budget service', () => {
 			deadline: null
 		});
 
-		expect(w.alice.prompts).toEqual(['budget-lock']);
+		// The seal belongs to setting up Alice's account; the lock itself is one prompt.
+		expect(w.alice.prompts).toEqual(['budget-read-seal', 'budget-lock']);
 		expect(w.state.sent).toHaveLength(1);
 		expect(w.state.sent[0].calls.map((/** @type {any} */ call) => call.kind)).toEqual([
 			'funding',
@@ -424,7 +468,7 @@ describe('the Sepolia budget service', () => {
 
 		const { releaseTx } = await w.alice.service.release({ todoRef: TODO_REF });
 		expect(releaseTx).toMatch(/^0x/);
-		expect(w.alice.prompts).toEqual(['budget-lock', 'budget-release']);
+		expect(w.alice.prompts).toEqual(['budget-read-seal', 'budget-lock', 'budget-release']);
 		expect(await codeOf(w.alice.service.release({ todoRef: TODO_REF }))).toBe('escrow-closed');
 		// Bob has no escrow under that todoRef: releasing is the creator's.
 		expect(await codeOf(w.bob.service.release({ todoRef: TODO_REF }))).toBe('escrow-not-found');
@@ -451,7 +495,8 @@ describe('the Sepolia budget service', () => {
 
 		const renewed = await w.bob.service.renewReadKey();
 		expect(renewed.state).toBe('valid');
-		expect(w.bob.prompts).toEqual(['budget-read-key']);
+		// The sealing key from setting up is still in this session: no second touch.
+		expect(w.bob.prompts).toEqual(['budget-read-seal', 'budget-read-key']);
 		expect(w.bob.accounts.load(BOB, CHAIN_ID)?.session?.address).not.toBe(record?.session?.address);
 		expect(await w.bob.service.decryptAmount({ todoRef: TODO_REF, creatorDid: ALICE })).toBe(3n);
 	});
@@ -509,6 +554,217 @@ describe('the Sepolia budget service', () => {
 		expect(await codeOf(service.balance())).toBe('not-allowed');
 		// Asking whether a read key exists is not acting: no error before sign-in.
 		expect(await service.readKeyStatus()).toEqual({ state: 'missing', expiresAt: null });
+	});
+});
+
+describe('the sealed read key', () => {
+	it('is stored only sealed, and after a reload reads stop without asking until it is opened', async () => {
+		const w = world();
+		await w.bob.service.prepareAccount();
+		await w.alice.service.lock({
+			todoRef: TODO_REF,
+			beneficiaryDid: BOB,
+			amount: 5n,
+			deadline: null
+		});
+
+		// Nothing in storage that could sign: the session is an address and a seal.
+		expect(storedText(w.bob.storage)).not.toMatch(/privateKey/i);
+		const stored = JSON.parse(storedText(w.bob.storage));
+		expect(Object.keys(stored.session).sort()).toEqual(['address', 'sealed']);
+		expect(Object.keys(stored.session.sealed).sort()).toEqual([
+			'address',
+			'algorithm',
+			'ciphertext',
+			'iv',
+			'version'
+		]);
+
+		// The same browser, reloaded: the record is there, the open key is not.
+		const reloaded = w.serviceFor(BOB, { storage: w.bob.storage });
+		expect((await reloaded.service.readKeyStatus()).state).toBe('locked');
+		expect(await codeOf(reloaded.service.balance())).toBe('read-access-locked');
+		expect(
+			await codeOf(reloaded.service.decryptAmount({ todoRef: TODO_REF, creatorDid: ALICE }))
+		).toBe('read-access-locked');
+		expect(reloaded.prompts).toEqual([]);
+
+		const opened = await reloaded.service.unlockReadKey();
+		expect(opened.state).toBe('valid');
+		expect(reloaded.prompts).toEqual(['budget-read-unlock']);
+		expect(await reloaded.service.decryptAmount({ todoRef: TODO_REF, creatorDid: ALICE })).toBe(5n);
+		// Opened once per session: a second unlock asks nothing.
+		await reloaded.service.unlockReadKey();
+		expect(reloaded.prompts).toEqual(['budget-read-unlock']);
+	});
+
+	it('opens a sealed read key for a lock, with one touch before the lock itself', async () => {
+		const w = world();
+		await w.bob.service.prepareAccount();
+		await w.alice.service.prepareAccount();
+
+		const reloaded = w.serviceFor(ALICE, { storage: w.alice.storage });
+		await reloaded.service.lock({
+			todoRef: TODO_REF,
+			beneficiaryDid: BOB,
+			amount: 2n,
+			deadline: null
+		});
+		expect(reloaded.prompts).toEqual(['budget-read-unlock', 'budget-lock']);
+	});
+
+	it('asks for the sealing key once per session, at the first renewal that needs it', async () => {
+		const w = world();
+		await w.bob.service.prepareAccount();
+		const record = /** @type {any} */ (w.bob.accounts.load(BOB, CHAIN_ID));
+		w.bob.accounts.save(BOB, { ...record, readKeyExpiresAt: 1 });
+
+		const reloaded = w.serviceFor(BOB, { storage: w.bob.storage });
+		expect((await reloaded.service.readKeyStatus()).state).toBe('expired');
+		await reloaded.service.renewReadKey();
+		await reloaded.service.renewReadKey();
+		expect(reloaded.prompts).toEqual(['budget-read-seal', 'budget-read-key', 'budget-read-key']);
+		expect(reloaded.accounts.load(BOB, CHAIN_ID)?.session?.sealed).not.toBeNull();
+	});
+
+	it('sends nothing when the seal touch of a renewal is declined', async () => {
+		const w = world();
+		await w.bob.service.prepareAccount();
+		const reloaded = w.serviceFor(BOB, { storage: w.bob.storage });
+		reloaded.prf.mode = 'cancel';
+		const sentBefore = w.state.sent.length;
+
+		expect(await codeOf(reloaded.service.renewReadKey())).toBe('passkey-cancelled');
+		expect(w.state.sent).toHaveLength(sentBefore);
+		expect(reloaded.prompts).toEqual(['budget-read-seal']);
+	});
+
+	it('keeps a read key for the session only when the passkey has no PRF', async () => {
+		const w = world();
+		const prf = fakePrf(BOB);
+		prf.mode = 'none';
+		const bob = w.serviceFor(BOB, { prf });
+		await bob.service.prepareAccount();
+
+		// The account stands, and this session reads.
+		expect(w.state.created).toHaveLength(1);
+		expect((await bob.service.readKeyStatus()).state).toBe('valid');
+		expect(bob.accounts.load(BOB, CHAIN_ID)?.session?.sealed).toBeNull();
+		// A renewal still works, for this session too.
+		expect((await bob.service.renewReadKey()).state).toBe('valid');
+
+		const reloaded = w.serviceFor(BOB, { storage: bob.storage, prf });
+		expect((await reloaded.service.readKeyStatus()).state).toBe('missing');
+	});
+
+	it('keeps the account when the seal touch at setup is declined', async () => {
+		const w = world();
+		const prf = fakePrf(BOB);
+		prf.mode = 'cancel';
+		const bob = w.serviceFor(BOB, { prf });
+		await bob.service.prepareAccount();
+
+		expect(w.state.created).toHaveLength(1);
+		expect((await bob.service.readKeyStatus()).state).toBe('valid');
+		const reloaded = w.serviceFor(BOB, { storage: bob.storage });
+		expect((await reloaded.service.readKeyStatus()).state).toBe('missing');
+	});
+
+	it('drops a seal that does not open, so a renewal is offered instead of the same button', async () => {
+		const w = world();
+		await w.bob.service.prepareAccount();
+		const prf = fakePrf(BOB);
+		prf.mode = 'other';
+		const reloaded = w.serviceFor(BOB, { storage: w.bob.storage, prf });
+
+		expect(await codeOf(reloaded.service.unlockReadKey())).toBe('read-access-expired');
+		expect((await reloaded.service.readKeyStatus()).state).toBe('missing');
+		prf.mode = 'answer';
+		expect((await reloaded.service.renewReadKey()).state).toBe('valid');
+	});
+
+	it('shares one passkey prompt between two opens at the same time', async () => {
+		const w = world();
+		await w.bob.service.prepareAccount();
+		const reloaded = w.serviceFor(BOB, { storage: w.bob.storage });
+
+		const [first, second] = await Promise.all([
+			reloaded.service.unlockReadKey(),
+			reloaded.service.unlockReadKey()
+		]);
+		expect(first.state).toBe('valid');
+		expect(second.state).toBe('valid');
+		expect(reloaded.prf.asked).toBe(1);
+		expect(reloaded.prompts).toEqual(['budget-read-unlock']);
+	});
+
+	it('takes a plain key from before the seal over once, and removes it from storage', async () => {
+		const w = world();
+		await w.bob.service.prepareAccount();
+		const record = /** @type {any} */ (w.bob.accounts.load(BOB, CHAIN_ID));
+		// A record as the app wrote it before: the read key in plain text.
+		const plain = `0x${'11'.repeat(32)}`;
+		const plainAddress = privateKeyToAccount(/** @type {`0x${string}`} */ (plain)).address;
+		w.bob.storage().setItem(
+			`simpleTodo.chainAccount.v1.${BOB}`,
+			JSON.stringify({
+				...record,
+				session: { address: plainAddress, privateKey: plain }
+			})
+		);
+
+		const updated = w.serviceFor(BOB, { storage: w.bob.storage });
+		expect((await updated.service.readKeyStatus()).state).toBe('valid');
+		expect(storedText(w.bob.storage)).not.toContain(plain.slice(2));
+		expect(updated.prompts).toEqual([]);
+
+		const next = w.serviceFor(BOB, { storage: w.bob.storage });
+		expect((await next.service.readKeyStatus()).state).toBe('missing');
+	});
+});
+
+describe('the stored account record', () => {
+	const sealed = {
+		version: 1,
+		algorithm: 'AES-GCM',
+		address: address('c'),
+		iv: `0x${'01'.repeat(12)}`,
+		ciphertext: `0x${'02'.repeat(48)}`
+	};
+	const base = { chainId: CHAIN_ID, address: address('a'), readKeyExpiresAt: 5, createdAt: 'x' };
+
+	it('reads a sealed read key, and refuses one sealed for another address or malformed', () => {
+		const good = parseRecord({ ...base, session: { address: address('c'), sealed } }, CHAIN_ID);
+		expect(good?.session?.sealed?.ciphertext).toBe(sealed.ciphertext);
+		expect(good?.readKeyExpiresAt).toBe(5);
+		expect(
+			parseRecord({ ...base, session: { address: address('d'), sealed } }, CHAIN_ID)?.session
+		).toBeNull();
+		expect(
+			parseRecord(
+				{ ...base, session: { address: address('c'), sealed: { ...sealed, iv: '0x01' } } },
+				CHAIN_ID
+			)?.session
+		).toBeNull();
+	});
+
+	it('hands a plain key over as legacyPrivateKey, and never writes one', () => {
+		const plain = `0x${'22'.repeat(32)}`;
+		const legacy = parseRecord(
+			{ ...base, session: { address: address('c'), privateKey: plain } },
+			CHAIN_ID
+		);
+		expect(legacy?.legacyPrivateKey).toBe(plain);
+		expect(legacy?.session).toEqual({ address: getAddress(address('c')), sealed: null });
+
+		const storage = memoryStorage();
+		const store = createAccountStore(storage);
+		store.save(ALICE, /** @type {any} */ ({ ...legacy, extra: plain }));
+		expect(storedText(storage)).not.toContain(plain.slice(2));
+		expect(store.load(ALICE, CHAIN_ID)?.session).toEqual({
+			address: getAddress(address('c')),
+			sealed: null
+		});
 	});
 });
 

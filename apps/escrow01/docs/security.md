@@ -338,8 +338,10 @@ can restore an account whose passkey is lost, and the key that pays for gas is r
   `InvalidUserSignature` unless the ECDSA signer is the user. A passkey account cannot sign a decryption
   permit. The app's workaround is a secp256k1 session key, the read key, that the account authorizes
   with `ACL.delegateForUserDecryption(sessionKey, contract, expiry)`, once per contract (token and
-  escrow), for 24 hours: in the setup batch, and with a new key on every renewal. The key sits in plain
-  text in the browser's `localStorage`. The `DelegatedForUserDecryption` event makes the link between
+  escrow), for 24 hours: in the setup batch, and with a new key on every renewal. The key is stored
+  sealed in the browser's `localStorage` (AES-GCM under a key HKDF derives from the passkey's PRF
+  output) and opened in memory once per visit; a page compromised while it is open can use it
+  ([The read key](passkey-account.md#read-key-technical)). The `DelegatedForUserDecryption` event makes the link between
   account and session key public, and the session key can read everything the account may read in
   those contracts until the expiry or a revocation.
 - **v0.14** adds ERC-1271 verification in the KMS connector for its new unified request (`ecrecover`
@@ -373,7 +375,7 @@ can restore an account whose passkey is lost, and the key that pays for gas is r
 4. The app has no refund button, and its Sepolia mode depends on one unpublished package vendored as a
    tarball.
 5. Passkey wallet: permanent root key, no on-chain user verification, public link between account and
-   session key, the session key in plain text in `localStorage`, no recovery for a lost passkey,
+   session key, an opened session key in the page's memory for the visit, no recovery for a lost passkey,
    Calibur v1.0.0 rather than v1.1.0.
 6. Mainnet readiness: a single coprocessor signer for input attestation on mainnet, relayer API key
    and fees, v0.14 migration, no audit.

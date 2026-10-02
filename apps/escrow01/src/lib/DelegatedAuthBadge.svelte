@@ -18,6 +18,10 @@
 				return 'auth.releaseConfirmed';
 			case 'budget-read-key':
 				return 'auth.readKeyRenewed';
+			case 'budget-read-seal':
+				return 'auth.readKeySealed';
+			case 'budget-read-unlock':
+				return 'auth.readKeyUnlocked';
 			default:
 				return 'auth.delegatedWriteSigned';
 		}

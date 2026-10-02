@@ -114,6 +114,8 @@ export function createFakeBudgetService({
 	auditorDid = FAKE_AUDITOR_DID
 }) {
 	let readKeyExpiresAt = now() + readKeyTtlMs;
+	/** Sealed and not opened yet, as on Sepolia after a reload. */
+	let readKeyLocked = false;
 
 	/** @type {import('./budget-service.js').BudgetServiceInfo} */
 	const info = {
@@ -147,6 +149,9 @@ export function createFakeBudgetService({
 		if (now() >= readKeyExpiresAt) {
 			throw new BudgetError('read-access-expired', 'The read key has expired.');
 		}
+		if (readKeyLocked) {
+			throw new BudgetError('read-access-locked', 'The read key is sealed and not open yet.');
+		}
 	}
 
 	/** @param {string} action */
@@ -159,7 +164,7 @@ export function createFakeBudgetService({
 	/** @returns {import('./budget-service.js').ReadKeyStatus} */
 	function readKey() {
 		return {
-			state: now() < readKeyExpiresAt ? 'valid' : 'expired',
+			state: now() >= readKeyExpiresAt ? 'expired' : readKeyLocked ? 'locked' : 'valid',
 			expiresAt: new Date(readKeyExpiresAt).toISOString()
 		};
 	}
@@ -198,6 +203,11 @@ export function createFakeBudgetService({
 				throw new BudgetError('escrow-exists', 'This todoRef already has an escrow.');
 			}
 
+			// As on Sepolia: a lock needs the read key, and a sealed one opens first.
+			if (readKeyLocked && now() < readKeyExpiresAt) {
+				await confirmed('budget-read-unlock');
+				readKeyLocked = false;
+			}
 			await confirmed('budget-lock');
 			await wait(delayMs);
 			if (ledger.escrows.has(key)) {
@@ -313,6 +323,15 @@ export function createFakeBudgetService({
 		async renewReadKey() {
 			await confirmed('budget-read-key');
 			readKeyExpiresAt = now() + readKeyTtlMs;
+			readKeyLocked = false;
+			return readKey();
+		},
+
+		async unlockReadKey() {
+			if (readKeyLocked && now() < readKeyExpiresAt) {
+				await confirmed('budget-read-unlock');
+				readKeyLocked = false;
+			}
 			return readKey();
 		}
 	};
@@ -324,6 +343,11 @@ export function createFakeBudgetService({
 	const demo = {
 		expireReadKey() {
 			readKeyExpiresAt = now() - 1;
+		},
+
+		/** What a reload on Sepolia shows: the read key sealed, amounts hidden. */
+		lockReadKey() {
+			readKeyLocked = true;
 		},
 
 		/** The example rows of the auditor screen. */
