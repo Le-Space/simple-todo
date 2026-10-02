@@ -409,8 +409,7 @@ ist, kann niemand wiederherstellen, und der Schlüssel, der das Gas bezahlt, ist
    Blockliste des zugrunde liegenden Tokens die Blacklist von USDT ab (`getBlackListStatus`).
 3. Metadaten: `todoRef`, DID des Delegierten und Budget-Status sind in der unverschlüsselten
    OrbitDB-Liste lesbar, und Entschlüsselungsanfragen sind auf der Gateway-Chain öffentlich.
-4. Die App hat keine Schaltfläche für die Rückzahlung, und ihr Sepolia-Modus hängt an einem
-   unveröffentlichten Paket, das als Tarball beiliegt.
+4. Die App hat keine Schaltfläche für die Rückzahlung.
 5. Passkey-Wallet: dauerhafter Root-Key, keine Nutzerverifikation on-chain, öffentliche Verknüpfung
    zwischen Konto und Sitzungsschlüssel, ein geöffneter Sitzungsschlüssel im Speicher der Seite für den Besuch, keine
    Wiederherstellung bei verlorenem Passkey, Calibur v1.0.0 statt v1.1.0.

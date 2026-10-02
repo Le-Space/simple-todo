@@ -376,8 +376,8 @@ app setting, not a Zama requirement, and it is enforced through the chain
 ### Is this ready for mainnet?
 
 No, it is a testnet demonstration. Zama's host contracts on Ethereum mainnet have the same version
-v0.13 and the same verified source as on Sepolia. Open points: the app knows only Sepolia and depends
-on unpublished packages, the escrow is not audited, the auditor is a development key, the passkey
+v0.13 and the same verified source as on Sepolia. Open points: the app knows only Sepolia, the escrow
+is not audited, the auditor is a development key, the passkey
 account cannot be recovered without its passkey and uses Calibur v1.0.0 instead of the newer v1.1.0, the sponsorship is not
 restricted to the demo's contracts, an opened read key lives in the page's memory, version v0.14 is
 released but not yet deployed, and mainnet's InputVerifier accepts an encrypted input with the

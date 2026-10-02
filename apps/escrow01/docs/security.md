@@ -372,8 +372,7 @@ can restore an account whose passkey is lost, and the key that pays for gas is r
    consulted USDT's own blacklist (`getBlackListStatus`) as its underlying deny list.
 3. Metadata: `todoRef`, delegate DID and budget status are readable in the unencrypted OrbitDB list,
    and decryption requests are public on the Gateway chain.
-4. The app has no refund button, and its Sepolia mode depends on one unpublished package vendored as a
-   tarball.
+4. The app has no refund button.
 5. Passkey wallet: permanent root key, no on-chain user verification, public link between account and
    session key, an opened session key in the page's memory for the visit, no recovery for a lost passkey,
    Calibur v1.0.0 rather than v1.1.0.
