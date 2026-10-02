@@ -183,10 +183,20 @@ stays authoritative. The permit itself moved to `signUnifiedDecryptionPermit`, w
 `canUseUnifiedDecryptionPermit` as the capability probe and `durationDays` replaced by
 `durationSeconds`. The v0.14.1 line adds "make the ERC-1271 Safe suite viable on Sepolia".
 
-Calibur can hold the other end of that: its keys are Secp256k1, P-256 or WebAuthnP256, and its
-`isValidSignature` accepts ECDSA from `address(this)` plus ERC-7739 nested typed-data and personal
-signatures. Whether a Calibur WebAuthn signature passes Zama's verifier in practice is untested —
-it cannot be tested until the route exists.
+Calibur can hold the other end of that, with one condition. Its key types are `P256`,
+`WebAuthnP256` and `Secp256k1`, and its `isValidSignature` (`src/Calibur.sol` 144) takes a raw 64-
+or 65-byte signature only from the root key — the account's own address, here the setup key that
+was thrown away. Every registered key, the passkey included, has to sign in an ERC-7739 form: a
+`TypedDataSign` over the nested typed data, or a `NestedPersonalSign`, wrapped as
+`(keyHash, signature, hookData)`. Our wallet package does not build that yet: its account's
+`signTypedData` throws, saying "Calibur verifies ERC-1271 signatures through ERC-7739 wrapping,
+which this package does not build". So the passkey cannot sign a Zama permit until that exists,
+whatever Zama deploys.
+
+That half does not have to wait for Zama. Whether Calibur accepts a wrapped passkey signature for a
+permit's digest can be checked today with an `eth_call` to `isValidSignature` on one of our Sepolia
+accounts, gas included — and the SDK's local precheck, `verifyErc1271UserDecrypt` in `@fhevm/sdk`
+0.14 (alpha), is that same STATICCALL. Only the KMS's own acceptance waits for the route.
 
 ## Measured on 2026-10-02
 
@@ -226,11 +236,12 @@ Three ways out, in the order they make sense. The roadmap with its steps and don
    help against an active XSS, which can still _use_ the key, and WebCrypto has no secp256k1 — its
    ECDSA curves are the NIST ones, and of those Calibur takes P-256. So this one only becomes
    possible together with step 3, through Calibur's standalone P-256 key type.
-3. **No read key at all.** Once `canUseUnifiedDecryptionPermit` reports true for Sepolia, the
-   passkey account signs the permit itself over ERC-1271, and both the key and the ACL delegation go
-   away. One passkey confirmation per permit, not per read — and per page load as long as the permit
-   lives only in memory, which is why step 1's sealing carries over: a sealed permit and transport
-   key pair in the SDK's `GenericStorage` survive the reload.
+3. **No read key at all.** Once the wallet can sign in ERC-7739 form and
+   `canUseUnifiedDecryptionPermit` reports true for Sepolia, the passkey account signs the permit
+   itself over ERC-1271, and both the key and the ACL delegation go away. One passkey confirmation
+   per permit, not per read — and per page load as long as the permit lives only in memory, which is
+   why step 1's sealing carries over: a sealed permit and transport key pair in the SDK's
+   `GenericStorage` survive the reload.
 
 Two conclusions worth writing down, because they are easy to get wrong:
 
@@ -290,6 +301,8 @@ Upstream, read on 2026-10-02:
 - [zama-ai/sdk#684](https://github.com/zama-ai/sdk/pull/684) (merged 2026-09-04): v1/v2 permit
   branching, the deferred `@fhevm/sdk` bump
 - [Zama protocol changelog](https://docs.zama.org/protocol/changelog)
+- [Uniswap/calibur](https://github.com/Uniswap/calibur): `src/Calibur.sol` 143-188
+  (`isValidSignature`), `src/libraries/KeyLib.sol` (`KeyType`)
 - [Uniswap Calibur audit](https://www.openzeppelin.com/news/uniswap-calibur-audit),
   [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271),
   [ERC-7739](https://ethereum-magicians.org/t/erc-7739-readable-typed-signatures-for-smart-accounts/20513)
