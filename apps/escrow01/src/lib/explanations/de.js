@@ -329,14 +329,15 @@ export default {
 				points: [
 					'Bis zum Ablauf oder zu einem Widerruf kann der Leseschlüssel alles lesen, was das Konto in diesen Verträgen lesen darf.',
 					'Das Event `DelegatedForUserDecryption` macht die Verknüpfung zwischen Konto und Leseschlüssel öffentlich.',
-					'Jede Kombination (Delegierender, Delegierter, Vertrag) kann einmal pro Block delegiert oder widerrufen werden; die App nimmt deshalb für jede Erneuerung einen neuen Leseschlüssel.'
+					'Jede Kombination (Delegierender, Delegierter, Vertrag) kann einmal pro Block delegiert oder widerrufen werden; die App nimmt deshalb für jede Erneuerung einen neuen Leseschlüssel.',
+					'Eine Verlängerung widerruft den vorigen Schlüssel in derselben UserOperation überall dort, wo seine Delegation noch läuft, nachdem sie `getUserDecryptionDelegationExpirationDate` gelesen hat: Bei einer fehlenden Delegation revertiert die ACL mit `NotDelegatedYet` und damit der ganze Stapel. Auch `RevokedDelegationForUserDecryption` ist öffentlich.'
 				],
 				sources: ['security.passkeyWallet', 'zama.acl', 'account.reading']
 			},
 			{
 				heading: 'In dieser App',
 				points: [
-					'Auf Sepolia gilt der Leseschlüssel 24 Stunden. „Mit Passkey verlängern“ leitet zuerst den Siegelschlüssel ab (ein Passkey-Schritt, entfällt, wenn die Sitzung ihn schon hat) und sendet dann eine UserOperation mit zwei neuen Delegationen an einen neuen Leseschlüssel (ein Passkey-Schritt).',
+					'Auf Sepolia gilt der Leseschlüssel 24 Stunden. „Mit Passkey verlängern“ leitet zuerst den Siegelschlüssel ab (ein Passkey-Schritt, entfällt, wenn die Sitzung ihn schon hat) und sendet dann eine UserOperation mit zwei neuen Delegationen an einen neuen Leseschlüssel, dazu den Widerruf des vorigen, wo er noch gilt (ein Passkey-Schritt).',
 					'Die 24 Stunden sind eine Einstellung der App (`READ_KEY_TTL_SECONDS`), keine Vorgabe von Zama: Der Leseschlüssel liegt versiegelt im Browser, und eine kurze Frist begrenzt trotzdem, wie lange ein in einer kompromittierten Seite geöffneter Schlüssel mitlesen könnte.',
 					'Die Attrappe simuliert den Ablauf: `simpleTodoBudgetDemo.expireReadKey()` in der Konsole.'
 				],

@@ -325,14 +325,15 @@ export default {
 				points: [
 					'Until the expiry or a revocation, the read key can read everything the account may read in those contracts.',
 					'The `DelegatedForUserDecryption` event makes the link between account and read key public.',
-					'Each (delegator, delegate, contract) can be delegated or revoked once per block; the app therefore uses a new read key for every renewal.'
+					'Each (delegator, delegate, contract) can be delegated or revoked once per block; the app therefore uses a new read key for every renewal.',
+					'A renewal revokes the previous key in the same user operation wherever its delegation still runs, after reading `getUserDecryptionDelegationExpirationDate`: a missing delegation would make the ACL revert with `NotDelegatedYet`, and the whole batch with it. `RevokedDelegationForUserDecryption` is public as well.'
 				],
 				sources: ['security.passkeyWallet', 'zama.acl', 'account.reading']
 			},
 			{
 				heading: 'In this app',
 				points: [
-					'On Sepolia the read key holds for 24 hours. “Renew with passkey” first derives the sealing key (one passkey step, skipped if this session already has it), then sends one user operation with two new delegations to a new read key (one passkey step).',
+					'On Sepolia the read key holds for 24 hours. “Renew with passkey” first derives the sealing key (one passkey step, skipped if this session already has it), then sends one user operation with two new delegations to a new read key, plus the revocation of the previous key where it still runs (one passkey step).',
 					'The 24 hours are an app setting (`READ_KEY_TTL_SECONDS`), not a Zama requirement: the read key is stored sealed, and a short term still limits how long a key opened in a compromised page could read along.',
 					'The fake simulates the expiry: `simpleTodoBudgetDemo.expireReadKey()` in the console.'
 				],

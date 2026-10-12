@@ -632,7 +632,8 @@ sequenceDiagram
    „Mit Passkey verlängern“: eine UserOperation mit zwei neuen Delegationen an einen neuen
    Leseschlüssel, ein Passkey-Schritt (`renewReadKey`). Neu ist der Schlüssel jedes Mal, weil die ACL
    dieselbe Delegation nur einmal pro Block annimmt und ein alter Schlüssel seine Erneuerung nicht
-   überdauern soll. Ist er nicht abgelaufen, aber nach einem Neuladen noch versiegelt, zeigt die App
+   überdauern soll: Dieselbe Operation widerruft den vorigen Schlüssel überall dort, wo seine
+   Delegation noch läuft. Ist er nicht abgelaufen, aber nach einem Neuladen noch versiegelt, zeigt die App
    stattdessen „Beträge verborgen.“ und „Beträge anzeigen“: Eine Passkey-Berührung öffnet ihn im
    Speicher, und nichts wird gesendet (`unlockReadKey`).
 7. **Die Prüfansicht** listet auf Sepolia für jede Identität die `Locked`-Events der Treuhand,
@@ -665,8 +666,9 @@ nichts, womit sich lesen ließe.
 - **Lesen** fragt den Passkey danach nie. So sieht Bob seine Beträge, ohne jedes Mal den Finger
   aufzulegen.
 - **Nach 24 Stunden** läuft die Vollmacht ab. Die App zeigt „Lesezugriff abgelaufen.“; nach „Mit Passkey
-  verlängern“ gilt ein neuer Leseschlüssel wieder 24 Stunden. Dasselbe zeigt ein zweites Gerät, das
-  noch keinen Leseschlüssel hat.
+  verlängern“ gilt ein neuer Leseschlüssel wieder 24 Stunden. Galt der alte noch — etwa weil dieser
+  Browser ihn nicht mehr öffnen konnte —, wird er im selben Schritt zurückgenommen. Dasselbe zeigt ein
+  zweites Gerät, das noch keinen Leseschlüssel hat.
 
 **Warum trotzdem 24 Stunden:** Versiegelt verlässt der Leseschlüssel den Browser nicht mehr mit einem
 kopierten Profil. Solange ein Besuch ihn geöffnet hat, könnte eine kompromittierte Seite ihn aber
@@ -750,9 +752,19 @@ stateDiagram-v2
   Calibur-Kontos wäre ein ERC-1271-Nachweis in ERC-7739-Form
   ([Passkey-Wallet](security.de.md#passkey-wallet-technisch)). v0.14 prüft Permits auch per ERC-1271;
   ob eine Calibur-Passkey-Signatur dort besteht, ist nicht geprüft.
-- **Was die App nicht tut.** Einen Widerruf (`revokeDelegationForUserDecryption`, im Wallet-Paket
-  `getRevokeDelegationForUserDecryptionCalls`) bietet sie nicht an; die Vollmacht endet nur durch
-  Ablauf ([Offene Punkte](#offene-punkte)).
+- **Widerruf.** Eine Verlängerung nimmt den Leseschlüssel, den dieser Browser vorher hatte, in
+  derselben UserOperation zurück, für jeden Vertrag, in dem seine Delegation noch läuft
+  (`revokeDelegationForUserDecryption`, über `getRevokeDelegationForUserDecryptionCalls` der Wallet;
+  `revokePrevious` in [`budget-service-zama.js`](../src/lib/budget-service-zama.js)). Vorher liest
+  sie `getUserDecryptionDelegationExpirationDate` für beide Verträge. Eine abgelaufene Delegation
+  bleibt, wie sie ist: Ein Widerruf ändert nichts und erzeugt nur ein öffentliches
+  `RevokedDelegationForUserDecryption`-Ereignis. Eine, die die ACL nicht hat, wird nie genannt: Die
+  ACL revertiert mit `NotDelegatedYet`, und mit `revertOnFailure` revertiert dann die ganze
+  Verlängerung. Geprüft am 2026-10-12 per `eth_call` gegen die ACL v0.4.0 auf Sepolia: Der Widerruf
+  einer abgelaufenen Delegation geht durch, der einer fehlenden revertiert. Einen Schlüssel, den ein
+  anderes Gerät hält, kennt dieser Browser nicht; er läuft weiter, jeder Browser nimmt nur seinen
+  eigenen zurück. Lässt sich die ACL nicht lesen, wird trotzdem verlängert, und der alte Schlüssel
+  läuft von selbst aus. Außerhalb einer Verlängerung bietet die App keinen Widerruf an.
 
 ## Freigabe und Auszahlung
 
@@ -971,9 +983,10 @@ von EntryPoint und Paymaster; die Sperre allein kostete im Smoke-Test vom 2026-0
    brauchen eine neue Autorisierung, die nur ihr Root-Key signieren kann. Neue Konten auf v1.1.0 wären
    der einfachere Weg.
 2. **Openfort-Regel** auf die Verträge der Demo beschränken und das Kontingent begrenzen.
-3. **Leseschlüssel**: seit 2026-10-02 versiegelt, unter einem Schlüssel aus dem PRF-Wert des Passkeys.
-   Offen: die vorige Delegation bei der Verlängerung widerrufen
-   ([Le-Space/simple-todo#54](https://github.com/Le-Space/simple-todo/issues/54), Schritt 2).
+3. **Leseschlüssel**: seit 2026-10-02 versiegelt, unter einem Schlüssel aus dem PRF-Wert des Passkeys;
+   seit 2026-10-12 widerruft eine Verlängerung auch den vorigen Schlüssel, solange seine Delegation
+   läuft ([Le-Space/simple-todo#54](https://github.com/Le-Space/simple-todo/issues/54), Schritte 1
+   und 2).
 4. **Wiederherstellung bei verlorenem Passkey**: ein zweiter Admin-Schlüssel oder ein Hook, bevor
    echtes Geld im Spiel ist. Ein zweites Gerät mit demselben Passkey braucht das seit 0.8.0 nicht.
 5. **Pakete veröffentlichen** und die Tarballs ersetzen.
