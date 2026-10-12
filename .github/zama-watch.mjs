@@ -3,7 +3,7 @@
  * own decryption permits (Le-Space/simple-todo#54, step 3). Until then the app
  * keeps a read key, and nothing on our side can change that.
  *
- * Two things have to be true:
+ * Three things have to be true:
  * - The Sepolia relayer serves the unified route. Asked the way the SDK's own
  *   `canUseUnifiedDecryptionPermit` asks — an empty POST — `v3/user-decrypt`
  *   answers 400 when the route is there and 404 when it is not. `v2` is asked
@@ -12,16 +12,24 @@
  * - The `@zama-fhe/sdk` that npm calls `latest` depends on `@fhevm/sdk` 0.14 or
  *   later, the line with ERC-1271 permits. `beta` and `alpha` are reported
  *   too, as the early warning.
+ * - Sepolia's KMSVerifier is 0.4.0 or later. Before it builds a unified permit,
+ *   `@fhevm/sdk` 0.14.3 reads the current KMS context from the host chain,
+ *   and only from KMSVerifier 0.4.0 on does it get the extraData v2 a
+ *   unified permit needs (`readCurrentKmsSignersContext`); below that,
+ *   `createUnsignedDecryptionPermitEip712V2` refuses. Asked through two public
+ *   Sepolia RPCs with `getVersion()`; the address is a proxy that Zama
+ *   upgrades in place — `@fhevm/sdk` 0.13.2 and 0.14.3 name the same one.
  *
  * Measured on 2026-10-02 and 2026-10-12: the route answered 404, and `latest`
- * (3.6.0) as well as `beta` depended on `@fhevm/sdk` 0.13.2.
+ * (3.6.0) as well as `beta` depended on `@fhevm/sdk` 0.13.2. On 2026-10-12
+ * the KMSVerifier said `KMSVerifier v0.3.0`.
  *
  *   node .github/zama-watch.mjs            measure, and say whether the issue would hear of it
  *   node .github/zama-watch.mjs --comment  comment on the issue when the answer changed
  *
  * The issue only hears about a change of the state line: a route that
- * appeared, a new minor of the SDK, a dist-tag that reached 0.14. A probe
- * that says nothing is never news.
+ * appeared, a new minor of the SDK or the KMSVerifier, a dist-tag that reached
+ * 0.14. A probe that says nothing is never news.
  */
 
 import { appendFileSync, readFileSync } from 'node:fs';
@@ -33,6 +41,13 @@ const SDK = '@zama-fhe/sdk';
 const FHEVM = '@fhevm/sdk';
 /** The first `@fhevm/sdk` with ERC-1271 permits (fhevm v0.14.0, 2026-08-14). */
 const UNIFIED_FROM = '0.14.0';
+/** Zama's KMSVerifier on Sepolia, the address `@fhevm/sdk` 0.13.2 and 0.14.3 both name. */
+const KMS_VERIFIER = '0xbE0E383937d564D7FF0BC3b46c51f0bF8d5C311A';
+/** The first KMSVerifier from which `@fhevm/sdk` 0.14.3 builds a unified permit. */
+const KMS_UNIFIED_FROM = '0.4.0';
+/** `getVersion()` */
+const GET_VERSION = '0x0d8e6e2c';
+const SEPOLIA_RPCS = ['https://ethereum-sepolia-rpc.publicnode.com', 'https://sepolia.drpc.org'];
 const MARKER = 'zama-watch:';
 
 /**
@@ -69,6 +84,22 @@ export function atLeast(version, floor = UNIFIED_FROM) {
 	return true;
 }
 
+/**
+ * The version in a `getVersion()` answer — an ABI-encoded string such as
+ * `KMSVerifier v0.3.0` — or null when the answer is not one.
+ *
+ * @param {unknown} result the `eth_call` result
+ * @returns {string | null}
+ */
+export function versionFromCall(result) {
+	if (typeof result !== 'string' || !/^0x[0-9a-f]*$/i.test(result) || result.length < 130) {
+		return null;
+	}
+	const length = Number.parseInt(result.slice(66, 130), 16);
+	const text = Buffer.from(result.slice(130, 130 + length * 2), 'hex').toString('utf8');
+	return /\bv(\d+\.\d+\.\d+)\b/.exec(text)?.[1] ?? null;
+}
+
 /** `3.6.0` → `3.6`, so a patch release is not news. @param {string | null} version */
 export function minorOf(version) {
 	const match = version ? /^(\d+)\.(\d+)/.exec(version) : null;
@@ -83,8 +114,10 @@ export function minorOf(version) {
  *   route: 'present' | 'absent' | 'unclear',
  *   status: { v2: number | null, v3: number | null },
  *   tags: { latest: Tagged, beta: Tagged, alpha: Tagged },
+ *   kms: string | null,
  *   pinned: string | null
  * }} Measurement
+ *   `kms` is the KMSVerifier's version on Sepolia, null when no RPC answered.
  */
 
 /** @param {Tagged} tag */
@@ -98,6 +131,7 @@ const unified = (tag) => (tag.version === null ? 'none' : atLeast(tag.fhevm) ? '
 export function stateLine(m) {
 	return [
 		`relayer-v3=${m.route}`,
+		`kms-verifier=${minorOf(m.kms)}`,
 		`latest=${minorOf(m.tags.latest.version)}`,
 		`latest-unified=${unified(m.tags.latest)}`,
 		`beta-unified=${unified(m.tags.beta)}`,
@@ -105,9 +139,25 @@ export function stateLine(m) {
 	].join(' ');
 }
 
-/** Both halves are there: step 4 can be checked against Zama, and step 5 can follow. @param {Measurement} m */
+/**
+ * What is still missing, in words for the issue; empty when nothing is.
+ *
+ * @param {Measurement} m
+ */
+export function missing(m) {
+	return [
+		m.route !== 'present' &&
+			`the unified route on the Sepolia relayer (\`v3/user-decrypt\` answers ${m.status.v3 ?? 'nothing'})`,
+		unified(m.tags.latest) !== 'yes' &&
+			`a released SDK on \`${FHEVM}\` 0.14 (\`latest\` depends on ${m.tags.latest.fhevm ?? 'nothing'})`,
+		!atLeast(m.kms, KMS_UNIFIED_FROM) &&
+			`KMSVerifier ${KMS_UNIFIED_FROM} on Sepolia (it is ${m.kms ?? 'unknown'})`
+	].filter((item) => typeof item === 'string');
+}
+
+/** All three are there: step 5 can run against Zama's KMS, and step 6 can follow. @param {Measurement} m */
 export function ready(m) {
-	return m.route === 'present' && unified(m.tags.latest) === 'yes';
+	return missing(m).length === 0;
 }
 
 /**
@@ -132,6 +182,9 @@ export function decide(previous, m) {
 	if (m.route === 'unclear') {
 		return { post: false, why: 'the relayer probe said nothing this time (v2 did not answer 400)' };
 	}
+	if (m.kms === null) {
+		return { post: false, why: "Sepolia's KMSVerifier did not answer this time" };
+	}
 	const line = stateLine(m);
 	if (previous === line) return { post: false, why: 'nothing changed since the last comment' };
 	return { post: true, why: previous === null ? 'first measurement' : `was: ${previous}` };
@@ -144,13 +197,11 @@ export function decide(previous, m) {
 export function commentBody(m, date) {
 	const row = (/** @type {string} */ tag, /** @type {Tagged} */ t) =>
 		`| \`${tag}\` | ${t.version ?? '—'} | ${t.fhevm ?? '—'} | ${unified(t)} |`;
-	const headline = ready(m)
-		? '**Both halves are there.** The relayer serves the unified route, and the released SDK carries `@fhevm/sdk` 0.14. Step 4 can now be checked against Zama itself, and step 5 can follow.'
-		: m.route === 'present'
-			? '**The route is there; the released SDK is not yet.** `v3/user-decrypt` answers on Sepolia, but `latest` still depends on `@fhevm/sdk` below 0.14.'
-			: unified(m.tags.latest) === 'yes'
-				? '**The released SDK is there; the route is not yet.** `latest` depends on `@fhevm/sdk` 0.14, but the Sepolia relayer still answers 404 on `v3/user-decrypt`.'
-				: '**Not yet.** The Sepolia relayer answers 404 on `v3/user-decrypt`, and `latest` depends on `@fhevm/sdk` below 0.14.';
+	const gaps = missing(m);
+	const headline =
+		gaps.length === 0
+			? "**All three are there.** The relayer serves the unified route, the released SDK carries `@fhevm/sdk` 0.14, and Sepolia's KMSVerifier is 0.4 or later. Step 5 can now run end to end against Zama's KMS, and step 6 can follow."
+			: `**Not yet.** Still missing: ${gaps.join('; ')}.`;
 	return [
 		`Zama watch, ${date}. ${headline}`,
 		'',
@@ -164,6 +215,10 @@ export function commentBody(m, date) {
 		row('latest', m.tags.latest),
 		row('beta', m.tags.beta),
 		row('alpha', m.tags.alpha),
+		'',
+		'| Sepolia | version | unified permits from |',
+		'|---|---|---|',
+		`| \`KMSVerifier\` \`${KMS_VERIFIER}\` | ${m.kms ?? 'no answer'} | ${KMS_UNIFIED_FROM} |`,
 		'',
 		`escrow01 pins \`${SDK}\` ${m.pinned ?? '(not found)'}.`,
 		'',
@@ -191,6 +246,31 @@ async function probe(path) {
 	}
 }
 
+/** The KMSVerifier's version on Sepolia, from the first RPC that answers. @returns {Promise<string | null>} */
+async function kmsVerifier() {
+	for (const rpc of SEPOLIA_RPCS) {
+		try {
+			const response = await fetch(rpc, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'eth_call',
+					params: [{ to: KMS_VERIFIER, data: GET_VERSION }, 'latest']
+				}),
+				signal: AbortSignal.timeout(20_000)
+			});
+			if (!response.ok) continue;
+			const version = versionFromCall((await response.json()).result);
+			if (version) return version;
+		} catch {
+			// The next RPC.
+		}
+	}
+	return null;
+}
+
 /** @param {string} path */
 async function npm(path) {
 	const response = await fetch(`${REGISTRY}/${path}`, { signal: AbortSignal.timeout(20_000) });
@@ -208,9 +288,10 @@ async function tagged(distTags, tag) {
 
 /** @returns {Promise<Measurement>} */
 export async function measure() {
-	const [v2, v3, distTags] = await Promise.all([
+	const [v2, v3, kms, distTags] = await Promise.all([
 		probe('v2/user-decrypt'),
 		probe('v3/user-decrypt'),
+		kmsVerifier(),
 		npm(`-/package/${SDK}/dist-tags`)
 	]);
 	const [latest, beta, alpha] = await Promise.all(
@@ -229,6 +310,7 @@ export async function measure() {
 		route: routeState({ v2, v3 }),
 		status: { v2, v3 },
 		tags: { latest, beta, alpha },
+		kms,
 		pinned
 	};
 }
