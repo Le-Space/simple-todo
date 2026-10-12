@@ -227,7 +227,11 @@ return false today. [zama-ai/sdk#684](https://github.com/zama-ai/sdk/pull/684), 
 wires the v1/v2 branching into `grantPermit` and says plainly that the `@fhevm/sdk` bump comes
 separately.
 
-The capability probe, not a date, is the trigger for the next step.
+The capability probe, not a date, is the trigger for the next step. Since 2026-10-12 a weekly
+workflow repeats both measurements
+([`.github/workflows/zama-watch.yml`](../../../.github/workflows/zama-watch.yml)) and comments on
+[Le-Space/simple-todo#54](https://github.com/Le-Space/simple-todo/issues/54) when the answer
+changes: a route that appears, a new minor of the SDK, a dist-tag that reaches `@fhevm/sdk` 0.14.
 
 ## How we proceed
 
