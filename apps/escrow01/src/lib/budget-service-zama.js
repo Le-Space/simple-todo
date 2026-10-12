@@ -381,6 +381,43 @@ export function createZamaBudgetService({
 	}
 
 	/**
+	 * The calls that take back the read key this browser held before, for each
+	 * contract where its delegation still runs at `now`.
+	 *
+	 * A delegation that has run out is left as it is: revoking it changes
+	 * nothing and adds a public event. One the ACL does not have — never made,
+	 * or revoked already — must not be named, because the ACL refuses it and
+	 * the refusal reverts the whole renewal. A key another device holds is not
+	 * known here and stays: each browser takes back only its own.
+	 *
+	 * @param {import('./chain/account-store.js').ChainAccountRecord} record
+	 * @param {bigint} now the latest block's time
+	 * @returns {Promise<import('./chain/sepolia-chain.js').Call[]>}
+	 */
+	async function revokePrevious(record, now) {
+		const previous = record.session?.address;
+		if (!previous) return [];
+		/** @type {Map<`0x${string}`, bigint>} */
+		let expirations;
+		try {
+			expirations = await chain.readKeyExpirations({ account: record.address, delegate: previous });
+		} catch (error) {
+			// Better a renewal that leaves the old key to run out than none.
+			console.warn('The previous read key could not be checked; it runs out on its own:', error);
+			return [];
+		}
+		const running = [...expirations]
+			.filter(([, until]) => until > now)
+			.map(([contract]) => contract);
+		if (running.length === 0) return [];
+		return chain.calls.revokeReadKey({
+			account: record.address,
+			sessionAddress: previous,
+			contracts: running
+		});
+	}
+
+	/**
 	 * @param {string} did
 	 * @param {import('./chain/account-store.js').ChainAccountRecord} record
 	 * @returns {import('./budget-service.js').ReadKeyStatus}
@@ -639,18 +676,20 @@ export function createZamaBudgetService({
 				if (!(error instanceof BudgetError) || error.code !== 'passkey-without-prf') throw error;
 			}
 			// A new read key each time: the ACL refuses the same delegation twice
-			// in one block, and an old key should not outlive its renewal.
+			// in one block, and an old key should not outlive its renewal. So the
+			// one this browser held before is taken back in the same operation,
+			// if its delegation still runs.
 			const readKey = createZamaSessionKey();
-			const readUntil = (await chain.blockTimestamp()) + READ_KEY_TTL_SECONDS;
-			const receipt = await send(
-				'budget-read-key',
-				record,
-				chain.calls.readKey({
+			const now = await chain.blockTimestamp();
+			const readUntil = now + READ_KEY_TTL_SECONDS;
+			const receipt = await send('budget-read-key', record, [
+				...(await revokePrevious(record, now)),
+				...chain.calls.readKey({
 					account: record.address,
 					sessionAddress: readKey.address,
 					readUntil
 				})
-			);
+			]);
 			if (!receipt.success) throw new BudgetError('unknown', 'The read key renewal reverted.');
 			opened.set(did, readKey);
 			/** @type {import('./chain/account-store.js').ChainAccountRecord} */

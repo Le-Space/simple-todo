@@ -611,7 +611,8 @@ sequenceDiagram
 6. **When the read key has expired**, the app shows "Read access expired." and the button "Renew with
    passkey": one user operation with two new delegations to a new read key, one passkey step
    (`renewReadKey`). The key is new every time, because the ACL accepts the same delegation only once
-   per block and an old key should not outlive its renewal. A read key that has not expired but is
+   per block and an old key should not outlive its renewal: the same operation revokes the previous
+   key wherever its delegation still runs. A read key that has not expired but is
    still sealed after a reload shows "Amounts are hidden." and "Show amounts" instead: one passkey
    touch opens it in memory, and nothing is sent (`unlockReadKey`).
 7. **The auditor view** on Sepolia lists the escrow's `Locked` events, at most 50, for any identity.
@@ -640,8 +641,9 @@ never stored. A copy of the browser profile holds nothing that reads.
 - **Reading** after that never asks the passkey. So Bob sees his amounts without touching his finger
   every time.
 - **After 24 hours** the power of attorney expires. The app shows "Read access expired."; after "Renew
-  with passkey" a new read key holds for another 24 hours. A second device that has no read key yet
-  shows the same.
+  with passkey" a new read key holds for another 24 hours. If the old one was still valid — say, this
+  browser could no longer open it — it is taken back in the same step. A second device that has no
+  read key yet shows the same.
 
 **Why still 24 hours:** sealed, the read key no longer leaves with a copied browser profile. While a
 visit has it open, though, a compromised page could use it. A short term limits that time, a long one
@@ -718,9 +720,19 @@ stateDiagram-v2
   would be an ERC-1271 proof in ERC-7739 form ([Passkey wallet](security.md#passkey-wallet-technical)).
   v0.14 also checks permits through ERC-1271; whether a Calibur passkey signature passes there has not
   been checked.
-- **What the app does not do.** It offers no revocation (`revokeDelegationForUserDecryption`, in the
-  wallet package `getRevokeDelegationForUserDecryptionCalls`); the power of attorney ends only by expiry
-  ([Open issues](#open-issues)).
+- **Revocation.** A renewal takes back the read key this browser held before, in the same user
+  operation, for each contract where its delegation still runs
+  (`revokeDelegationForUserDecryption`, through the wallet's
+  `getRevokeDelegationForUserDecryptionCalls`; `revokePrevious` in
+  [`budget-service-zama.js`](../src/lib/budget-service-zama.js)). It first reads
+  `getUserDecryptionDelegationExpirationDate` for both contracts. A delegation that has run out is
+  left alone: revoking it changes nothing and adds a public `RevokedDelegationForUserDecryption`
+  event. One the ACL does not have is never named: the ACL reverts with `NotDelegatedYet`, and with
+  `revertOnFailure` that reverts the whole renewal. Checked on 2026-10-12 with `eth_call` against
+  Sepolia's ACL v0.4.0: revoking an expired delegation goes through, revoking a missing one reverts.
+  A key another device holds is not known here and keeps running: each browser takes back only its
+  own. If the ACL cannot be read, the renewal goes ahead and the old key runs out on its own. Outside
+  a renewal the app offers no revocation.
 
 ## Release and payout
 
@@ -927,9 +939,9 @@ EntryPoint and paymaster; the lock alone cost 682,630 gas in the smoke test of 2
    against v1.1.0 (Foundry harness and fork test), and existing accounts need a new authorization that
    only their root key can sign. New accounts on v1.1.0 would be the simpler path.
 2. **Openfort rule**: restrict it to the demo's contracts and cap the budget.
-3. **Read key**: sealed since 2026-10-02, under a key from the passkey's PRF output. Left: revoke the
-   previous delegation on renewal
-   ([Le-Space/simple-todo#54](https://github.com/Le-Space/simple-todo/issues/54), step 2).
+3. **Read key**: sealed since 2026-10-02, under a key from the passkey's PRF output; since 2026-10-12
+   a renewal also revokes the previous key while its delegation runs
+   ([Le-Space/simple-todo#54](https://github.com/Le-Space/simple-todo/issues/54), steps 1 and 2).
 4. **Recovery for a lost passkey**: a second admin key or a hook, before real money is involved.
    Another device with the same passkey needs none of that since 0.8.0.
 5. **Publish the packages** and replace the tarballs.

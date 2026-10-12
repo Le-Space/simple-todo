@@ -8,6 +8,7 @@ import { parsePublished } from './chain/account-directory.js';
 import {
 	CHAIN_ID,
 	ESCROW_ADDRESS,
+	READ_KEY_TTL_SECONDS,
 	STARTING_FUNDS,
 	TOKEN_ADDRESS,
 	readChainEndpoints
@@ -36,11 +37,27 @@ function fakeChain() {
 	const clear = new Map();
 	/** @type {Array<{ address: string, calls: any[] }>} */
 	const sent = [];
+	/**
+	 * The ACL's read-key delegations: `account:delegate:contract` → expiry in
+	 * unix seconds; missing or 0 means none.
+	 *
+	 * @type {Map<string, bigint>}
+	 */
+	const delegations = new Map();
+	const delegationKey = (
+		/** @type {string} */ account,
+		/** @type {string} */ delegate,
+		/** @type {string} */ contract
+	) => `${account}:${delegate}:${contract}`.toLowerCase();
 	let nextAccount = 1;
 	let nextHandle = 1;
 	const state = {
 		passkeys,
 		escrows,
+		delegations,
+		delegationKey,
+		/** Reading the ACL fails, as a public RPC can. */
+		aclReadFails: false,
 		balanceHandles,
 		clear,
 		sent,
@@ -73,12 +90,24 @@ function fakeChain() {
 			return escrows.get(`${creator}:${todoRef}`) ?? none;
 		},
 		balanceHandle: async (/** @type {string} */ account) => balanceHandles.get(account) ?? ZERO,
+		readKeyExpirations: async (/** @type {any} */ { account, delegate }) => {
+			if (state.aclReadFails) throw new Error('RPC Request failed.');
+			return new Map(
+				[ESCROW_ADDRESS, TOKEN_ADDRESS].map((contract) => [
+					contract,
+					delegations.get(delegationKey(account, delegate, contract)) ?? 0n
+				])
+			);
+		},
 		isPasskeyAccount: async (
 			/** @type {{ address: string, did: string }} */ { address: at, did }
 		) => passkeys.get(at) === did,
-		createAccount: async (/** @type {any} */ { descriptor }) => {
+		createAccount: async (/** @type {any} */ { descriptor, sessionAddress, readUntil }) => {
 			const at = address(String(nextAccount++));
 			passkeys.set(at, descriptor.did);
+			for (const contract of [ESCROW_ADDRESS, TOKEN_ADDRESS]) {
+				delegations.set(delegationKey(at, sessionAddress, contract), readUntil);
+			}
 			state.created.push(at);
 			return { address: at, setupTx: `0x${'5e'.repeat(32)}` };
 		},
@@ -95,6 +124,17 @@ function fakeChain() {
 				throw Object.assign(new Error('Signing the user operation failed.'), { cause });
 			}
 			onSigned?.();
+			// As the ACL does: revoking what is not there reverts, and with it the
+			// whole batch.
+			const refused = calls.some(
+				(/** @type {any} */ call) =>
+					call.kind === 'revokeReadKey' &&
+					(delegations.get(delegationKey(at, call.sessionAddress, call.contract)) ?? 0n) === 0n
+			);
+			if (refused) {
+				sent.push({ address: at, calls });
+				return { success: false, txHash: `0x${'ee'.repeat(32)}`, blockNumber: BigInt(sent.length) };
+			}
 			sent.push({ address: at, calls });
 			for (const call of calls) {
 				if (call.kind === 'funding') {
@@ -113,6 +153,14 @@ function fakeChain() {
 						status: 'locked',
 						amount: handle
 					});
+				}
+				if (call.kind === 'readKey') {
+					for (const contract of [ESCROW_ADDRESS, TOKEN_ADDRESS]) {
+						delegations.set(delegationKey(at, call.sessionAddress, contract), call.readUntil);
+					}
+				}
+				if (call.kind === 'revokeReadKey') {
+					delegations.set(delegationKey(at, call.sessionAddress, call.contract), 0n);
 				}
 				if (call.kind === 'release') {
 					const escrow = escrows.get(`${at}:${call.todoRef}`);
@@ -156,7 +204,16 @@ function fakeChain() {
 			],
 			readKey: (/** @type {any} */ input) => [
 				{ kind: 'readKey', to: ESCROW_ADDRESS, data: '0x', ...input }
-			]
+			],
+			revokeReadKey: (/** @type {any} */ { account, sessionAddress, contracts }) =>
+				contracts.map((/** @type {string} */ contract) => ({
+					kind: 'revokeReadKey',
+					to: ESCROW_ADDRESS,
+					data: '0x',
+					account,
+					sessionAddress,
+					contract
+				}))
 		},
 		sameAddress: (/** @type {string} */ a, /** @type {string} */ b) =>
 			a.toLowerCase() === b.toLowerCase()
@@ -720,6 +777,78 @@ describe('the sealed read key', () => {
 
 		const next = w.serviceFor(BOB, { storage: w.bob.storage });
 		expect((await next.service.readKeyStatus()).state).toBe('missing');
+	});
+});
+
+describe('a renewal takes the previous read key back', () => {
+	/** The kinds of calls in the last operation sent. */
+	const lastKinds = (/** @type {any} */ w) =>
+		w.state.sent.at(-1).calls.map((/** @type {any} */ call) => call.kind);
+	const previousOf = (/** @type {any} */ side) =>
+		/** @type {`0x${string}`} */ (side.accounts.load(BOB, CHAIN_ID)?.session?.address);
+
+	it('revokes it in the same operation while its delegation still runs', async () => {
+		const w = world();
+		await w.bob.service.prepareAccount();
+		const account = /** @type {string} */ (w.bob.accounts.load(BOB, CHAIN_ID)?.address);
+		const previous = previousOf(w.bob);
+
+		await w.bob.service.renewReadKey();
+
+		expect(lastKinds(w)).toEqual(['revokeReadKey', 'revokeReadKey', 'readKey']);
+		for (const contract of [ESCROW_ADDRESS, TOKEN_ADDRESS]) {
+			expect(w.state.delegations.get(w.state.delegationKey(account, previous, contract))).toBe(0n);
+			expect(
+				w.state.delegations.get(w.state.delegationKey(account, previousOf(w.bob), contract))
+			).toBeGreaterThan(w.state.now);
+		}
+		// Still one operation, still one prompt for it.
+		expect(w.bob.prompts).toEqual(['budget-read-seal', 'budget-read-key']);
+	});
+
+	it('leaves a delegation that has run out alone', async () => {
+		const w = world();
+		await w.bob.service.prepareAccount();
+		w.state.now += BigInt(READ_KEY_TTL_SECONDS) + 1n;
+
+		await w.bob.service.renewReadKey();
+		expect(lastKinds(w)).toEqual(['readKey']);
+	});
+
+	it('names only the contracts where the delegation still runs', async () => {
+		const w = world();
+		await w.bob.service.prepareAccount();
+		const account = /** @type {string} */ (w.bob.accounts.load(BOB, CHAIN_ID)?.address);
+		w.state.delegations.set(w.state.delegationKey(account, previousOf(w.bob), ESCROW_ADDRESS), 0n);
+
+		const renewed = await w.bob.service.renewReadKey();
+		expect(renewed.state).toBe('valid');
+		expect(lastKinds(w)).toEqual(['revokeReadKey', 'readKey']);
+		expect(w.state.sent.at(-1).calls[0].contract).toBe(TOKEN_ADDRESS);
+	});
+
+	it('leaves the key of another device running: each browser takes back only its own', async () => {
+		const w = world();
+		await w.bob.service.prepareAccount();
+		const account = /** @type {string} */ (w.bob.accounts.load(BOB, CHAIN_ID)?.address);
+		const firstDevice = previousOf(w.bob);
+		const second = w.serviceFor(BOB);
+		await second.service.prepareAccount();
+
+		await second.service.renewReadKey();
+		expect(lastKinds(w)).toEqual(['readKey']);
+		expect(
+			w.state.delegations.get(w.state.delegationKey(account, firstDevice, ESCROW_ADDRESS))
+		).toBeGreaterThan(w.state.now);
+	});
+
+	it('still renews when the ACL cannot be read, and lets the old key run out', async () => {
+		const w = world();
+		await w.bob.service.prepareAccount();
+		w.state.aclReadFails = true;
+
+		expect((await w.bob.service.renewReadKey()).state).toBe('valid');
+		expect(lastKinds(w)).toEqual(['readKey']);
 	});
 });
 

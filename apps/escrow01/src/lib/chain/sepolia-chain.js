@@ -13,8 +13,11 @@ import {
 	getCaliburKeyState,
 	getDelegateForUserDecryptionCalls,
 	getKeyHash,
+	getRevokeDelegationForUserDecryptionCalls,
+	getZamaAclAddress,
 	toCaliburPasskeyAccount,
-	toWebAuthnP256Key
+	toWebAuthnP256Key,
+	zamaAclAbi
 } from '@le-space/passkey-wallet';
 import { encodeFunctionData, getAddress, isAddressEqual } from 'viem';
 import { ESCROW_STATUS, escrowAbi, tokenAbi, underlyingAbi } from './abis.js';
@@ -163,6 +166,30 @@ export function createSepoliaChain({ endpoints }) {
 				status: ESCROW_STATUS[status] ?? 'none',
 				amount
 			};
+		},
+
+		/**
+		 * Until when `delegate` may have `account`'s amounts decrypted, per
+		 * contract, as the ACL keeps it: unix seconds, 0 for a delegation that
+		 * never was or was revoked.
+		 *
+		 * @param {{ account: Hex, delegate: Hex }} input
+		 * @returns {Promise<Map<Hex, bigint>>} by contract: the escrow and the token
+		 */
+		async readKeyExpirations({ account, delegate }) {
+			const acl = getZamaAclAddress({ chainId: CHAIN_ID });
+			const contracts = [ESCROW_ADDRESS, TOKEN_ADDRESS];
+			const until = await Promise.all(
+				contracts.map((contract) =>
+					client.readContract({
+						address: acl,
+						abi: zamaAclAbi,
+						functionName: 'getUserDecryptionDelegationExpirationDate',
+						args: [account, delegate, contract]
+					})
+				)
+			);
+			return new Map(contracts.map((contract, index) => [contract, until[index]]));
 		},
 
 		/** @param {Hex} account */
@@ -385,6 +412,23 @@ export function createSepoliaChain({ endpoints }) {
 					delegate: sessionAddress,
 					contractAddresses: [ESCROW_ADDRESS, TOKEN_ADDRESS],
 					expirationDate: readUntil
+				});
+			},
+
+			/**
+			 * Take a read key's delegation back for the contracts named. The ACL
+			 * refuses one that is not there (`NotDelegatedYet`), and one refusal
+			 * reverts the whole batch: name only contracts whose delegation
+			 * `readKeyExpirations` reports.
+			 *
+			 * @param {{ account: Hex, sessionAddress: Hex, contracts: Hex[] }} input
+			 */
+			revokeReadKey({ account, sessionAddress, contracts }) {
+				return getRevokeDelegationForUserDecryptionCalls({
+					chainId: CHAIN_ID,
+					account,
+					delegate: sessionAddress,
+					contractAddresses: contracts
 				});
 			}
 		},
