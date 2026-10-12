@@ -239,7 +239,12 @@ dass der vereinheitlichte Pfad für Sepolia nicht ausgerollt ist. Selbst mit SDK
 V1/V2-Verzweigung in `grantPermit` ein und sagt ausdrücklich, dass der `@fhevm/sdk`-Bump separat
 kommt.
 
-Der Auslöser für den nächsten Schritt ist die Fähigkeitsprobe, kein Datum.
+Der Auslöser für den nächsten Schritt ist die Fähigkeitsprobe, kein Datum. Seit 2026-10-12
+wiederholt ein wöchentlicher Workflow beide Messungen
+([`.github/workflows/zama-watch.yml`](../../../.github/workflows/zama-watch.yml)) und kommentiert in
+[Le-Space/simple-todo#54](https://github.com/Le-Space/simple-todo/issues/54), wenn sich die Antwort
+ändert: eine Route, die auftaucht, eine neue Minor-Version des SDK, ein Dist-Tag, das
+`@fhevm/sdk` 0.14 erreicht.
 
 ## Wie wir weiter verfahren
 
