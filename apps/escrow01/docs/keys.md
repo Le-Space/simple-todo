@@ -173,9 +173,12 @@ of a plain key. That is exactly what was missing: the passkey account could then
 permission itself, and the extra key would not be needed at all. They test it against Safe accounts,
 so smart accounts are a supported case now, not a trick.
 
-It is not usable for us yet. The part that has to run on the chain we use is not deployed, and the
-SDK version we depend on does not carry the new code. So the read key stays for now — not as a
-mistake, but as the workaround for a limit that is being lifted.
+It is not usable for us yet. The part that has to run on the chain we use is not deployed, one of
+Zama's contracts there is a version short, and the SDK version we depend on does not carry the new
+code. So the read key stays for now — not as a mistake, but as the workaround for a limit that is
+being lifted. Everything on our side is ready: the passkey account can sign the permission, and
+Zama's own SDK accepts that signature in its check
+([below](#checked-ahead-of-zama-on-2026-10-12)).
 
 ### v0.14: technical
 
@@ -198,15 +201,16 @@ Calibur can hold the other end of that, with one condition. Its key types are `P
 or 65-byte signature only from the root key — the account's own address, here the setup key that
 was thrown away. Every registered key, the passkey included, has to sign in an ERC-7739 form: a
 `TypedDataSign` over the nested typed data, or a `NestedPersonalSign`, wrapped as
-`(keyHash, signature, hookData)`. Our wallet package does not build that yet: its account's
-`signTypedData` throws, saying "Calibur verifies ERC-1271 signatures through ERC-7739 wrapping,
-which this package does not build". So the passkey cannot sign a Zama permit until that exists,
-whatever Zama deploys.
+`(keyHash, signature, hookData)`. Up to `@le-space/passkey-wallet` 0.1.x the wallet did not build
+that — its account's `signTypedData` threw, saying "Calibur verifies ERC-1271 signatures through
+ERC-7739 wrapping, which this package does not build". Since 0.2.0
+([Le-Space/orbitdb-identity-provider-webauthn-did#86](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did/pull/86),
+2026-10-12) `signTypedData` and `signMessage` sign in exactly that form, and on a Sepolia fork
+Calibur v1.0.0 accepts them.
 
-That half does not have to wait for Zama. Whether Calibur accepts a wrapped passkey signature for a
-permit's digest can be checked today with an `eth_call` to `isValidSignature` on one of our Sepolia
-accounts, gas included — and the SDK's local precheck, `verifyErc1271UserDecrypt` in `@fhevm/sdk`
-0.14 (alpha), is that same STATICCALL. Only the KMS's own acceptance waits for the route.
+That half did not have to wait for Zama, and neither did the SDK's local precheck,
+`verifyErc1271UserDecrypt` in `@fhevm/sdk` 0.14: it is the same STATICCALL. Both are checked —
+[below](#checked-ahead-of-zama-on-2026-10-12). Only the KMS's own acceptance waits for Zama.
 
 ## Measured on 2026-10-02
 
@@ -228,10 +232,57 @@ wires the v1/v2 branching into `grantPermit` and says plainly that the `@fhevm/s
 separately.
 
 The capability probe, not a date, is the trigger for the next step. Since 2026-10-12 a weekly
-workflow repeats both measurements
-([`.github/workflows/zama-watch.yml`](../../../.github/workflows/zama-watch.yml)) and comments on
+workflow repeats these measurements, asks Sepolia's KMSVerifier for its version too (see the next
+section for why), and comments on
 [Le-Space/simple-todo#54](https://github.com/Le-Space/simple-todo/issues/54) when the answer
-changes: a route that appears, a new minor of the SDK, a dist-tag that reaches `@fhevm/sdk` 0.14.
+changes: a route that appears, a new minor of the SDK or of the KMSVerifier, a dist-tag that reaches
+`@fhevm/sdk` 0.14 ([`.github/workflows/zama-watch.yml`](../../../.github/workflows/zama-watch.yml)).
+
+## Checked ahead of Zama on 2026-10-12
+
+Step 5 of the roadmap is the passkey account's own permit, end to end against Zama's KMS. That
+cannot run yet. Everything that could be checked without Zama was, so that step 5 is short once
+Zama's side has moved. In short: the passkey account's signature passes the check Zama's own SDK
+makes before it sends a permit, and Zama is missing three things, not two.
+
+**Where `isValidSignature` runs.** On the host chain, Sepolia. The relayer keeps one read-only
+provider per host chain and picks it by the chain id in the ciphertext handles
+(`relayer/src/host/signature_prechecker.rs` 38-39, 97-102). The shared crate checks the same way
+(`shared/user-decryption-signature/src/lib.rs`): `ecrecover` for a 65-byte signature, otherwise an
+ERC-1271 STATICCALL with a gas cap.
+
+**The domain the permit signs.** `Decryption`, version `1`, chain id 11155111 — the host chain, not
+Zama's gateway chain 10901 — and the gateway's `Decryption` contract,
+`0x5D8BD78e2ea6bbE41f26dFe9fdaEAa349e077478` (`default_user_decrypt_domain` in that crate;
+`createKmsEip712Domain` in `@fhevm/sdk` 0.14.3, which says so for this primary type). The wallet's
+tests now sign a permit of exactly this shape
+([Le-Space/orbitdb-identity-provider-webauthn-did#87](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did/pull/87)).
+
+**`@fhevm/sdk` 0.14.3 accepts the passkey account's signature.** On a Sepolia fork, the SDK's own
+`createKmsUserDecryptEip712V2` built a permit for a Calibur account with a registered passkey
+(wallet 0.2.0; a P-256 key in memory answering like an authenticator). The account signed it in
+three ways: directly, through the SDK's signer adapter, and with the account itself as the signer.
+All three passed the SDK's ERC-1271 precheck, `verifyErc1271UserDecrypt`, in every run. The same
+signature presented for another contract list was refused (`Erc1271RejectedError`).
+
+**Gas.** 89,410 by `eth_estimateGas`, 89,606 as the least `eth_call` gas in the wallet's fork suite,
+against the SDK's cap of 250,000. Sepolia has the P-256 precompile; without it Calibur needs
+372k-383k, and the check would fail.
+
+**What escrow01 has to hand the SDK.** The account itself as the signer, not a viem wallet client
+holding it. The SDK calls `signer.signTypedData({ account, … })` with the account's address, and a
+wallet client given an address asks its RPC node to sign; the fork refused that.
+
+**The third missing piece.** Before it builds a unified permit, the SDK reads the current KMS
+context from the host chain, and its code produces the extraData v2 such a permit needs only from
+KMSVerifier 0.4.0 on (`readCurrentKmsSignersContext`); below that,
+`createUnsignedDecryptionPermitEip712V2` throws. Sepolia's KMSVerifier answers `KMSVerifier v0.3.0`.
+So the experiment built its permit with a stand-in extraData: Sepolia's context id and epoch 1. The
+address is a proxy that Zama upgrades in place — `@fhevm/sdk` 0.13.2 and 0.14.3 name the same one —
+so the weekly watch asks it for its version.
+
+What is left for step 5 is what only Zama can answer: the relayer forwarding the permit, the KMS
+accepting the signature, and a decryption coming back. Step 6 switches escrow01 over.
 
 ## How we proceed
 
@@ -251,12 +302,12 @@ Three ways out, in the order they make sense. The roadmap with its steps and don
    help against an active XSS, which can still _use_ the key, and WebCrypto has no secp256k1 — its
    ECDSA curves are the NIST ones, and of those Calibur takes P-256. So this one only becomes
    possible together with step 3, through Calibur's standalone P-256 key type.
-3. **No read key at all.** Once the wallet can sign in ERC-7739 form and
-   `canUseUnifiedDecryptionPermit` reports true for Sepolia, the passkey account signs the permit
-   itself over ERC-1271, and both the key and the ACL delegation go away. One passkey confirmation
-   per permit, not per read — and per page load as long as the permit lives only in memory, which is
-   why step 1's sealing carries over: a sealed permit and transport key pair in the SDK's
-   `GenericStorage` survive the reload.
+3. **No read key at all.** The wallet signs in ERC-7739 form since 0.2.0. Once
+   `canUseUnifiedDecryptionPermit` reports true for Sepolia and its KMSVerifier is 0.4 or later,
+   the passkey account signs the permit itself over ERC-1271, and both the key and the ACL
+   delegation go away. One passkey confirmation per permit, not per read — and per page load as
+   long as the permit lives only in memory, which is why step 1's sealing carries over: a sealed
+   permit and transport key pair in the SDK's `GenericStorage` survive the reload.
 
 Two conclusions worth writing down, because they are easy to get wrong:
 
@@ -308,6 +359,24 @@ Code:
   (`wrapSKWithPRF`, `unwrapSKWithPRF`), `src/keystore/derived-signing-key.js` (HKDF-SHA256,
   `ensureDerivedSigningKey`), `src/webauthn/prf-input.js` (`PRF_INPUT_INFO`),
   `src/standalone/webauthn/credential.js` (`extractPrfSeedFromCredential`)
+
+Read on 2026-10-12, for [Checked ahead of Zama](#checked-ahead-of-zama-on-2026-10-12):
+
+- `zama-ai/fhevm` at v0.14.1:
+  [`relayer/src/host/signature_prechecker.rs`](https://github.com/zama-ai/fhevm/blob/v0.14.1/relayer/src/host/signature_prechecker.rs)
+  38-39, 97-102 (a provider per host chain);
+  [`shared/user-decryption-signature/src/lib.rs`](https://github.com/zama-ai/fhevm/blob/v0.14.1/shared/user-decryption-signature/src/lib.rs)
+  47-49, 78 (`DEFAULT_DOMAIN_NAME`, `DEFAULT_DOMAIN_VERSION`, `default_user_decrypt_domain`)
+- `@fhevm/sdk` 0.14.3 from npm, `_esm/`: `core/kms/createKmsEip712Domain.js`,
+  `core/kms/createKmsUserDecryptEip712V2.js`, `core/kms/SignedDecryptionPermitV2-p.js`,
+  `core/utils-p/decrypt/verifyErc1271UserDecrypt-p.js`,
+  `core/host-contracts/readKmsSignersContext-p.js`, `core/chains/definitions/sepolia.js`,
+  `viem/internal/ethereum.js` (the signer adapter); `@fhevm/sdk` 0.13.2 for the same addresses
+- `@le-space/passkey-wallet` 0.2.0: `src/calibur.js` (`getTypedDataSignDigests`), `src/account.js`
+  (`signTypedData`), `test/fork/erc7739.test.js`, `test/support/zama-permit.mjs`
+- On Sepolia: `getVersion()` of the KMSVerifier `0xbE0E383937d564D7FF0BC3b46c51f0bF8d5C311A`
+  (`KMSVerifier v0.3.0`) and of the ACL (`ACL v0.4.0`);
+  `ProtocolConfig.getCurrentKmsContextId()` at `0x51f9AFBc89Ea792e1a21a12AB802ab58D4dbee83`
 
 Upstream, read on 2026-10-02:
 
