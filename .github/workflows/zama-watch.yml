@@ -1,12 +1,13 @@
 name: Zama watch
 
 # escrow01 keeps a read key only because Zama's side cannot take a passkey's
-# signature yet: the Sepolia relayer has no unified decryption route, and the
+# signature yet: the Sepolia relayer has no unified decryption route, the
 # released @zama-fhe/sdk still depends on an @fhevm/sdk without ERC-1271
-# permits (Le-Space/simple-todo#54). Neither is ours to change, so once a week
-# this asks again, and comments on the issue when the answer differs from the
-# last one it gave there. A week in which nothing moved leaves no trace but
-# the run's summary.
+# permits, and Sepolia's KMSVerifier is older than the one that SDK needs to
+# build such a permit (Le-Space/simple-todo#54). None of it is ours to change,
+# so once a week this asks again, and comments on the issue when the answer
+# differs from the last one it gave there. A week in which nothing moved
+# leaves no trace but the run's summary.
 
 permissions:
   contents: read
@@ -26,7 +27,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '24.x'
-      - name: Ask the relayer and npm, and tell the issue if the answer changed
+      - name: Ask the relayer, npm and Sepolia, and tell the issue if the answer changed
         run: node .github/zama-watch.mjs --comment
         env:
           GITHUB_TOKEN: ${{ github.token }}

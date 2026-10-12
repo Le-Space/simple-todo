@@ -6,15 +6,18 @@ import {
 	decide,
 	lastStateLine,
 	minorOf,
+	missing,
 	ready,
 	routeState,
-	stateLine
+	stateLine,
+	versionFromCall
 } from './zama-watch.mjs';
 
 /** What the watch measured on 2026-10-12, with overrides. @param {any} [over] */
 const measured = (over = {}) => ({
 	route: 'absent',
 	status: { v2: 400, v3: 404 },
+	kms: '0.3.0',
 	pinned: '3.6.0',
 	...over,
 	tags: {
@@ -45,6 +48,27 @@ test('0.14: counted by its numbers, prereleases included, ranges read', () => {
 	assert.equal(atLeast('workspace:*'), false);
 });
 
+test("the KMSVerifier's version, read from its getVersion() answer", () => {
+	// What Sepolia answered on 2026-10-12: the ABI-encoded "KMSVerifier v0.3.0".
+	const answer =
+		'0x0000000000000000000000000000000000000000000000000000000000000020' +
+		'0000000000000000000000000000000000000000000000000000000000000012' +
+		'4b4d5356657269666965722076302e332e300000000000000000000000000000';
+	assert.equal(versionFromCall(answer), '0.3.0');
+	assert.equal(versionFromCall('0x'), null);
+	assert.equal(versionFromCall(undefined), null);
+	assert.equal(versionFromCall({ code: -32000 }), null);
+	// A string without a version in it.
+	assert.equal(
+		versionFromCall(
+			'0x0000000000000000000000000000000000000000000000000000000000000020' +
+				'0000000000000000000000000000000000000000000000000000000000000003' +
+				'6e6f6e0000000000000000000000000000000000000000000000000000000000'
+		),
+		null
+	);
+});
+
 test('a patch release is not news, a minor is', () => {
 	assert.equal(minorOf('3.6.0'), '3.6');
 	assert.equal(minorOf('3.6.1'), '3.6');
@@ -55,19 +79,21 @@ test('a patch release is not news, a minor is', () => {
 test('the state line as of 2026-10-12', () => {
 	assert.equal(
 		stateLine(measured()),
-		'relayer-v3=absent latest=3.6 latest-unified=no beta-unified=no alpha-unified=yes'
+		'relayer-v3=absent kms-verifier=0.3 latest=3.6 latest-unified=no beta-unified=no alpha-unified=yes'
 	);
 	assert.equal(ready(measured()), false);
+	assert.equal(missing(measured()).length, 3);
 });
 
-test('ready takes both halves: the route and the released SDK', () => {
-	const sdk = { latest: { version: '3.8.0', fhevm: '0.14.3' } };
-	assert.equal(ready(measured({ route: 'present', status: { v2: 400, v3: 400 } })), false);
-	assert.equal(ready(measured({ tags: sdk })), false);
-	assert.equal(
-		ready(measured({ route: 'present', status: { v2: 400, v3: 400 }, tags: sdk })),
-		true
-	);
+test('ready takes all three: the route, the released SDK, and KMSVerifier 0.4', () => {
+	const route = { route: 'present', status: { v2: 400, v3: 400 } };
+	const sdk = { tags: { latest: { version: '3.8.0', fhevm: '0.14.3' } } };
+	const kms = { kms: '0.4.0' };
+	assert.equal(ready(measured({ ...route, ...sdk })), false);
+	assert.equal(ready(measured({ ...route, ...kms })), false);
+	assert.equal(ready(measured({ ...sdk, ...kms })), false);
+	assert.equal(ready(measured({ ...route, ...sdk, ...kms })), true);
+	assert.equal(ready(measured({ ...route, ...sdk, kms: null })), false);
 });
 
 test('the issue hears a change once, and never a probe that said nothing', () => {
@@ -83,9 +109,14 @@ test('the issue hears a change once, and never a probe that said nothing', () =>
 		decide(stateLine(now), measured({ route: 'present', status: { v2: 400, v3: 400 } })).post,
 		true
 	);
+	assert.equal(decide(stateLine(now), measured({ kms: '0.4.0' })).post, true);
+	assert.equal(decide(stateLine(now), measured({ kms: '0.3.1' })).post, false);
 	const silent = measured({ route: 'unclear', status: { v2: null, v3: null } });
 	assert.equal(decide(null, silent).post, false);
 	assert.equal(decide('anything else', silent).post, false);
+	const noKms = measured({ kms: null });
+	assert.equal(decide(null, noKms).post, false);
+	assert.equal(decide('anything else', noKms).post, false);
 });
 
 test('the comment carries its state line, and the newest one is what counts', () => {
@@ -96,27 +127,41 @@ test('the comment carries its state line, and the newest one is what counts', ()
 	);
 	assert.equal(
 		lastStateLine([{ body: 'a person writes' }, { body: old }, { body: null }, { body: newer }]),
-		'relayer-v3=absent latest=3.7 latest-unified=no beta-unified=no alpha-unified=yes'
+		'relayer-v3=absent kms-verifier=0.3 latest=3.7 latest-unified=no beta-unified=no alpha-unified=yes'
 	);
 	assert.equal(lastStateLine([{ body: 'nothing from the watch' }]), null);
 });
 
-test('the comment says plainly which half is missing', () => {
-	assert.match(commentBody(measured(), 'd'), /^Zama watch, d\. \*\*Not yet\.\*\*/);
+test('the comment says plainly what is missing', () => {
 	assert.match(
-		commentBody(measured({ route: 'present', status: { v2: 400, v3: 400 } }), 'd'),
-		/The route is there; the released SDK is not yet/
+		commentBody(measured(), 'd'),
+		/^Zama watch, d\. \*\*Not yet\.\*\* Still missing: the unified route on the Sepolia relayer \(`v3\/user-decrypt` answers 404\); a released SDK on `@fhevm\/sdk` 0\.14 \(`latest` depends on 0\.13\.2\); KMSVerifier 0\.4\.0 on Sepolia \(it is 0\.3\.0\)\./
 	);
+	const routeAndSdk = commentBody(
+		measured({
+			route: 'present',
+			status: { v2: 400, v3: 400 },
+			tags: { latest: { version: '3.8.0', fhevm: '0.14.3' } }
+		}),
+		'd'
+	);
+	assert.match(routeAndSdk, /Still missing: KMSVerifier 0\.4\.0 on Sepolia \(it is 0\.3\.0\)\.$/m);
+	assert.doesNotMatch(routeAndSdk, /relayer \(|a released SDK/);
 	assert.match(
 		commentBody(
 			measured({
 				route: 'present',
 				status: { v2: 400, v3: 400 },
+				kms: '0.4.0',
 				tags: { latest: { version: '3.8.0', fhevm: '0.14.3' } }
 			}),
 			'd'
 		),
-		/Both halves are there/
+		/\*\*All three are there\.\*\*/
+	);
+	assert.match(
+		commentBody(measured(), 'd'),
+		/\| `KMSVerifier` `0xbE0E383937d564D7FF0BC3b46c51f0bF8d5C311A` \| 0\.3\.0 \| 0\.4\.0 \|/
 	);
 	assert.match(
 		commentBody(measured({ tags: { beta: { version: null, fhevm: null } } }), 'd'),
