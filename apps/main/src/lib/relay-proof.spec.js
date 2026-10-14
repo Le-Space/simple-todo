@@ -3,6 +3,7 @@ import {
 	decideProofOutcome,
 	nextProofDelayMs,
 	statusForExhaustedBudget,
+	relayProofMode,
 	RELAY_PROOF_BUDGET_MS
 } from './relay-proof.js';
 
@@ -110,5 +111,43 @@ describe('statusForExhaustedBudget', () => {
 	it('only reports unavailable after a definite miss', () => {
 		expect(statusForExhaustedBudget('absent')).toBe('unavailable');
 		expect(statusForExhaustedBudget('indeterminate')).toBe('unknown');
+	});
+});
+
+describe('relayProofMode', () => {
+	const production = { VITE_E2E: 'false', DEV: false };
+	const e2e = { VITE_E2E: 'true', DEV: false };
+	const storageSaying = (/** @type {string | null} */ value) => ({ getItem: () => value });
+
+	it('is sync unless the build says otherwise', () => {
+		expect(relayProofMode(production, undefined)).toBe('sync');
+		expect(relayProofMode({ ...production, VITE_RELAY_PROOF_MODE: 'observe' }, undefined)).toBe(
+			'observe'
+		);
+		expect(relayProofMode({ ...production, VITE_RELAY_PROOF_MODE: 'anything' }, undefined)).toBe(
+			'sync'
+		);
+	});
+
+	it('lets an E2E build switch arms through localStorage', () => {
+		expect(relayProofMode(e2e, storageSaying('observe'))).toBe('observe');
+		expect(
+			relayProofMode({ ...e2e, VITE_RELAY_PROOF_MODE: 'observe' }, storageSaying('sync'))
+		).toBe('sync');
+		expect(relayProofMode(e2e, storageSaying('nonsense'))).toBe('sync');
+		expect(relayProofMode(e2e, storageSaying(null))).toBe('sync');
+		expect(
+			relayProofMode(e2e, {
+				getItem: () => {
+					throw new Error('storage disabled');
+				}
+			})
+		).toBe('sync');
+	});
+
+	it('ignores localStorage in a production build', () => {
+		// A visitor's storage must not be able to change how the app talks to
+		// the relay; only the experiment's builds read it.
+		expect(relayProofMode(production, storageSaying('observe'))).toBe('sync');
 	});
 });

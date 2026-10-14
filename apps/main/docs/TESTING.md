@@ -65,6 +65,26 @@ pnpm run test:e2e:local-relay-src
 `E2E_RELAY_HTTP_ORIGIN` is required when a pinning proof calls
 `/pinning/sync` and `/pinning/databases`.
 
+### The relay-proof experiment (#64)
+
+Does the relay replicate a todo without being asked to? The proof behind the
+relay chip has two modes (`relay-proof.js`): `sync`, today's behaviour, sends
+`POST /pinning/sync` every round and restarts the local Sync; `observe` only
+reads `POST /pinning/has-entry`. `VITE_RELAY_PROOF_MODE` sets the mode at
+build time; an E2E build also reads `localStorage['relay-proof-mode']`, which
+is how one build serves both arms.
+
+```bash
+E2E_RELAY_CLI_PATH=/path/to/orbitdb-relay/dist/cli.js e2e/relay-proof-experiment.sh 5
+```
+
+Twenty runs of `e2e/relay-proof-mode.bench.js`, ten per mode, alternating
+(ABBA), each on a fresh relay datastore; results in `e2e/results/`, the table
+from `node e2e/relay-proof-summary.mjs`. The relay must be built from
+orbitdb-relay `main` at or after NiKrause/orbitdb-relay#60 — the one in
+`node_modules` hangs up on browsers during a fresh pass. Run it on an
+otherwise idle machine, one Playwright suite at a time.
+
 ## Remote browser replication providers
 
 `remote-replication.yml` keeps browser A on the GitHub runner and supports three

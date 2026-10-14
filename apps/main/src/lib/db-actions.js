@@ -6,7 +6,8 @@ import {
 	decideProofOutcome,
 	nextProofDelayMs,
 	statusForExhaustedBudget,
-	RELAY_PROOF_BUDGET_MS
+	RELAY_PROOF_BUDGET_MS,
+	relayProofMode
 } from './relay-proof.js';
 
 /**
@@ -392,7 +393,13 @@ async function verifyRelayReplication(todoKey, entryHash, dbAddress) {
 			const { origin } = get(relayHttpStatusStore);
 
 			if (origin) {
-				const sync = await requestRelayReplicationProof(origin, dbAddress, todoKey, attempt);
+				// `observe` never asks the relay for a pass (#64): the chip then
+				// says what the relay replicated on its own.
+				const mode = relayProofMode();
+				const sync =
+					mode === 'sync'
+						? await requestRelayReplicationProof(origin, dbAddress, todoKey, attempt)
+						: null;
 				const membership = await requestRelayEntryMembership(origin, dbAddress, entryHash, todoKey);
 				outcome = decideProofOutcome({ membership, sync, entryHash });
 
@@ -401,6 +408,7 @@ async function verifyRelayReplication(todoKey, entryHash, dbAddress) {
 						todoKey,
 						entryHash,
 						attempt,
+						mode,
 						via: membership?.ok === true ? 'has-entry' : 'lastRecord'
 					});
 					todoReplicationStatusStore.update((statuses) => ({
@@ -413,6 +421,7 @@ async function verifyRelayReplication(todoKey, entryHash, dbAddress) {
 				console.warn('Relay has not proven this entry yet:', {
 					todoKey,
 					attempt,
+					mode,
 					outcome,
 					expectedEntryHash: entryHash,
 					hasEntry: membership?.hasEntry ?? null,

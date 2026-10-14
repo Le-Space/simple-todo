@@ -76,3 +76,37 @@ export function nextProofDelayMs(attempt) {
 export function statusForExhaustedBudget(lastOutcome) {
 	return lastOutcome === 'absent' ? 'unavailable' : 'unknown';
 }
+
+/**
+ * @typedef {'sync' | 'observe'} RelayProofMode
+ */
+
+/**
+ * How the proof asks the relay (Le-Space/simple-todo#64).
+ *
+ * `sync`, the default and what every chapter does today: each round sends
+ * `POST /pinning/sync`, which makes the relay run a fresh pass over the
+ * database, and restarts the local Sync so the relay sees a subscription edge.
+ * `observe`: never ask the relay to do anything; only read
+ * `POST /pinning/has-entry` within the same budget, so the chip reports what
+ * the relay replicated on its own.
+ *
+ * Set at build time with `VITE_RELAY_PROOF_MODE`. An E2E or dev build also
+ * reads `localStorage['relay-proof-mode']`, so one build serves both arms of
+ * the experiment; a production build ignores it.
+ *
+ * @param {Record<string, string | boolean | undefined>} [env] the build's `import.meta.env`
+ * @param {{ getItem(key: string): string | null } | undefined} [storage] the page's `localStorage`
+ * @returns {RelayProofMode}
+ */
+export function relayProofMode(env = import.meta.env, storage = globalThis.localStorage) {
+	if (env?.VITE_E2E === 'true' || env?.DEV === true) {
+		try {
+			const stored = storage?.getItem('relay-proof-mode');
+			if (stored === 'observe' || stored === 'sync') return stored;
+		} catch {
+			// No storage here; the build-time setting decides.
+		}
+	}
+	return env?.VITE_RELAY_PROOF_MODE === 'observe' ? 'observe' : 'sync';
+}
