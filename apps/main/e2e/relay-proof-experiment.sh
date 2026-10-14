@@ -32,11 +32,14 @@ run() {
 	echo "$label $mode exit=$rc  $(grep -E '^todo [0-9]+:' "$log" | sed -E 's/alice chip ([a-z]+) after ([0-9-]+) ms.*bob got it after ([0-9-]+) ms.*/\1\/\2\/\3/' | tr '\n' ' ')"
 }
 
+# Labels carry the relay, so runs against a local and a public relay can be
+# told apart in e2e/results/ by name as well as by content.
+RELAY_LABEL=${E2E_RELAY_MODE:-local}
 for i in $(seq 1 "$ITERATIONS"); do
-	run observe "abba$i-1"
-	run sync "abba$i-2"
-	run sync "abba$i-3"
-	run observe "abba$i-4"
+	run observe "$RELAY_LABEL-abba$i-1"
+	run sync "$RELAY_LABEL-abba$i-2"
+	run sync "$RELAY_LABEL-abba$i-3"
+	run observe "$RELAY_LABEL-abba$i-4"
 done
 
 node e2e/relay-proof-summary.mjs

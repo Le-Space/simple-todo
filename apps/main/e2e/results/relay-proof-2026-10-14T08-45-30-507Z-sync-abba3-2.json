@@ -1,0 +1,321 @@
+{
+	"date": "2026-10-14T08:45:30.507Z",
+	"mode": "sync",
+	"label": "abba3-2",
+	"machine": {
+		"cpus": "Intel(R) Core(TM) i9-9880H CPU @ 2.30GHz",
+		"cores": 16,
+		"memGB": 32
+	},
+	"relay": {
+		"mode": "public",
+		"multiaddr": "/dns4/exhaust-tobacco-abuse-purchase.2n6.me/tcp/443/tls/ws/p2p/12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+		"httpOrigin": "https://exhaust-tobacco-abuse-purchase.2n6.me"
+	},
+	"todos": [
+		{
+			"i": 1,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 5746,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 92
+					},
+					{
+						"status": "pinned",
+						"t": 5746
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 341,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 5754,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 5754
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m"
+				],
+				"bob": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P"
+				]
+			}
+		},
+		{
+			"i": 2,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 5531,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 73
+					},
+					{
+						"status": "pinned",
+						"t": 5531
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 308,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 5537,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 5537
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m"
+				],
+				"bob": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P"
+				]
+			}
+		},
+		{
+			"i": 3,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 5720,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 81
+					},
+					{
+						"status": "pinned",
+						"t": 5720
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 315,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 5723,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 5723
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m"
+				],
+				"bob": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P"
+				]
+			}
+		},
+		{
+			"i": 4,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 581,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 68
+					},
+					{
+						"status": "pinned",
+						"t": 581
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 302,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 5719,
+					"transitions": [
+						{
+							"status": "pending",
+							"t": 584
+						},
+						{
+							"status": "pinned",
+							"t": 5719
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m"
+				],
+				"bob": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P"
+				]
+			}
+		},
+		{
+			"i": 5,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 5766,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 84
+					},
+					{
+						"status": "pinned",
+						"t": 5766
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 317,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 5771,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 5771
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m",
+					"12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m"
+				],
+				"bob": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P",
+					"12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P"
+				]
+			}
+		}
+	],
+	"setup": {
+		"readyMs": 26232,
+		"peersMet": true,
+		"alicePeerId": "12D3KooWNtunVSxXpRRM5wTYMckUqbuprfaJL6cx3jomA3uFrv1P",
+		"bobPeerId": "12D3KooWNFMZBXmdBZx2X51f7FWMKtR7jZ8pR2mmsybMWzFc6X7m"
+	},
+	"relayAfter": {
+		"stats": {
+			"totalPinned": 1,
+			"syncOperations": 76,
+			"failedSyncs": 0,
+			"pinnedMediaCids": [],
+			"timestamp": "2026-10-14T08:46:25.993Z",
+			"syncQueue": {
+				"waiting": 0,
+				"active": 0,
+				"activeTopics": [],
+				"queuedTopics": 0,
+				"cooldownTopics": 0,
+				"timedOutSyncs": 0
+			}
+		},
+		"databases": {
+			"databases": [
+				{
+					"address": "/orbitdb/zdpuAu6Q1KU2r6RwxiH61ispCAhC6K1GYTv77Uv2FFsKDVAPw",
+					"lastSyncedAt": "2026-10-14T08:46:25.105Z",
+					"entryCount": 42,
+					"lastRecord": {
+						"hash": "zdpuAnQ7DV5u8JaJikDLY8Gp7LC8GB2C35uKU9si8Agr2RPBk",
+						"redacted": true
+					},
+					"snapshotSource": "db.all()"
+				}
+			],
+			"total": 1
+		}
+	},
+	"errors": {
+		"alice": {
+			"total": 0,
+			"streamResets": 0,
+			"byName": {}
+		},
+		"bob": {
+			"total": 0,
+			"streamResets": 0,
+			"byName": {}
+		}
+	}
+}

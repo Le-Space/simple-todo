@@ -7,3 +7,6 @@ bun.lockb
 
 # Miscellaneous
 /static/
+
+# Machine-written benchmark results (e2e/relay-proof-mode.bench.js, #64); data, not source.
+/e2e/results/

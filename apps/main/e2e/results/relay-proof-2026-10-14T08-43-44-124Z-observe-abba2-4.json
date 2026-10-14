@@ -1,0 +1,317 @@
+{
+	"date": "2026-10-14T08:43:44.124Z",
+	"mode": "observe",
+	"label": "abba2-4",
+	"machine": {
+		"cpus": "Intel(R) Core(TM) i9-9880H CPU @ 2.30GHz",
+		"cores": 16,
+		"memGB": 32
+	},
+	"relay": {
+		"mode": "public",
+		"multiaddr": "/dns4/exhaust-tobacco-abuse-purchase.2n6.me/tcp/443/tls/ws/p2p/12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+		"httpOrigin": "https://exhaust-tobacco-abuse-purchase.2n6.me"
+	},
+	"todos": [
+		{
+			"i": 1,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 861,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 93
+					},
+					{
+						"status": "pinned",
+						"t": 861
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 350,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 868,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 868
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz"
+				],
+				"bob": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ"
+				]
+			}
+		},
+		{
+			"i": 2,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 849,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 80
+					},
+					{
+						"status": "pinned",
+						"t": 849
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 312,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 853,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 853
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz"
+				],
+				"bob": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ"
+				]
+			}
+		},
+		{
+			"i": 3,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 842,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 72
+					},
+					{
+						"status": "pinned",
+						"t": 842
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 306,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 847,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 847
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz"
+				],
+				"bob": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ"
+				]
+			}
+		},
+		{
+			"i": 4,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 844,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 74
+					},
+					{
+						"status": "pinned",
+						"t": 844
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 307,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 847,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 847
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz"
+				],
+				"bob": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ"
+				]
+			}
+		},
+		{
+			"i": 5,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 839,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 69
+					},
+					{
+						"status": "pinned",
+						"t": 839
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 303,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 843,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 843
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz",
+					"12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz"
+				],
+				"bob": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ",
+					"12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ"
+				]
+			}
+		}
+	],
+	"setup": {
+		"readyMs": 26242,
+		"peersMet": true,
+		"alicePeerId": "12D3KooWGkn6a88VGVPLzUJvtZq4WWigmMqTWKUKnu3EejzpydHJ",
+		"bobPeerId": "12D3KooWKPR6FHXardeUpzMsWDgCgovu3u8FiDD52qnYLSz96Epz"
+	},
+	"relayAfter": {
+		"stats": {
+			"totalPinned": 1,
+			"syncOperations": 60,
+			"failedSyncs": 0,
+			"pinnedMediaCids": [],
+			"timestamp": "2026-10-14T08:44:15.309Z",
+			"syncQueue": {
+				"waiting": 0,
+				"active": 0,
+				"activeTopics": [],
+				"queuedTopics": 0,
+				"cooldownTopics": 0,
+				"timedOutSyncs": 0
+			}
+		},
+		"databases": {
+			"databases": [
+				{
+					"address": "/orbitdb/zdpuAu6Q1KU2r6RwxiH61ispCAhC6K1GYTv77Uv2FFsKDVAPw",
+					"lastSyncedAt": "2026-10-14T08:44:14.490Z",
+					"entryCount": 27,
+					"lastRecord": {
+						"hash": "zdpuAnNMghJe88K5gCJN5GGTBFAp36juFQ7Cu822GgNjswZT1",
+						"redacted": true
+					},
+					"snapshotSource": "db.all()"
+				}
+			],
+			"total": 1
+		}
+	},
+	"errors": {
+		"alice": {
+			"total": 0,
+			"streamResets": 0,
+			"byName": {}
+		},
+		"bob": {
+			"total": 0,
+			"streamResets": 0,
+			"byName": {}
+		}
+	}
+}
