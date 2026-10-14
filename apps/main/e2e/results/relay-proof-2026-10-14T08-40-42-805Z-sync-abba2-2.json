@@ -1,0 +1,317 @@
+{
+	"date": "2026-10-14T08:40:42.805Z",
+	"mode": "sync",
+	"label": "abba2-2",
+	"machine": {
+		"cpus": "Intel(R) Core(TM) i9-9880H CPU @ 2.30GHz",
+		"cores": 16,
+		"memGB": 32
+	},
+	"relay": {
+		"mode": "public",
+		"multiaddr": "/dns4/exhaust-tobacco-abuse-purchase.2n6.me/tcp/443/tls/ws/p2p/12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+		"httpOrigin": "https://exhaust-tobacco-abuse-purchase.2n6.me"
+	},
+	"todos": [
+		{
+			"i": 1,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 5981,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 233
+					},
+					{
+						"status": "pinned",
+						"t": 5981
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 5700,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 11158,
+					"transitions": [
+						{
+							"status": "pending",
+							"t": 5987
+						},
+						{
+							"status": "pinned",
+							"t": 11158
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooW9ynQtRvHrH73st1bH99gpVCsQnA4fNQaK1hdpQe5YCoC",
+					"12D3KooW9ynQtRvHrH73st1bH99gpVCsQnA4fNQaK1hdpQe5YCoC",
+					"12D3KooW9ynQtRvHrH73st1bH99gpVCsQnA4fNQaK1hdpQe5YCoC"
+				],
+				"bob": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWGydhEXL1bvuHNcuTj5fF3WtyePiMbCoJz3q6xnAyqa3b",
+					"12D3KooWGydhEXL1bvuHNcuTj5fF3WtyePiMbCoJz3q6xnAyqa3b",
+					"12D3KooWGydhEXL1bvuHNcuTj5fF3WtyePiMbCoJz3q6xnAyqa3b"
+				]
+			}
+		},
+		{
+			"i": 2,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 5763,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 68
+					},
+					{
+						"status": "pinned",
+						"t": 5763
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 328,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 5767,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 5767
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooW9ynQtRvHrH73st1bH99gpVCsQnA4fNQaK1hdpQe5YCoC",
+					"12D3KooW9ynQtRvHrH73st1bH99gpVCsQnA4fNQaK1hdpQe5YCoC",
+					"12D3KooW9ynQtRvHrH73st1bH99gpVCsQnA4fNQaK1hdpQe5YCoC"
+				],
+				"bob": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWGydhEXL1bvuHNcuTj5fF3WtyePiMbCoJz3q6xnAyqa3b",
+					"12D3KooWGydhEXL1bvuHNcuTj5fF3WtyePiMbCoJz3q6xnAyqa3b",
+					"12D3KooWGydhEXL1bvuHNcuTj5fF3WtyePiMbCoJz3q6xnAyqa3b"
+				]
+			}
+		},
+		{
+			"i": 3,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 600,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 75
+					},
+					{
+						"status": "pinned",
+						"t": 600
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 308,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 5799,
+					"transitions": [
+						{
+							"status": "pending",
+							"t": 604
+						},
+						{
+							"status": "pinned",
+							"t": 5799
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooW9ynQtRvHrH73st1bH99gpVCsQnA4fNQaK1hdpQe5YCoC",
+					"12D3KooW9ynQtRvHrH73st1bH99gpVCsQnA4fNQaK1hdpQe5YCoC",
+					"12D3KooW9ynQtRvHrH73st1bH99gpVCsQnA4fNQaK1hdpQe5YCoC"
+				],
+				"bob": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWGydhEXL1bvuHNcuTj5fF3WtyePiMbCoJz3q6xnAyqa3b",
+					"12D3KooWGydhEXL1bvuHNcuTj5fF3WtyePiMbCoJz3q6xnAyqa3b",
+					"12D3KooWGydhEXL1bvuHNcuTj5fF3WtyePiMbCoJz3q6xnAyqa3b"
+				]
+			}
+		},
+		{
+			"i": 4,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 5746,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 76
+					},
+					{
+						"status": "pinned",
+						"t": 5746
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 357,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 5750,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 5750
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooW9ynQtRvHrH73st1bH99gpVCsQnA4fNQaK1hdpQe5YCoC",
+					"12D3KooW9ynQtRvHrH73st1bH99gpVCsQnA4fNQaK1hdpQe5YCoC",
+					"12D3KooW9ynQtRvHrH73st1bH99gpVCsQnA4fNQaK1hdpQe5YCoC"
+				],
+				"bob": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWGydhEXL1bvuHNcuTj5fF3WtyePiMbCoJz3q6xnAyqa3b",
+					"12D3KooWGydhEXL1bvuHNcuTj5fF3WtyePiMbCoJz3q6xnAyqa3b",
+					"12D3KooWGydhEXL1bvuHNcuTj5fF3WtyePiMbCoJz3q6xnAyqa3b"
+				]
+			}
+		},
+		{
+			"i": 5,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 5600,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 81
+					},
+					{
+						"status": "pinned",
+						"t": 5600
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 322,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 5605,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 5605
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooW9ynQtRvHrH73st1bH99gpVCsQnA4fNQaK1hdpQe5YCoC",
+					"12D3KooW9ynQtRvHrH73st1bH99gpVCsQnA4fNQaK1hdpQe5YCoC",
+					"12D3KooW9ynQtRvHrH73st1bH99gpVCsQnA4fNQaK1hdpQe5YCoC"
+				],
+				"bob": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+					"12D3KooWGydhEXL1bvuHNcuTj5fF3WtyePiMbCoJz3q6xnAyqa3b",
+					"12D3KooWGydhEXL1bvuHNcuTj5fF3WtyePiMbCoJz3q6xnAyqa3b",
+					"12D3KooWGydhEXL1bvuHNcuTj5fF3WtyePiMbCoJz3q6xnAyqa3b"
+				]
+			}
+		}
+	],
+	"setup": {
+		"readyMs": 26626,
+		"peersMet": true,
+		"alicePeerId": "12D3KooWGydhEXL1bvuHNcuTj5fF3WtyePiMbCoJz3q6xnAyqa3b",
+		"bobPeerId": "12D3KooW9ynQtRvHrH73st1bH99gpVCsQnA4fNQaK1hdpQe5YCoC"
+	},
+	"relayAfter": {
+		"stats": {
+			"totalPinned": 1,
+			"syncOperations": 41,
+			"failedSyncs": 0,
+			"pinnedMediaCids": [],
+			"timestamp": "2026-10-14T08:41:44.492Z",
+			"syncQueue": {
+				"waiting": 0,
+				"active": 0,
+				"activeTopics": [],
+				"queuedTopics": 0,
+				"cooldownTopics": 0,
+				"timedOutSyncs": 0
+			}
+		},
+		"databases": {
+			"databases": [
+				{
+					"address": "/orbitdb/zdpuAu6Q1KU2r6RwxiH61ispCAhC6K1GYTv77Uv2FFsKDVAPw",
+					"lastSyncedAt": "2026-10-14T08:41:43.566Z",
+					"entryCount": 22,
+					"lastRecord": {
+						"hash": "zdpuAyXGiNemauyAhVjqb46VDs7epGGy4rRtjokvpA7pa8Wdp",
+						"redacted": true
+					},
+					"snapshotSource": "db.all()"
+				}
+			],
+			"total": 1
+		}
+	},
+	"errors": {
+		"alice": {
+			"total": 0,
+			"streamResets": 0,
+			"byName": {}
+		},
+		"bob": {
+			"total": 1,
+			"streamResets": 0,
+			"byName": {
+				"OperationError": 1
+			}
+		}
+	}
+}

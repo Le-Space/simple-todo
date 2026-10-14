@@ -80,7 +80,8 @@ E2E_RELAY_CLI_PATH=/path/to/orbitdb-relay/dist/cli.js e2e/relay-proof-experiment
 
 Twenty runs of `e2e/relay-proof-mode.bench.js`, ten per mode, alternating
 (ABBA), each on a fresh relay datastore; results in `e2e/results/`, the table
-from `node e2e/relay-proof-summary.mjs`. The relay must be built from
+from `node e2e/relay-proof-summary.mjs`, and what they showed in
+[relay-proof-results.md](relay-proof-results.md). The relay must be built from
 orbitdb-relay `main` at or after NiKrause/orbitdb-relay#60 — the one in
 `node_modules` hangs up on browsers during a fresh pass. Run it on an
 otherwise idle machine, one Playwright suite at a time.

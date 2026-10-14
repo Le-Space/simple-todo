@@ -1,0 +1,1335 @@
+{
+	"date": "2026-10-14T08:11:19.772Z",
+	"mode": "observe",
+	"label": "prod0107-obs3",
+	"machine": {
+		"cpus": "Intel(R) Core(TM) i9-9880H CPU @ 2.30GHz",
+		"cores": 16,
+		"memGB": 32
+	},
+	"relay": {
+		"mode": "public",
+		"multiaddr": "/dns4/improve-empty-grass-tent.2n6.me/tcp/443/tls/ws/p2p/12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+		"httpOrigin": "https://improve-empty-grass-tent.2n6.me"
+	},
+	"todos": [
+		{
+			"i": 1,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 7712,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 6938
+					},
+					{
+						"status": "pinned",
+						"t": 7712
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 7032,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 7719,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 7719
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm"
+				],
+				"bob": [
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh"
+				]
+			}
+		},
+		{
+			"i": 2,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 863,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 91
+					},
+					{
+						"status": "pinned",
+						"t": 863
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 330,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 869,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 869
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm"
+				],
+				"bob": [
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh"
+				]
+			}
+		},
+		{
+			"i": 3,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 847,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 76
+					},
+					{
+						"status": "pinned",
+						"t": 847
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 310,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 851,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 851
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm"
+				],
+				"bob": [
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh"
+				]
+			}
+		},
+		{
+			"i": 4,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 858,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 87
+					},
+					{
+						"status": "pinned",
+						"t": 858
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 324,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 862,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 862
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm"
+				],
+				"bob": [
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh"
+				]
+			}
+		},
+		{
+			"i": 5,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 863,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 88
+					},
+					{
+						"status": "pinned",
+						"t": 863
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": 326,
+				"chip": {
+					"final": "pinned",
+					"settledMs": 869,
+					"transitions": [
+						{
+							"status": "pinned",
+							"t": 869
+						}
+					]
+				}
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm",
+					"12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm"
+				],
+				"bob": [
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWL9UKRwGWE6GGxANhDZpJNyDphQcfBSApuXE1qTW5pkVh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh",
+					"12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh"
+				]
+			}
+		}
+	],
+	"setup": {
+		"readyMs": 26840,
+		"peersMet": true,
+		"alicePeerId": "12D3KooWJ2zgqp8vPiMFZbWnn4bCkaQwAzk8WJVbhrZH6WyqETyh",
+		"bobPeerId": "12D3KooWGKqPwHJi9p5W8txfneKjUKQct7rD3EV3j49CwU3ESBcm"
+	},
+	"relayAfter": {
+		"stats": {
+			"totalPinned": 132,
+			"syncOperations": 4572,
+			"failedSyncs": 1555,
+			"pinnedMediaCids": [],
+			"timestamp": "2026-10-14T08:11:58.614Z",
+			"syncQueue": {
+				"waiting": 0,
+				"active": 0,
+				"activeTopics": [],
+				"queuedTopics": 0,
+				"cooldownTopics": 0,
+				"timedOutSyncs": 335
+			}
+		},
+		"databases": {
+			"databases": [
+				{
+					"address": "/orbitdb/zdpuB3EcqJggifmyPFK8uEiGEQRzWT5ihajM3eSjXiV41mxJd",
+					"lastSyncedAt": "2026-09-25T18:08:13.300Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAzbKZuvLLVC1NbLPptvnQjgq2VZNEx6aaUE5KXwKZcfT7",
+					"lastSyncedAt": "2026-09-25T18:08:18.310Z",
+					"entryCount": 1,
+					"lastRecord": {
+						"hash": "zdpuArd2dN9Rokk7QAKbQGEgiLT1TErEpbBEJxbeSZuZn6cBY",
+						"key": "todo_1790356522736_sekjqubq1",
+						"value": "{\n  text: 'Test',\n  assignee: null,\n  completed: false,\n  createdAt: '2026-09-25T17:15:22.736Z',\n  createdBy: '12D3KooWEpHk2qUrfy9zhw21Ar41tbXrEYSNyYQYhTfvfYNNGjY2',\n  updatedAt: '2026-09-25T17:15:22.736Z',\n  delegation: null,\n  createdByIdentity: '02036b027ef1e965d919269744a4e03007fa4f490a1e408e65a10fee24b6dc904b'\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAwKvHSWLrXX7P63JHXRssgT5Ra5nmM4J5UAQSoM9RjpNU",
+					"lastSyncedAt": "2026-09-25T18:08:23.626Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuArbXJLTCLgN8KRFVvjxmcEuwg2MwjP9Su7L7vpUXZSM5b",
+					"lastSyncedAt": "2026-09-25T18:09:09.506Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAy99Q3mY6VhXLkVAXK2dbnZFoyYwgraQpHQmH1xP13rke",
+					"lastSyncedAt": "2026-09-25T18:08:33.438Z",
+					"entryCount": 1,
+					"lastRecord": {
+						"hash": "zdpuB3TiWZiwHwvPRAozoQ3fddrtoTmLyNECkwZJBAivcnHvM",
+						"key": "/orbitdb/zdpuArbXJLTCLgN8KRFVvjxmcEuwg2MwjP9Su7L7vpUXZSM5b",
+						"value": "{\n  name: 'Invoices',\n  role: 'owner',\n  address: '/orbitdb/zdpuArbXJLTCLgN8KRFVvjxmcEuwg2MwjP9Su7L7vpUXZSM5b',\n  createdAt: 1790356536298\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAqX6u3Nzirub5nEZ7ssjZCPaVKowKXKhBbXGekLH9XXCH",
+					"lastSyncedAt": "2026-10-13T17:42:53.432Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB1h1nWtRair5QPNUmeePpn8zNFrJE3w2bqyxmi2d7rio3",
+					"lastSyncedAt": "2026-09-25T18:41:32.797Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB1g2Y8pyTPbEyMvrFzUZ6GWGXVfcgk6KXEsaeYboizccT",
+					"lastSyncedAt": "2026-09-25T19:19:45.954Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAsrWjjqkdjbmwEsx3hreHwCVfzqC3PyNXqNJ5phquqViR",
+					"lastSyncedAt": "2026-09-25T18:41:38.206Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAsibDUywxK3HXR8wvBavWUYqfkupCAQuD8V1scocH3N89",
+					"lastSyncedAt": "2026-10-04T14:58:41.782Z",
+					"entryCount": 7,
+					"lastRecord": {
+						"hash": "zdpuAwNcJZLEscVFLhNZgHM9jFKE2LTKarGceeAiZN9ecU7q2",
+						"key": "t1790199545776",
+						"value": "{\n  ts: 1790199545776,\n  done: true,\n  text: 'Feldtest Funkprobe'\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAvbSjxZgRtUjHovWcE221TD4cCdMP4yPgssxcXM36jw8S",
+					"lastSyncedAt": "2026-10-13T17:42:53.453Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAySz63XvaSnenZpjrabtV5ZowvykBtyqpZpMBxNfP3af4",
+					"lastSyncedAt": "2026-10-13T17:43:38.985Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAxDNXS3o9gqhWUKRThsuUucpkutFGzskG9J6bMuHSTNDw",
+					"lastSyncedAt": "2026-09-26T09:52:50.603Z",
+					"entryCount": 1,
+					"lastRecord": {
+						"hash": "zdpuAra2aCkTPcJapg4vWAJAWRQwTJF4UjLi7RdrVmr3UrPfS",
+						"key": "60e4f639-6503-4ee8-a1cc-b0261bfc6ea1",
+						"value": "{\n  _id: '60e4f639-6503-4ee8-a1cc-b0261bfc6ea1',\n  cid: 'bafkreiefxpub45fpwtgwxs6zjwrlfntncntewwhzfvyptiq3rkmsecwm4e',\n  name: 'ai-relay-upload-1790416346234.png',\n  size: 68,\n  type: 'image/png',\n  createdAt: '2026-09-26T09:52:33.209Z'\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAyLx54j6KWKbsVRyoJ4fkbtrbRD46uL7QpqwLbdSctv4C",
+					"lastSyncedAt": "2026-09-26T09:52:37.338Z",
+					"entryCount": null,
+					"lastRecord": {
+						"hash": "zdpuAybko5JnPvPPjy9VqvcGXhdGWhtNvq9dWSnuUZ6PVsb4M",
+						"identity": "zdpuAojZyhHCPNmeFgHhTrQodopb…",
+						"payloadPreview": "{\n  op: 'PUT',\n  key: 'aiDBAddress',\n  value: {\n    _id: 'aiDBAddress',\n    value: '/orbitdb/zdpuAxjfSViFqkriuCj8ph5zsEqonHFxE836TE9hnrzMDqnE7'\n  }\n}"
+					},
+					"snapshotSource": "update-event burst only (n=1)"
+				},
+				{
+					"address": "/orbitdb/zdpuAnwn3Kjf8NvvKnmhr3xqWjbMvoCi1B3z8TSRmWR5JjZMK",
+					"lastSyncedAt": "2026-09-26T09:52:39.940Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAwHERKDrG4x1FZP2NXEHyQzD2KyUozhMTnAftGiZDgZeq",
+					"lastSyncedAt": "2026-10-13T12:55:49.039Z",
+					"entryCount": 19,
+					"lastRecord": {
+						"hash": "zdpuB1QX9zGFrnz2vvA4qLccuUgzZXxUhm6aWt9cDo6Q2KDJM",
+						"key": "86e33c5d-fa72-48a1-92c4-fbb8f3a441b9",
+						"value": "{\n  _id: '86e33c5d-fa72-48a1-92c4-fbb8f3a441b9',\n  author: 'LED Tester',\n  postId: '971c2834-d7f8-426e-a29b-b89bd6aaf1da',\n  content: 'db-led comment 1790416566065',\n  createdAt: '2026-09-26T09:56:33.375Z'\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAxhHdhXKZyfJoBbwySQejeNPxPGf6UVofmnPeTXqz3xw7",
+					"lastSyncedAt": "2026-09-26T09:58:47.399Z",
+					"entryCount": 7,
+					"lastRecord": {
+						"hash": "zdpuB1ucgN1kCFCfz4oEpTXuYYJDFN9j3XYL3cniGmQjcxFHj",
+						"key": "categories",
+						"value": "{\n  _id: 'categories',\n  value: [\n    'General'\n  ]\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAvfXPzxKva2vP9sZC9DBCykP3AVR3S6x8sntUs1ibwgHp",
+					"lastSyncedAt": "2026-09-26T09:58:52.412Z",
+					"entryCount": 1,
+					"lastRecord": {
+						"hash": "zdpuB2Tp9FQaPZj8dY2CNnddkkUSA4hH2ZWQCbSyRziLoYr8a",
+						"key": "971c2834-d7f8-426e-a29b-b89bd6aaf1da",
+						"value": "{\n  _id: '971c2834-d7f8-426e-a29b-b89bd6aaf1da',\n  title: 'db-led-post-1790416566065',\n  content: 'db-led content 1790416566065\\n' +\n    '\\n' +\n    '![Media](ipfs://bafkreiefxpub45fpwtgwxs6zjwrlfntncntewwhzfvyptiq3rkmsecwm4e)',\n  category: 'General',\n  identity: 'did:key:z6MknCvV7nZSeBTjRuZoaoD1SQP7RcoFqyBQXE2NuWvMNZ1Q',\n  language: 'en',\n  mediaIds: [\n    'bafkreiefxpub45fpwtgwxs6zjwrlfntncntewwhzfvyptiq3rkmsecwm4e'\n  ],\n  createdAt: 1790416569809,\n  published: true,\n  updatedAt: 1790416569809,\n  categories: [\n    'General'\n  ]\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAwaPnYjgTnYDfXDpGvmFvxZPZsZdGjowHnTdrAuhS4ztJ",
+					"lastSyncedAt": "2026-09-26T09:59:02.447Z",
+					"entryCount": 1,
+					"lastRecord": {
+						"hash": "zdpuB1JjPqFYyU5gZPaKLRfc4qK63iRfPp2rspu1PPGz2dePd",
+						"key": "0b7b5217-ccbb-498b-b104-0eece4c48918",
+						"value": "{\n  _id: '0b7b5217-ccbb-498b-b104-0eece4c48918',\n  cid: 'bafkreiefxpub45fpwtgwxs6zjwrlfntncntewwhzfvyptiq3rkmsecwm4e',\n  name: 'db-led-1790416566065.png',\n  size: 68,\n  type: 'image/png',\n  createdAt: '2026-09-26T09:56:09.570Z'\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB334DoSjxxcPMaZJiKYmCmyyNsKF6931NA4vKrbabyTT1",
+					"lastSyncedAt": "2026-09-26T10:00:55.611Z",
+					"entryCount": 1,
+					"lastRecord": {
+						"hash": "zdpuAuVf6FABkC9LX6GhSPLGae8LaCZEsaC9M3GChfAx72Yjj",
+						"key": "484cbb96-b921-4457-a579-680d346ef2c2",
+						"value": "{\n  _id: '484cbb96-b921-4457-a579-680d346ef2c2',\n  title: 'relay-post-1790416686169',\n  content: 'relay replication check 1790416686169',\n  category: 'General',\n  identity: 'did:key:z6MkwVGdSeqyB31yMLZhvB87e4ykrYG63Ar9NBJnsmnv7Epi',\n  language: 'en',\n  mediaIds: [],\n  createdAt: 1790416688734,\n  published: true,\n  updatedAt: 1790416688734,\n  categories: [\n    'General'\n  ]\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAxkTjCBHTZ91xtRzkLC2ebqrntmC3PXhAprVEDoidmLvV",
+					"lastSyncedAt": "2026-09-28T11:08:57.433Z",
+					"entryCount": 1,
+					"lastRecord": {
+						"hash": "zdpuAkvgHuBNn4sQp3ooFTJcVpvMoC9jt2sPsAKRnCmZoxQyv",
+						"key": "todo_1790454980332_z37u4h0nr",
+						"value": "{\n  text: 'x402 für Doichain umsetzen (Idee Nico, 26.09.2026): Doichain-API und MCP-Werkzeug anchor_proof antworten KI-Agenten nach dem Freikontingent mit HTTP 402 samt Preis in DOI und Zieladresse, der Agent zahlt aus seiner eigenen Wallet und bekommt den Nachweis on-chain. Dafür ein eigenes x402-Schema für Doichain als UTXO-Kette, die bisherige 402 für leere Server-Wallet auf 503 umstellen.',\n  assignee: null,\n  completed: false,\n  createdAt: '2026-09-26T20:36:20.332Z',\n  createdBy: '12D3KooWREXAhC6RcpRciJ3KQ9frEGapjZ3fB3N9z9HDXfRk9xzo',\n  updatedAt: '2026-09-26T20:36:20.332Z',\n  delegation: null,\n  createdByIdentity: 'did:key:z4oJ8dp79eK37rStscixKZCF9HBLsYC1JbAQRZahfrRsMWcmYQmjvbWBseEnqEqiCoZ8kbUdaBZuyXyMCPK8UGAAhKmKu'\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAvzDUKyV4N1L8AbgpwDpXrkKLsVZJ1eYn965r6m6kegqB",
+					"lastSyncedAt": "2026-09-28T11:08:57.798Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAoiv95TtAz19Jq1w2d3syakJ4PtxnRqeGppv7nN6Uu2A7",
+					"lastSyncedAt": "2026-09-28T10:53:57.826Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuApmjtxRC5iepbv7ba4ZVwJksabHypVsqripWTz2XUmVHA",
+					"lastSyncedAt": "2026-09-28T10:54:43.249Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB2awvNHVBCeYXmQVN8bJihRbxEh1ZgAA2kCjhvzpoFoGh",
+					"lastSyncedAt": "2026-09-27T10:34:04.567Z",
+					"entryCount": 1,
+					"lastRecord": {
+						"hash": "zdpuAkutR9ra2GACc5YHBipRBe4j9ETYg9tXeyUwXRCaaEuwp",
+						"key": "86a6ff51-16d0-4d2b-a64f-b7221d1bafa0",
+						"value": "{\n  _id: '86a6ff51-16d0-4d2b-a64f-b7221d1bafa0',\n  cid: 'bafkreiefxpub45fpwtgwxs6zjwrlfntncntewwhzfvyptiq3rkmsecwm4e',\n  name: 'ai-relay-upload-1790505221345.png',\n  size: 68,\n  type: 'image/png',\n  createdAt: '2026-09-27T10:33:49.039Z'\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAqyL9ikP5iYBv3P1ZBH1cKuDBdqQ9CjrkVb1kF8NJy3q6",
+					"lastSyncedAt": "2026-09-27T10:33:51.967Z",
+					"entryCount": null,
+					"lastRecord": {
+						"hash": "zdpuAkXbZD84w62sfD6w9SfMSGQRisYQmFpUaRJcAr1deB8um",
+						"identity": "zdpuAskXnD7pFpK48NUitKoAB5qR…",
+						"payloadPreview": "{\n  op: 'PUT',\n  key: 'aiDBAddress',\n  value: {\n    _id: 'aiDBAddress',\n    value: '/orbitdb/zdpuAwJTLCFtnmP8a7gKwssUwyqpZGPuufTS6UzPLEQEMst2f'\n  }\n}"
+					},
+					"snapshotSource": "update-event burst only (n=1)"
+				},
+				{
+					"address": "/orbitdb/zdpuB1NVdHXFo2VjPEgqw5rX65qx2jfgMSnQPKkxdP47QYHJ7",
+					"lastSyncedAt": "2026-09-27T10:33:54.534Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAtLZYCMBcevwca1F6a71tcEY32FaHE9vfYv1eb6Gz52kU",
+					"lastSyncedAt": "2026-09-27T10:36:02.867Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAnsbsZEonhGvW7jyNKTBwk9xwyoUS8dGyeqSg1WSP64q7",
+					"lastSyncedAt": "2026-09-27T10:36:08.501Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAnCbXzoMbbhuUEFYr6QWg37VSnhaJmgdnRieXnkj9zsvz",
+					"lastSyncedAt": "2026-09-27T10:36:10.100Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuApCvFkCkVLkHw6sJkYXBRYH9HJeNk54znEgAZAKzNgk3Z",
+					"lastSyncedAt": "2026-09-27T10:36:14.074Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAsTz71pExtKDJ5yuBNWHbcDwUEG3qTEQ7Eopacxn1f96Q",
+					"lastSyncedAt": "2026-09-27T10:39:42.990Z",
+					"entryCount": 7,
+					"lastRecord": {
+						"hash": "zdpuAmobC43mAyLbEVEz3HJ7MYqQJSnYuNZEbCFLK5jNizsA7",
+						"key": "categories",
+						"value": "{\n  _id: 'categories',\n  value: [\n    'General'\n  ]\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB2guEXs821ormxfxjWewuH8KaMyLgv2fmjFTX5c4r2HaD",
+					"lastSyncedAt": "2026-09-27T10:39:43.637Z",
+					"entryCount": 1,
+					"lastRecord": {
+						"hash": "zdpuAxQ8DDKhQVnEzhrnWqVsyc5tdGCV2KUa1TAshWTQu1UfG",
+						"key": "2a508169-8029-404b-8d7f-bbe14afdf1a3",
+						"value": "{\n  _id: '2a508169-8029-404b-8d7f-bbe14afdf1a3',\n  title: 'db-led-post-1790505443977',\n  content: 'db-led content 1790505443977\\n' +\n    '\\n' +\n    '![Media](ipfs://bafkreiefxpub45fpwtgwxs6zjwrlfntncntewwhzfvyptiq3rkmsecwm4e)',\n  category: 'General',\n  identity: 'did:key:z6MkwBxixoL9L7iMxkF4wVu8LDZNyL7z4Mf48ev2HCuaEC5a',\n  language: 'en',\n  mediaIds: [\n    'bafkreiefxpub45fpwtgwxs6zjwrlfntncntewwhzfvyptiq3rkmsecwm4e'\n  ],\n  createdAt: 1790505447757,\n  published: true,\n  updatedAt: 1790505447757,\n  categories: [\n    'General'\n  ]\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuArnUYoojajMyGcTATNUSvJJZp1hZ8ATU1eL1ajLScqeoZ",
+					"lastSyncedAt": "2026-09-27T10:39:38.618Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAna331yAyvsMwGNTre97wtjuJUtiwABBjfeyH5WCdqZt3",
+					"lastSyncedAt": "2026-09-27T10:42:01.520Z",
+					"entryCount": 7,
+					"lastRecord": {
+						"hash": "zdpuArw31xdo8LBdpKWST6iwhx5KbzPW4egUDR3PNVLN2i2xx",
+						"key": "categories",
+						"value": "{\n  _id: 'categories',\n  value: [\n    'General'\n  ]\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAsS5uv2HHmMjM9YamAgF1U5YUYUkUWeALP3ZcspucmHNq",
+					"lastSyncedAt": "2026-09-27T10:41:51.499Z",
+					"entryCount": 1,
+					"lastRecord": {
+						"hash": "zdpuAyyUDsS9FjDoN7wv61uj1CCcyANT8nL6DPNKVRHSJZDCt",
+						"key": "32003fe5-96d4-4ae4-ad48-5a87c89499f3",
+						"value": "{\n  _id: '32003fe5-96d4-4ae4-ad48-5a87c89499f3',\n  title: 'db-led-post-1790505653657',\n  content: 'db-led content 1790505653657\\n' +\n    '\\n' +\n    '![Media](ipfs://bafkreiefxpub45fpwtgwxs6zjwrlfntncntewwhzfvyptiq3rkmsecwm4e)',\n  category: 'General',\n  identity: 'did:key:z6MkvWzfCGs1WoemPDM1pbnfFXFR565qjJ38DcEm9KyUSSiK',\n  language: 'en',\n  mediaIds: [\n    'bafkreiefxpub45fpwtgwxs6zjwrlfntncntewwhzfvyptiq3rkmsecwm4e'\n  ],\n  createdAt: 1790505656862,\n  published: true,\n  updatedAt: 1790505656862,\n  categories: [\n    'General'\n  ]\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAtxrXKycPprFfHCMs7zAvgqvDnJ4guKzLJSgefSfqGJmE",
+					"lastSyncedAt": "2026-09-27T10:41:41.757Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB2YGtRQomfh1PFVxuTz71kqPUAeb4WQAn8Y8RNVeixNyT",
+					"lastSyncedAt": "2026-09-27T10:41:56.509Z",
+					"entryCount": 1,
+					"lastRecord": {
+						"hash": "zdpuAs1heFAM2JqiY6sgS2hDWnQXRhv83TVtRCwYiXbJVGu7i",
+						"key": "d9c72363-68a5-42ac-af19-bc7c4f995d46",
+						"value": "{\n  _id: 'd9c72363-68a5-42ac-af19-bc7c4f995d46',\n  cid: 'bafkreiefxpub45fpwtgwxs6zjwrlfntncntewwhzfvyptiq3rkmsecwm4e',\n  name: 'db-led-1790505653657.png',\n  size: 68,\n  type: 'image/png',\n  createdAt: '2026-09-27T10:40:56.704Z'\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAwsEAaEmRLsCarevMtpzAmZyq4AxK1AfgBgg6X7su6WT2",
+					"lastSyncedAt": "2026-09-27T10:45:31.250Z",
+					"entryCount": 7,
+					"lastRecord": {
+						"hash": "zdpuB2Xt8cr8NJcdsS2NRhNAHZ1iEbCFbnb7Ay2PSAs3LzUA2",
+						"key": "categories",
+						"value": "{\n  _id: 'categories',\n  value: [\n    'General'\n  ]\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAkzZvQZaHefYwEUDauTSNynQfnhV5HneSHBXTaChnCmn8",
+					"lastSyncedAt": "2026-09-27T10:42:43.519Z",
+					"entryCount": 1,
+					"lastRecord": {
+						"hash": "zdpuAvG2MEH2CUUu3eKNQ5iTyXKdqmGnZdqy2ANhAnGUU8gaZ",
+						"key": "27bac6b6-d335-4426-982c-98b79b54fbf3",
+						"value": "{\n  _id: '27bac6b6-d335-4426-982c-98b79b54fbf3',\n  title: 'relay-post-1790505753078',\n  content: 'relay replication check 1790505753078',\n  category: 'General',\n  identity: 'did:key:z6MktRebGqL819MxpwvwrMFcbC4JJMhBRuY9aYiz9qf3jFKr',\n  language: 'en',\n  mediaIds: [],\n  createdAt: 1790505756158,\n  published: true,\n  updatedAt: 1790505756158,\n  categories: [\n    'General'\n  ]\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAwveutj3TvN6afELHTZ6JL1bd7h1DwiujKLVaQev4mEhg",
+					"lastSyncedAt": "2026-09-28T11:42:14.039Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAuzBUPt59BW7ZKL5WbfPKAoz6UHsHBzbnZCheK9GPtTTb",
+					"lastSyncedAt": "2026-09-28T11:42:14.066Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAneEf7nAZqQV5Tajt1XLh8ANMZL3957d1c9sJBJ6Ey6R6",
+					"lastSyncedAt": "2026-09-28T11:42:24.822Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB2gAmnq5ej3ixDCzaJrGgoNdzrmKTCtG8u995xZES4VPM",
+					"lastSyncedAt": "2026-09-28T11:56:39.191Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuArUackiwQejPfUvwJM3uEH8mzFnmPLac66JNhJxhgJGkA",
+					"lastSyncedAt": "2026-09-29T11:22:39.236Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAykbCegrHb9fT4W9nhBPyEFwLeJJZZufRnFJpdHAjVyXb",
+					"lastSyncedAt": "2026-09-29T11:22:49.671Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAxRQcug8fTenTqcxrY1PKKrRLwgEa1fkohYjYBGGSaV9t",
+					"lastSyncedAt": "2026-09-29T11:22:39.255Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB1UPqn2fxD4Ydg8g441gxpbC7jwFrYPh8hqaTzHaQiRYn",
+					"lastSyncedAt": "2026-09-29T11:24:44.773Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB3Qi4yroa6T5v4nCd1ccFq2Kmmb2V12u1s3WvXXS9kZUF",
+					"lastSyncedAt": "2026-09-29T11:27:00.064Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB18hLgpEHGyPyaok6DyQyMwTKon9MqjnVzNehyb7sP5qH",
+					"lastSyncedAt": "2026-09-29T11:31:00.163Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAohcFvupC9CZFwZ7KYAh8qTf7ZBus52WZsQVGuMquomSv",
+					"lastSyncedAt": "2026-09-29T11:33:16.728Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAy9dEcLjd1xT5zpkdp2i4t1mbbY62QJSLeSMwZUD23haT",
+					"lastSyncedAt": "2026-09-29T11:33:22.177Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuArSwHdzLRhjg4Txr4CWn118wkFnz42JCjaxKjne56r4Wm",
+					"lastSyncedAt": "2026-09-30T11:04:19.828Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAyGwKLTZrZNuTXRE8zzfVxWnhDtLLPJYySauWhKKB1Tcf",
+					"lastSyncedAt": "2026-09-30T11:04:19.885Z",
+					"entryCount": 3,
+					"lastRecord": {
+						"hash": "zdpuAxpzT2TFDbWnuLNaSBKvZjbHea4KDRHQHfTCVR5Yic4r1",
+						"key": "todo_1790155158218_srmb8cbxc",
+						"value": "{\n  text: 'Müsli',\n  assignee: null,\n  completed: false,\n  createdAt: '2026-09-23T09:19:18.218Z',\n  createdBy: '12D3KooWSQpgx2sN5VEqn7wLofUMu9riSbHnqPnoF91HLmtwsJ27',\n  updatedAt: '2026-09-23T09:19:18.218Z',\n  delegation: null,\n  createdByIdentity: 'did:key:z4oJ8apacjPfeaNaxAeshGr5t38nVKYXCpDQdyyYtw7VSxP6dptkFNtLq9WnJH3Z4KpbpcNF9KFxVktPzPyFsUhFPDuCo'\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAu9FKjB14LfzvQAofnGEMrCeFLLGSg1qERDmwmv4rk7E9",
+					"lastSyncedAt": "2026-09-30T11:04:45.379Z",
+					"entryCount": 1,
+					"lastRecord": {
+						"hash": "zdpuB2AaZcvn8S3ZGDwfXZrqFgeRV8tsGspymAqNEHYE2PFvT",
+						"key": "/orbitdb/zdpuAsYSoW631dXnmucBeGmXVEhVLJoaQofh4SuJZqaD1fBXp",
+						"value": "{\n  name: 'invoices-mug2272g-47js7w',\n  role: 'owner',\n  address: '/orbitdb/zdpuAsYSoW631dXnmucBeGmXVEhVLJoaQofh4SuJZqaD1fBXp',\n  createdAt: 1790286000758\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAmXQqa4Ns67UYQoYf8ovkJKFT9hQQMLvABBwoWs4tbmZM",
+					"lastSyncedAt": "2026-09-30T11:11:08.181Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB1L9u4KbSqW2PrS5o8JyTYuZL9hbYQyYFtghJcwRmwnZv",
+					"lastSyncedAt": "2026-09-30T11:11:08.200Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuArEJNgDbegC83JzNeDKuLi1JvSDqL5LCRck7ZiV3DUwFt",
+					"lastSyncedAt": "2026-09-30T11:11:19.127Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAkTL5KScFsGAci2Qir94grczx6vs3ajzpGS4QaSjSrVtw",
+					"lastSyncedAt": "2026-09-30T11:38:09.795Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAtEhdVWMBAkgy19iC3d2uif3wu6gjhf9GmMzL3XxbghPe",
+					"lastSyncedAt": "2026-09-30T11:41:00.562Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuApwnJwMgWiCwfjgZWU1kexcDu9vZc2Qn24wNs2SHGdCau",
+					"lastSyncedAt": "2026-09-30T11:41:38.755Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAq5Gqtb4WXeDD8aWVxqaBxJxxKc76CzS4QVSY2qAkZwDP",
+					"lastSyncedAt": "2026-09-30T11:37:24.336Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAm2vtkg6rbLTZbJ1cSDhEjkGcv6U6dvJKcc8K4aJp1kdb",
+					"lastSyncedAt": "2026-09-30T11:40:14.998Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB12YwTJTriHFBeNBaYg5zw19mXxJALPhiKH9DmnFN6yT7",
+					"lastSyncedAt": "2026-10-01T11:38:04.061Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAzUdLKJ3Pxfw6hwGxefjhb9HX4RyRxyN36Egho5sr1zJK",
+					"lastSyncedAt": "2026-10-01T11:38:04.097Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAvbGcSP961d6aJLmS7inh42N3RVxYRP61GSvLopHwuMjq",
+					"lastSyncedAt": "2026-10-01T11:38:14.616Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAsEPneurdr7sysbDreibCnCAVZf4dkE6sjX8dGFuWK24u",
+					"lastSyncedAt": "2026-10-01T11:52:29.289Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAry4RDt2A4eCJaQmJszY5mL5ubV46gSFrPaayzBRMnyeV",
+					"lastSyncedAt": "2026-10-02T11:07:10.869Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB2MS6nmbdXHwS6QmkjhTus2bEHPT7h4xzVZPGA2Y5z1Ee",
+					"lastSyncedAt": "2026-10-02T11:07:10.951Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAvgBBuEPiQHQeVrCFEaEKSi3AhTM97syZN9HvoyEEMQUo",
+					"lastSyncedAt": "2026-10-02T11:07:21.748Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAtrEdKh74siKPPD7pLQT9bm73PumNfCCe7R3rzZLpgkNW",
+					"lastSyncedAt": "2026-10-02T11:21:36.164Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAsAUCJ7oQKE1ihTbD8YNZeecDcsBxfYb8pzBojY9rtjdA",
+					"lastSyncedAt": "2026-10-03T10:25:48.842Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAtsRn7dM6E6szHLSJvGPWYBQVBUtvP7hVDoHo5hzwPUpU",
+					"lastSyncedAt": "2026-10-03T10:25:48.864Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB2Ut45GW6qHgNJBuyNpw5RY2tq8BR2ucTQNAbwCHWg3vN",
+					"lastSyncedAt": "2026-10-03T10:25:59.995Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAsVHajGoUVn8UNpP2YfHPBvrwpF6XYeK7joi2NT1cBEhE",
+					"lastSyncedAt": "2026-10-03T10:40:14.316Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuArrrR9dQjcje18zmCLXE24Pwwccxn94pqPFaVgeoqUssZ",
+					"lastSyncedAt": "2026-10-04T11:07:10.839Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB1uibBHFrJfHHP9h86bXn4hHXxNnFwyq35iZvDxTZ7p6S",
+					"lastSyncedAt": "2026-10-04T11:07:10.948Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAreN295WbJA144XjfwiN5ZVkNvXW4YgNQjPtNoRx8ck9K",
+					"lastSyncedAt": "2026-10-04T11:07:21.686Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAuph77yCWv51Bmmk6iV8BaKYgMBGZs6YW3enAZmCVZxNz",
+					"lastSyncedAt": "2026-10-04T11:09:16.070Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAmnwPFB2EZMw3Fssk7EG13PLdDpsJmKeedVQryPV9GKiC",
+					"lastSyncedAt": "2026-10-04T11:11:31.874Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAnbVUE6a4bQbV9jFXrkhcMzc9yVNr6bQn6JFJYDmzvJ3k",
+					"lastSyncedAt": "2026-10-04T11:15:31.250Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAwdpvXkguFZVn9yvjPgPFr3RafT3ntD24c3uRB7yKJijy",
+					"lastSyncedAt": "2026-10-04T11:17:48.306Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAsbQBwnfzvrGhSMdwqFv6QnysQGPdPEJtLtUVNX8P9Uut",
+					"lastSyncedAt": "2026-10-04T11:17:54.154Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAtySb5RL7u4QWqeR9d6uEgSz1ydgMazo8nwuB3bCLyUyT",
+					"lastSyncedAt": "2026-10-05T12:17:08.174Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAnbqou5Lp45HyjCRW9BHeYacF7tTFYDjN7LR8PyvjDdQU",
+					"lastSyncedAt": "2026-10-05T12:17:08.210Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAmvgTGGDJsFY5g1ZfLudmDkULJhAnxNrdhXpPmtnKkXCo",
+					"lastSyncedAt": "2026-10-05T12:17:19.264Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAq8ATR4W6o7SvoZoge7ERTW4fcYubjn4c2yvzXwtdVoeh",
+					"lastSyncedAt": "2026-10-05T12:19:13.417Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuApWuHqCJPJQwwUwxkrk6VJBc94j8YqzZj4H8GfyyxZpGm",
+					"lastSyncedAt": "2026-10-05T12:31:33.747Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuArzLTj1ThNQoKTB7R5AqZcKCLAKBxthoxEJ8Yw3DgxDA7",
+					"lastSyncedAt": "2026-10-07T11:48:01.249Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAzKUgdebjgvfw1wmvxx44GM4vU7uzhqsu77c5HaqVpWaQ",
+					"lastSyncedAt": "2026-10-07T11:48:01.258Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAud5Asdooe9wwpLyaL9bTeKAJbtaPPqaKPaybdcqp2g2U",
+					"lastSyncedAt": "2026-10-07T11:48:11.779Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAq8n1LeKRg6fpbRCekfHVyzRwY6ebVSCVB2mZQLJztvRW",
+					"lastSyncedAt": "2026-10-07T11:50:06.432Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB1xxmeM6Sx6jtr15jtbvCqzadHS4EZ13Zjnw81XnWQMir",
+					"lastSyncedAt": "2026-10-07T12:02:16.826Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAuisS7YkTXiexvDNoZoeFRdvDp48GQCMVB76VdGjVeUzZ",
+					"lastSyncedAt": "2026-10-08T12:02:51.269Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAw6DjH9GXsqHbpXEFB7iksuBF1vfVCcuwUYPxRKcSYUNJ",
+					"lastSyncedAt": "2026-10-08T12:03:02.081Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAz5Bs1DqERTiCbLn8MdF22J8Jnz715YpSvC9mACH9bipx",
+					"lastSyncedAt": "2026-10-08T12:02:51.306Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB1KueXyykjQZfGzRKJ1mdrHD4z9pSMNeiQ9Lauxp9573J",
+					"lastSyncedAt": "2026-10-08T12:13:07.325Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAysDFtHMZV8CWWnt7M6su5iFJkQLE6BG6pPcRFf9ohwRP",
+					"lastSyncedAt": "2026-10-08T12:17:13.042Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAnrn6i7KJRe2EVjBLdcJeMqEfZu9BufVU6ZJ12YPQ7CKY",
+					"lastSyncedAt": "2026-10-09T11:54:51.641Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuApyJDBScQeNLVq7Kjm9aunFo5r4nXvs3sZbrQY35qACcy",
+					"lastSyncedAt": "2026-10-09T11:54:51.677Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAvvGo7zs5wtEvh9wovQJmUHFhdmYsYCDff5HSpv8XKQ1b",
+					"lastSyncedAt": "2026-10-09T11:55:02.380Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAmo1P45MibLyLejRezy33QsYFpqf6fAX1FtErEjrrmdXM",
+					"lastSyncedAt": "2026-10-09T12:09:16.895Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuApTcHvbj2A3EiYB6Vkx2QehgAyyUEUPbyEFzUnqd2XoFL",
+					"lastSyncedAt": "2026-10-10T11:11:43.535Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuArhfSpqryyGQwd7zH2AWw649tyUocadcPiZ4N79Wnw9za",
+					"lastSyncedAt": "2026-10-10T11:11:43.557Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAxiuszECNw91MfvRkeiXoAE2BsTiNEoV3YDa8kvzR29iB",
+					"lastSyncedAt": "2026-10-10T11:11:54.331Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAoefepKGbQN93v9hMP1sponwz316TCa2BNm3MpqEZyPGe",
+					"lastSyncedAt": "2026-10-10T11:26:08.921Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAnf5uFoYpCaouxniThLSS1MwdpfLXmJjxi91VzbxuLU7h",
+					"lastSyncedAt": "2026-10-11T11:25:02.894Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAqyB8qUA25UFNPfXJy8G6ERftKb81eg4iyHA5eFv8QvC9",
+					"lastSyncedAt": "2026-10-11T11:25:02.910Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuApQB6X54KyUteoaCbp7BgFHe8dxdvU8GVBqTWuPoBt9FE",
+					"lastSyncedAt": "2026-10-11T11:25:13.639Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAuQtdAm1pVSk9qzZAXfuaT7f2HuSSdk5ibBk87fdc5TBT",
+					"lastSyncedAt": "2026-10-11T11:27:08.313Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAoMLZw4DaTNzxkKkdMosm9EAknMcBPGqSgSbQjkgPytV6",
+					"lastSyncedAt": "2026-10-11T11:39:18.622Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAzVzQMVaggftrWiGUc9zuLrzmgwBB7o4nzh2SkJpJLM3h",
+					"lastSyncedAt": "2026-10-12T13:30:33.083Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAsUVAp7HPoADMyLhyVNXxYhyEo9XYsiAWSXHnQjkjZQMQ",
+					"lastSyncedAt": "2026-10-12T13:30:33.111Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAthD6KtjdmgEMcpSaZfByRYMKocPgmUjQEJkasa3gxsBu",
+					"lastSyncedAt": "2026-10-12T13:30:44.105Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB3KGHKDS9kNvYQriLF7ahxUJcNHuRERQ3mCdj5LG2P8Da",
+					"lastSyncedAt": "2026-10-12T13:32:38.098Z",
+					"entryCount": 7,
+					"lastRecord": {
+						"hash": "zdpuAsd8hpYvpr7MCagQTECfMb5AJ55JnRphYhgZHohEMN2gY",
+						"key": "categories",
+						"value": "{\n  _id: 'categories',\n  value: [\n    'General'\n  ]\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAoXDzngUa3Sdh8XEJ1QmLpuHrHmYguowY9CpCpvEKqKoK",
+					"lastSyncedAt": "2026-10-12T13:32:43.104Z",
+					"entryCount": 1,
+					"lastRecord": {
+						"hash": "zdpuAs6ghagmqCyoXaEP9BmwvxNpQfxbcEe9PVQUs8hiQjFoZ",
+						"key": "b6954588-26d7-45f3-8bab-918f70643b68",
+						"value": "{\n  _id: 'b6954588-26d7-45f3-8bab-918f70643b68',\n  title: 'db-led-post-1791811839373',\n  content: 'db-led content 1791811839373\\n' +\n    '\\n' +\n    '![Media](ipfs://bafkreiefxpub45fpwtgwxs6zjwrlfntncntewwhzfvyptiq3rkmsecwm4e)',\n  category: 'General',\n  identity: 'did:key:z6MkkSx4cx9C4DrNKANc7rGKcGLYEp67KAUo6AdH3n2MjCg6',\n  language: 'en',\n  mediaIds: [\n    'bafkreiefxpub45fpwtgwxs6zjwrlfntncntewwhzfvyptiq3rkmsecwm4e'\n  ],\n  createdAt: 1791811842056,\n  published: true,\n  updatedAt: 1791811842056,\n  categories: [\n    'General'\n  ]\n}"
+					},
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAzrB7VzM78iPAL3m692iVbtyW9qM97Q6P4j3FxR2hnp69",
+					"lastSyncedAt": "2026-10-12T13:32:48.830Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAufSoyjiHEm4R4S9LhVmULt4VzF4VpZYPZuGCQRumDQHP",
+					"lastSyncedAt": "2026-10-12T13:32:55.059Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAsNojRR933jVMKKEdho2wgqKQa86TsjMyu6WvEyjJUSGW",
+					"lastSyncedAt": "2026-10-12T13:35:29.425Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuApg5VXPJF4crfqAu9aMNB6HPjTwsADT8pyjGytojReuch",
+					"lastSyncedAt": "2026-10-12T13:35:29.424Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuArbQQvPBYqeEWKUo7YFk58Xo1CEAK4CcXBsUqp5PqEmQf",
+					"lastSyncedAt": "2026-10-12T13:34:34.723Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB1qxNmQYXhr3JYK8R4DScVBeQZW47iJhsjueq3Y8WTWRL",
+					"lastSyncedAt": "2026-10-12T13:35:29.438Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuB1TGSE3fpAzShZgZ22bjo16i78CsnEBbwVN7fzMe9senC",
+					"lastSyncedAt": "2026-10-12T13:37:59.873Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuApMrBBqnkbVck62aYmohuwBpYNjLtX8rCmZDs9S6rpVHV",
+					"lastSyncedAt": "2026-10-12T13:38:01.743Z",
+					"entryCount": null,
+					"lastRecord": {
+						"hash": "zdpuAuidjFxAi62wx34Sp6YMbEiCbgrWgWwnbHqvmyLgqEzVD",
+						"identity": "zdpuAyrULBg4qSMMVNLccQNQCMn9…",
+						"payloadPreview": "{\n  op: 'PUT',\n  key: '7eefe08a-93fb-4124-b9a8-fe1dad8263bb',\n  value: {\n    _id: '7eefe08a-93fb-4124-b9a8-fe1dad8263bb',\n    title: 'relay-post-1791812270935',\n    content: 'relay replication check 1791812270935',\n    category: 'General',\n    identity: 'did:key:z6MkqUCWttMADVwQs2gAZVXhnfoA4UUh9UeKt6PbMdBkhA8a',\n    language: 'en',\n    mediaIds: [],\n    createdAt: 1791812273789,\n    published: true,\n    updatedAt: 1791812273789,\n    categories: [\n      'General'\n    ]\n  }\n}"
+					},
+					"snapshotSource": "update-event burst only (n=1)"
+				},
+				{
+					"address": "/orbitdb/zdpuAsAgvzTt8vbRtjT8y55xDXU7RFymeN4fZbnK27FHmsbcL",
+					"lastSyncedAt": "2026-10-12T13:38:06.218Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAvEBZc5W3Zhho9e4TvCDZWSNQtCRVJuoZfq99XmkE9TuA",
+					"lastSyncedAt": "2026-10-12T13:40:11.825Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAtU7tWdpnoo8tCKAHZSUnNxvqKwvMjJRADU3qNaf1Dqwe",
+					"lastSyncedAt": "2026-10-12T13:40:17.699Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAwAizTi2xbaBUJfCRbXorbMKnYwgGFiZikTRDpm2tZi8M",
+					"lastSyncedAt": "2026-10-13T12:43:29.003Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAys2icSkbx2nzt6a6UPZh83uUgMkz64J7vWLpsNKMKd5C",
+					"lastSyncedAt": "2026-10-13T12:43:29.053Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAtBQXxYZgx7wStRR7yXiAHuMFC9mEh4dWaJpc9WFmQSgq",
+					"lastSyncedAt": "2026-10-13T12:43:40.219Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAnm8fCne7c61hagFi66nK9cw9ha2VY78MBH3vdE2VfVc9",
+					"lastSyncedAt": "2026-10-13T12:57:54.603Z",
+					"entryCount": 0,
+					"lastRecord": null,
+					"snapshotSource": "db.all()"
+				},
+				{
+					"address": "/orbitdb/zdpuAu6Q1KU2r6RwxiH61ispCAhC6K1GYTv77Uv2FFsKDVAPw",
+					"lastSyncedAt": "2026-10-14T08:11:57.542Z",
+					"entryCount": 38,
+					"lastRecord": {
+						"hash": "zdpuAmhSvi84UfQwA9viUaqZdTYkVfP1oUG2VnHJi5KBsD7e8",
+						"key": "todo_1791965440505_x2t84kvvi",
+						"value": "{\n  text: 'alice-1791965403685-ke7644-todo-5',\n  assignee: null,\n  completed: false,\n  createdAt: '2026-10-14T08:10:40.505Z',\n  createdBy: '12D3KooWBqAv7i1nFz5nerA2cRJUA52sdmZ989mcBwVpxSLCiJFe',\n  updatedAt: '2026-10-14T08:10:40.505Z'\n}"
+					},
+					"snapshotSource": "db.all()"
+				}
+			],
+			"total": 132
+		}
+	},
+	"errors": {
+		"alice": {
+			"total": 0,
+			"streamResets": 0,
+			"byName": {}
+		},
+		"bob": {
+			"total": 0,
+			"streamResets": 0,
+			"byName": {}
+		}
+	}
+}

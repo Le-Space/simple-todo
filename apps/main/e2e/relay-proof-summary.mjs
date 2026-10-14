@@ -1,4 +1,6 @@
-// Adds up the runs of e2e/relay-proof-mode.bench.js (#64), one row per mode.
+// Adds up the runs of e2e/relay-proof-mode.bench.js (#64): one row per relay
+// (local or public) and mode. The first todo of a run is shown apart from the
+// rest, because opening the database is paid on it alone.
 //
 //   node e2e/relay-proof-summary.mjs [results dir]
 import { readdir, readFile } from 'node:fs/promises';
@@ -22,13 +24,16 @@ const ms = (v) => (v == null ? '—' : v >= 10_000 ? `${(v / 1000).toFixed(1)} s
 const byMode = {};
 for (const file of files) {
 	const r = JSON.parse(await readFile(`${dir}/${file}`, 'utf8'));
-	const m = (byMode[r.mode] ??= {
+	const key = `${r.relay?.mode ?? 'unknown'} / ${r.mode}`;
+	const m = (byMode[key] ??= {
 		runs: 0,
 		todos: 0,
 		pinned: 0,
 		unavailable: 0,
 		unknown: 0,
 		settle: [],
+		settleFirst: [],
+		settleRest: [],
 		arrival: [],
 		arrived: 0,
 		bobPinned: 0,
@@ -50,6 +55,7 @@ for (const file of files) {
 		if (final === 'pinned') {
 			m.pinned++;
 			m.settle.push(t.alice.settledMs);
+			(t.i === 1 ? m.settleFirst : m.settleRest).push(t.alice.settledMs);
 		} else if (final === 'unavailable') m.unavailable++;
 		else m.unknown++;
 		if (t.bob?.arrivedMs != null) {
@@ -62,12 +68,12 @@ for (const file of files) {
 
 const pct = (a, b) => (b ? `${Math.round((100 * a) / b)} %` : '—');
 console.log(
-	'| mode | runs | peers met | todos | pinned (Alice) | time to pinned median / p95 | unavailable | unknown | reached Bob | arrival median / p95 | Bob chip pinned | resets per run median | relay entryCount median |'
+	'| relay / mode | runs | peers met | todos | pinned (Alice) | time to pinned median / p95 | first todo median | later todos median | unavailable | unknown | reached Bob | arrival median / p95 | Bob chip pinned | resets per run median | relay entryCount median |'
 );
-console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
 for (const [mode, m] of Object.entries(byMode)) {
 	console.log(
-		`| ${mode} | ${m.runs} | ${m.met}/${m.runs} | ${m.todos} | ${m.pinned} (${pct(m.pinned, m.todos)}) | ${ms(quantile(m.settle, 0.5))} / ${ms(quantile(m.settle, 0.95))} | ${m.unavailable} | ${m.unknown} | ${m.arrived} (${pct(m.arrived, m.todos)}) | ${ms(quantile(m.arrival, 0.5))} / ${ms(quantile(m.arrival, 0.95))} | ${m.bobPinned} | ${quantile(m.resets, 0.5) ?? '—'} | ${quantile(m.entryCounts, 0.5) ?? '—'} |`
+		`| ${mode} | ${m.runs} | ${m.met}/${m.runs} | ${m.todos} | ${m.pinned} (${pct(m.pinned, m.todos)}) | ${ms(quantile(m.settle, 0.5))} / ${ms(quantile(m.settle, 0.95))} | ${ms(quantile(m.settleFirst, 0.5))} | ${ms(quantile(m.settleRest, 0.5))} | ${m.unavailable} | ${m.unknown} | ${m.arrived} (${pct(m.arrived, m.todos)}) | ${ms(quantile(m.arrival, 0.5))} / ${ms(quantile(m.arrival, 0.95))} | ${m.bobPinned} | ${quantile(m.resets, 0.5) ?? '—'} | ${quantile(m.entryCounts, 0.5) ?? '—'} |`
 	);
 }
 console.log(`\n${files.length} runs read from ${dir}`);

@@ -1,0 +1,192 @@
+{
+	"date": "2026-10-14T08:30:37.252Z",
+	"mode": "sync",
+	"label": "abba1-3",
+	"machine": {
+		"cpus": "Intel(R) Core(TM) i9-9880H CPU @ 2.30GHz",
+		"cores": 16,
+		"memGB": 32
+	},
+	"relay": {
+		"mode": "public",
+		"multiaddr": "/dns4/exhaust-tobacco-abuse-purchase.2n6.me/tcp/443/tls/ws/p2p/12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+		"httpOrigin": "https://exhaust-tobacco-abuse-purchase.2n6.me"
+	},
+	"todos": [
+		{
+			"i": 1,
+			"alice": {
+				"final": "unknown",
+				"settledMs": null,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 72
+					},
+					{
+						"status": "unknown",
+						"t": 57626
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": null,
+				"chip": null
+			},
+			"connections": {
+				"alice": [],
+				"bob": []
+			}
+		},
+		{
+			"i": 2,
+			"alice": {
+				"final": "unknown",
+				"settledMs": null,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 80
+					},
+					{
+						"status": "unknown",
+						"t": 57788
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": null,
+				"chip": null
+			},
+			"connections": {
+				"alice": [],
+				"bob": []
+			}
+		},
+		{
+			"i": 3,
+			"alice": {
+				"final": "unknown",
+				"settledMs": null,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 62
+					},
+					{
+						"status": "unknown",
+						"t": 57750
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": null,
+				"chip": null
+			},
+			"connections": {
+				"alice": [],
+				"bob": []
+			}
+		},
+		{
+			"i": 4,
+			"alice": {
+				"final": "unknown",
+				"settledMs": null,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 64
+					},
+					{
+						"status": "unknown",
+						"t": 57769
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": null,
+				"chip": null
+			},
+			"connections": {
+				"alice": [],
+				"bob": []
+			}
+		},
+		{
+			"i": 5,
+			"alice": {
+				"final": "unknown",
+				"settledMs": null,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 64
+					},
+					{
+						"status": "unknown",
+						"t": 57722
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": null,
+				"chip": null
+			},
+			"connections": {
+				"alice": [],
+				"bob": []
+			}
+		}
+	],
+	"setup": {
+		"readyMs": 90865,
+		"peersMet": false,
+		"alicePeerId": "12D3KooWKYstWLnGvxex2yddGf4oMUwtLQf8RJZFtfEfkauWqgsk",
+		"bobPeerId": "12D3KooWL2t8xsvyKUEQscX2YameTHtqKXhhpZLc7QhFjQjKPTzB"
+	},
+	"relayAfter": {
+		"stats": {
+			"totalPinned": 1,
+			"syncOperations": 17,
+			"failedSyncs": 0,
+			"pinnedMediaCids": [],
+			"timestamp": "2026-10-14T08:37:59.679Z",
+			"syncQueue": {
+				"waiting": 0,
+				"active": 0,
+				"activeTopics": [],
+				"queuedTopics": 0,
+				"cooldownTopics": 0,
+				"timedOutSyncs": 0
+			}
+		},
+		"databases": {
+			"databases": [
+				{
+					"address": "/orbitdb/zdpuAu6Q1KU2r6RwxiH61ispCAhC6K1GYTv77Uv2FFsKDVAPw",
+					"lastSyncedAt": "2026-10-14T08:26:20.933Z",
+					"entryCount": 7,
+					"lastRecord": {
+						"hash": "zdpuAtU4sQwLoHy8ZwfWhqBcXN2cu51d9XptWBJrB1VVzrzBa",
+						"redacted": true
+					},
+					"snapshotSource": "db.all()"
+				}
+			],
+			"total": 1
+		}
+	},
+	"errors": {
+		"alice": {
+			"total": 0,
+			"streamResets": 0,
+			"byName": {}
+		},
+		"bob": {
+			"total": 0,
+			"streamResets": 0,
+			"byName": {}
+		}
+	}
+}

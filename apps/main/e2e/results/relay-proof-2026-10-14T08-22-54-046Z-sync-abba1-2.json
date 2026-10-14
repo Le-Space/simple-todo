@@ -1,0 +1,166 @@
+{
+	"date": "2026-10-14T08:22:54.046Z",
+	"mode": "sync",
+	"label": "abba1-2",
+	"machine": {
+		"cpus": "Intel(R) Core(TM) i9-9880H CPU @ 2.30GHz",
+		"cores": 16,
+		"memGB": 32
+	},
+	"relay": {
+		"mode": "public",
+		"multiaddr": "/dns4/exhaust-tobacco-abuse-purchase.2n6.me/tcp/443/tls/ws/p2p/12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq",
+		"httpOrigin": "https://exhaust-tobacco-abuse-purchase.2n6.me"
+	},
+	"todos": [
+		{
+			"i": 1,
+			"alice": {
+				"final": "pending",
+				"settledMs": null,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 66701
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": null,
+				"chip": null
+			},
+			"connections": {
+				"alice": [
+					"12D3KooWC9tUS4mSjada8VN4AvAfv4gpgGutnsVFtS6a3Y1mjjSq"
+				],
+				"bob": []
+			}
+		},
+		{
+			"i": 2,
+			"alice": {
+				"final": "pinned",
+				"settledMs": 29931,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 3853
+					},
+					{
+						"status": "pinned",
+						"t": 29931
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": null,
+				"chip": null
+			},
+			"connections": {
+				"alice": [],
+				"bob": []
+			}
+		},
+		{
+			"i": 3,
+			"alice": {
+				"final": "unknown",
+				"settledMs": null,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 69
+					},
+					{
+						"status": "unknown",
+						"t": 57791
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": null,
+				"chip": null
+			},
+			"connections": {
+				"alice": [],
+				"bob": []
+			}
+		},
+		{
+			"i": 4,
+			"alice": {
+				"final": "unknown",
+				"settledMs": null,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 64
+					},
+					{
+						"status": "unknown",
+						"t": 57704
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": null,
+				"chip": null
+			},
+			"connections": {
+				"alice": [],
+				"bob": []
+			}
+		},
+		{
+			"i": 5,
+			"alice": {
+				"final": "unknown",
+				"settledMs": null,
+				"transitions": [
+					{
+						"status": "pending",
+						"t": 73
+					},
+					{
+						"status": "unknown",
+						"t": 57824
+					}
+				]
+			},
+			"bob": {
+				"arrivedMs": null,
+				"chip": null
+			},
+			"connections": {
+				"alice": [],
+				"bob": []
+			}
+		}
+	],
+	"setup": {
+		"readyMs": 91045,
+		"peersMet": false,
+		"alicePeerId": "12D3KooWMTugdMGgvhXrGefb62sJxBRXzr99GcfgLkCBpphhx8FL",
+		"bobPeerId": "12D3KooWDoJCpd6BMw5T5U9nNrXoFsR2fzWXFmcZycA1Vik3t4KN"
+	},
+	"relayAfter": {
+		"stats": {
+			"error": "fetch failed"
+		},
+		"databases": {
+			"error": "fetch failed"
+		}
+	},
+	"errors": {
+		"alice": {
+			"total": 0,
+			"streamResets": 0,
+			"byName": {}
+		},
+		"bob": {
+			"total": 0,
+			"streamResets": 0,
+			"byName": {}
+		}
+	}
+}
