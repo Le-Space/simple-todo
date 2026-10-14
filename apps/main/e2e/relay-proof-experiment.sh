@@ -18,7 +18,9 @@ if [ -z "${E2E_RELAY_CLI_PATH:-}" ] || [ ! -f "$E2E_RELAY_CLI_PATH" ]; then
 	echo "E2E_RELAY_CLI_PATH must point at orbitdb-relay's dist/cli.js (main, after #60)." >&2
 	exit 2
 fi
-if pgrep -f "[p]laywright test" > /dev/null; then
+# A suite started through a package script runs as `…/playwright/cli.js test`,
+# not `playwright test`; the pattern takes both.
+if pgrep -f "[p]laywright(/cli\.js)? test" > /dev/null; then
 	echo "Another Playwright suite is running; the timings would not be worth keeping." >&2
 	exit 2
 fi
