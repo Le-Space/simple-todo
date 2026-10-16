@@ -176,10 +176,6 @@
 		"notALoop": "Each prompt has its own purpose; it is not a repeat. With a security key: touch it and, if asked, enter the PIN.",
 		"continue": "Continue",
 		"cancel": "Cancel",
-		"countRestore": "Passkey prompts 1 and 2 of {of}",
-		"restore": {
-			"title": "First: find the passkey",
-			"why": "Nothing is stored in this browser. Your passkey is asked twice: once for the secret your signing key is derived from, once for a second signature your identity can be computed from. The two touches come right after each other."
-		}
+		"restoreTouch": "Passkey prompt 2 of {of}: a second signature your identity is computed from. Not a repeat."
 	}
 }

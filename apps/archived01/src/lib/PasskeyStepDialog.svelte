@@ -27,9 +27,7 @@
 			class="text-xs font-semibold tracking-wide text-faint uppercase"
 			data-testid="passkey-step-count"
 		>
-			{step.purpose === 'restore'
-				? $_('passkeySteps.countRestore', { values: { of: step.of } })
-				: $_('passkeySteps.count', { values: { n: step.n, of: step.of } })}
+			{$_('passkeySteps.count', { values: { n: step.n, of: step.of } })}
 		</p>
 		<h2 id="passkey-step-h" class="mt-1 text-lg font-semibold text-heading">
 			{$_(`passkeySteps.${step.purpose}.title`)}

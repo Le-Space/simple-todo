@@ -190,8 +190,16 @@
 			} else if (identityMode === 'existing') {
 				const stored = hasStoredPasskeyCredential();
 				steps = passkeyStepsFor({ mode: stored ? 'stored' : 'restore', prf: archiveOn });
-				await announce(steps, 'restore');
-				passkeyCredential = await recoverPasskeyCredential();
+				// The authenticator's two touches come right after each other; the
+				// second is named as it comes, not gated — a browser with no passkey
+				// has to reach its "nothing here" without a dialog in the way.
+				const of = 3 + (archiveOn ? 1 : 0);
+				passkeyCredential = await recoverPasskeyCredential({
+					onTouch: ({ touch }) => {
+						if (touch === 2)
+							showToast($_('passkeySteps.restoreTouch', { values: { of } }), 'default', 6000);
+					}
+				});
 				if (!passkeyCredential) {
 					throw new IdentityChoiceError($_('consent.errorNoPasskey'));
 				}

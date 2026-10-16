@@ -16,7 +16,7 @@
 
 import { writable } from 'svelte/store';
 
-/** @typedef {'restore' | 'prf' | 'proof'} PasskeyPurpose */
+/** @typedef {'prf' | 'proof'} PasskeyPurpose */
 /** @typedef {{ n: number, of: number, purpose: PasskeyPurpose }} PasskeyStep */
 
 /**
@@ -70,9 +70,10 @@ export function confirmPasskeyStep(step) {
  *   key and the identity proof are kept too. With the archive on, one touch
  *   for the PRF output, from the button — no dialog.
  * - restore: nothing stored (memory mode, or a fresh browser). Two touches
- *   find the passkey (1, 2), then the PRF read for the archive (3) when it is
- *   on, then the identity proof — the restore brought the signing key, so the
- *   provider asks for nothing else.
+ *   find the passkey (1, 2) — the second follows the first at once, so a
+ *   toast names it rather than a dialog — then the PRF read for the archive
+ *   (3) when it is on, then the identity proof; the restore brought the
+ *   signing key, so the provider asks for nothing else.
  *
  * @param {{ mode: 'create' | 'stored' | 'restore', prf: boolean }} start
  * @returns {Partial<Record<PasskeyPurpose, PasskeyStep>>} the steps to announce, by purpose
@@ -86,7 +87,6 @@ export function passkeyStepsFor({ mode, prf }) {
 		steps.proof = { n: of, of, purpose: 'proof' };
 	} else if (mode === 'restore') {
 		const of = 3 + (prf ? 1 : 0);
-		steps.restore = { n: 1, of, purpose: 'restore' };
 		if (prf) steps.prf = { n: 3, of, purpose: 'prf' };
 		steps.proof = { n: of, of, purpose: 'proof' };
 	}

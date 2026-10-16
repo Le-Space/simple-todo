@@ -176,10 +176,6 @@
 		"notALoop": "Jede Abfrage hat ihren eigenen Zweck, es ist keine Wiederholung. Mit einem Sicherheitsschlüssel: berühren und, falls gefragt, die PIN eingeben.",
 		"continue": "Weiter",
 		"cancel": "Abbrechen",
-		"countRestore": "Passkey-Abfragen 1 und 2 von {of}",
-		"restore": {
-			"title": "Zuerst: den Passkey wiederfinden",
-			"why": "In diesem Browser ist nichts gespeichert. Ihr Passkey wird zweimal gefragt: einmal für das Geheimnis, aus dem Ihr Signierschlüssel entsteht, einmal für eine zweite Unterschrift, aus der sich Ihre Identität errechnen lässt. Beide Berührungen kommen direkt hintereinander."
-		}
+		"restoreTouch": "Passkey-Abfrage 2 von {of}: eine zweite Unterschrift, aus der sich Ihre Identität errechnen lässt. Keine Wiederholung."
 	}
 }
