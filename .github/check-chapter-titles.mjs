@@ -16,6 +16,12 @@
  *   2. That title and the one in `app.html` both name the chapter's directory —
  *      except `main`, which is the app the other chapters are variations of and
  *      carries the product name.
+ *   3. The installed app says it too: `app.html` links the chapter's own web
+ *      app manifest (`manifest/<chapter>.json`, written by
+ *      packages/brand/write-manifests.mjs), and its `application-name` and
+ *      `apple-mobile-web-app-title` name the chapter — those are the labels
+ *      under the icon on Android and iOS. Ten chapters installed under one
+ *      name "Simple-Todo" was how this rule came about.
  *
  * Static on purpose: it catches the copy-paste at the moment it happens, in
  * milliseconds, without starting nine browsers to read nine strings.
@@ -70,6 +76,39 @@ for (const chapter of readdirSync(APPS).sort()) {
 	const staticTitle = titlesIn(read(join(src, 'app.html')) ?? '')[0];
 	if (!staticTitle) problems.push(`${chapter}: no <title> in app.html`);
 
+	// The manifest and the two home-screen labels, for every chapter.
+	const html = read(join(src, 'app.html')) ?? '';
+	const manifestHref = html.match(/<link rel="manifest" href="([^"]+)"/)?.[1];
+	if (manifestHref !== `./manifest/${chapter}.json`) {
+		problems.push(
+			`${chapter}: app.html links ${manifestHref ?? 'no manifest'}, not ./manifest/${chapter}.json`
+		);
+	}
+	// A chapter may carry a home-screen name of its own (qr01: "QR-Todo"); it
+	// says so in chapter.json, and the generator and this check both read it.
+	const chapterMeta = JSON.parse(read(join(APPS, chapter, 'chapter.json')) ?? '{}');
+	const label = chapter === BASE ? 'Simple-Todo' : (chapterMeta.label ?? chapter);
+	const manifestFile = join('packages', 'brand', 'static', 'manifest', `${chapter}.json`);
+	const manifest = read(manifestFile);
+	if (!manifest) {
+		problems.push(
+			`${chapter}: ${manifestFile} is missing (node packages/brand/write-manifests.mjs)`
+		);
+	} else {
+		const { name, short_name } = JSON.parse(manifest);
+		if (!String(name).includes(label) || short_name !== label) {
+			problems.push(
+				`${chapter}: ${manifestFile} does not name the chapter: ${name} / ${short_name}`
+			);
+		}
+	}
+	for (const meta of ['application-name', 'apple-mobile-web-app-title']) {
+		const content = html.match(new RegExp(`<meta name="${meta}" content="([^"]*)"`))?.[1];
+		if (content !== label) {
+			problems.push(`${chapter}: app.html ${meta} is "${content ?? ''}", expected "${label}"`);
+		}
+	}
+
 	if (chapter === BASE) continue;
 	for (const { title, where } of [
 		...runtime.map((r) => ({ title: r.title, where: r.file })),
@@ -86,4 +125,6 @@ if (problems.length) {
 	process.exit(1);
 }
 
-console.log('Chapter titles: every chapter names itself, once.');
+console.log(
+	'Chapter titles: every chapter names itself, once — in the tab and on the home screen.'
+);

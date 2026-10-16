@@ -14,6 +14,13 @@
  * @param {import('@playwright/test').Page} page
  */
 export async function addVirtualAuthenticator(page) {
+	// A virtual authenticator needs no explanation between two prompts: a
+	// chapter that puts a word before each further touch (archived01's
+	// passkey-steps.js, after belege#430) resolves its dialog at once when this
+	// is set. Chapters without such a dialog never read it.
+	await page.addInitScript(() => {
+		/** @type {any} */ (globalThis).__simpleTodoSkipPasskeySteps = true;
+	});
 	const cdp = await page.context().newCDPSession(page);
 	await cdp.send('WebAuthn.enable');
 	await cdp.send('WebAuthn.addVirtualAuthenticator', {

@@ -27,5 +27,6 @@
 		"check": true,
 		"readme": true
 	},
-	"title": "Meet by scanning a code, with no relay at all"
+	"title": "Meet by scanning a code, with no relay at all",
+	"label": "QR-Todo"
 }

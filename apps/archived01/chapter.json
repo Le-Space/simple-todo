@@ -1,0 +1,33 @@
+{
+	"name": "archived01",
+	"aleph": {
+		"site": "simple-todo-archived01",
+		"domain": "archived01.le-space.de",
+		"deployer": "@le-space/node@0.9.9"
+	},
+	"ports": {
+		"preview": 4182,
+		"relayHttp": 4990,
+		"relayTcp": 4991,
+		"relayWs": 4992,
+		"relayWebrtc": 4993,
+		"relayWebrtcDirect": 4996
+	},
+	"ci": {
+		"specs": [
+			"e2e/consent-screen.spec.js",
+			"e2e/default-database-collaboration.spec.js",
+			"e2e/manual-multiaddr-connection.spec.js",
+			"e2e/shared-list-mnemonic.spec.js",
+			"e2e/passkey-identity.spec.js",
+			"e2e/storage-choice.spec.js",
+			"e2e/passkey-restore.spec.js",
+			"e2e/footer.spec.js",
+			"e2e/page-qr.spec.js",
+			"e2e/consent-network.spec.js",
+			"e2e/archive.spec.js"
+		],
+		"check": true
+	},
+	"title": "Every change archived as it happens, with one passkey touch"
+}
