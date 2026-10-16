@@ -166,7 +166,10 @@
 			"collecting": "Änderungen werden eingesammelt und versiegelt …",
 			"uploading": "Inkrement wird hochgeladen …",
 			"keeping": "Speicher wird gebeten, es zu halten …"
-		}
+		},
+		"restoredOpened": "Das Archiv hielt eine andere Liste als die geöffnete; sie wurde unter ihrer eigenen Adresse geöffnet und ist jetzt die aktive Liste:",
+		"restoredCopied": "{count} Einträge aus einer früheren Liste übernommen; sie sind jetzt von dieser Identität geschrieben.",
+		"memoryHint": "Speichermodus „nur im Arbeitsspeicher“: Der Browser merkt sich Archiv-Einstellung und Zählung nicht; nach dem Neuladen muss das Archiv wieder eingeschaltet werden, die Zählung holt es sich aus dem Speicher."
 	},
 	"passkeySteps": {
 		"count": "Passkey-Abfrage {n} von {of}",

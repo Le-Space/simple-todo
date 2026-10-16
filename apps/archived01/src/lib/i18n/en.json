@@ -166,7 +166,10 @@
 			"collecting": "Collecting and sealing the changes …",
 			"uploading": "Uploading the increment …",
 			"keeping": "Asking the store to keep it …"
-		}
+		},
+		"restoredOpened": "The archive held a list other than the open one; it was opened under its own address and is now the open list:",
+		"restoredCopied": "{count} entries taken over from an earlier list; they are now written by this identity.",
+		"memoryHint": "Storage mode “in memory only”: the browser does not remember the archive’s setting or its numbering; after a reload the archive has to be switched on again, and the numbering comes back from the store."
 	},
 	"passkeySteps": {
 		"count": "Passkey prompt {n} of {of}",
