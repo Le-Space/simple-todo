@@ -97,7 +97,7 @@
 		"p2pOnLabel": "On",
 		"p2pOnHint": "This browser connects to a relay and to other devices, and the list replicates between them.",
 		"p2pOffLabel": "Off",
-		"p2pOffHint": "No relay, no other devices, nothing leaves this browser. The list lives here alone — and in the archive, which is how to see what a restore alone gives back."
+		"p2pOffHint": "No relay, no other devices: the list does not replicate. The archive still talks to its store (upload, STORE, balance); nothing else leaves the browser. That is how to see what a restore alone gives back."
 	},
 	"archive": {
 		"title": "Archive",

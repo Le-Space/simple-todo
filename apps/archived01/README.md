@@ -94,6 +94,16 @@ the list back with the same passkey.
   account itself (it is the owner; no wallet), elsewhere the service's own
   delete. The list stays; the watcher starts over, and the next increment
   carries the whole list again.
+- **What the store learns.** Every increment is sealed, so the service holds
+  ciphertext; it still sees the account's address, the channel, each blob's
+  size and the moment it arrived (a few seconds after a write), and the
+  balance reads name the address. The blob names carry a sequence number and
+  nothing else. With the network off, the archive still talks to its store.
+- **What a restore copies.** Todos of other archived lists are copied into the
+  open list only when this identity may write to that list (its access
+  controller names this DID or everyone), and only values shaped like a todo;
+  a store that could forge a sealed blob still cannot put words into the
+  owner's mouth. A chain with a missing increment is refused and named.
 - **What it does not do.** Encrypt the list itself: anyone with the address can
   read it, and the relay still does. The seal is on the archive only.
 

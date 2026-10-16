@@ -97,7 +97,7 @@
 		"p2pOnLabel": "An",
 		"p2pOnHint": "Dieser Browser verbindet sich mit einem Relay und anderen Geräten, und die Liste repliziert zwischen ihnen.",
 		"p2pOffLabel": "Aus",
-		"p2pOffHint": "Kein Relay, keine anderen Geräte, nichts verlässt diesen Browser. Die Liste lebt nur hier und im Archiv; so sieht man, was eine Wiederherstellung allein zurückbringt."
+		"p2pOffHint": "Kein Relay, keine anderen Geräte: Die Liste repliziert nicht. Das Archiv spricht weiter mit seinem Speicher (Upload, STORE, Guthaben); sonst verlässt nichts den Browser. So sieht man, was eine Wiederherstellung allein zurückbringt."
 	},
 	"archive": {
 		"title": "Archiv",

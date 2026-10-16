@@ -62,7 +62,7 @@
 			<span class="text-faint mt-0.5 block text-xs">
 				{$t(
 					'consent.p2pOffHint',
-					'No relay, no other devices, nothing leaves this browser. The list lives here alone — and in the archive, which is how to see what a restore alone gives back.'
+					'No relay, no other devices: the list does not replicate. An archive, if one is on, still talks to its store; nothing else leaves the browser.'
 				)}
 			</span>
 		</span>
