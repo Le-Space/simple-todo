@@ -18,6 +18,7 @@ import * as json from 'multiformats/codecs/json';
 import { sha512 } from 'multiformats/hashes/sha2';
 import { multiaddr } from '@multiformats/multiaddr';
 import { createLibp2pConfig } from '@simple-todo/net/libp2p-config.js';
+import { getP2PEnabled } from '@simple-todo/todo/p2p-mode.js';
 import { createMemoryIdentities } from '@simple-todo/todo/memory-identities.js';
 import { seedRestoredSigningKey } from '@simple-todo/todo/restored-signing-key.js';
 import { keepLogsWhereTheChoiceSays } from '@simple-todo/todo/keep-logs-in-memory.js';
@@ -196,6 +197,25 @@ function createHeliaWithLibp2p(libp2pNode, stores = {}) {
 }
 
 /**
+ * A libp2p node that goes nowhere: encryption and a muxer because libp2p
+ * insists, identify because Helia asks for it, and not one transport.
+ */
+async function createOfflineLibp2pConfig() {
+	const [{ noise }, { yamux }, { identify }] = await Promise.all([
+		import('@chainsafe/libp2p-noise'),
+		import('@chainsafe/libp2p-yamux'),
+		import('@libp2p/identify')
+	]);
+	return {
+		transports: [],
+		connectionEncrypters: [noise()],
+		streamMuxers: [yamux()],
+		peerDiscovery: [],
+		services: { identify: identify() }
+	};
+}
+
+/**
  * Initialize the P2P network after user consent
  * This function should be called only after the user has accepted the consent modal
  */
@@ -212,20 +232,26 @@ export async function initializeP2P(
 		// Set initialization state
 		setInitializationProgress(0);
 
-		// Create libp2p configuration and node
-		const config = await createLibp2pConfig();
+		// Create libp2p configuration and node. With the peer-to-peer network
+		// switched off on the consent screen, the node has no transports, no
+		// relay, no discovery and no pubsub: Helia and OrbitDB still need one to
+		// exist, but nothing leaves this browser and nothing arrives from a peer.
+		const p2p = getP2PEnabled();
+		const config = p2p ? await createLibp2pConfig() : await createOfflineLibp2pConfig();
 		setInitializationProgress(1);
 		libp2p = await createLibp2p(config);
 		libp2pStore.set(libp2p); // Make available to plugins
-		console.log(`✅ libp2p node created`);
+		console.log(p2p ? `✅ libp2p node created` : `✅ libp2p node created, peer-to-peer off`);
 
 		// Get and set peer ID
 		peerId = libp2p.peerId.toString();
 		console.log(`✅ peerId is ${peerId}`);
 		peerIdStore.set(peerId);
 		discoveredPeers.clear();
-		setupPubsubDiscoveryAutoDial();
-		setupAutomaticRelayReservations();
+		if (p2p) {
+			setupPubsubDiscoveryAutoDial();
+			setupAutomaticRelayReservations();
+		}
 
 		// Create Helia (IPFS) instance
 		setInitializationProgress(2);
@@ -323,7 +349,8 @@ async function openInitialTodoDatabase(address, databaseName) {
 		activeTodoDatabaseName = '';
 		return orbitdb.open(normalizedAddress, {
 			type: 'keyvalue',
-			sync: true,
+			// No pubsub without the network, and OrbitDB's Sync would subscribe on open.
+			sync: getP2PEnabled(),
 			// Memory-only when that is what was chosen: `Database` defaults both
 			// log storages to LevelStorage, which browser-level puts in IndexedDB.
 			...(await createLogStorages())
@@ -332,11 +359,17 @@ async function openInitialTodoDatabase(address, databaseName) {
 
 	const canonicalDatabaseName = getTodoDatabaseName(databaseName || '');
 	activeTodoDatabaseName = canonicalDatabaseName;
+	// With a passkey, the list is the passkey's: only this DID may write, and
+	// the access controller is part of the address, so the same three words
+	// name a different list for every DID — and the same list for the same
+	// passkey on every device, which is what an archive is for. Without a
+	// passkey the list stays the open one of the previous chapters.
+	const writers = activePasskeyCredential && orbitdb.identity?.id ? [orbitdb.identity.id] : ['*'];
 	const defaultTodoDB = await orbitdb.open(canonicalDatabaseName, {
 		type: 'keyvalue', //Stores data as key-value pairs supports basic operations: put(), get(), delete()
 		create: true, // Allows the database to be created if it doesn't exist
-		sync: true, // Enables automatic synchronization with other peers
-		AccessController: IPFSAccessController({ write: ['*'] }), //defines who can write to the database, ["*"] is a wildcard that allows all peers to write to the database, This creates a fully collaborative environment where any peer can add/edit TODOs
+		sync: getP2PEnabled(), // Automatic synchronization with other peers — none with the network off
+		AccessController: IPFSAccessController({ write: writers }),
 		// Memory-only when that is what was chosen; see the note above.
 		...(await createLogStorages())
 	});

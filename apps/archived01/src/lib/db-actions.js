@@ -1,4 +1,5 @@
 import { writable, derived, get } from 'svelte/store';
+import { getP2PEnabled } from '@simple-todo/todo/p2p-mode.js';
 import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import { peerIdStore } from './p2p-stores.js';
 import { relayHttpStatusStore } from '@simple-todo/net/relay-status.js';
@@ -81,6 +82,13 @@ export const todoReplicationStatusStore = writable(
 
 // Derived store that updates when todos change
 export const todosCountStore = derived(todosStore, ($todos) => $todos.length);
+/**
+ * Why the last write failed, for the toast. "Failed to add todo" alone sent a
+ * reader on a phone to a console they could not open (2026-10-16, a Fold
+ * with a YubiKey: same DID as on the desktop, and every save refused).
+ * @type {import('svelte/store').Writable<string | null>}
+ */
+export const lastWriteErrorStore = writable(null);
 
 const observedDatabases = new WeakSet();
 const relayProofsInFlight = new Set();
@@ -158,7 +166,7 @@ export async function loadTodoDatabase(address) {
 	try {
 		const loadedTodoDB = await orbitdb.open(normalizedAddress, {
 			type: 'keyvalue',
-			sync: true,
+			sync: getP2PEnabled(),
 			// Memory-only when that is what was chosen: `Database` defaults both
 			// log storages to LevelStorage, which browser-level puts in IndexedDB.
 			...(await createLogStorages())
@@ -361,15 +369,18 @@ export async function addTodo(text, assignee = null) {
 
 	if (!todoDB || !myPeerId) {
 		console.error('❌ Database or peer ID not available');
+		lastWriteErrorStore.set('the list is not open yet');
 		return false;
 	}
 
 	if (!text || text.trim() === '') {
 		console.error('❌ Todo text cannot be empty');
+		lastWriteErrorStore.set('the todo is empty');
 		return false;
 	}
 
 	try {
+		lastWriteErrorStore.set(null);
 		const todoId = `todo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 		/** @type {TodoValue} */
 		const todo = {
@@ -387,6 +398,7 @@ export async function addTodo(text, assignee = null) {
 		return true;
 	} catch (error) {
 		console.error('❌ Error adding todo:', error);
+		lastWriteErrorStore.set(error instanceof Error ? error.message : String(error));
 		return false;
 	}
 }

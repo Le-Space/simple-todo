@@ -20,7 +20,7 @@
 			"noServer": "Wir betreiben keinen Server, und nirgends bei uns liegt eine Kopie Ihrer Liste.",
 			"gateway": "Die App selbst kommt über ein öffentliches IPFS-Gateway, das sieht, dass Sie sie geladen haben. Mit einem eigenen Kubo-Knoten oder der IPFS-Companion-Erweiterung holen Sie sie stattdessen direkt aus dem Netz.",
 			"relay": "Relay-Knoten machen Geräte miteinander bekannt und behalten unter Umständen eine Kopie der Liste, damit ein anderes Gerät sie später abholen kann.",
-			"sharedList": "Die Liste hinter den drei spanischen Wörtern ist offen: Wer die Wörter hat, kann sie lesen und beschreiben. Die Wörter sind ein Weg, sich zu treffen - kein Passwort.",
+			"sharedList": "Mit Passkey gehört die Liste hinter den drei spanischen Wörtern Ihrer DID: Nur Ihr Passkey schreibt, auf jedem Gerät dieselbe Liste; wer Adresse oder Wörter hat, kann lesen. Ohne Passkey bleibt die Liste offen wie in den vorigen Kapiteln.",
 			"readingIsOpen": "Ein Passkey sagt, wer etwas geschrieben hat. Er macht es nicht privat - hier ist nichts verschlüsselt, und wer die drei Wörter hat, liest alles, auch der Relay, der die Liste aufbewahrt.",
 			"identityPasskey": "Ihr Passkey weist Sie gegenüber den anderen Geräten aus und bleibt auf diesem Gerät. Niemand sonst kann in Ihrem Namen schreiben, und wir bekommen ihn nie zu sehen.",
 			"identityAnonymous": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Schließen Sie ihn, ist sie weg, und nichts verbindet einen Besuch mit dem nächsten.",
@@ -92,7 +92,12 @@
 		"storageMemoryLabel": "Nur im Arbeitsspeicher",
 		"storageMemoryHint": "Die Aufgaben liegen in einer geteilten, unverschlüsselten OrbitDB-Datenbank im Arbeitsspeicher und sind beim Neuladen oder Beenden weg.",
 		"storagePersistentLabel": "IndexedDB",
-		"storagePersistentHint": "Mir ist klar, dass die Aufgaben in einer geteilten, unverschlüsselten OrbitDB-Datenbank in der IndexedDB des Browsers liegen und einen Neustart überdauern."
+		"storagePersistentHint": "Mir ist klar, dass die Aufgaben in einer geteilten, unverschlüsselten OrbitDB-Datenbank in der IndexedDB des Browsers liegen und einen Neustart überdauern.",
+		"p2pLegend": "Peer-to-Peer-Netz",
+		"p2pOnLabel": "An",
+		"p2pOnHint": "Dieser Browser verbindet sich mit einem Relay und anderen Geräten, und die Liste repliziert zwischen ihnen.",
+		"p2pOffLabel": "Aus",
+		"p2pOffHint": "Kein Relay, keine anderen Geräte, nichts verlässt diesen Browser. Die Liste lebt nur hier und im Archiv; so sieht man, was eine Wiederherstellung allein zurückbringt."
 	},
 	"archive": {
 		"title": "Archiv",

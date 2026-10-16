@@ -68,7 +68,13 @@ test.describe('Archive increments', () => {
 				storageTypes: 'indexeddb'
 			});
 			await page.reload();
-			await proceedWithExistingPasskey(page);
+			// The network off for the second half: with the relay reachable, a wiped
+			// browser could get its list back by replication, and nobody would know
+			// whether the archive did anything. Off, the archive is the only road.
+			await proceedWithExistingPasskey(page, { p2p: false });
+			await expect(page.getByTestId('p2p-status-nav')).toContainText('Peer-to-peer network off', {
+				timeout: readyTimeout
+			});
 			expect(await getOwnDid(page)).toMatch(/^did:/);
 			for (const todo of todos) await expect(page.getByText(todo, { exact: true })).toHaveCount(0);
 
@@ -111,9 +117,13 @@ async function openReadyAppWithNewPasskey(page, { label }) {
 	await expectAppReady(page);
 }
 
-/** @param {import('@playwright/test').Page} page */
-async function proceedWithExistingPasskey(page) {
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {{ p2p?: boolean }} [choices]
+ */
+async function proceedWithExistingPasskey(page, { p2p } = {}) {
 	await fillConsentModal(page);
+	if (p2p === false) await consentModal(page).getByTestId('p2p-mode-off').check();
 	await expect(page.getByTestId('identity-mode-existing')).toBeChecked();
 	await page.getByTestId('consent-proceed').click();
 	await page.waitForFunction(

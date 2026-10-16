@@ -1,4 +1,5 @@
 <script>
+	import { p2pEnabledStore } from '@simple-todo/todo/p2p-mode.js';
 	import { onDestroy } from 'svelte';
 	import { relayHttpStatusStore } from '@simple-todo/net/relay-status.js';
 	import { relayHttpOriginForPeer } from '@simple-todo/net/multiaddr-utils.js';
@@ -59,7 +60,9 @@
 					: 'pending'
 		}
 	];
-	$: allSteps = [...(initialization?.steps ?? []), ...connectivitySteps];
+	// With the network off there is no relay to connect and no WebRTC to wait
+	// for: the connectivity steps are not pending, they do not exist.
+	$: allSteps = [...(initialization?.steps ?? []), ...($p2pEnabledStore ? connectivitySteps : [])];
 	$: allComplete = allSteps.length > 0 && allSteps.every((step) => step.status === 'complete');
 	$: currentStep =
 		allSteps.find((step) => step.status === 'active') ??
@@ -232,6 +235,7 @@
 	 * @param {StatusStep | undefined} step
 	 */
 	function getStatusLabel(complete, step) {
+		if (!$p2pEnabledStore && complete) return 'Peer-to-peer network off';
 		if (complete) return 'P2P network ready';
 		if (step?.label === 'Relay connected') return 'Connecting to relay';
 		if (step?.label === 'WebRTC connected') return 'Waiting for WebRTC connection';

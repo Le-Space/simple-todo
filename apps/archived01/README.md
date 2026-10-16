@@ -73,9 +73,19 @@ the list back with the same passkey.
   so the page reads the PRF output itself on a first start and hands it to the
   provider — the same number of touches, and the archive is unlocked from the
   start.
-- **What it does not do.** Encrypt the list itself: the shared list is as open
-  as in `passkey01`, and the relay still reads it. The seal is on the archive
-  only. Nor does it forget: a store keeps every increment until something
+- **A switch for the whole network.** The consent screen has _Peer-to-peer
+  network: on / off_. Off, the chapter starts libp2p with no transports, no
+  relay, no discovery and no pubsub, and opens the list without sync: nothing
+  leaves the browser and nothing arrives from a peer. That is how to test a
+  restore honestly — with the relay reachable, a wiped browser gets its list
+  back by replication too — and the E2E test restores with the network off.
+- **The list belongs to the passkey.** Its access controller names your DID
+  as the only writer, and since the controller is part of the address, the
+  same three words name a different list for every DID — and the same list for
+  the same passkey on every device. Without a passkey the list stays the open
+  one of the previous chapters.
+- **What it does not do.** Encrypt the list itself: anyone with the address can
+  read it, and the relay still does. The seal is on the archive only. Nor does it forget: a store keeps every increment until something
   removes it, and on Aleph that is a FORGET the account would have to send.
 
 ### Try this chapter (archived increments)
