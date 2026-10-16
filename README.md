@@ -17,6 +17,7 @@ to the one before it, and each chapter is a complete app you can run.
 | `delegation01` | Hand one todo to another DID, and take it back | [delegation01.le-space.de](https://delegation01.le-space.de) |
 | `escrow01` | Confidential budgets on Sepolia with Zama FHE | [escrow01.le-space.de](https://escrow01.le-space.de) |
 | `invoice01` | Invoices on top of delegation | [invoice01.le-space.de](https://invoice01.le-space.de) |
+| `archived01` | Every change archived as a sealed increment, with one passkey touch | [archived01.le-space.de](https://archived01.le-space.de) |
 
 **Four keys, one passkey.** In `escrow01` the passkey is the wallet, but four keys do the work: the
 passkey's own P-256 key signs every transaction, a key derived from its PRF output signs the list, a
