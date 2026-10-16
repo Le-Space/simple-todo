@@ -2,11 +2,13 @@ import { test, expect } from '@playwright/test';
 import { acceptNotice, consentModal, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import { addVirtualAuthenticator } from '@simple-todo/e2e-kit/webauthn.mjs';
 
-// Chapter (passkey01): Alice and Bob each register a WebAuthn passkey in
-// their own browser context (CDP virtual authenticator), write todos into
-// the shared list, and both see every todo attributed to the correct author
-// DID (resolved from entry.identity). A reload then recovers Alice's
-// identity through the create-or-recover flow — the DID stays identical.
+// Chapter (archived01): Alice and Bob each register a WebAuthn passkey in
+// their own browser context (CDP virtual authenticator) and open the same
+// three words. Here the list belongs to the passkey — its access controller
+// names the DID as the only writer, and so the same words name a list per
+// DID: each sees their own todo, attributed to their own DID, and not the
+// other's. A reload then recovers Alice's identity through the
+// create-or-recover flow — the DID, and with it the list, stays identical.
 
 const testUrl = '/';
 const collaborationTimeout = 90000;
@@ -49,11 +51,13 @@ test.describe('Passkey identities', () => {
 			await addTodo(alice, aliceTodo);
 			await addTodo(bob, bobTodo);
 
-			// Both peers see both todos, each attributed to its author's DID.
-			for (const page of [alice, bob]) {
-				await expectTodoWithAuthor(page, aliceTodo, aliceDid);
-				await expectTodoWithAuthor(page, bobTodo, bobDid);
-			}
+			// In this chapter the list belongs to the passkey: the same three words
+			// name a different list for every DID, so each sees their own todo,
+			// attributed to their own DID, and never the other's.
+			await expectTodoWithAuthor(alice, aliceTodo, aliceDid);
+			await expectTodoWithAuthor(bob, bobTodo, bobDid);
+			await expect(alice.getByText(bobTodo, { exact: true })).toHaveCount(0);
+			await expect(bob.getByText(aliceTodo, { exact: true })).toHaveCount(0);
 
 			// Reload → the app preselects passkey recovery; the DID must survive.
 			await alice.reload();

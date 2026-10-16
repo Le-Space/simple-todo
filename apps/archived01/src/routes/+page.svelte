@@ -20,6 +20,7 @@
 	import {
 		todosStore,
 		todoDBAddressStore,
+		lastWriteErrorStore,
 		addTodo,
 		deleteTodo,
 		toggleTodoComplete
@@ -40,6 +41,8 @@
 	import PeerIdCard from '@simple-todo/ui/PeerIdCard.svelte';
 	import OwnMultiaddrs from '@simple-todo/ui/OwnMultiaddrs.svelte';
 	import StorageModeSelector from '@simple-todo/ui/StorageModeSelector.svelte';
+	import P2PModeSelector from '@simple-todo/ui/P2PModeSelector.svelte';
+	import { initializeP2PMode } from '@simple-todo/todo/p2p-mode.js';
 	import { RELAY_FAB_POSITION_KEY } from '@simple-todo/ui/relay-fab.js';
 	import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
 	import { honourStorageChoice } from '@simple-todo/todo/browser-memory.js';
@@ -48,6 +51,7 @@
 	// once, at module scope, because the first `recall()` happens in `onMount`
 	// before anything renders.
 	honourStorageChoice();
+	initializeP2PMode();
 	import SharedListSelector from '$lib/SharedListSelector.svelte';
 	import SharedListDetails from '$lib/SharedListDetails.svelte';
 	import {
@@ -359,7 +363,9 @@
 		if (success) {
 			showToast('✅ Todo added successfully!', 'success');
 		} else {
-			showToast('❌ Failed to add todo', 'error');
+			// The reason, on screen: a phone has no console to read it from.
+			const why = get(lastWriteErrorStore);
+			showToast(why ? `❌ Failed to add todo: ${why}` : '❌ Failed to add todo', 'error', 10_000);
 		}
 	};
 
@@ -430,6 +436,7 @@
 		on:proceed={handleModalClose}
 	>
 		<svelte:fragment slot="before-confirmation">
+			<P2PModeSelector />
 			<StorageModeSelector bind:mode={storageMode} />
 			<SharedListSelector bind:value={selectedMnemonic} />
 			<PasskeyOnboarding bind:mode={identityMode} bind:label={passkeyLabel} />
