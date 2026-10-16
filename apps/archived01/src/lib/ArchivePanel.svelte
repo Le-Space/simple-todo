@@ -1,5 +1,6 @@
 <script>
 	import { _ } from '$lib/i18n/index.js';
+	import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
 	import {
 		archiveStore,
 		BACKEND_KINDS,
@@ -24,6 +25,7 @@
 
 	let secret = '';
 	let secretStored = false;
+	const persistent = getPersistentStorageEnabled();
 	/** @type {string | null} */
 	let localError = null;
 
@@ -228,7 +230,7 @@
 									({$_('archive.creditsMeasured', {
 										values: {
 											hourly: $archiveStore.credits.hourly.toLocaleString(),
-											mib: ($archiveStore.credits.mib ?? 0).toFixed(1)
+											mib: ($archiveStore.credits.mib ?? 0).toFixed(2)
 										}
 									})})
 								{:else}
@@ -246,6 +248,11 @@
 							{$_('archive.creditsUnknown')}
 						{/if}
 					</p>
+					{#if !persistent}
+						<p class="mt-2 text-xs text-faint" data-testid="archive-memory-hint">
+							{$_('archive.memoryHint')}
+						</p>
+					{/if}
 					<p class="mt-2 text-xs text-faint">
 						{$_('archive.alephCredits', { values: { channel: ALEPH_CHANNEL } })}
 						<a
@@ -331,6 +338,13 @@
 							skipped: $archiveStore.restored.skipped
 						}
 					})}
+					{#if $archiveStore.restored.copied}
+						<span class="block text-xs text-faint" data-testid="archive-restored-copied"
+							>{$_('archive.restoredCopied', {
+								values: { count: $archiveStore.restored.copied }
+							})}</span
+						>
+					{/if}
 				</p>
 			{/if}
 		{/if}

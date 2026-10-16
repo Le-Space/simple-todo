@@ -58,7 +58,11 @@ the list back with the same passkey.
   driver ([storage-bridge#151](https://github.com/NiKrause/orbitdb-storage-bridge/issues/151)).
 - **Restore merges into the open list** (`joinIncrements`): what is here
   stays, what the archive holds is added, and the watcher is told that
-  everything now present counts as shipped. A progress bar counts the
+  everything now present counts as shipped. Increments of other lists — the
+  list's address changed when it became the passkey's, or an earlier device
+  opened other words — are restored under their own addresses (the increments
+  carry the manifest, so this works with the network off too) and their todos
+  copied into the open list, written anew by this identity. A progress bar counts the
   increments as they download. In a fresh browser, **Restore from the
   archive** does the whole way from one button: unlock, find, join.
 - **Every prompt says what it is for.** Creating a passkey touches the

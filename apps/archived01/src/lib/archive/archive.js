@@ -32,7 +32,7 @@ import {
 } from '@le-space/orbitdb-identity-provider-webauthn-did';
 import { deriveArchiveKeys, sealer, sealText, openText } from './keys.js';
 import { createLocalBackend } from './local-backend.js';
-import { todoDBStore, loadTodos } from '../db-actions.js';
+import { todoDBStore, orbitdbStore, loadTodos } from '../db-actions.js';
 import { recall, remember, forget } from '@simple-todo/todo/browser-memory.js';
 
 /** The stores an archive can go to. */
@@ -102,7 +102,7 @@ function saveArchiveSettings(patch) {
  * @property {number} failures
  * @property {{ id: string, name?: string, size?: number, time?: number, sequence?: number, entries?: number }[] | null} increments - the last listing
  * @property {'' | 'unlocking' | 'shipping' | 'listing' | 'restoring'} busy
- * @property {{ joined: number, heads: number, increments: number, skipped: number } | null} restored
+ * @property {{ joined: number, heads: number, increments: number, skipped: number, copied?: number } | null} restored - `copied`: todos taken over from archived lists other than the open one
  * @property {{ stage: 'listing' | 'downloading' | 'joining' | 'collecting' | 'uploading' | 'keeping', done: number, total: number } | null} progress - what a restore or a backup is doing now; `total` 0 when no share makes sense
  * @property {{ credits: number, hourly: number | null, mib: number | null, days: number | null, at: number } | null} credits - the archive account on Aleph: balance, last full hour's expense, and how long the balance lasts at that rate
  */
@@ -477,6 +477,7 @@ export async function restoreArchive() {
 		const { readIncrement, joinIncrements } = await import(
 			'@le-space/orbitdb-storage-bridge/live-backup'
 		);
+		/** @type {Awaited<ReturnType<typeof readIncrement>>[]} */
 		const increments = [];
 		let skipped = 0;
 		for (const [index, item] of items.entries()) {
@@ -489,20 +490,63 @@ export async function restoreArchive() {
 			patch({ progress: { stage: 'downloading', done: index + 1, total: items.length } });
 		}
 		patch({ progress: { stage: 'joining', done: items.length, total: items.length } });
-		const mine = increments.filter((i) =>
-			/** @type {any} */ (i.manifest.metadata).databases.some(
-				(/** @type {any} */ d) => String(d.address) === String(db.address)
-			)
-		);
-		const result = mine.length
-			? await joinIncrements(db, { increments: mine })
-			: { joined: 0, heads: 0 };
+		// Which list the increments are about. The open list is joined in place.
+		// Increments of other lists — the list's address changed when it became
+		// the passkey's, or an earlier device opened other words — are restored
+		// under their own addresses (the increments carry the manifest, so this
+		// works with the network off) and their todos copied into the open list,
+		// written anew by this identity: what somebody pressing "restore" wants is
+		// everything the archive holds, in the list in front of them.
+		/** @type {Map<string, typeof increments>} */
+		const byAddress = new Map();
+		for (const increment of increments) {
+			for (const d of /** @type {any} */ (increment.manifest.metadata).databases ?? []) {
+				const address = String(d.address);
+				byAddress.set(address, [...(byAddress.get(address) ?? []), increment]);
+			}
+		}
+		const current = String(db.address);
+		let result = { joined: 0, heads: 0 };
+		let count = 0;
+		let copied = 0;
+		const mine = byAddress.get(current);
+		if (mine) {
+			count += mine.length;
+			result = await joinIncrements(db, { increments: mine });
+		}
+		const others = [...byAddress.entries()].filter(([address]) => address !== current);
+		if (others.length > 0) {
+			const orbitdb = get(orbitdbStore);
+			if (!orbitdb) throw new Error('OrbitDB is not open');
+			const { restoreFromIncrements } = await import(
+				'@le-space/orbitdb-storage-bridge/live-backup'
+			);
+			for (const [address, theirs] of others) {
+				count += theirs.length;
+				patch({ progress: { stage: 'joining', done: count, total: increments.length } });
+				const restored = await restoreFromIncrements(orbitdb, {
+					increments: theirs,
+					open: { type: 'keyvalue', sync: false }
+				});
+				const other = /** @type {any} */ (
+					restored.databases.find((/** @type {any} */ d) => String(d.address) === address)
+				)?.database;
+				if (!other) continue;
+				for (const { key, value } of await other.all()) {
+					if ((await db.get(key)) !== undefined) continue;
+					await db.put(key, value);
+					copied++;
+				}
+				await other.close();
+			}
+		}
 		await loadTodos();
 		const restored = {
 			joined: result.joined,
 			heads: result.heads,
-			increments: mine.length,
-			skipped
+			increments: count,
+			skipped,
+			...(copied ? { copied } : {})
 		};
 		patch({ restored });
 		// What is here now counts as shipped: the watcher must not send it back.
