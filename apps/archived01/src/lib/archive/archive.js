@@ -101,9 +101,10 @@ function saveArchiveSettings(patch) {
  * @property {string | null} lastError
  * @property {number} failures
  * @property {{ id: string, name?: string, size?: number, time?: number, sequence?: number, entries?: number }[] | null} increments - the last listing
- * @property {'' | 'unlocking' | 'shipping' | 'listing' | 'restoring'} busy
+ * @property {'' | 'unlocking' | 'shipping' | 'listing' | 'restoring' | 'deleting'} busy
+ * @property {{ forgotten: number, rejected: number } | null} deleted - what the last deletion did
  * @property {{ joined: number, heads: number, increments: number, skipped: number, copied?: number } | null} restored - `copied`: todos taken over from archived lists other than the open one
- * @property {{ stage: 'listing' | 'downloading' | 'joining' | 'collecting' | 'uploading' | 'keeping', done: number, total: number } | null} progress - what a restore or a backup is doing now; `total` 0 when no share makes sense
+ * @property {{ stage: 'listing' | 'downloading' | 'joining' | 'collecting' | 'uploading' | 'keeping' | 'deleting', done: number, total: number } | null} progress - what a restore or a backup is doing now; `total` 0 when no share makes sense
  * @property {{ credits: number, hourly: number | null, mib: number | null, days: number | null, at: number } | null} credits - the archive account on Aleph: balance, last full hour's expense, and how long the balance lasts at that rate
  */
 
@@ -125,7 +126,8 @@ export const archiveStore = writable({
 	busy: '',
 	restored: null,
 	credits: null,
-	progress: null
+	progress: null,
+	deleted: null
 });
 
 /** @param {Partial<ArchiveStatus>} patch */
@@ -631,6 +633,85 @@ export async function refreshCredits({ shippedBytes = 0 } = {}) {
 	} catch (error) {
 		console.warn('archive: could not read credits', error);
 		return null;
+	}
+}
+
+/**
+ * Delete the whole archive at the store: every increment this account keeps
+ * there. On Aleph a signed FORGET per batch, which the archive account sends
+ * for itself — it is the owner, no wallet needed; elsewhere the service's
+ * own `remove` per blob. Afterwards the watcher starts from nothing, so the
+ * next increment carries the whole list again: deleting the archive is not
+ * deleting the list.
+ *
+ * Increments never go away by themselves, and each costs by the hour; this is
+ * the way to stop paying for a chain nobody will restore from.
+ *
+ * @returns {Promise<{ forgotten: number, rejected: number }>}
+ */
+export async function deleteArchive() {
+	if (!keys) throw new Error('unlock the archive first');
+	const kind = get(archiveStore).backend;
+	patch({
+		busy: 'deleting',
+		lastError: null,
+		deleted: null,
+		progress: { stage: 'deleting', done: 0, total: 0 }
+	});
+	try {
+		await stopArchive();
+		let forgotten = 0;
+		let rejected = 0;
+		if (kind === 'aleph') {
+			const { createAlephForget, forgetAlephStores } = await import(
+				'@le-space/orbitdb-storage-bridge/backends/aleph-pin'
+			);
+			const { address, sign } = keys;
+			const result = await forgetAlephStores({
+				owner: address,
+				channel: ALEPH_CHANNEL,
+				forget: createAlephForget({
+					sender: address,
+					sign: (_address, text) => sign(text),
+					channel: ALEPH_CHANNEL
+				}),
+				reason: 'archive deleted by its owner (simple-todo archived01)',
+				onProgress: (/** @type {{ done: number, total: number }} */ p) =>
+					patch({ progress: { stage: 'deleting', done: p.done, total: p.total } })
+			});
+			forgotten = result.forgotten.length;
+			rejected = result.rejected.length;
+		} else {
+			const b = backend ?? (await buildBackend(kind));
+			const items = typeof b.list === 'function' ? await b.list() : [];
+			const mine = items.filter(
+				(/** @type {any} */ h) => !h.name || String(h.name).startsWith(NAME_PREFIX)
+			);
+			for (const [index, item] of mine.entries()) {
+				try {
+					if (typeof b.remove !== 'function') throw new Error(`${kind} cannot delete`);
+					await b.remove(item);
+					forgotten++;
+				} catch (error) {
+					console.warn(`archive: could not delete ${item.id}: ${message(error)}`);
+					rejected++;
+				}
+				patch({ progress: { stage: 'deleting', done: index + 1, total: mine.length } });
+			}
+		}
+		// The watcher's memory of what was shipped is memory of what is gone.
+		const db = get(todoDBStore);
+		if (db) forget(stateKey(kind, String(db.address)));
+		const deleted = { forgotten, rejected };
+		patch({ deleted, increments: [], restored: null, sequence: 0, lastShipped: null });
+		if (get(archiveStore).enabled) await startArchive();
+		void refreshCredits();
+		return deleted;
+	} catch (error) {
+		patch({ lastError: message(error) });
+		throw error;
+	} finally {
+		patch({ busy: '', progress: null });
 	}
 }
 

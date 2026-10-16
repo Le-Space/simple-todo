@@ -95,6 +95,22 @@ test.describe('Archive increments', () => {
 			await expect(panel.getByTestId('archive-pending')).toHaveText('0');
 			await panel.getByTestId('archive-flush').click();
 			await expect(panel.getByTestId('archive-sequence')).toHaveText('2');
+
+			// Deleting the archive asks first, then empties the store; the list
+			// stays, and the chain starts again from the whole list.
+			await panel.getByTestId('archive-delete').click();
+			await panel.getByTestId('archive-delete-yes').click();
+			await expect(panel.getByTestId('archive-deleted')).toContainText('2 increments deleted', {
+				timeout: readyTimeout
+			});
+			for (const todo of todos) await expect(page.getByText(todo, { exact: true })).toBeVisible();
+			await panel.getByTestId('archive-list').click();
+			await expect(panel.getByTestId('archive-increments').locator('li')).toHaveCount(1); // "nothing"
+			await expect(panel.getByTestId('archive-sequence')).toHaveText('0');
+			await panel.getByTestId('archive-flush').click();
+			await expect(panel.getByTestId('archive-sequence')).toHaveText('1', {
+				timeout: readyTimeout
+			});
 		} finally {
 			await context.close();
 		}
