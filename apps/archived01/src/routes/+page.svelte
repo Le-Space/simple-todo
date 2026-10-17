@@ -43,6 +43,9 @@
 	import OwnMultiaddrs from '@simple-todo/ui/OwnMultiaddrs.svelte';
 	import StorageModeSelector from '@simple-todo/ui/StorageModeSelector.svelte';
 	import P2PModeSelector from '@simple-todo/ui/P2PModeSelector.svelte';
+	import SealListSelector from '$lib/SealListSelector.svelte';
+	import { getSealListEnabled } from '$lib/list-sealing.js';
+	import { getP2PEnabled } from '@simple-todo/todo/p2p-mode.js';
 	import { initializeP2PMode } from '@simple-todo/todo/p2p-mode.js';
 	import { RELAY_FAB_POSITION_KEY } from '@simple-todo/ui/relay-fab.js';
 	import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
@@ -94,6 +97,12 @@
 	// it afterwards would mean tearing the node down.
 	/** @type {'memory' | 'indexeddb'} As `StorageModeSelector` declares it. */
 	let storageMode = getPersistentStorageEnabled() ? 'indexeddb' : 'memory';
+	/** Sealing the list with the passkey's key (list-sealing.js); the statement follows it. */
+	let sealList = getSealListEnabled();
+	let p2pEnabled = getP2PEnabled();
+	let archiveSettings = readArchiveSettings();
+	// Re-read whenever the dialog comes back: the archive may have been switched on since.
+	$: if (showModal) archiveSettings = readArchiveSettings();
 	let activeMnemonic = '';
 
 	// The open list travels in the URL fragment as `#list=` and its three words,
@@ -178,6 +187,9 @@
 			// for it then anyway, and reading it here lets the archive unlock from
 			// the start.
 			const archiveOn = readArchiveSettings().enabled;
+			// Sealing the list needs the same PRF output as the archive.
+			const sealOn = getSealListEnabled();
+			const wantsPrf = archiveOn || sealOn;
 			/** @type {ReturnType<typeof passkeyStepsFor>} */
 			let steps = {};
 			if (identityMode === 'create') {
@@ -194,11 +206,11 @@
 				});
 			} else if (identityMode === 'existing') {
 				const stored = hasStoredPasskeyCredential();
-				steps = passkeyStepsFor({ mode: stored ? 'stored' : 'restore', prf: archiveOn });
+				steps = passkeyStepsFor({ mode: stored ? 'stored' : 'restore', prf: wantsPrf });
 				// The authenticator's two touches come right after each other; the
 				// second is named as it comes, not gated — a browser with no passkey
 				// has to reach its "nothing here" without a dialog in the way.
-				const of = 3 + (archiveOn ? 1 : 0);
+				const of = 3 + (wantsPrf ? 1 : 0);
 				passkeyCredential = await recoverPasskeyCredential({
 					onTouch: ({ touch }) => {
 						if (touch === 2)
@@ -216,11 +228,13 @@
 			}
 
 			let prfOutput = null;
-			if (passkeyCredential && (identityMode === 'create' || archiveOn)) {
+			if (passkeyCredential && (identityMode === 'create' || wantsPrf)) {
 				await announce(steps, 'prf');
 				const { readPrfOutput } = await import('@le-space/orbitdb-identity-provider-webauthn-did');
 				prfOutput = await readPrfOutput(passkeyCredential).catch(() => null);
 				rememberPrfOutput(prfOutput);
+				// Chosen, and not possible: say so, rather than seal nothing quietly.
+				if (sealOn && !prfOutput) showToast($_('sealList.noPrf'), 'warning', 8000);
 			}
 			activeCredential = passkeyCredential;
 			await announce(steps, 'proof');
@@ -432,15 +446,21 @@
 		bind:rememberDecision
 		canProceed={mnemonicValid}
 		identity={identityMode}
+		p2p={p2pEnabled}
+		persistent={storageMode === 'indexeddb'}
+		seal={sealList}
+		archive={archiveSettings.enabled}
+		owner={Boolean(archiveSettings.owner)}
 		{error}
 		{notice}
 		on:proceed={handleModalClose}
 	>
 		<svelte:fragment slot="before-confirmation">
-			<P2PModeSelector />
+			<P2PModeSelector bind:enabled={p2pEnabled} />
 			<StorageModeSelector bind:mode={storageMode} />
 			<SharedListSelector bind:value={selectedMnemonic} />
 			<PasskeyOnboarding bind:mode={identityMode} bind:label={passkeyLabel} />
+			<SealListSelector bind:enabled={sealList} passkey={identityMode !== 'anonymous'} />
 		</svelte:fragment>
 	</ConsentModal>
 {/if}
@@ -460,7 +480,7 @@
 				<p class="mt-1 text-sm text-faint">A local-first peer-to-peer PWA</p>
 			</div>
 		</div>
-		<div class="flex flex-shrink-0 items-center gap-2 self-start sm:self-auto">
+		<div class="flex min-w-0 flex-wrap items-center justify-end gap-2 self-start sm:self-auto">
 			<DidBadge did={$ownDidStore ?? ''} />
 			<LanguageSwitcher />
 			<ThemeToggle />

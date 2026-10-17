@@ -35,14 +35,47 @@ test.describe('Consent screen', () => {
 		await waitForConsent(page);
 
 		const proceed = page.getByTestId('consent-proceed');
-		await expect(proceed).toBeDisabled();
+		// Waiting, not disabled: a press leads to the tick (next test).
+		await expect(proceed).toHaveAttribute('aria-disabled', 'true');
+		// Playwright honours aria-disabled and will not click; a finger does.
+		await proceed.dispatchEvent('click');
+		expect(await isConsentOpen(page)).toBe(true);
 
 		await acceptNotice(page);
-		await expect(proceed).toBeEnabled();
+		await expect(proceed).toHaveAttribute('aria-disabled', 'false');
 
 		await proceed.click();
 		expect(await isConsentOpen(page)).toBe(false);
 		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
+	});
+
+	test('a press on the waiting button opens the statement and puts the cursor on the tick', async ({
+		page
+	}) => {
+		// The tick sits inside the collapsed "what this means for your data". On
+		// a phone the button naming it was the only thing in view, and it
+		// swallowed the press (2026-10-17).
+		await page.goto('/');
+		await waitForConsent(page);
+		const state = () =>
+			page.$eval('[data-testid="consent-modal"]', (host) => {
+				const root = /** @type {any} */ (host).shadowRoot;
+				const box = root?.querySelector('input[part=accept]');
+				return {
+					open: box?.closest('details')?.open === true,
+					focused: root?.activeElement === box
+				};
+			});
+		// Folded, as a phone shows it (the element opens it on a wide screen).
+		await page.$eval('[data-testid="consent-modal"]', (host) => {
+			const details = /** @type {any} */ (host).shadowRoot?.querySelector('details.privacy');
+			if (details) details.open = false;
+		});
+		expect(await state()).toEqual({ open: false, focused: false });
+
+		await page.getByTestId('consent-proceed').dispatchEvent('click');
+		await expect.poll(state).toEqual({ open: true, focused: true });
+		expect(await isConsentOpen(page)).toBe(true);
 	});
 
 	test('names the requirement that is actually holding the button', async ({ page }) => {
@@ -61,7 +94,7 @@ test.describe('Consent screen', () => {
 		await page.getByTestId('shared-list-mnemonic-input').fill('brisa-arena-sal');
 		await acceptNotice(page);
 		await expect(proceed).toHaveText('Open shared list');
-		await expect(proceed).toBeEnabled();
+		await expect(proceed).toHaveAttribute('aria-disabled', 'false');
 	});
 
 	test('a failed start is readable, not hidden behind the dialog it reopens', async ({ page }) => {
@@ -139,26 +172,51 @@ test.describe('Consent screen', () => {
 
 		const statement = (await clauses(page)).join(' ');
 
-		// Both kinds of list, because naming only one would be false either way.
 		expect(statement).toContain('three Spanish words');
-		expect(statement).toContain('A passkey says who wrote something');
-
-		// And the sentence this chapter exists to make people read: a passkey
-		// proves authorship and protects nothing. The three words are still
-		// enough to read everything, including for the relay that stores it.
-		expect(statement).toContain('does not make it private');
-		expect(statement).toContain('nothing here is encrypted');
+		// Without a passkey there is no key, and the statement says so rather than
+		// hiding it — and points at the chapter that explains what a key buys.
+		expect(statement).toContain('Without a passkey the list is not encrypted');
+		expect(statement).toContain('privacy01');
+		// The relay, named fairly: with the network on it may keep the list.
+		expect(statement).toContain('may keep (pin) your list');
+		// What stays in this browser, with the default storage choice (memory).
+		expect(statement).toContain('Memory only');
+		await page.getByTestId('storage-mode-indexeddb').check();
+		await expect
+			.poll(async () => (await clauses(page)).join(' '))
+			.toContain('This browser keeps the list');
+		// The archive, off until switched on.
+		expect(statement).toContain('The archive is off');
 	});
 
-	test('rewrites the line a choice changes, and only that line', async ({ page }) => {
+	test('rewrites the lines a choice changes, and only those', async ({ page }) => {
 		await page.goto('/');
 		await waitForConsent(page);
 
+		// A passkey changes whose list it is, whether it can be sealed, and who
+		// you are: three sentences, no other.
 		const before = await clauses(page);
 		await page.getByTestId('identity-mode-create').check();
 		await expect
 			.poll(async () => (await clauses(page)).filter((c, i) => c !== before[i]).length)
+			.toBe(3);
+		const withPasskey = await clauses(page);
+		expect(withPasskey.join(' ')).toContain('The entries are sealed with a key from your passkey');
+
+		// Unticking the seal rewrites that one sentence.
+		await page.getByTestId('seal-list').uncheck();
+		await expect
+			.poll(async () => (await clauses(page)).filter((c, i) => c !== withPasskey[i]).length)
 			.toBe(1);
+		expect((await clauses(page)).join(' ')).toContain('New entries are not encrypted');
+
+		// Switching the network off rewrites the relay sentence, and no other.
+		const beforeOff = await clauses(page);
+		await page.getByTestId('p2p-mode-off').check();
+		await expect
+			.poll(async () => (await clauses(page)).filter((c, i) => c !== beforeOff[i]).length)
+			.toBe(1);
+		expect((await clauses(page)).join(' ')).toContain('The network is off');
 	});
 
 	test('offers the technical view beside the plain one', async ({ page }) => {
@@ -229,7 +287,7 @@ test.describe('Consent screen', () => {
 
 			const statement = (await clauses(page)).join(' ');
 			expect(statement).toContain('Wir betreiben keinen Server');
-			expect(statement).toContain('nichts verschlüsselt');
+			expect(statement).toContain('nicht verschlüsselt');
 			// Not a single English clause left behind: a half-translated statement
 			// reads as a decision rather than an omission.
 			expect(statement).not.toContain('We run no server');

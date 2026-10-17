@@ -33,6 +33,7 @@ import {
 import { deriveArchiveKeys, sealer, sealText, openText } from './keys.js';
 import { createLocalBackend } from './local-backend.js';
 import { todoDBStore, orbitdbStore, loadTodos } from '../db-actions.js';
+import { getActiveListEncryption, looksLikeTodo } from '../list-sealing.js';
 import { recall, remember, forget } from '@simple-todo/todo/browser-memory.js';
 import {
 	authorizationEntry,
@@ -329,17 +330,6 @@ async function stateFromStore(address) {
 	}
 }
 
-/**
- * A todo as this app writes it; anything else from an archived list is left
- * where it is rather than copied into the open one.
- * @param {unknown} value
- */
-function looksLikeTodo(value) {
-	if (!value || typeof value !== 'object') return false;
-	const v = /** @type {Record<string, unknown>} */ (value);
-	return typeof v.text === 'string' && typeof v.completed === 'boolean';
-}
-
 /** The name every increment goes up under; the listing filters by it. */
 const NAME_PREFIX = 'archived01-';
 
@@ -607,9 +597,12 @@ export async function restoreArchive() {
 			for (const [address, theirs] of others) {
 				count += theirs.length;
 				patch({ progress: { stage: 'joining', done: count, total: increments.length } });
+				const encryption = getActiveListEncryption();
 				const restored = await restoreFromIncrements(orbitdb, {
 					increments: theirs,
-					open: { type: 'keyvalue', sync: false }
+					// The passkey's key, so a sealed list of this passkey reads; an open
+					// one reads anyway.
+					open: { type: 'keyvalue', sync: false, ...(encryption ? { encryption } : {}) }
 				});
 				const other = /** @type {any} */ (
 					restored.databases.find((/** @type {any} */ d) => String(d.address) === address)

@@ -1,3 +1,4 @@
+import { countSealedHidden } from './list-sealing.js';
 import { writable, derived, get } from 'svelte/store';
 import { getP2PEnabled } from '@simple-todo/todo/p2p-mode.js';
 import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
@@ -75,6 +76,8 @@ export const todoDBAddressStore = writable('');
 
 // Store for todos
 export const todosStore = writable(/** @type {TodoItem[]} */ ([]));
+/** Entries sealed by the passkey that this start has no key for (list-sealing.js). */
+export const sealedHiddenStore = writable(0);
 /** @typedef {'unknown' | 'pending' | 'pinned' | 'unavailable'} TodoReplicationStatus */
 export const todoReplicationStatusStore = writable(
 	/** @type {Record<string, TodoReplicationStatus>} */ ({})
@@ -219,6 +222,12 @@ async function loadTodosSnapshot() {
 			key: todo.key,
 			...todo.value
 		}));
+		// Sealed entries the index skipped: counted, so they do not just vanish.
+		countSealedHidden(/** @type {any} */ (todoDB))
+			.then((n) => {
+				if (get(todoDBStore) === todoDB) sealedHiddenStore.set(n);
+			})
+			.catch(() => sealedHiddenStore.set(0));
 
 		todosStore.set(sortTodos(todosArray));
 		const pendingEntries = todoEntriesReceivedDuringLoad;

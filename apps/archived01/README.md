@@ -85,8 +85,11 @@ the list back with the same passkey.
   archive** does the whole way from one button: unlock, find, join.
 - **Every prompt says what it is for.** Creating a passkey touches the
   authenticator four times (register, largeBlob, PRF, identity proof);
-  restoring one in a fresh browser three times (largeBlob read, PRF, proof);
-  a later start in the same browser once, twice with the archive on. Before
+  restoring one in a fresh browser three times (largeBlob read, PRF, proof),
+  four with sealing or the archive on — the restore's PRF read serves the
+  signing key and is not handed back ([provider#89](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did/issues/89));
+  a later start in the same browser once, twice with sealing or the archive
+  on. Before
   every touch after the first, a dialog says "prompt n of m" and what the
   touch is for (`src/lib/passkey-steps.js`, after Le-Space/belege#430), and
   starts it on _Continue_. The provider's own prompts cannot be announced from
@@ -123,6 +126,41 @@ the list back with the same passkey.
   controller names this DID or everyone), and only values shaped like a todo;
   a store that could forge a sealed blob still cannot put words into the
   owner's mouth. A chain with a missing increment is refused and named.
+- **Seal the list — a box on the consent screen.** OrbitDB has no read
+  permission: whoever holds an address and reaches a peer that has it reads
+  everything in it, the relay that keeps it included. The `privacy01` chapter
+  seals a list's entries and hands the key around in envelopes; this chapter
+  needs no envelopes, because with a passkey the list is the passkey's — so the
+  key comes from the passkey too, the same PRF output that yields the archive
+  account and the backup key, through HKDF under a third info string
+  (`src/lib/list-sealing.js`, the sealing itself ported from `privacy01`).
+  Every device with the passkey derives the same key; the relay stores sealed
+  entries; the archive's increments carry them sealed as well and a restore
+  reads them back with the same passkey. It is a choice — _Seal the list_, on
+  by default once a passkey is chosen — and the consent statement rewrites its
+  sentence with it. Sealing is not part of the address: an existing list keeps
+  the entries it already had in the clear and seals the ones that follow, and
+  with the box unticked the passkey still opens what it sealed before (only
+  `decrypt` is handed to OrbitDB) while new entries go out in the clear. A
+  browser without the key keeps a sealed entry but finds no todo in it; the
+  list then says how many entries it cannot read. Without a passkey there is
+  no key, and the box says so. `e2e/sealed-list.spec.js` proves it on the log
+  itself: every entry sealed on the way out, restored from the archive, and
+  mixed once the box is unticked — a stranger's view is `privacy01`'s to
+  prove, since nobody but the passkey can reach this list at all.
+- **The consent statement follows every choice.** "What this means for your
+  data" used to depend on the identity alone and said things that were no
+  longer true (nothing stored on this device; the passkey stays on this
+  device; nothing encrypted). It now rewrites itself with the network switch,
+  the storage choice, the sealing box, the archive and its payer — and names
+  the relay fairly: with the network on, our relay may keep (pin) the list so
+  another device can collect it. The tick that releases the button sits inside
+  that statement; a press on the waiting button opens it, scrolls to the tick
+  and puts the cursor there, instead of swallowing the press as a disabled
+  button did (`e2e/consent-screen.spec.js`).
+- **Fits a phone.** The header's right-hand group (DID, language, theme, page
+  QR, social links) wraps instead of pushing the page past the viewport;
+  `e2e/phone-layout.spec.js` measures it at 360 px.
 - **A Content Security Policy.** The page tells the browser where scripts may
   come from (its own origin and the one hashed inline script SvelteKit emits,
   nothing else), what it may connect to (TLS hosts and secure WebSockets only;

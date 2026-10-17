@@ -414,7 +414,7 @@
 		<!-- The DID moved into the status panel, next to the control that
 		     produces it. Announcing it up here left the identity split across
 		     two ends of the page. -->
-		<div class="flex flex-shrink-0 items-center gap-2 self-start sm:self-auto">
+		<div class="flex min-w-0 flex-wrap items-center justify-end gap-2 self-start sm:self-auto">
 			<LanguageSwitcher />
 			<ViewModeToggle />
 			<!-- Dismissing the introduction must not be a one-way door. -->

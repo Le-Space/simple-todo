@@ -57,7 +57,10 @@ test('the identity comes back from the passkey alone, in three touches', async (
 
 	await page.reload();
 	await waitForConsent(page);
-	await passConsent(page, { persistent: false, identity: 'existing' });
+	// Sealing off: on, the start reads the PRF output once more for the list
+	// key (a fourth touch, like the archive — provider#89 would fold it into the
+	// restore). The promise counted here is the identity's alone.
+	await passConsent(page, { persistent: false, identity: 'existing', seal: false });
 	await expect(todoInput(page)).toBeEnabled({ timeout: 120000 });
 	const after = await page.getByTestId('own-did-value').getAttribute('data-did');
 	expect(after).toBe(before);
@@ -91,7 +94,7 @@ test('a device that keeps things restores the passkey too, and keeps it', async 
 	await page.goto('/');
 	await waitForConsent(page);
 	await takeCeremonies(page);
-	await passConsent(page, { persistent: true, identity: 'existing' });
+	await passConsent(page, { persistent: true, identity: 'existing', seal: false });
 	await expect(todoInput(page)).toBeEnabled({ timeout: 120000 });
 	expect(await page.getByTestId('own-did-value').getAttribute('data-did')).toBe(before);
 	expect((await takeCeremonies(page)).length).toBe(3);

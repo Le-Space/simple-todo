@@ -116,6 +116,13 @@ let peerId = /** @type {string | null} */ (null);
  */
 let activePasskeyCredential = null;
 /**
+ * OrbitDB's `encryption` option for the passkey's list, when sealing is on and
+ * the start had the PRF output (list-sealing.js); null for an open list.
+ * @type {Awaited<ReturnType<import('./list-sealing.js').deriveListEncryption>> | null}
+ */
+let listEncryption = null;
+
+/**
  * The passkey's PRF output, read once at the start (archived01): the identity
  * provider derives the signing key from it instead of asking the passkey a
  * second time, and the archive derives its account and backup key from the
@@ -226,6 +233,16 @@ export async function initializeP2P(
 		activePasskeyCredential = options.passkeyCredential ?? null;
 	}
 	startPrfOutput = options.prfOutput instanceof Uint8Array ? options.prfOutput : null;
+	// The list is sealed when that was chosen and a passkey gave its PRF output;
+	// without the output (no passkey, or an authenticator without PRF) it is
+	// open, and the page says so.
+	const { getSealListEnabled, deriveListEncryption, setActiveListEncryption } = await import(
+		'./list-sealing.js'
+	);
+	listEncryption = startPrfOutput
+		? await deriveListEncryption(startPrfOutput, { seal: getSealListEnabled() })
+		: null;
+	setActiveListEncryption(listEncryption);
 	console.log('🚀 Starting P2P initialization after user consent...');
 
 	try {
@@ -264,6 +281,16 @@ export async function initializeP2P(
 		orbitdb = await createOrbitDBInstance(helia);
 		setInitializationProgress(4);
 		todoDB = await openInitialTodoDatabase(options.todoDbAddress, options.todoDbName);
+
+		// For the sealed-list spec: what the log holds, and whether each entry's
+		// payload is sealed bytes (a peer without the key) or was opened with a
+		// key (`_payload` keeps the sealed form). Read-only; the UI shows neither,
+		// since a peer without the key sees no todo at all — OrbitDB's key-value
+		// index finds no operation in a payload it cannot open.
+		/** @type {any} */ (globalThis).__simpleTodoLog = async () =>
+			(await todoDB.log.values()).map((/** @type {any} */ e) => ({
+				sealed: e.payload instanceof Uint8Array || e._payload instanceof Uint8Array
+			}));
 
 		console.log('✅ Database opened successfully with OrbitDBAccessController:', {
 			address: todoDB.address,
@@ -351,6 +378,9 @@ async function openInitialTodoDatabase(address, databaseName) {
 			type: 'keyvalue',
 			// No pubsub without the network, and OrbitDB's Sync would subscribe on open.
 			sync: getP2PEnabled(),
+			// The passkey's key opens what the passkey sealed; an entry written in
+			// the clear comes through as it is (entry-encryption.js).
+			...(listEncryption ? { encryption: listEncryption } : {}),
 			// Memory-only when that is what was chosen: `Database` defaults both
 			// log storages to LevelStorage, which browser-level puts in IndexedDB.
 			...(await createLogStorages())
@@ -370,6 +400,8 @@ async function openInitialTodoDatabase(address, databaseName) {
 		create: true, // Allows the database to be created if it doesn't exist
 		sync: getP2PEnabled(), // Automatic synchronization with other peers — none with the network off
 		AccessController: IPFSAccessController({ write: writers }),
+		// Sealed with a key from the passkey when that was chosen (list-sealing.js).
+		...(listEncryption ? { encryption: listEncryption } : {}),
 		// Memory-only when that is what was chosen; see the note above.
 		...(await createLogStorages())
 	});
