@@ -6,13 +6,11 @@ settings:
 
 overrides:
   '@ipshipyard/node-datachannel': npm:node-datachannel@0.29.0
-  '@le-space/orbitdb-identity-provider-webauthn-did': 0.7.0
+  '@le-space/orbitdb-identity-provider-webauthn-did': 0.11.0
   '@libp2p/gossipsub': 16.1.0
-  '@simple-todo/escrow01>@le-space/orbitdb-identity-provider-webauthn-did': 0.8.0
   orbitdb-relay>@orbitdb/core: 4.0.0
   react: 19.2.6
   react-dom: 19.2.6
-  '@simple-todo/archived01>@le-space/orbitdb-identity-provider-webauthn-did': 0.11.0
 
 importers:
 
@@ -55,8 +53,8 @@ importers:
         specifier: 0.13.1
         version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.7.0
-        version: 0.7.0(@orbitdb/core@4.0.0)
+        specifier: 0.11.0
+        version: 0.11.0(@orbitdb/core@4.0.0)
       '@le-space/ui':
         specifier: 0.9.6
         version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -519,8 +517,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0(typescript@5.9.2)(zod@4.6.5)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.7.0
-        version: 0.7.0(@orbitdb/core@4.0.0)
+        specifier: 0.11.0
+        version: 0.11.0(@orbitdb/core@4.0.0)
       '@le-space/ui':
         specifier: 0.9.6
         version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -749,10 +747,10 @@ importers:
         version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-access-controller-delegated-todo':
         specifier: 0.1.0
-        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.7.0(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
+        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.11.0(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.7.0
-        version: 0.7.0(@orbitdb/core@4.0.0)
+        specifier: 0.11.0
+        version: 0.11.0(@orbitdb/core@4.0.0)
       '@le-space/ui':
         specifier: 0.9.6
         version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -984,13 +982,13 @@ importers:
         version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-access-controller-delegated-todo':
         specifier: 0.1.0
-        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.8.0(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
+        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.11.0(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.8.0
-        version: 0.8.0(@orbitdb/core@4.0.0)
+        specifier: 0.11.0
+        version: 0.11.0(@orbitdb/core@4.0.0)
       '@le-space/passkey-wallet':
         specifier: 0.1.0
-        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.8.0(@orbitdb/core@4.0.0))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))
+        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.11.0(@orbitdb/core@4.0.0))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))
       '@le-space/ui':
         specifier: 0.9.6
         version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -1225,10 +1223,10 @@ importers:
         version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-access-controller-delegated-todo':
         specifier: 0.1.0
-        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.7.0(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
+        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.11.0(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.7.0
-        version: 0.7.0(@orbitdb/core@4.0.0)
+        specifier: 0.11.0
+        version: 0.11.0(@orbitdb/core@4.0.0)
       '@le-space/ui':
         specifier: 0.9.6
         version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -1468,8 +1466,8 @@ importers:
         specifier: 0.13.1
         version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.7.0
-        version: 0.7.0(@orbitdb/core@4.0.0)
+        specifier: 0.11.0
+        version: 0.11.0(@orbitdb/core@4.0.0)
       '@le-space/ui':
         specifier: 0.9.6
         version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -1700,8 +1698,8 @@ importers:
         specifier: 0.13.1
         version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.7.0
-        version: 0.7.0(@orbitdb/core@4.0.0)
+        specifier: 0.11.0
+        version: 0.11.0(@orbitdb/core@4.0.0)
       '@le-space/ui':
         specifier: 0.9.6
         version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -1932,8 +1930,8 @@ importers:
         specifier: 0.13.1
         version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.7.0
-        version: 0.7.0(@orbitdb/core@4.0.0)
+        specifier: 0.11.0
+        version: 0.11.0(@orbitdb/core@4.0.0)
       '@le-space/ui':
         specifier: 0.9.6
         version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -2164,8 +2162,8 @@ importers:
         specifier: 0.13.1
         version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.7.0
-        version: 0.7.0(@orbitdb/core@4.0.0)
+        specifier: 0.11.0
+        version: 0.11.0(@orbitdb/core@4.0.0)
       '@le-space/ui':
         specifier: 0.9.6
         version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -3509,23 +3507,11 @@ packages:
   '@le-space/orbitdb-access-controller-delegated-todo@0.1.0':
     resolution: {integrity: sha512-IYqHNFWlwKWRXYXsxbw2pIdwRVe//YP1Y6VWmMkkl/BulOyDAkiV3Xz+CZRVAbyVscVPm5tQtjxb7fdqaLznKg==}
     peerDependencies:
-      '@le-space/orbitdb-identity-provider-webauthn-did': 0.7.0
+      '@le-space/orbitdb-identity-provider-webauthn-did': 0.11.0
       '@orbitdb/core': ^3.0.0
 
   '@le-space/orbitdb-identity-provider-webauthn-did@0.11.0':
     resolution: {integrity: sha512-yUX8HWUoCTVfPLvXNEY+wP/sIQxdsZjJOoQPU4wV/9BLa+MzE71vjX0Vn7KDe4LAFm2szlVAMyWNQSgKtAyw2g==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      '@orbitdb/core': ^4.0.0
-
-  '@le-space/orbitdb-identity-provider-webauthn-did@0.7.0':
-    resolution: {integrity: sha512-38HTfJSx7lcEA+X9+koFoMGJse6FIYyi6Hg3F4EieEBQFiVF+/C1C5dtPmRlE1xsvKXSsV+IxqFqwy+uGXt7pA==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      '@orbitdb/core': ^4.0.0
-
-  '@le-space/orbitdb-identity-provider-webauthn-did@0.8.0':
-    resolution: {integrity: sha512-vNZaiClqv5OEj9pTXupgaHcV9YgNzfjuWV3HdjBNIomK0DgouEFZjhPDMO0vec+knn8RQMZ1oIZyMKETTIDEZg==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@orbitdb/core': ^4.0.0
@@ -3541,7 +3527,7 @@ packages:
     resolution: {integrity: sha512-yWyHhEpkekE161qtOwGd1CSwQt4NrQ1R6q7WbQUmAijPzoZQwVJzroooFj+VbHLnjWE16/PABoI+39B7O152Jg==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
-      '@le-space/orbitdb-identity-provider-webauthn-did': 0.7.0
+      '@le-space/orbitdb-identity-provider-webauthn-did': 0.11.0
       viem: ^2.56.5
 
   '@le-space/playwright@0.7.0':
@@ -8347,7 +8333,7 @@ snapshots:
     dependencies:
       '@chainsafe/as-chacha20poly1305': 0.1.0
       '@chainsafe/as-sha256': 1.2.4
-      '@libp2p/crypto': 5.1.21
+      '@libp2p/crypto': 5.1.24
       '@libp2p/interface': 2.11.0
       '@libp2p/peer-id': 5.1.9
       '@noble/ciphers': 1.3.0
@@ -8423,7 +8409,7 @@ snapshots:
 
   '@chainsafe/libp2p-quic@1.1.8':
     dependencies:
-      '@libp2p/crypto': 5.1.21
+      '@libp2p/crypto': 5.1.24
       '@libp2p/interface': 2.11.0
       '@libp2p/utils': 6.7.2
       '@multiformats/multiaddr': 12.5.1
@@ -9109,7 +9095,7 @@ snapshots:
       '@helia/interface': 6.2.1
       '@ipld/dag-pb': 4.1.7
       '@libp2p/interface': 3.2.5
-      '@libp2p/logger': 6.2.11
+      '@libp2p/logger': 6.2.14
       '@libp2p/utils': 7.3.1
       '@multiformats/murmur3': 2.2.8
       interface-blockstore: 6.0.2
@@ -9753,14 +9739,9 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@le-space/orbitdb-access-controller-delegated-todo@0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.7.0(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)':
+  '@le-space/orbitdb-access-controller-delegated-todo@0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.11.0(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)':
     dependencies:
-      '@le-space/orbitdb-identity-provider-webauthn-did': 0.7.0(@orbitdb/core@4.0.0)
-      '@orbitdb/core': 4.0.0
-
-  '@le-space/orbitdb-access-controller-delegated-todo@0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.8.0(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)':
-    dependencies:
-      '@le-space/orbitdb-identity-provider-webauthn-did': 0.8.0(@orbitdb/core@4.0.0)
+      '@le-space/orbitdb-identity-provider-webauthn-did': 0.11.0(@orbitdb/core@4.0.0)
       '@orbitdb/core': 4.0.0
 
   '@le-space/orbitdb-identity-provider-webauthn-did@0.11.0(@orbitdb/core@4.0.0)':
@@ -9770,40 +9751,6 @@ snapshots:
       '@le-space/ucanto-principal': 9.1.2
       '@libp2p/crypto': 5.1.24
       '@libp2p/logger': 6.2.14
-      '@orbitdb/core': 4.0.0
-      '@simplewebauthn/browser': 13.3.0
-      cbor-web: 9.0.2
-      iso-base: '@le-space/iso-base@4.3.0'
-      iso-did: '@le-space/iso-did@2.1.2'
-      iso-passkeys: '@le-space/iso-passkeys@0.3.1'
-      iso-web: 3.1.2
-      iso-webauthn-varsig: '@le-space/iso-webauthn-varsig@0.3.0'
-      multiformats: 14.0.5
-
-  '@le-space/orbitdb-identity-provider-webauthn-did@0.7.0(@orbitdb/core@4.0.0)':
-    dependencies:
-      '@ipld/dag-cbor': 10.0.1
-      '@ipld/dag-ucan': 3.4.5
-      '@le-space/ucanto-principal': 9.1.2
-      '@libp2p/crypto': 5.1.21
-      '@libp2p/logger': 6.2.11
-      '@orbitdb/core': 4.0.0
-      '@simplewebauthn/browser': 13.3.0
-      cbor-web: 9.0.2
-      iso-base: '@le-space/iso-base@4.3.0'
-      iso-did: '@le-space/iso-did@2.1.2'
-      iso-passkeys: '@le-space/iso-passkeys@0.3.1'
-      iso-web: 3.1.2
-      iso-webauthn-varsig: '@le-space/iso-webauthn-varsig@0.3.0'
-      multiformats: 14.0.5
-
-  '@le-space/orbitdb-identity-provider-webauthn-did@0.8.0(@orbitdb/core@4.0.0)':
-    dependencies:
-      '@ipld/dag-cbor': 10.0.1
-      '@ipld/dag-ucan': 3.4.5
-      '@le-space/ucanto-principal': 9.1.2
-      '@libp2p/crypto': 5.1.21
-      '@libp2p/logger': 6.2.11
       '@orbitdb/core': 4.0.0
       '@simplewebauthn/browser': 13.3.0
       cbor-web: 9.0.2
@@ -9851,9 +9798,9 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@le-space/passkey-wallet@0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.8.0(@orbitdb/core@4.0.0))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))':
+  '@le-space/passkey-wallet@0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.11.0(@orbitdb/core@4.0.0))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))':
     dependencies:
-      '@le-space/orbitdb-identity-provider-webauthn-did': 0.8.0(@orbitdb/core@4.0.0)
+      '@le-space/orbitdb-identity-provider-webauthn-did': 0.11.0(@orbitdb/core@4.0.0)
       viem: 2.56.8(typescript@5.9.2)(zod@4.6.5)
 
   '@le-space/playwright@0.7.0(@playwright/test@1.61.1)(typescript@5.9.2)(zod@4.6.5)':
@@ -9989,7 +9936,7 @@ snapshots:
 
   '@libp2p/circuit-relay-v2@3.2.24':
     dependencies:
-      '@libp2p/crypto': 5.1.21
+      '@libp2p/crypto': 5.1.24
       '@libp2p/interface': 2.11.0
       '@libp2p/interface-internal': 2.3.19
       '@libp2p/peer-collections': 6.0.35
@@ -10162,7 +10109,7 @@ snapshots:
 
   '@libp2p/identify@3.0.39':
     dependencies:
-      '@libp2p/crypto': 5.1.21
+      '@libp2p/crypto': 5.1.24
       '@libp2p/interface': 2.11.0
       '@libp2p/interface-internal': 2.3.19
       '@libp2p/peer-id': 5.1.9
@@ -10440,7 +10387,7 @@ snapshots:
 
   '@libp2p/peer-id@5.1.9':
     dependencies:
-      '@libp2p/crypto': 5.1.21
+      '@libp2p/crypto': 5.1.24
       '@libp2p/interface': 2.11.0
       multiformats: 13.4.2
       uint8arrays: 5.1.0
@@ -10520,7 +10467,7 @@ snapshots:
 
   '@libp2p/ping@2.0.37':
     dependencies:
-      '@libp2p/crypto': 5.1.21
+      '@libp2p/crypto': 5.1.24
       '@libp2p/interface': 2.11.0
       '@libp2p/interface-internal': 2.3.19
       '@multiformats/multiaddr': 12.5.1
@@ -10721,7 +10668,7 @@ snapshots:
       '@chainsafe/is-ip': 2.1.0
       '@chainsafe/libp2p-noise': 16.1.5
       '@ipshipyard/node-datachannel': node-datachannel@0.29.0
-      '@libp2p/crypto': 5.1.21
+      '@libp2p/crypto': 5.1.24
       '@libp2p/interface': 2.11.0
       '@libp2p/interface-internal': 2.3.19
       '@libp2p/keychain': 5.2.9
@@ -12004,7 +11951,7 @@ snapshots:
 
   blockstore-core@6.1.3:
     dependencies:
-      '@libp2p/logger': 6.2.11
+      '@libp2p/logger': 6.2.14
       interface-blockstore: 6.0.2
       interface-store: 7.0.2
       it-all: 3.0.11
@@ -12452,7 +12399,7 @@ snapshots:
 
   datastore-core@11.0.4:
     dependencies:
-      '@libp2p/logger': 6.2.11
+      '@libp2p/logger': 6.2.14
       interface-datastore: 9.0.3
       interface-store: 7.0.2
       it-drain: 3.0.12
@@ -14009,7 +13956,7 @@ snapshots:
     dependencies:
       '@chainsafe/is-ip': 2.1.0
       '@chainsafe/netmask': 2.0.0
-      '@libp2p/crypto': 5.1.21
+      '@libp2p/crypto': 5.1.24
       '@libp2p/interface': 2.11.0
       '@libp2p/interface-internal': 2.3.19
       '@libp2p/logger': 5.2.0
@@ -14630,8 +14577,8 @@ snapshots:
       '@ipld/dag-cbor': 10.0.1
       '@ipld/dag-json': 11.0.0
       '@ipshipyard/libp2p-auto-tls': 1.0.0
-      '@le-space/orbitdb-access-controller-delegated-todo': 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.7.0(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
-      '@le-space/orbitdb-identity-provider-webauthn-did': 0.7.0(@orbitdb/core@4.0.0)
+      '@le-space/orbitdb-access-controller-delegated-todo': 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.11.0(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
+      '@le-space/orbitdb-identity-provider-webauthn-did': 0.11.0(@orbitdb/core@4.0.0)
       '@libp2p/autonat': 3.0.24
       '@libp2p/bootstrap': 12.0.27
       '@libp2p/circuit-relay-v2': 4.2.9
@@ -14685,8 +14632,8 @@ snapshots:
       '@ipld/dag-cbor': 10.0.1
       '@ipld/dag-json': 11.0.0
       '@ipshipyard/libp2p-auto-tls': 2.0.2
-      '@le-space/orbitdb-access-controller-delegated-todo': 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.7.0(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
-      '@le-space/orbitdb-identity-provider-webauthn-did': 0.7.0(@orbitdb/core@4.0.0)
+      '@le-space/orbitdb-access-controller-delegated-todo': 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.11.0(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
+      '@le-space/orbitdb-identity-provider-webauthn-did': 0.11.0(@orbitdb/core@4.0.0)
       '@libp2p/autonat': 3.0.24
       '@libp2p/bootstrap': 12.0.27
       '@libp2p/circuit-relay-v2': 4.2.9
