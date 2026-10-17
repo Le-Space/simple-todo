@@ -123,6 +123,20 @@ the list back with the same passkey.
   controller names this DID or everyone), and only values shaped like a todo;
   a store that could forge a sealed blob still cannot put words into the
   owner's mouth. A chain with a missing increment is refused and named.
+- **A Content Security Policy.** The page tells the browser where scripts may
+  come from (its own origin and the one hashed inline script SvelteKit emits,
+  nothing else), what it may connect to (TLS hosts and secure WebSockets only;
+  plain `http:`/`ws:` only in a development build — relays and compute nodes
+  are whatever the person picks, so no finite list of hosts describes them)
+  and that it loads no plugins, frames or media. One known report per load:
+  cbor-x, under the provider's WebAuthn parser, probes `new Function` once and
+  takes its slow path when refused. Prerendered and served from IPFS, so the policy
+  is a `<meta>` tag (`svelte.config.js`); the theme script moved out of
+  `app.html` into `theme-init.js` for it. The point: a script that gets into
+  this tab can ask the authenticator and walk off with the PRF output at the
+  next touch, and the policy is the cheapest door to close. `e2e/csp.spec.js`
+  listens for every violation while the app starts, syncs, writes, draws the
+  QR code and switches theme and language, and expects none.
 - **What it does not do.** Encrypt the list itself: anyone with the address can
   read it, and the relay still does. The seal is on the archive only.
 

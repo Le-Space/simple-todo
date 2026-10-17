@@ -4,19 +4,11 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 
-		<!-- Theme init (before paint) — set light/dark from stored choice or system pref -->
-		<script>
-			(function () {
-				try {
-					var t = localStorage.getItem('theme');
-					if (t !== 'light' && t !== 'dark') {
-						t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-					}
-					document.documentElement.classList.toggle('dark', t === 'dark');
-					document.documentElement.style.background = t === 'dark' ? '#0B0E15' : '#EDF1F8';
-				} catch (e) {}
-			})();
-		</script>
+		<!-- Theme init (before paint) — set light/dark from stored choice or system
+		     pref. An external file, not an inline script: this chapter ships a
+		     Content Security Policy (svelte.config.js) that allows no inline script
+		     beyond the hashed one SvelteKit emits. -->
+		<script src="./theme-init.js"></script>
 
 		<!-- Favicon and Icons -->
 		<link rel="icon" type="image/svg+xml" href="./favicon.svg" />
