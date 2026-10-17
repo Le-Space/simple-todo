@@ -187,7 +187,6 @@
 			"local": "Alle Inkremente in diesem Browser werden gelöscht."
 		},
 		"deleteNote": "Die Liste selbst bleibt. Der Watcher fängt danach von vorn an: Das nächste Inkrement trägt wieder die ganze Liste.",
-		"deleteYes": "Ja, Archiv löschen",
 		"deleteNo": "Abbrechen",
 		"deletedSummary": "{forgotten} Inkremente gelöscht, {rejected} abgelehnt.",
 		"signer": "Signiert (Archivschlüssel)",
@@ -229,7 +228,13 @@
 				"revoke": "Diesem Schlüssel entziehen (die vollständige Liste ohne ihn)"
 			},
 			"forgetNotGranted": "Der Besitzer hat diesem Schlüssel kein FORGET gewährt, deshalb lässt sich das Archiv von hier aus nicht löschen. Der Besitzer löscht es mit diesem Befehl, oder gewährt oben FORGET, und du versuchst es erneut."
-		}
+		},
+		"deleteThisList": "Archiv dieser Liste löschen",
+		"deleteEverything": "Alles auf dem Konto löschen",
+		"deleteScopeHint": "Jede Liste hat beim Speicher ihre eigene Kette, benannt nach einem Fingerabdruck aus dem Passkey, nicht nach ihrer Adresse. „Diese Liste“ vergisst diese Kette; „alles“ vergisst jedes Inkrement, das das Konto auf dem Kanal hält, also auch andere Listen und ältere Inkremente aus der Zeit, bevor Ketten unterschieden wurden.",
+		"elsewhere": "Das Konto hält {count} weitere Inkremente außerhalb der Kette dieser Liste: andere Listen oder ältere aus der Zeit, bevor Ketten unterschieden wurden. Eine Wiederherstellung liest sie, wenn diese Kette leer ist.",
+		"restoredChain": "Kette: {duplicates} Sequenznummern doppelt (zwei Geräte zählen für sich, harmlos), {gaps} fehlend (Inkremente, die der Speicher nicht hat).",
+		"restoredFromAccount": "Die Kette dieser Liste war leer, deshalb wurde das ganze Archiv des Kontos gelesen; Todos anderer Listen wurden kopiert, nicht zusammengeführt."
 	},
 	"passkeySteps": {
 		"count": "Passkey-Abfrage {n} von {of}",

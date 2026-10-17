@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deriveArchiveKeys, sealer, sealText, openText } from './keys.js';
+import { listRefFor, deriveArchiveKeys, sealer, sealText, openText } from './keys.js';
 
 // A fixed "PRF output": what the passkey would answer. The point of the
 // derivation is that the same answer gives the same account and the same key
@@ -48,5 +48,27 @@ describe('the archive keys', () => {
 
 	it('refuses something that is not a PRF output', async () => {
 		await expect(deriveArchiveKeys(new Uint8Array(8))).rejects.toThrow(/PRF output/);
+	});
+});
+
+describe('listRefFor', () => {
+	const prf = new Uint8Array(32).map((_, i) => i + 1);
+	const address = '/orbitdb/zdpuAexample000000000000000000000000000000000000000';
+
+	it('names a chain the same way on every device with the passkey, and differently per list', async () => {
+		const a = await deriveArchiveKeys(prf);
+		const b = await deriveArchiveKeys(prf);
+		const once = await listRefFor(a.refKey, address);
+		expect(once).toMatch(/^[0-9a-f]{32}$/);
+		expect(await listRefFor(b.refKey, address)).toBe(once);
+		expect(await listRefFor(a.refKey, address + '1')).not.toBe(once);
+	});
+
+	it('says nothing about the address, and another passkey gets another name', async () => {
+		const a = await deriveArchiveKeys(prf);
+		const other = await deriveArchiveKeys(new Uint8Array(32).map((_, i) => 200 - i));
+		const name = await listRefFor(a.refKey, address);
+		expect(name).not.toContain('zdpu');
+		expect(await listRefFor(other.refKey, address)).not.toBe(name);
 	});
 });

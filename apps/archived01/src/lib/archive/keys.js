@@ -27,6 +27,8 @@ import { privateKeyToAccount } from 'viem/accounts';
 /** Bumping either rotates every key and address, so treat it as a breaking change. */
 export const ALEPH_ACCOUNT_INFO = 'simple-todo/archived01/aleph-account/v1';
 export const BACKUP_KEY_INFO = 'simple-todo/archived01/backup-key/v1';
+/** The key behind {@link listRefFor}: bumping renames every list's chain at the store. */
+export const LIST_REF_KEY_INFO = 'simple-todo/archived01/list-ref-key/v1';
 
 /** @param {Uint8Array} bytes */
 const hex = (bytes) => `0x${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
@@ -36,6 +38,7 @@ const hex = (bytes) => `0x${Array.from(bytes, (b) => b.toString(16).padStart(2, 
  * @property {string} address - the archive account, EIP-55 checksummed (Aleph keys accounts by it)
  * @property {(message: string) => Promise<string>} sign - `personal_sign` of a text, 0x-hex
  * @property {CryptoKey} aesKey - the backup key, AES-GCM, non-extractable
+ * @property {CryptoKey} refKey - HMAC-SHA-256, non-extractable: names a list's chain at the store ({@link listRefFor})
  */
 
 /**
@@ -66,11 +69,41 @@ export async function deriveArchiveKeys(prfOutput) {
 	}
 	if (!account) throw new Error('could not derive an archive account from the PRF output');
 	const aesKey = await deriveAesKey(prfOutput, BACKUP_KEY_INFO);
+	const refKey = await crypto.subtle.importKey(
+		'raw',
+		/** @type {BufferSource} */ (await deriveSubkey(prfOutput, LIST_REF_KEY_INFO, { length: 32 })),
+		{ name: 'HMAC', hash: 'SHA-256' },
+		false,
+		['sign']
+	);
 	return {
 		address: account.address,
 		sign: (message) => account.signMessage({ message }),
-		aesKey
+		aesKey,
+		refKey
 	};
+}
+
+/**
+ * The name one list's chain goes under at the store: Aleph's `ref` on every
+ * STORE, the first segment of every blob name elsewhere.
+ *
+ * An account archives several lists (the words name a list per DID, and the
+ * address changed once already), and each chain numbers from 1, so a listing
+ * of the whole account mixes them. The store needs a label that tells chains
+ * apart and nothing more: an HMAC of the address under a key from the
+ * passkey, so the same passkey finds the same chain on every device while the
+ * store learns neither the address nor whether two accounts share a list.
+ *
+ * @param {CryptoKey} refKey
+ * @param {string} address - the OrbitDB address
+ * @returns {Promise<string>} 32 hex characters
+ */
+export async function listRefFor(refKey, address) {
+	const mac = new Uint8Array(
+		await crypto.subtle.sign('HMAC', refKey, new TextEncoder().encode(String(address)))
+	);
+	return Array.from(mac.subarray(0, 16), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 /**
