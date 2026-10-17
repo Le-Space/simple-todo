@@ -224,6 +224,13 @@ export async function initializeDatabase(orbitdb, todoDB, meta = {}) {
 		name: meta.name ?? todoDB?.name ?? ''
 	});
 
+	// A list of one's own is made at the start too, not only through
+	// `createPrivateTodoList`, and it needs the relay just as much: nobody can
+	// open a list the relay was never told about.
+	if ((meta.kind ?? 'shared') === 'private') {
+		void tellRelayAboutList(getDatabaseAddress(todoDB));
+	}
+
 	// OrbitDB's non-indexed keyvalue.all() traverses the complete append-only
 	// history. Hydrate the UI in the background instead of blocking app startup.
 	setupDatabaseListeners(todoDB);
