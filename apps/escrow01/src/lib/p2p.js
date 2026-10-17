@@ -26,6 +26,7 @@ import * as json from 'multiformats/codecs/json';
 import { sha512 } from 'multiformats/hashes/sha2';
 import { multiaddr } from '@multiformats/multiaddr';
 import { createLibp2pConfig } from '@simple-todo/net/libp2p-config.js';
+import { withoutStaleIdentityCache } from '@simple-todo/todo/stale-identity-cache.js';
 import { createMemoryIdentities } from '@simple-todo/todo/memory-identities.js';
 import { seedRestoredSigningKey } from '@simple-todo/todo/restored-signing-key.js';
 import { forgetByPrefix, recall, remember } from '@simple-todo/todo/browser-memory.js';
@@ -380,9 +381,15 @@ async function createOrbitDBInstance(heliaNode) {
 	// signature -- still points at the same place after a reload. In memory mode
 	// the key goes with the tab, and with PRF the passkey derives the same one
 	// again anyway (#9).
-	const identities = getPersistentStorageEnabled()
-		? await Identities({ ipfs: heliaNode })
-		: await createMemoryIdentities(heliaNode);
+	// Wrapped: OrbitDB's identity cache refuses another session of the same
+	// passkey (stale-identity-cache.js) — entries of an earlier session arrive,
+	// and this session can no longer write.
+	const identities = withoutStaleIdentityCache(
+		getPersistentStorageEnabled()
+			? await Identities({ ipfs: heliaNode })
+			: await createMemoryIdentities(heliaNode),
+		OrbitDBWebAuthnIdentityProviderFunction
+	);
 	// A passkey restored on this device brought its signing key along; in the
 	// keystore before the provider looks, it spares the passkey a touch that
 	// would only read the PRF output the restore already read.
