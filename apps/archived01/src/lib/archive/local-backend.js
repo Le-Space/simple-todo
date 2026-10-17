@@ -1,5 +1,6 @@
-// A storage backend that keeps the increments in this browser's localStorage
-// (archived01).
+// A storage backend that keeps the increments in this browser (archived01),
+// as far as the storage choice allows: through `remember`/`recall`, so a
+// device that asked to keep nothing keeps no ciphertext either.
 //
 // It archives nothing anywhere: the point of the chapter is a copy *outside*
 // the device. It exists so the mechanism can be watched without an account —
@@ -12,6 +13,7 @@
 
 import { defineBackend, BackendError } from '@le-space/orbitdb-storage-bridge/backends/types';
 import { CID } from 'multiformats/cid';
+import { recall, remember, forget } from '@simple-todo/todo/browser-memory.js';
 import { sha256 } from 'multiformats/hashes/sha2';
 import * as raw from 'multiformats/codecs/raw';
 
@@ -33,7 +35,7 @@ const fromBase64 = (text) => Uint8Array.from(atob(text), (c) => c.charCodeAt(0))
 /** @returns {{ id: string, name?: string, size: number, time: number }[]} */
 function readIndex() {
 	try {
-		const parsed = JSON.parse(localStorage.getItem(INDEX_KEY) ?? '[]');
+		const parsed = JSON.parse(recall(INDEX_KEY) ?? '[]');
 		return Array.isArray(parsed) ? parsed : [];
 	} catch {
 		return [];
@@ -42,13 +44,13 @@ function readIndex() {
 
 /** @param {{ id: string, name?: string, size: number, time: number }[]} index */
 function writeIndex(index) {
-	localStorage.setItem(INDEX_KEY, JSON.stringify(index));
+	remember(INDEX_KEY, JSON.stringify(index));
 }
 
 /** Forget every increment kept here. */
 export function clearLocalArchive() {
-	for (const { id } of readIndex()) localStorage.removeItem(BLOB_KEY + id);
-	localStorage.removeItem(INDEX_KEY);
+	for (const { id } of readIndex()) forget(BLOB_KEY + id);
+	forget(INDEX_KEY);
 }
 
 export function createLocalBackend() {
@@ -71,7 +73,7 @@ export function createLocalBackend() {
 		 */
 		async putBlob(bytes, meta = {}) {
 			const id = CID.create(1, raw.code, await sha256.digest(bytes)).toString();
-			localStorage.setItem(BLOB_KEY + id, toBase64(bytes));
+			remember(BLOB_KEY + id, toBase64(bytes));
 			const index = readIndex().filter((entry) => entry.id !== id);
 			index.push({
 				id,
@@ -92,7 +94,7 @@ export function createLocalBackend() {
 		/** @param {{ id: string } | string} handle */
 		async getBlob(handle) {
 			const id = typeof handle === 'string' ? handle : handle.id;
-			const stored = localStorage.getItem(BLOB_KEY + id);
+			const stored = recall(BLOB_KEY + id);
 			if (!stored) throw new BackendError('NOT_FOUND', `No blob for ${id}`);
 			return fromBase64(stored);
 		},
@@ -107,7 +109,7 @@ export function createLocalBackend() {
 		/** @param {{ id: string } | string} handle */
 		async remove(handle) {
 			const id = typeof handle === 'string' ? handle : handle.id;
-			localStorage.removeItem(BLOB_KEY + id);
+			forget(BLOB_KEY + id);
 			writeIndex(readIndex().filter((entry) => entry.id !== id));
 		}
 	});

@@ -15,7 +15,8 @@
 		setBackendSecret,
 		hasBackendSecret,
 		refreshCredits,
-		recoverFromArchive
+		recoverFromArchive,
+		deleteArchive
 	} from '$lib/archive/archive.js';
 
 	/** The passkey behind the identity; without one there is no archive. */
@@ -55,6 +56,12 @@
 	const onList = () => run(() => listArchive());
 	const onRestore = () => run(() => restoreArchive());
 	const onRecover = () => run(() => recoverFromArchive({ credential }));
+	let confirmDelete = false;
+	const onDelete = () =>
+		run(async () => {
+			confirmDelete = false;
+			await deleteArchive();
+		});
 	const onSecret = () =>
 		run(async () => {
 			await setBackendSecret(kind, secret);
@@ -311,7 +318,50 @@
 					disabled={!canAct || !secretStored}
 					data-testid="archive-restore">{$_('archive.restore')}</button
 				>
+				<button
+					type="button"
+					class="rounded-md border border-danger/40 px-3 py-1.5 text-sm text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
+					on:click={() => (confirmDelete = true)}
+					disabled={!canAct || !secretStored || confirmDelete}
+					data-testid="archive-delete">{$_('archive.delete')}</button
+				>
 			</div>
+
+			{#if confirmDelete}
+				<div
+					class="mb-3 rounded-md border border-danger/40 bg-danger/10 p-3 text-sm"
+					role="alertdialog"
+					data-testid="archive-delete-confirm"
+				>
+					<p>{$_(`archive.deleteConfirm.${kind}`)}</p>
+					<p class="mt-1 text-xs text-faint">{$_('archive.deleteNote')}</p>
+					<div class="mt-2 flex gap-2">
+						<button
+							type="button"
+							class="rounded-md bg-danger px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
+							on:click={onDelete}
+							data-testid="archive-delete-yes">{$_('archive.deleteYes')}</button
+						>
+						<button
+							type="button"
+							class="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-surface-2"
+							on:click={() => (confirmDelete = false)}
+							data-testid="archive-delete-no">{$_('archive.deleteNo')}</button
+						>
+					</div>
+				</div>
+			{/if}
+
+			{#if $archiveStore.deleted}
+				<p class="mb-2 text-sm" data-testid="archive-deleted">
+					{$_('archive.deletedSummary', {
+						values: {
+							forgotten: $archiveStore.deleted.forgotten,
+							rejected: $archiveStore.deleted.rejected
+						}
+					})}
+				</p>
+			{/if}
 
 			{#if $archiveStore.increments}
 				<ul class="mb-3 space-y-1 text-xs" data-testid="archive-increments">

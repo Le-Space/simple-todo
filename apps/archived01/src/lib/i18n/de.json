@@ -97,7 +97,7 @@
 		"p2pOnLabel": "An",
 		"p2pOnHint": "Dieser Browser verbindet sich mit einem Relay und anderen Geräten, und die Liste repliziert zwischen ihnen.",
 		"p2pOffLabel": "Aus",
-		"p2pOffHint": "Kein Relay, keine anderen Geräte, nichts verlässt diesen Browser. Die Liste lebt nur hier und im Archiv; so sieht man, was eine Wiederherstellung allein zurückbringt."
+		"p2pOffHint": "Kein Relay, keine anderen Geräte: Die Liste repliziert nicht. Das Archiv spricht weiter mit seinem Speicher (Upload, STORE, Guthaben); sonst verlässt nichts den Browser. So sieht man, was eine Wiederherstellung allein zurückbringt."
 	},
 	"archive": {
 		"title": "Archiv",
@@ -165,11 +165,23 @@
 			"joining": "Einträge werden übernommen …",
 			"collecting": "Änderungen werden eingesammelt und versiegelt …",
 			"uploading": "Inkrement wird hochgeladen …",
-			"keeping": "Speicher wird gebeten, es zu halten …"
+			"keeping": "Speicher wird gebeten, es zu halten …",
+			"deleting": "Inkremente werden gelöscht: {done} von {total}"
 		},
 		"restoredOpened": "Das Archiv hielt eine andere Liste als die geöffnete; sie wurde unter ihrer eigenen Adresse geöffnet und ist jetzt die aktive Liste:",
 		"restoredCopied": "{count} Einträge aus einer früheren Liste übernommen; sie sind jetzt von dieser Identität geschrieben.",
-		"memoryHint": "Speichermodus „nur im Arbeitsspeicher“: Der Browser merkt sich Archiv-Einstellung und Zählung nicht; nach dem Neuladen muss das Archiv wieder eingeschaltet werden, die Zählung holt es sich aus dem Speicher."
+		"memoryHint": "Speichermodus „nur im Arbeitsspeicher“: Der Browser merkt sich Archiv-Einstellung und Zählung nicht; nach dem Neuladen muss das Archiv wieder eingeschaltet werden, die Zählung holt es sich aus dem Speicher.",
+		"delete": "Archiv löschen",
+		"deleteConfirm": {
+			"aleph": "Alle Inkremente dieses Kontos auf dem Kanal werden bei Aleph vergessen (FORGET, signiert vom Archivkonto). Die Dateien verschwinden von den Knoten und kosten keine Credits mehr. Das lässt sich nicht rückgängig machen.",
+			"pinata": "Alle Inkremente dieses Archivs werden bei Pinata gelöscht. Das lässt sich nicht rückgängig machen.",
+			"lighthouse": "Alle Inkremente dieses Archivs werden bei Lighthouse gelöscht. Das lässt sich nicht rückgängig machen.",
+			"local": "Alle Inkremente in diesem Browser werden gelöscht."
+		},
+		"deleteNote": "Die Liste selbst bleibt. Der Watcher fängt danach von vorn an: Das nächste Inkrement trägt wieder die ganze Liste.",
+		"deleteYes": "Ja, Archiv löschen",
+		"deleteNo": "Abbrechen",
+		"deletedSummary": "{forgotten} Inkremente gelöscht, {rejected} abgelehnt."
 	},
 	"passkeySteps": {
 		"count": "Passkey-Abfrage {n} von {of}",

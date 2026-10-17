@@ -50,7 +50,8 @@ export const EVERY_MS = 30_000;
 const SETTINGS_KEY = 'simpleTodo.archive';
 const stateKey = (/** @type {string} */ kind, /** @type {string} */ address) =>
 	`simpleTodo.archive.state.${kind}.${address}`;
-const secretKey = (/** @type {string} */ kind) => `simpleTodo.archive.secret.${kind}`;
+const secretKey = (/** @type {string} */ kind, /** @type {string} */ address) =>
+	`simpleTodo.archive.secret.${kind}.${address}`;
 
 /**
  * @typedef {object} ArchiveSettings
@@ -101,9 +102,10 @@ function saveArchiveSettings(patch) {
  * @property {string | null} lastError
  * @property {number} failures
  * @property {{ id: string, name?: string, size?: number, time?: number, sequence?: number, entries?: number }[] | null} increments - the last listing
- * @property {'' | 'unlocking' | 'shipping' | 'listing' | 'restoring'} busy
+ * @property {'' | 'unlocking' | 'shipping' | 'listing' | 'restoring' | 'deleting'} busy
+ * @property {{ forgotten: number, rejected: number } | null} deleted - what the last deletion did
  * @property {{ joined: number, heads: number, increments: number, skipped: number, copied?: number } | null} restored - `copied`: todos taken over from archived lists other than the open one
- * @property {{ stage: 'listing' | 'downloading' | 'joining' | 'collecting' | 'uploading' | 'keeping', done: number, total: number } | null} progress - what a restore or a backup is doing now; `total` 0 when no share makes sense
+ * @property {{ stage: 'listing' | 'downloading' | 'joining' | 'collecting' | 'uploading' | 'keeping' | 'deleting', done: number, total: number } | null} progress - what a restore or a backup is doing now; `total` 0 when no share makes sense
  * @property {{ credits: number, hourly: number | null, mib: number | null, days: number | null, at: number } | null} credits - the archive account on Aleph: balance, last full hour's expense, and how long the balance lasts at that rate
  */
 
@@ -125,7 +127,8 @@ export const archiveStore = writable({
 	busy: '',
 	restored: null,
 	credits: null,
-	progress: null
+	progress: null,
+	deleted: null
 });
 
 /** @param {Partial<ArchiveStatus>} patch */
@@ -168,8 +171,9 @@ export async function unlockArchive({ credential, prfOutput = null }) {
 	patch({ busy: 'unlocking', lastError: null });
 	try {
 		const prf = prfOutput ?? rememberedPrf ?? (await readPrfOutput(credential));
-		rememberedPrf = prf;
 		keys = await deriveArchiveKeys(prf);
+		// Derived; the secret itself has no further use in this tab.
+		rememberedPrf = null;
 		saveArchiveSettings({ address: keys.address });
 		patch({ unlocked: true, address: keys.address });
 		void refreshCredits();
@@ -187,7 +191,8 @@ export async function unlockArchive({ credential, prfOutput = null }) {
 
 /** Is a service key needed, and is one stored, for this kind of store? */
 export function hasBackendSecret(/** @type {BackendKind} */ kind) {
-	return kind !== 'aleph' && kind !== 'local' ? Boolean(recall(secretKey(kind))) : true;
+	const address = get(archiveStore).address ?? '';
+	return kind !== 'aleph' && kind !== 'local' ? Boolean(recall(secretKey(kind, address))) : true;
 }
 
 /**
@@ -199,16 +204,16 @@ export function hasBackendSecret(/** @type {BackendKind} */ kind) {
 export async function setBackendSecret(kind, secret) {
 	if (!keys) throw new Error('unlock the archive first');
 	if (!secret.trim()) {
-		forget(secretKey(kind));
+		forget(secretKey(kind, keys.address));
 		return;
 	}
-	remember(secretKey(kind), await sealText(keys.aesKey, secret.trim()));
+	remember(secretKey(kind, keys.address), await sealText(keys.aesKey, secret.trim()));
 }
 
 /** @param {BackendKind} kind */
 async function backendSecret(kind) {
 	if (!keys) throw new Error('unlock the archive first');
-	const sealed = recall(secretKey(kind));
+	const sealed = recall(secretKey(kind, keys.address));
 	if (!sealed) throw new Error(`no key stored for ${kind}`);
 	return openText(keys.aesKey, sealed);
 }
@@ -283,11 +288,19 @@ async function stateFromStore(address) {
 	}
 }
 
+/**
+ * A todo as this app writes it; anything else from an archived list is left
+ * where it is rather than copied into the open one.
+ * @param {unknown} value
+ */
+function looksLikeTodo(value) {
+	if (!value || typeof value !== 'object') return false;
+	const v = /** @type {Record<string, unknown>} */ (value);
+	return typeof v.text === 'string' && typeof v.completed === 'boolean';
+}
+
 /** The name every increment goes up under; the listing filters by it. */
 const NAME_PREFIX = 'archived01-';
-
-/** @param {string} address */
-const short = (address) => address.split('/').pop()?.slice(-8) ?? 'db';
 
 function refresh() {
 	if (!live) return;
@@ -321,6 +334,20 @@ export async function startArchive() {
 		backend,
 		after: 1,
 		settle: SETTLE_MS,
+		// Aleph says "pending" first and may refuse later — no credit, no grant.
+		// The increment counts as shipped only once the STORE is processed; a
+		// refusal fails the flush, and the next one ships it all again.
+		confirm:
+			kind === 'aleph'
+				? async (/** @type {any} */ kept) => {
+						if (kept?.status !== 'pending' || !kept.itemHash) return kept;
+						const { waitForMessage } = await import(
+							'@le-space/orbitdb-storage-bridge/backends/aleph-pin'
+						);
+						const final = await waitForMessage(kept.itemHash, { timeout: 60_000, interval: 2_000 });
+						return { ...kept, ...final, retained: final.status === 'processed' };
+					}
+				: undefined,
 		every: EVERY_MS,
 		state: {
 			// Remembered where the storage choice allows; otherwise, or on a
@@ -330,7 +357,8 @@ export async function startArchive() {
 			save: async (/** @type {unknown} */ state) => remember(key, JSON.stringify(state))
 		},
 		name: (/** @type {number} */ sequence, /** @type {Date} */ at) =>
-			`${NAME_PREFIX}${short(address)}-${String(sequence).padStart(6, '0')}-${at.toISOString().replace(/[:.]/g, '-')}.car`,
+			// Opaque: the service sees a sequence number, not the list or the time.
+			`${NAME_PREFIX}${String(sequence).padStart(6, '0')}-${at.getTime().toString(36).slice(-4)}.car`,
 		onShipped: (/** @type {any} */ shipped) => {
 			patch({
 				lastShipped: {
@@ -430,7 +458,21 @@ export async function listArchive() {
 			const { listAlephStores } = await import(
 				'@le-space/orbitdb-storage-bridge/backends/aleph-pin'
 			);
-			const { stores } = await listAlephStores({ owner: keys.address, channel: ALEPH_CHANNEL });
+			// Every page: the API cuts at 50 by default, and a chain of increments is
+			// longer than that after a few sessions. The oldest entries live there.
+			/** @type {any[]} */
+			const stores = [];
+			for (let page = 1; ; page++) {
+				const { stores: some, total } = await listAlephStores({
+					owner: keys.address,
+					channel: ALEPH_CHANNEL,
+					pagination: 100,
+					page
+				});
+				stores.push(...some);
+				if (some.length === 0 || (total != null && stores.length >= total)) break;
+				if (total == null && some.length < 100) break;
+			}
 			items = stores.map((s) => ({ id: s.cid, time: s.time * 1000 }));
 		} else {
 			const b = backend ?? (await buildBackend(kind));
@@ -532,8 +574,19 @@ export async function restoreArchive() {
 					restored.databases.find((/** @type {any} */ d) => String(d.address) === address)
 				)?.database;
 				if (!other) continue;
+				// Only a list this identity may write — the archive is sealed, but a
+				// store that could forge a sealed blob must not be able to put words
+				// into the owner's mouth: what is copied is written anew by this DID.
+				const writers = /** @type {string[]} */ (other.access?.write ?? []);
+				const mine = writers.includes('*') || writers.includes(String(orbitdb.identity?.id));
+				if (!mine) {
+					console.warn(`archive: not copying from ${address}: this identity may not write there`);
+					await other.close();
+					continue;
+				}
 				for (const { key, value } of await other.all()) {
 					if ((await db.get(key)) !== undefined) continue;
+					if (!looksLikeTodo(value)) continue;
 					await db.put(key, value);
 					copied++;
 				}
@@ -631,6 +684,85 @@ export async function refreshCredits({ shippedBytes = 0 } = {}) {
 	} catch (error) {
 		console.warn('archive: could not read credits', error);
 		return null;
+	}
+}
+
+/**
+ * Delete the whole archive at the store: every increment this account keeps
+ * there. On Aleph a signed FORGET per batch, which the archive account sends
+ * for itself — it is the owner, no wallet needed; elsewhere the service's
+ * own `remove` per blob. Afterwards the watcher starts from nothing, so the
+ * next increment carries the whole list again: deleting the archive is not
+ * deleting the list.
+ *
+ * Increments never go away by themselves, and each costs by the hour; this is
+ * the way to stop paying for a chain nobody will restore from.
+ *
+ * @returns {Promise<{ forgotten: number, rejected: number }>}
+ */
+export async function deleteArchive() {
+	if (!keys) throw new Error('unlock the archive first');
+	const kind = get(archiveStore).backend;
+	patch({
+		busy: 'deleting',
+		lastError: null,
+		deleted: null,
+		progress: { stage: 'deleting', done: 0, total: 0 }
+	});
+	try {
+		await stopArchive();
+		let forgotten = 0;
+		let rejected = 0;
+		if (kind === 'aleph') {
+			const { createAlephForget, forgetAlephStores } = await import(
+				'@le-space/orbitdb-storage-bridge/backends/aleph-pin'
+			);
+			const { address, sign } = keys;
+			const result = await forgetAlephStores({
+				owner: address,
+				channel: ALEPH_CHANNEL,
+				forget: createAlephForget({
+					sender: address,
+					sign: (_address, text) => sign(text),
+					channel: ALEPH_CHANNEL
+				}),
+				reason: 'archive deleted by its owner (simple-todo archived01)',
+				onProgress: (/** @type {{ done: number, total: number }} */ p) =>
+					patch({ progress: { stage: 'deleting', done: p.done, total: p.total } })
+			});
+			forgotten = result.forgotten.length;
+			rejected = result.rejected.length;
+		} else {
+			const b = backend ?? (await buildBackend(kind));
+			const items = typeof b.list === 'function' ? await b.list() : [];
+			const mine = items.filter(
+				(/** @type {any} */ h) => !h.name || String(h.name).startsWith(NAME_PREFIX)
+			);
+			for (const [index, item] of mine.entries()) {
+				try {
+					if (typeof b.remove !== 'function') throw new Error(`${kind} cannot delete`);
+					await b.remove(item);
+					forgotten++;
+				} catch (error) {
+					console.warn(`archive: could not delete ${item.id}: ${message(error)}`);
+					rejected++;
+				}
+				patch({ progress: { stage: 'deleting', done: index + 1, total: mine.length } });
+			}
+		}
+		// The watcher's memory of what was shipped is memory of what is gone.
+		const db = get(todoDBStore);
+		if (db) forget(stateKey(kind, String(db.address)));
+		const deleted = { forgotten, rejected };
+		patch({ deleted, increments: [], restored: null, sequence: 0, lastShipped: null });
+		if (get(archiveStore).enabled) await startArchive();
+		void refreshCredits();
+		return deleted;
+	} catch (error) {
+		patch({ lastError: message(error) });
+		throw error;
+	} finally {
+		patch({ busy: '', progress: null });
 	}
 }
 
