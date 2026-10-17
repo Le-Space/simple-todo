@@ -26,11 +26,11 @@
 			"orbitdb-relay>@orbitdb/core": "4.0.0",
 			"react": "19.2.6",
 			"react-dom": "19.2.6",
-			"@simple-todo/archived01>@le-space/orbitdb-identity-provider-webauthn-did": "0.10.0"
+			"@simple-todo/archived01>@le-space/orbitdb-identity-provider-webauthn-did": "0.11.0"
 		},
 		"peerDependencyRules": {
 			"allowedVersions": {
-				"@le-space/orbitdb-access-controller-delegated-todo>@le-space/orbitdb-identity-provider-webauthn-did": "0.5.4 || 0.7.0 || 0.8.0 || 0.10.0",
+				"@le-space/orbitdb-access-controller-delegated-todo>@le-space/orbitdb-identity-provider-webauthn-did": "0.5.4 || 0.7.0 || 0.8.0 || 0.10.0 || 0.11.0",
 				"@le-space/passkey-wallet>@le-space/orbitdb-identity-provider-webauthn-did": "0.8.0",
 				"@le-space/orbitdb-access-controller-delegated-todo>@orbitdb/core": "4.0.0"
 			}

@@ -18,8 +18,12 @@
 // unblocked the restore); upstream orbitdb/orbitdb#1258. Where OrbitDB says
 // no, an identity of the given provider is checked again the way an uncached
 // one would be: the shape, the id signature over the public key, and the
-// provider's own binding. Shared by every chapter that builds identities for
-// a passkey; remove once OrbitDB keys its cache by identity hash.
+// provider's own binding.
+//
+// Since provider 0.11.0 this lives in the provider itself
+// (`withoutStaleIdentityCache`, `createIdentities`; Le-Space/orbitdb-identity-
+// provider-webauthn-did#90). archived01 imports it from there; this copy stays
+// for the chapters still on an older provider, and goes when they move.
 
 import { isIdentity } from '@orbitdb/core';
 

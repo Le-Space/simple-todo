@@ -11,7 +11,10 @@ import {
 	Identities,
 	useIdentityProvider
 } from '@orbitdb/core';
-import { OrbitDBWebAuthnIdentityProviderFunction } from '@le-space/orbitdb-identity-provider-webauthn-did';
+import {
+	OrbitDBWebAuthnIdentityProviderFunction,
+	withoutStaleIdentityCache
+} from '@le-space/orbitdb-identity-provider-webauthn-did';
 import * as dagCbor from '@ipld/dag-cbor';
 import * as dagJson from '@ipld/dag-json';
 import * as json from 'multiformats/codecs/json';
@@ -19,7 +22,6 @@ import { sha512 } from 'multiformats/hashes/sha2';
 import { multiaddr } from '@multiformats/multiaddr';
 import { createLibp2pConfig } from '@simple-todo/net/libp2p-config.js';
 import { getP2PEnabled } from '@simple-todo/todo/p2p-mode.js';
-import { withoutStaleIdentityCache } from '@simple-todo/todo/stale-identity-cache.js';
 import { createMemoryIdentities } from '@simple-todo/todo/memory-identities.js';
 import { seedRestoredSigningKey } from '@simple-todo/todo/restored-signing-key.js';
 import { keepLogsWhereTheChoiceSays } from '@simple-todo/todo/keep-logs-in-memory.js';
@@ -464,14 +466,13 @@ async function createOrbitDBInstance(heliaNode) {
 	// signature -- still points at the same place after a reload. In memory mode
 	// the key goes with the tab, and with PRF the passkey derives the same one
 	// again anyway (#9).
-	// Wrapped: OrbitDB's identity cache refuses another session of the same
-	// passkey (stale-identity-cache.js) — a device restoring another device's
-	// archive could no longer write to its own list.
+	// Wrapped by the provider (0.11.0): OrbitDB's identity cache refuses another
+	// session of the same passkey — a device restoring another device's archive
+	// could no longer write to its own list (orbitdb/orbitdb#1258).
 	const identities = withoutStaleIdentityCache(
 		getPersistentStorageEnabled()
 			? await Identities({ ipfs: heliaNode })
-			: await createMemoryIdentities(heliaNode),
-		OrbitDBWebAuthnIdentityProviderFunction
+			: await createMemoryIdentities(heliaNode)
 	);
 	// A passkey restored on this device brought its signing key along; in the
 	// keystore before the provider looks, it spares the passkey a touch that

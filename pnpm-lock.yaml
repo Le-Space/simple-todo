@@ -12,7 +12,7 @@ overrides:
   orbitdb-relay>@orbitdb/core: 4.0.0
   react: 19.2.6
   react-dom: 19.2.6
-  '@simple-todo/archived01>@le-space/orbitdb-identity-provider-webauthn-did': 0.10.0
+  '@simple-todo/archived01>@le-space/orbitdb-identity-provider-webauthn-did': 0.11.0
 
 importers:
 
@@ -287,8 +287,8 @@ importers:
         specifier: 0.13.1
         version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.10.0
-        version: 0.10.0(@orbitdb/core@4.0.0)
+        specifier: 0.11.0
+        version: 0.11.0(@orbitdb/core@4.0.0)
       '@le-space/orbitdb-storage-bridge':
         specifier: 0.20.0
         version: 0.20.0(encoding@0.1.13)(lucide-svelte@0.539.0(svelte@5.37.2))(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))(svelte@5.37.2)
@@ -3512,8 +3512,8 @@ packages:
       '@le-space/orbitdb-identity-provider-webauthn-did': 0.7.0
       '@orbitdb/core': ^3.0.0
 
-  '@le-space/orbitdb-identity-provider-webauthn-did@0.10.0':
-    resolution: {integrity: sha512-bnAILNvBp1yjTuFtfqSUtnRHLP4TszXUEdYXCqCmMDP8JHZ9rofkK6V1tuFUZ0XAlqBE5h83OZClCRa1GR016w==}
+  '@le-space/orbitdb-identity-provider-webauthn-did@0.11.0':
+    resolution: {integrity: sha512-yUX8HWUoCTVfPLvXNEY+wP/sIQxdsZjJOoQPU4wV/9BLa+MzE71vjX0Vn7KDe4LAFm2szlVAMyWNQSgKtAyw2g==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@orbitdb/core': ^4.0.0
@@ -9763,13 +9763,13 @@ snapshots:
       '@le-space/orbitdb-identity-provider-webauthn-did': 0.8.0(@orbitdb/core@4.0.0)
       '@orbitdb/core': 4.0.0
 
-  '@le-space/orbitdb-identity-provider-webauthn-did@0.10.0(@orbitdb/core@4.0.0)':
+  '@le-space/orbitdb-identity-provider-webauthn-did@0.11.0(@orbitdb/core@4.0.0)':
     dependencies:
       '@ipld/dag-cbor': 10.0.1
       '@ipld/dag-ucan': 3.4.5
       '@le-space/ucanto-principal': 9.1.2
-      '@libp2p/crypto': 5.1.21
-      '@libp2p/logger': 6.2.11
+      '@libp2p/crypto': 5.1.24
+      '@libp2p/logger': 6.2.14
       '@orbitdb/core': 4.0.0
       '@simplewebauthn/browser': 13.3.0
       cbor-web: 9.0.2
