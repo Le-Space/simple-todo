@@ -121,6 +121,16 @@ the list back with the same passkey.
   size and the moment it arrived (a few seconds after a write), and the
   balance reads name the address. The blob names carry a sequence number and
   nothing else. With the network off, the archive still talks to its store.
+- **Another device's session is still you.** OrbitDB remembers a verified
+  identity under its id signature and, on a hit, compares the whole identity;
+  with a passkey the id signature is the same in every session while the
+  WebAuthn proof is new per session, so after joining a laptop's archive the
+  laptop's session sits in the cache and the phone's own writes are refused
+  ("not allowed to write to the log", 2026-10-17). `stale-identity-cache.js`
+  (from belege#259, upstream orbitdb/orbitdb#1258) re-checks a refused webauthn
+  identity the way an uncached one would be. The archive test restores as a
+  new session on purpose and writes a todo afterwards; without the workaround
+  that write is refused.
 - **What a restore copies.** Todos of other archived lists are copied into the
   open list only when this identity may write to that list (its access
   controller names this DID or everyone), and only values shaped like a todo;

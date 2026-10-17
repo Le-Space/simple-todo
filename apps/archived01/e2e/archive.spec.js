@@ -67,6 +67,15 @@ test.describe('Archive increments', () => {
 				origin: new URL(page.url()).origin,
 				storageTypes: 'indexeddb'
 			});
+			// And the provider's remembered identity proof, so the restored identity
+			// comes back with a fresh WebAuthn assertion — a *different session* of
+			// the same passkey, as another device would be. OrbitDB's identity
+			// cache then refuses it after the join (stale-identity-cache.js).
+			await page.evaluate(() => {
+				for (const key of Object.keys(localStorage)) {
+					if (key.startsWith('webauthn-identity-proof:')) localStorage.removeItem(key);
+				}
+			});
 			await page.reload();
 			// The network off for the second half: with the relay reachable, a wiped
 			// browser could get its list back by replication, and nobody would know
@@ -91,16 +100,24 @@ test.describe('Archive increments', () => {
 			for (const todo of todos) {
 				await expect(page.getByText(todo, { exact: true })).toBeVisible({ timeout: readyTimeout });
 			}
-			// Nothing that came back is sent out again.
+			// The restored list is still this passkey's: it takes a new todo (a Fold
+			// restoring a laptop's archive was refused with "not allowed to write to
+			// the log", 2026-10-17).
+			await addTodo(page, `after-restore-${runId}`);
+			await expect(page.getByText(/Failed to add todo/)).toHaveCount(0);
+			// Nothing that came back is sent out again, and the new todo goes out.
+			await expect(panel.getByTestId('archive-sequence')).toHaveText('3', {
+				timeout: readyTimeout
+			});
 			await expect(panel.getByTestId('archive-pending')).toHaveText('0');
 			await panel.getByTestId('archive-flush').click();
-			await expect(panel.getByTestId('archive-sequence')).toHaveText('2');
+			await expect(panel.getByTestId('archive-sequence')).toHaveText('3');
 
 			// Deleting the archive asks first, then empties the store; the list
 			// stays, and the chain starts again from the whole list.
 			await panel.getByTestId('archive-delete').click();
 			await panel.getByTestId('archive-delete-yes').click();
-			await expect(panel.getByTestId('archive-deleted')).toContainText('2 increments deleted', {
+			await expect(panel.getByTestId('archive-deleted')).toContainText('3 increments deleted', {
 				timeout: readyTimeout
 			});
 			for (const todo of todos) await expect(page.getByText(todo, { exact: true })).toBeVisible();
