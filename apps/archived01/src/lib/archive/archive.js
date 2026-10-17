@@ -34,6 +34,17 @@ import { deriveArchiveKeys, sealer, sealText, openText } from './keys.js';
 import { createLocalBackend } from './local-backend.js';
 import { todoDBStore, orbitdbStore, loadTodos } from '../db-actions.js';
 import { recall, remember, forget } from '@simple-todo/todo/browser-memory.js';
+import {
+	authorizationEntry,
+	deleteCommand,
+	findAuthorization,
+	mergeAuthorizations,
+	normalizeOwner,
+	readAuthorizations,
+	verifyCommand,
+	withoutAuthorization,
+	writeAuthorizationsCommand
+} from './delegation.js';
 
 /** The stores an archive can go to. */
 export const BACKEND_KINDS = /** @type {const} */ (['aleph', 'pinata', 'lighthouse', 'local']);
@@ -57,7 +68,9 @@ const secretKey = (/** @type {string} */ kind, /** @type {string} */ address) =>
  * @typedef {object} ArchiveSettings
  * @property {boolean} enabled - the archive starts with the list, after the passkey
  * @property {BackendKind} backend
- * @property {string | null} address - the archive account, public
+ * @property {string | null} address - the archive key's address, public
+ * @property {string | null} owner - on Aleph: the account that pays and is billed, when it is not the archive key itself (see delegation.js)
+ * @property {boolean} ownerForget - the grant asked of the owner includes FORGET, so the archive can be deleted from here
  */
 
 /** @returns {ArchiveSettings} */
@@ -68,13 +81,15 @@ export function readArchiveSettings() {
 			return {
 				enabled: parsed.enabled === true,
 				backend: BACKEND_KINDS.includes(parsed.backend) ? parsed.backend : 'aleph',
-				address: typeof parsed.address === 'string' ? parsed.address : null
+				address: typeof parsed.address === 'string' ? parsed.address : null,
+				owner: typeof parsed.owner === 'string' ? parsed.owner : null,
+				ownerForget: parsed.ownerForget === true
 			};
 		}
 	} catch {
 		// No storage, or something that is not ours: the defaults.
 	}
-	return { enabled: false, backend: 'aleph', address: null };
+	return { enabled: false, backend: 'aleph', address: null, owner: null, ownerForget: false };
 }
 
 /** @param {Partial<ArchiveSettings>} patch */
@@ -85,7 +100,13 @@ function saveArchiveSettings(patch) {
 	} catch {
 		// The choice holds for this session and no longer.
 	}
-	archiveStore.update((s) => ({ ...s, enabled: next.enabled, backend: next.backend }));
+	archiveStore.update((s) => ({
+		...s,
+		enabled: next.enabled,
+		backend: next.backend,
+		owner: next.owner,
+		ownerForget: next.ownerForget
+	}));
 	return next;
 }
 
@@ -95,7 +116,10 @@ function saveArchiveSettings(patch) {
  * @property {BackendKind} backend
  * @property {boolean} unlocked - the keys are in memory
  * @property {boolean} running - the watcher is on
- * @property {string | null} address - the archive account
+ * @property {string | null} address - the archive key: it signs, and pays unless `owner` is set
+ * @property {string | null} owner - the Aleph account that pays instead, never in this browser
+ * @property {boolean} ownerForget - the grant asked of the owner includes FORGET
+ * @property {{ at: number, exists: boolean, store: boolean, forget: boolean, authorizations: import('./delegation.js').Authorization[] } | null} authorization - what the owner's `security` aggregate grants the archive key, as last read; null until read
  * @property {number} sequence - of the last increment shipped
  * @property {number} pending - updates not yet shipped
  * @property {{ sequence: number, at: Date, bytes: number, entries: number, id: string, kept: boolean } | null} lastShipped
@@ -118,6 +142,9 @@ export const archiveStore = writable({
 	unlocked: false,
 	running: false,
 	address: initial.address,
+	owner: initial.owner,
+	ownerForget: initial.ownerForget,
+	authorization: null,
 	sequence: 0,
 	pending: 0,
 	lastShipped: null,
@@ -177,6 +204,7 @@ export async function unlockArchive({ credential, prfOutput = null }) {
 		saveArchiveSettings({ address: keys.address });
 		patch({ unlocked: true, address: keys.address });
 		void refreshCredits();
+		if (get(archiveStore).owner) void checkAuthorization();
 		if (get(archiveStore).enabled) await startArchive();
 		return { address: keys.address };
 	} catch (error) {
@@ -219,6 +247,15 @@ async function backendSecret(kind) {
 }
 
 /**
+ * The Aleph account the archive is kept for and billed to: the owner when one
+ * is set, else the archive key itself. Listing, credits and FORGET go by it.
+ */
+function payer() {
+	if (!keys) throw new Error('unlock the archive first');
+	return get(archiveStore).owner ?? keys.address;
+}
+
+/**
  * The store, sealed: whichever driver, behind `withEncryption` with the
  * backup key, so every driver sees ciphertext only.
  *
@@ -235,9 +272,13 @@ async function buildBackend(kind) {
 			import('@le-space/orbitdb-storage-bridge/backends/aleph-pin')
 		]);
 		const { address, sign } = keys;
+		const owner = get(archiveStore).owner;
 		inner = createAlephBackend({
 			pin: createAlephPin({
 				sender: address,
+				// With an owner the STORE is the owner's: Aleph checks the owner's
+				// grant to this key and books the cost to the owner.
+				...(owner ? { owner } : {}),
 				sign: (_address, text) => sign(text),
 				channel: ALEPH_CHANNEL
 			})
@@ -464,7 +505,7 @@ export async function listArchive() {
 			const stores = [];
 			for (let page = 1; ; page++) {
 				const { stores: some, total } = await listAlephStores({
-					owner: keys.address,
+					owner: payer(),
 					channel: ALEPH_CHANNEL,
 					pagination: 100,
 					page
@@ -647,7 +688,9 @@ export const CREDITS_PER_MIB_DAY = 54;
  * @param {{ shippedBytes?: number }} [hint] - bytes kept so far, for the estimate
  */
 export async function refreshCredits({ shippedBytes = 0 } = {}) {
-	const { address, backend: kind } = get(archiveStore);
+	const { address: signer, owner, backend: kind } = get(archiveStore);
+	// The owner pays when there is one; its balance is what lasts.
+	const address = owner ?? signer;
 	if (!address || kind !== 'aleph') return null;
 	try {
 		const [balance, history] = await Promise.all([
@@ -718,11 +761,20 @@ export async function deleteArchive() {
 				'@le-space/orbitdb-storage-bridge/backends/aleph-pin'
 			);
 			const { address, sign } = keys;
+			const owner = get(archiveStore).owner;
+			if (owner) {
+				// A FORGET the owner did not grant is refused by Aleph; say so here,
+				// with the command the owner runs instead, rather than sending a
+				// batch per page that comes back rejected.
+				const granted = (get(archiveStore).authorization ?? (await checkAuthorization()))?.forget;
+				if (!granted) throw new Error('forget-not-granted');
+			}
 			const result = await forgetAlephStores({
-				owner: address,
+				owner: owner ?? address,
 				channel: ALEPH_CHANNEL,
 				forget: createAlephForget({
 					sender: address,
+					...(owner ? { owner } : {}),
 					sign: (_address, text) => sign(text),
 					channel: ALEPH_CHANNEL
 				}),
@@ -764,6 +816,93 @@ export async function deleteArchive() {
 	} finally {
 		patch({ busy: '', progress: null });
 	}
+}
+
+/**
+ * Who pays on Aleph. `null`: the archive key itself, as before. An address:
+ * an owner account outside the browser, which has to grant this key STORE
+ * on the channel first (`authorizationCommands`). The watcher restarts so the
+ * next STORE is the owner's; what was kept under the old payer stays there.
+ *
+ * @param {string | null} text - the owner's address, or null
+ * @param {{ forget?: boolean }} [grant] - ask the owner for FORGET too
+ */
+export async function setArchiveOwner(text, { forget: ownerForget } = {}) {
+	const owner = text == null || String(text).trim() === '' ? null : normalizeOwner(text);
+	const current = readArchiveSettings();
+	saveArchiveSettings({
+		owner,
+		ownerForget: ownerForget ?? current.ownerForget
+	});
+	patch({ increments: null, restored: null, credits: null, authorization: null, deleted: null });
+	if (get(archiveStore).backend === 'aleph') void refreshCredits();
+	if (keys && owner) void checkAuthorization();
+	if (keys && get(archiveStore).enabled) {
+		await stopArchive();
+		await startArchive();
+	}
+	return owner;
+}
+
+/**
+ * Read the owner's permissions from Aleph (public, no key) and say what they
+ * grant the archive key on this channel.
+ */
+export async function checkAuthorization() {
+	if (!keys) throw new Error('unlock the archive first');
+	const owner = get(archiveStore).owner;
+	if (!owner) return null;
+	try {
+		const { exists, authorizations } = await readAuthorizations(owner, { apiHost: ALEPH_API });
+		const found = findAuthorization(authorizations, keys.address, ALEPH_CHANNEL);
+		const authorization = {
+			at: Date.now(),
+			exists,
+			store: found.store,
+			forget: found.forget,
+			authorizations
+		};
+		patch({ authorization });
+		return authorization;
+	} catch (error) {
+		patch({ lastError: message(error) });
+		throw error;
+	}
+}
+
+/**
+ * The commands the owner runs where the owner's key lives — this page never
+ * holds that key. `grant` writes the complete list with this key's entry;
+ * `revoke` the list without it; `verify` reads it back; `remove` forgets the
+ * archive's files when FORGET was not granted.
+ *
+ * @param {{ forget?: boolean }} [wish] - ask for FORGET too; the saved setting by default
+ * @returns {{ grant: string, revoke: string, verify: string, remove: string | null, entry: import('./delegation.js').Authorization } | null}
+ */
+export function authorizationCommands({ forget: wished } = {}) {
+	const { owner, ownerForget, authorization, address, increments } = get(archiveStore);
+	if (!owner || !address) return null;
+	const entry = authorizationEntry({
+		delegate: address,
+		channel: ALEPH_CHANNEL,
+		forget: wished ?? ownerForget
+	});
+	const list = authorization?.authorizations ?? [];
+	const exists = authorization?.exists ?? false;
+	const cids = (increments ?? []).map((item) => item.id);
+	return {
+		entry,
+		grant: writeAuthorizationsCommand({
+			exists,
+			authorizations: mergeAuthorizations(list, entry)
+		}),
+		revoke: writeAuthorizationsCommand({
+			exists: true,
+			authorizations: withoutAuthorization(list, address)
+		}),
+		verify: verifyCommand(owner),
+		remove: cids.length > 0 ? deleteCommand({ cids, channel: ALEPH_CHANNEL }) : null
+	};
 }
 
 /** Forget the keys; the settings stay. */
