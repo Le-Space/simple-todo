@@ -17,15 +17,23 @@
 		"technical": "Technical",
 		"simple": "Simple",
 		"clause": {
-			"noServer": "We run no server, and no copy of your list exists anywhere we control.",
 			"gateway": "The app itself is delivered through a public IPFS gateway, which sees that you loaded it. Your own Kubo node, or the IPFS Companion extension, fetches it from the network instead.",
-			"relay": "Relay nodes introduce devices to each other and may keep a copy of the list so another device can collect it later.",
-			"sharedList": "With a passkey, the list behind the three Spanish words belongs to your DID: only your passkey writes, the same list on every device; anyone with the address or the words can read. Without a passkey the list stays open, as in the previous chapters.",
-			"readingIsOpen": "A passkey says who wrote something. It does not make it private - nothing here is encrypted, and anyone who has the three words reads everything, including the relay that stores it.",
-			"identityPasskey": "Your passkey identifies you to the other devices, and it stays on this device. Nobody else can write as you, and we never see it.",
-			"identityAnonymous": "You are using a random identity that exists only in this browser. Close it and it is gone, and nothing connects one visit to the next.",
-			"reload": "Nothing is stored on this device yet: reload the page and this browser starts over.",
-			"cookies": "No tracking cookies are used. If you tick \"don't show this again\", that choice is the only thing saved on this device."
+			"relayOn": "We run no server that keeps your list – but we do run a relay that introduces devices to each other. It may keep (pin) your list automatically so another device can collect it later, and it sees which addresses you open.",
+			"networkOff": "The network is off: no relay, no other devices. Nothing arrives and nothing leaves – except the archive, if you switch it on.",
+			"listPasskey": "The list behind the three Spanish words belongs to your passkey: only it writes, the same list on every device. Anyone with the words or the address gets the list.",
+			"listOpen": "The list behind the three Spanish words is open, as in the previous chapters: anyone with the words reads and writes.",
+			"sealed": "The entries are sealed with a key from your passkey: whoever gets the list cannot read it – the relay included. Only your passkey opens it, on every device. What such a key can and cannot do is the subject of the privacy01 chapter.",
+			"notSealed": "New entries are not encrypted: anyone with the three words reads them – including the relay that keeps the list. Entries sealed earlier stay readable with your passkey. The “Seal the list” box changes that; the privacy01 chapter shows how.",
+			"sealingNeedsPasskey": "Without a passkey the list is not encrypted: anyone with the three words reads everything – including the relay that keeps it. Sealing needs a passkey to supply the key; the privacy01 chapter shows how that works.",
+			"identityPasskey": "Your passkey identifies you to the other devices. It stays with your authenticator – in the device, on a security key, or in a password manager that may sync it between your devices. We never see it, and nobody else can write as you.",
+			"identityAnonymous": "You are using a random identity that exists only in this browser. Reload and it is gone, and nothing connects one visit to the next.",
+			"identityAnonymousKept": "You are using a random identity that exists only in this browser. It keeps it until you clear the site data; nothing links it to you.",
+			"storageKept": "This browser keeps the list, your language, the theme and the archive setting; with a passkey, its identifier too. Clear the site data and it is gone – except what the archive holds.",
+			"storageMemory": "Memory only: reload and the list in this browser starts empty. Language, theme and this decision stay.",
+			"archiveOn": "The archive is on: every change goes out shortly afterwards, sealed, to the chosen store. The store sees the account address, the channel, sizes and times, not the content; the balance of an address is publicly readable.",
+			"archiveOnOwner": "The archive is on: every change goes out shortly afterwards, sealed, to the chosen store. The store sees the account address, the channel, sizes and times, not the content. The owner account’s address and its grants are public on Aleph.",
+			"archiveOff": "The archive is off: nothing is kept outside this device until you switch it on in the “Archive” section.",
+			"noTracking": "No tracking cookies, no analytics. “Don’t show this again” remembers only that decision, on this device."
 		},
 		"errorNoPasskey": "No passkey is stored in this browser, and your authenticator did not hand one over. Create a new one, or continue without one.",
 		"errorNeedsLabel": "Please give the new passkey a name.",
@@ -90,9 +98,9 @@
 		"showNotice": "Show the notice",
 		"storageLegend": "Where your todos are stored",
 		"storageMemoryLabel": "In Memory Only",
-		"storageMemoryHint": "Todos are stored in a shared, unencrypted OrbitDB database in memory and will be deleted on app reload or on exit.",
+		"storageMemoryHint": "Todos are stored in an OrbitDB database in memory – sealed, if you tick “Seal the list” below – and are gone on reload or exit.",
 		"storagePersistentLabel": "IndexedDB",
-		"storagePersistentHint": "I understand todos are stored in a shared, unencrypted OrbitDB database in the browser's IndexedDB and will persist between app restarts or after app exit.",
+		"storagePersistentHint": "I understand todos are stored in an OrbitDB database in the browser’s IndexedDB – sealed, if I tick “Seal the list” below – and persist between restarts.",
 		"p2pLegend": "Peer-to-peer network",
 		"p2pOnLabel": "On",
 		"p2pOnHint": "This browser connects to a relay and to other devices, and the list replicates between them.",
@@ -237,5 +245,15 @@
 		"continue": "Continue",
 		"cancel": "Cancel",
 		"restoreTouch": "Passkey prompt 2 of {of}: a second signature your identity is computed from. Not a repeat."
+	},
+	"sealList": {
+		"title": "Encryption",
+		"label": "Seal the list",
+		"hint": "Entries leave this browser only encrypted, with a key from your passkey. Every device with the same passkey reads them; the relay, and anyone with the three words, does not. More in the privacy01 chapter.",
+		"needsPasskey": "Needs a passkey: it supplies the key. Without one the list stays open.",
+		"noPrf": "The list could not be sealed: this authenticator gives no PRF output to make a key from. It is open, as the notice without the box says."
+	},
+	"todo": {
+		"sealedHidden": "{count} entries are sealed and cannot be read without the key. Tick “Seal the list” at the next start, or switch the archive on, and the passkey supplies it."
 	}
 }

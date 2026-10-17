@@ -27,7 +27,9 @@
 			"e2e/consent-network.spec.js",
 			"e2e/archive.spec.js",
 			"e2e/archive-owner.spec.js",
-			"e2e/csp.spec.js"
+			"e2e/csp.spec.js",
+			"e2e/sealed-list.spec.js",
+			"e2e/phone-layout.spec.js"
 		],
 		"check": true
 	},

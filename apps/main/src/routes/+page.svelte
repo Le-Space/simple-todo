@@ -279,7 +279,7 @@
 				</p>
 			</div>
 		</div>
-		<div class="flex flex-shrink-0 items-center gap-2 self-start sm:self-auto">
+		<div class="flex min-w-0 flex-wrap items-center justify-end gap-2 self-start sm:self-auto">
 			<!--
 				The way back. "Don't show this again" is only safe to offer if
 				something puts it back - a dialog dismissed for good and never

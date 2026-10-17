@@ -110,11 +110,11 @@ export async function rememberDecision(page) {
  * the default mode under the name of the one they had asked for.
  *
  * @param {import('@playwright/test').Page} page
- * @param {{ identity?: 'anonymous' | 'create' | 'existing', label?: string, mnemonic?: string, persistent?: boolean, relay?: boolean, p2p?: boolean, remember?: boolean }} [choices]
+ * @param {{ identity?: 'anonymous' | 'create' | 'existing', label?: string, mnemonic?: string, persistent?: boolean, relay?: boolean, p2p?: boolean, seal?: boolean, remember?: boolean }} [choices]
  */
 export async function passConsent(
 	page,
-	{ identity = 'anonymous', label, mnemonic, persistent, relay, p2p, remember = false } = {}
+	{ identity = 'anonymous', label, mnemonic, persistent, relay, p2p, seal, remember = false } = {}
 ) {
 	await waitForConsent(page);
 
@@ -155,6 +155,12 @@ export async function passConsent(
 		// with no relay, no peers and no pubsub.
 		const choice = page.getByTestId(p2p ? 'p2p-mode-on' : 'p2p-mode-off');
 		if ((await choice.count()) > 0) await choice.check();
+	}
+	if (seal !== undefined) {
+		// Only where the dialog offers it (archived01): the list's entries sealed
+		// with a key from the passkey. The box is disabled without a passkey.
+		const box = page.getByTestId('seal-list');
+		if ((await box.count()) > 0) await box.setChecked(seal);
 	}
 	if (relay !== undefined) {
 		const box = page.getByTestId('consent-relay-network');

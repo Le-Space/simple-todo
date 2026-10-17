@@ -14,6 +14,12 @@
 	export let canProceed = true;
 	/** @type {'anonymous' | 'create' | 'existing'} */
 	export let identity = 'anonymous';
+	/** The peer-to-peer network switch, the storage choice, the sealing box, the archive. */
+	export let p2p = true;
+	export let persistent = true;
+	export let seal = true;
+	export let archive = false;
+	export let owner = false;
 	/**
 	 * What went wrong the last time somebody pressed proceed.
 	 *
@@ -59,19 +65,32 @@
 	 *
 	 * @param {any} state
 	 */
-	const clauses = (state) =>
-		[
-			get(_)('consent.clause.noServer'),
-			get(_)('consent.clause.gateway'),
-			get(_)('consent.clause.relay'),
-			get(_)('consent.clause.sharedList'),
-			get(_)('consent.clause.readingIsOpen'),
-			state.identity === 'anonymous'
-				? get(_)('consent.clause.identityAnonymous')
-				: get(_)('consent.clause.identityPasskey'),
-			get(_)('consent.clause.reload'),
-			get(_)('consent.clause.cookies')
+	const clauses = (state) => {
+		const passkey = state.identity !== 'anonymous';
+		const t = get(_);
+		return [
+			t('consent.clause.gateway'),
+			state.p2p ? t('consent.clause.relayOn') : t('consent.clause.networkOff'),
+			passkey ? t('consent.clause.listPasskey') : t('consent.clause.listOpen'),
+			!passkey
+				? t('consent.clause.sealingNeedsPasskey')
+				: state.seal
+					? t('consent.clause.sealed')
+					: t('consent.clause.notSealed'),
+			passkey
+				? t('consent.clause.identityPasskey')
+				: state.persistent
+					? t('consent.clause.identityAnonymousKept')
+					: t('consent.clause.identityAnonymous'),
+			state.persistent ? t('consent.clause.storageKept') : t('consent.clause.storageMemory'),
+			state.archive
+				? state.owner
+					? t('consent.clause.archiveOnOwner')
+					: t('consent.clause.archiveOn')
+				: t('consent.clause.archiveOff'),
+			t('consent.clause.noTracking')
 		].filter(Boolean);
+	};
 
 	/*
 		The element carries 30-odd strings and we used to hand it three, so the
@@ -106,7 +125,7 @@
 		watchAcceptance();
 		hideDeadCloseControl();
 	}
-	$: if (ready) introEl.choices = { identity };
+	$: if (ready) introEl.choices = { identity, p2p, persistent, seal, archive, owner };
 
 	/*
 		One label for two different blockers told people to fill in a field that
@@ -128,12 +147,27 @@
 	 * ours and has to know whether the statement was accepted. Idempotent,
 	 * because the reactive block above runs again on every choice.
 	 */
-	/** Bring the acceptance tick into view and put the cursor on it. */
+	/**
+	 * Open the statement, bring the acceptance tick into view and put the
+	 * cursor on it. The tick sits inside the element's collapsed "what this
+	 * means for your data": scrolling to it inside a closed <details> shows
+	 * nothing, and on a phone the button naming the tick was the only thing in
+	 * view (2026-10-17).
+	 */
 	function revealAcceptance() {
 		const box = introEl?.shadowRoot?.querySelector('input[part=accept]');
 		if (!(box instanceof HTMLElement)) return;
+		const details = box.closest('details');
+		if (details) details.open = true;
 		box.scrollIntoView({ block: 'center', behavior: 'smooth' });
 		box.focus();
+	}
+
+	/** A press on the waiting button leads to what it is waiting for. */
+	function onProceed() {
+		if (!canProceed) return;
+		if (!accepted) return revealAcceptance();
+		introEl.close();
 	}
 
 	/**
@@ -250,12 +284,18 @@
 					{$_('consent.showNotice')}
 				</button>
 			{/if}
+			<!--
+				Not `disabled` while it waits for the tick: a disabled button swallows
+				the press, and the press is how somebody finds the tick (onProceed).
+				`aria-disabled` keeps it announced as not yet available.
+			-->
 			<button
 				type="button"
-				disabled={!accepted || !canProceed}
-				on:click={() => introEl.close()}
+				aria-disabled={!accepted || !canProceed}
+				data-waiting={!accepted || !canProceed ? 'true' : undefined}
+				on:click={onProceed}
 				data-testid="consent-proceed"
-				class="rounded-md bg-coral-700 px-6 py-3 font-medium text-white transition-colors hover:bg-coral-800 disabled:cursor-not-allowed disabled:opacity-50"
+				class="rounded-md bg-coral-700 px-6 py-3 font-medium text-white transition-colors hover:bg-coral-800 aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
 			>
 				{proceedLabel}
 			</button>
