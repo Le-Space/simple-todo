@@ -20,6 +20,7 @@ import * as json from 'multiformats/codecs/json';
 import { sha512 } from 'multiformats/hashes/sha2';
 import { multiaddr } from '@multiformats/multiaddr';
 import { createLibp2pConfig } from '@simple-todo/net/libp2p-config.js';
+import { withoutStaleIdentityCache } from '@simple-todo/todo/stale-identity-cache.js';
 import { createMemoryIdentities } from '@simple-todo/todo/memory-identities.js';
 import { seedRestoredSigningKey } from '@simple-todo/todo/restored-signing-key.js';
 import { keepLogsWhereTheChoiceSays } from '@simple-todo/todo/keep-logs-in-memory.js';
@@ -379,7 +380,13 @@ async function createOrbitDBInstance(heliaNode) {
 	// No `encryptKeystore`: it encrypted a separate key pair that signed
 	// nothing, and cost a passkey prompt to unlock it.
 	const keystore = await KeyStore({ storage: await MemoryStorage() });
-	const identities = await Identities({ ipfs: heliaNode, keystore });
+	// Wrapped: OrbitDB's identity cache refuses another session of the same
+	// passkey (stale-identity-cache.js) — entries of an earlier session arrive,
+	// and this session can no longer write.
+	const identities = withoutStaleIdentityCache(
+		await Identities({ ipfs: heliaNode, keystore }),
+		OrbitDBWebAuthnIdentityProviderFunction
+	);
 	// A passkey restored on this device brought its signing key along; in the
 	// keystore before the provider looks, it spares the passkey a touch that
 	// would only read the PRF output the restore already read.
