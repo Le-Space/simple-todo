@@ -16,7 +16,10 @@
 		hasBackendSecret,
 		refreshCredits,
 		recoverFromArchive,
-		deleteArchive
+		deleteArchive,
+		setArchiveOwner,
+		checkAuthorization,
+		authorizationCommands
 	} from '$lib/archive/archive.js';
 
 	/** The passkey behind the identity; without one there is no archive. */
@@ -87,6 +90,46 @@
 		await navigator.clipboard.writeText($archiveStore.address);
 		copied = true;
 		setTimeout(() => (copied = false), 2000);
+	}
+
+	// Who pays on Aleph. 'self' is the archive key; 'owner' an account outside
+	// the browser that granted the key STORE on the channel (delegation.js).
+	// The radio can say 'owner' before an address is saved: the form is open,
+	// the archive still pays for itself until "Save".
+	/** @type {'self' | 'owner'} */
+	let payerMode = $archiveStore.owner ? 'owner' : 'self';
+	let ownerInput = $archiveStore.owner ?? '';
+	let ownerForget = $archiveStore.ownerForget;
+	let showPayerInfo = false;
+	/** @type {string | null} */
+	let copiedCommand = null;
+	// `authorizationCommands` reads the store itself; the checkbox goes in as a
+	// value so the grant shown follows it at once, saved or not.
+	$: commands =
+		$archiveStore.owner && $archiveStore.address
+			? authorizationCommands({ forget: ownerForget })
+			: null;
+
+	/** @param {'self' | 'owner'} mode */
+	const onPayer = (mode) => {
+		payerMode = mode;
+		if (mode === 'self' && $archiveStore.owner) run(() => setArchiveOwner(null));
+	};
+	const onOwnerSave = () =>
+		run(async () => {
+			await setArchiveOwner(ownerInput, { forget: ownerForget });
+			ownerInput = $archiveStore.owner ?? '';
+		});
+	const onOwnerForget = () =>
+		run(async () => {
+			if ($archiveStore.owner) await setArchiveOwner($archiveStore.owner, { forget: ownerForget });
+		});
+	const onCheckAuthorization = () => run(() => checkAuthorization());
+	/** @param {string} name @param {string} text */
+	async function copyCommand(name, text) {
+		await navigator.clipboard.writeText(text);
+		copiedCommand = name;
+		setTimeout(() => (copiedCommand = null), 2000);
 	}
 </script>
 
@@ -213,7 +256,11 @@
 				data-testid="archive-account"
 			>
 				<div class="flex flex-wrap items-center gap-2">
-					<span class="text-faint">{$_('archive.account')}</span>
+					<span class="text-faint"
+						>{kind === 'aleph' && $archiveStore.owner
+							? $_('archive.signer')
+							: $_('archive.account')}</span
+					>
 					<code class="font-mono text-xs break-all" data-testid="archive-address"
 						>{$archiveStore.address}</code
 					>
@@ -223,6 +270,14 @@
 						on:click={copyAddress}>{copied ? $_('archive.copied') : $_('archive.copy')}</button
 					>
 				</div>
+				{#if kind === 'aleph' && $archiveStore.owner}
+					<div class="mt-1 flex flex-wrap items-center gap-2">
+						<span class="text-faint">{$_('archive.payerAccount')}</span>
+						<code class="font-mono text-xs break-all" data-testid="archive-owner-address"
+							>{$archiveStore.owner}</code
+						>
+					</div>
+				{/if}
 				{#if kind === 'aleph'}
 					<p class="mt-2 text-sm" data-testid="archive-credits">
 						{#if $archiveStore.credits}
@@ -261,7 +316,9 @@
 						</p>
 					{/if}
 					<p class="mt-2 text-xs text-faint">
-						{$_('archive.alephCredits', { values: { channel: ALEPH_CHANNEL } })}
+						{$_($archiveStore.owner ? 'archive.alephCreditsOwner' : 'archive.alephCredits', {
+							values: { channel: ALEPH_CHANNEL }
+						})}
 						<a
 							class="underline"
 							href="https://app.aleph.cloud"
@@ -271,6 +328,162 @@
 					</p>
 				{/if}
 			</div>
+		{/if}
+
+		{#if $archiveStore.unlocked && kind === 'aleph'}
+			<fieldset
+				class="mb-4 rounded-md border border-border p-3 text-sm"
+				data-testid="archive-payer"
+				data-mode={$archiveStore.owner ? 'owner' : 'self'}
+			>
+				<legend class="flex items-center gap-2 px-1 font-medium">
+					{$_('archive.payer.title')}
+					<button
+						type="button"
+						class="flex h-6 w-6 items-center justify-center rounded-full border border-border text-xs text-faint hover:bg-surface-2"
+						aria-expanded={showPayerInfo}
+						aria-controls="archive-payer-info"
+						aria-label={$_('archive.payer.info')}
+						title={$_('archive.payer.info')}
+						on:click={() => (showPayerInfo = !showPayerInfo)}
+						data-testid="archive-payer-info">i</button
+					>
+				</legend>
+				{#if showPayerInfo}
+					<div
+						id="archive-payer-info"
+						class="mb-3 grid gap-3 rounded-md bg-surface-2 p-3 text-xs sm:grid-cols-2"
+						data-testid="archive-payer-infobox"
+					>
+						{#each ['self', 'owner'] as mode (mode)}
+							<div>
+								<h4 class="mb-1 font-semibold">{$_(`archive.payer.${mode}`)}</h4>
+								<ul class="space-y-1">
+									{#each [1, 2, 3] as n (n)}
+										<li class="flex gap-1.5">
+											<span class="text-success" aria-hidden="true">+</span>
+											<span>{$_(`archive.payer.${mode}Pro${n}`)}</span>
+										</li>
+									{/each}
+									{#each [1, 2, 3] as n (n)}
+										<li class="flex gap-1.5">
+											<span class="text-danger" aria-hidden="true">−</span>
+											<span>{$_(`archive.payer.${mode}Con${n}`)}</span>
+										</li>
+									{/each}
+								</ul>
+							</div>
+						{/each}
+						<p class="text-faint sm:col-span-2">{$_('archive.payer.verdict')}</p>
+					</div>
+				{/if}
+				<div class="flex flex-col gap-2">
+					{#each ['self', 'owner'] as mode (mode)}
+						<label class="flex items-start gap-2">
+							<input
+								type="radio"
+								name="archive-payer"
+								value={mode}
+								class="mt-1"
+								checked={payerMode === mode}
+								disabled={busy}
+								on:change={() => onPayer(/** @type {'self' | 'owner'} */ (mode))}
+								data-testid={`archive-payer-${mode}`}
+							/>
+							<span>
+								{$_(`archive.payer.${mode}`)}
+								<span class="block text-xs text-faint">{$_(`archive.payer.${mode}Short`)}</span>
+							</span>
+						</label>
+					{/each}
+				</div>
+				{#if payerMode === 'owner'}
+					<div class="mt-3 flex flex-wrap items-center gap-2">
+						<input
+							type="text"
+							class="min-w-0 flex-1 rounded-md border border-border bg-surface px-2 py-1.5 font-mono text-xs"
+							placeholder="0x…"
+							bind:value={ownerInput}
+							spellcheck="false"
+							autocomplete="off"
+							aria-label={$_('archive.payer.ownerAddress')}
+							data-testid="archive-owner"
+						/>
+						<button
+							type="button"
+							class="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-50"
+							on:click={onOwnerSave}
+							disabled={busy || !ownerInput.trim() || ownerInput.trim() === $archiveStore.owner}
+							data-testid="archive-owner-save">{$_('archive.payer.save')}</button
+						>
+					</div>
+					<label class="mt-2 flex items-start gap-2 text-xs">
+						<input
+							type="checkbox"
+							class="mt-0.5"
+							bind:checked={ownerForget}
+							on:change={onOwnerForget}
+							disabled={busy}
+							data-testid="archive-owner-forget"
+						/>
+						<span>{$_('archive.payer.forget')}</span>
+					</label>
+					{#if $archiveStore.owner && commands}
+						<p
+							class="mt-3 flex flex-wrap items-center gap-2 text-xs"
+							data-testid="archive-authorization"
+							data-store={$archiveStore.authorization
+								? String($archiveStore.authorization.store)
+								: 'unknown'}
+							data-forget={$archiveStore.authorization
+								? String($archiveStore.authorization.forget)
+								: 'unknown'}
+						>
+							<span>
+								{#if !$archiveStore.authorization}
+									{$_('archive.payer.grantUnknown')}
+								{:else if $archiveStore.authorization.store}
+									{$_(
+										$archiveStore.authorization.forget
+											? 'archive.payer.grantedWithForget'
+											: 'archive.payer.granted'
+									)}
+								{:else}
+									{$_('archive.payer.notGranted')}
+								{/if}
+							</span>
+							<button
+								type="button"
+								class="rounded-md border border-border px-2 py-1 hover:bg-surface-2 disabled:opacity-50"
+								on:click={onCheckAuthorization}
+								disabled={busy}
+								data-testid="archive-authorization-check">{$_('archive.payer.check')}</button
+							>
+						</p>
+						<details class="mt-2 text-xs" data-testid="archive-owner-commands">
+							<summary class="cursor-pointer">{$_('archive.payer.commands')}</summary>
+							<p class="mt-2 text-faint">{$_('archive.payer.commandsHelp')}</p>
+							{#each [{ name: 'grant', text: commands.grant }, { name: 'verify', text: commands.verify }, { name: 'revoke', text: commands.revoke }] as command (command.name)}
+								<p class="mt-2 font-medium">{$_(`archive.payer.command.${command.name}`)}</p>
+								<div class="mt-1 flex items-start gap-2">
+									<pre
+										class="min-w-0 flex-1 overflow-x-auto rounded bg-surface-2 p-2 font-mono"
+										data-testid={`archive-command-${command.name}`}><code>{command.text}</code
+										></pre>
+									<button
+										type="button"
+										class="rounded-md border border-border px-2 py-1 hover:bg-surface-2"
+										on:click={() => copyCommand(command.name, command.text)}
+										>{copiedCommand === command.name
+											? $_('archive.copied')
+											: $_('archive.copy')}</button
+									>
+								</div>
+							{/each}
+						</details>
+					{/if}
+				{/if}
+			</fieldset>
 		{/if}
 
 		{#if $archiveStore.unlocked}
@@ -425,7 +638,24 @@
 			</div>
 		{/if}
 
-		{#if localError || $archiveStore.lastError}
+		{#if localError === 'forget-not-granted' || $archiveStore.lastError === 'forget-not-granted'}
+			<div class="text-sm" data-testid="archive-forget-not-granted">
+				<p class="text-danger">{$_('archive.payer.forgetNotGranted')}</p>
+				{#if commands?.remove}
+					<div class="mt-1 flex items-start gap-2 text-xs">
+						<pre
+							class="min-w-0 flex-1 overflow-x-auto rounded bg-surface-2 p-2 font-mono"
+							data-testid="archive-command-remove"><code>{commands.remove}</code></pre>
+						<button
+							type="button"
+							class="rounded-md border border-border px-2 py-1 hover:bg-surface-2"
+							on:click={() => commands?.remove && copyCommand('remove', commands.remove)}
+							>{copiedCommand === 'remove' ? $_('archive.copied') : $_('archive.copy')}</button
+						>
+					</div>
+				{/if}
+			</div>
+		{:else if localError || $archiveStore.lastError}
 			<p class="text-sm text-danger" data-testid="archive-error">
 				{#if $archiveStore.lastError === 'prf-unavailable'}{$_(
 						'archive.prfUnavailable'

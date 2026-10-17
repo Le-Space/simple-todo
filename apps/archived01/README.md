@@ -51,8 +51,26 @@ the list back with the same passkey.
   derives the same account and the same key, lists the account's increments on
   Aleph by owner, and restores — with nothing stored beforehand.
 
+- **Who pays, on Aleph — your choice.** By default the archive key is also the
+  account holding the credits: nothing to set up, but the key lives in the tab,
+  and whoever gets it (a bad dependency, an injected script) can spend the
+  credits, forget the archive and probably move what is left. The panel's
+  **Who pays?** offers the other way: an **owner account that never enters the
+  browser** grants the archive key `STORE` on this chapter's channel, once,
+  from where the owner's key lives — the panel reads the owner's public
+  `security` aggregate, shows whether the grant is in place, and prints the
+  complete `aleph` CLI command (0.20.0) for the owner, with every other grant
+  the owner already has left as it was. The key then signs; Aleph checks the
+  owner's grant and bills the owner (measured 2026-10-03). A leaked browser key
+  can add storage on one channel and nothing else: it holds no credits and
+  cannot forget — unless you tick _also ask for FORGET_, which lets you delete
+  from the browser again at that price; otherwise the panel hands the owner the
+  `aleph file delete` command. An info box lists both sides of both choices;
+  `src/lib/archive/delegation.js` holds the pure parts, and
+  `e2e/archive-owner.spec.js` runs the whole walk against a stand-in Aleph that
+  checks signatures, ownership and grants the way the real one does.
 - **Four stores, one contract.** Aleph Cloud (no account, no key; the archive
-  account pays), Pinata (a JWT, kept sealed with the backup key), Lighthouse
+  key pays, or an owner account it was granted by), Pinata (a JWT, kept sealed with the backup key), Lighthouse
   (an API key; Filecoin deals; driver not yet verified live) and _this browser
   only_ for trying it out. Filecoin Onchain Cloud is designed but not yet a
   driver ([storage-bridge#151](https://github.com/NiKrause/orbitdb-storage-bridge/issues/151)).
@@ -91,7 +109,8 @@ the list back with the same passkey.
 - **Delete the archive.** Increments never go away by themselves and each
   costs by the hour. _Delete archive_ asks once, then forgets every increment
   the account keeps on the channel — on Aleph a FORGET signed by the archive
-  account itself (it is the owner; no wallet), elsewhere the service's own
+  key (for itself, or for the owner when the owner granted FORGET; otherwise
+  the owner deletes from outside), elsewhere the service's own
   delete. The list stays; the watcher starts over, and the next increment
   carries the whole list again.
 - **What the store learns.** Every increment is sealed, so the service holds
@@ -112,7 +131,9 @@ the list back with the same passkey.
 1. Create a passkey and open the list, as in `passkey01`. Add a todo or two.
 2. In **Archive**, pick a store. _This browser only_ needs nothing; for **Aleph**,
    click **Unlock archive** (one touch), copy the **archive account** and put
-   credits on it at app.aleph.cloud (about 54 credits per MiB and day).
+   credits on it at app.aleph.cloud (about 54 credits per MiB and day) — or,
+   under **Who pays?**, name an owner account, run the printed `aleph` command
+   where that account's key lives, and click **Check**.
 3. **Switch archive on.** The first increment goes out within a few seconds;
    every todo after that makes another. **Check archive** lists them.
 4. Wipe the site's data (or open a second browser with the same passkey —

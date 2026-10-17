@@ -29,6 +29,7 @@
 	import ConsentModal from '$lib/ConsentModal.svelte';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
 	import ThemeToggle from '@simple-todo/ui/ThemeToggle.svelte';
+	import LanguageSwitcher from '$lib/LanguageSwitcher.svelte';
 	import LocalFirstLink from '@simple-todo/ui/LocalFirstLink.svelte';
 	import AppFooter from '@simple-todo/ui/AppFooter.svelte';
 	import PageQr from '@simple-todo/ui/PageQr.svelte';
@@ -461,6 +462,7 @@
 		</div>
 		<div class="flex flex-shrink-0 items-center gap-2 self-start sm:self-auto">
 			<DidBadge did={$ownDidStore ?? ''} />
+			<LanguageSwitcher />
 			<ThemeToggle />
 			<PageQr />
 			<SocialIcons size="w-5 h-5" className="" />
