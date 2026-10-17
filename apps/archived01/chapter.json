@@ -26,7 +26,8 @@
 			"e2e/page-qr.spec.js",
 			"e2e/consent-network.spec.js",
 			"e2e/archive.spec.js",
-			"e2e/archive-owner.spec.js"
+			"e2e/archive-owner.spec.js",
+			"e2e/csp.spec.js"
 		],
 		"check": true
 	},
