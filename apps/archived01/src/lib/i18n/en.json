@@ -187,7 +187,6 @@
 			"local": "Every increment in this browser is deleted."
 		},
 		"deleteNote": "The list itself stays. The watcher starts over afterwards: the next increment carries the whole list again.",
-		"deleteYes": "Yes, delete the archive",
 		"deleteNo": "Cancel",
 		"deletedSummary": "{forgotten} increments deleted, {rejected} refused.",
 		"signer": "Signs (archive key)",
@@ -229,7 +228,13 @@
 				"revoke": "Revoke this key (the complete list without it)"
 			},
 			"forgetNotGranted": "The owner did not grant FORGET to this key, so the archive cannot be deleted from here. The owner deletes it with this command, or grants FORGET above and you try again."
-		}
+		},
+		"deleteThisList": "Delete this list’s archive",
+		"deleteEverything": "Delete everything on the account",
+		"deleteScopeHint": "Each list has its own chain at the store (named by a fingerprint from the passkey, not by its address). “This list” forgets that chain; “everything” forgets every increment the account keeps on the channel — other lists and older increments from before chains were told apart.",
+		"elsewhere": "The account keeps {count} more increments beyond this list’s chain: other lists, or older ones from before chains were told apart. A restore reads them when this chain is empty.",
+		"restoredChain": "Chain: {duplicates} sequence numbers carried twice (two devices numbering on their own, harmless), {gaps} missing (increments the store does not hold).",
+		"restoredFromAccount": "This list’s chain was empty, so the account’s whole archive was read; todos of other lists were copied, not joined."
 	},
 	"passkeySteps": {
 		"count": "Passkey prompt {n} of {of}",

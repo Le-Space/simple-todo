@@ -60,10 +60,11 @@
 	const onRestore = () => run(() => restoreArchive());
 	const onRecover = () => run(() => recoverFromArchive({ credential }));
 	let confirmDelete = false;
-	const onDelete = () =>
+	/** @param {'list' | 'account'} scope */
+	const onDelete = (scope) =>
 		run(async () => {
 			confirmDelete = false;
-			await deleteArchive();
+			await deleteArchive({ scope });
 		});
 	const onSecret = () =>
 		run(async () => {
@@ -548,12 +549,19 @@
 				>
 					<p>{$_(`archive.deleteConfirm.${kind}`)}</p>
 					<p class="mt-1 text-xs text-faint">{$_('archive.deleteNote')}</p>
-					<div class="mt-2 flex gap-2">
+					<p class="mt-1 text-xs text-faint">{$_('archive.deleteScopeHint')}</p>
+					<div class="mt-2 flex flex-wrap gap-2">
 						<button
 							type="button"
 							class="rounded-md bg-danger px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
-							on:click={onDelete}
-							data-testid="archive-delete-yes">{$_('archive.deleteYes')}</button
+							on:click={() => onDelete('list')}
+							data-testid="archive-delete-yes">{$_('archive.deleteThisList')}</button
+						>
+						<button
+							type="button"
+							class="rounded-md border border-danger/60 px-3 py-1.5 text-sm text-danger hover:bg-danger/10"
+							on:click={() => onDelete('account')}
+							data-testid="archive-delete-all">{$_('archive.deleteEverything')}</button
 						>
 						<button
 							type="button"
@@ -589,6 +597,11 @@
 							{#if item.size}<span class="text-faint">{kb(item.size)}</span>{/if}
 						</li>
 					{/each}
+					{#if $archiveStore.elsewhere}
+						<li class="text-faint" data-testid="archive-elsewhere">
+							{$_('archive.elsewhere', { values: { count: $archiveStore.elsewhere } })}
+						</li>
+					{/if}
 				</ul>
 			{/if}
 
@@ -606,6 +619,25 @@
 							>{$_('archive.restoredCopied', {
 								values: { count: $archiveStore.restored.copied }
 							})}</span
+						>
+					{/if}
+					{#if $archiveStore.restored.duplicates || $archiveStore.restored.gaps}
+						<span
+							class="block text-xs text-faint"
+							data-testid="archive-restored-chain"
+							data-duplicates={$archiveStore.restored.duplicates}
+							data-gaps={$archiveStore.restored.gaps}
+							>{$_('archive.restoredChain', {
+								values: {
+									duplicates: $archiveStore.restored.duplicates,
+									gaps: $archiveStore.restored.gaps
+								}
+							})}</span
+						>
+					{/if}
+					{#if $archiveStore.restored.scope === 'account'}
+						<span class="block text-xs text-faint" data-testid="archive-restored-account"
+							>{$_('archive.restoredFromAccount')}</span
 						>
 					{/if}
 				</p>

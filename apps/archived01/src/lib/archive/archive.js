@@ -30,7 +30,7 @@ import {
 	readPrfOutput,
 	PrfUnavailableError
 } from '@le-space/orbitdb-identity-provider-webauthn-did';
-import { deriveArchiveKeys, sealer, sealText, openText } from './keys.js';
+import { deriveArchiveKeys, listRefFor, sealer, sealText, openText } from './keys.js';
 import { createLocalBackend } from './local-backend.js';
 import { todoDBStore, orbitdbStore, loadTodos } from '../db-actions.js';
 import { getActiveListEncryption, looksLikeTodo } from '../list-sealing.js';
@@ -126,10 +126,11 @@ function saveArchiveSettings(patch) {
  * @property {{ sequence: number, at: Date, bytes: number, entries: number, id: string, kept: boolean } | null} lastShipped
  * @property {string | null} lastError
  * @property {number} failures
- * @property {{ id: string, name?: string, size?: number, time?: number, sequence?: number, entries?: number }[] | null} increments - the last listing
+ * @property {{ id: string, name?: string, size?: number, time?: number, sequence?: number, entries?: number }[] | null} increments - the last listing: this list's chain
+ * @property {number | null} elsewhere - increments the account keeps beyond this list's chain (other lists, or older ones from before chains were told apart); null until listed
  * @property {'' | 'unlocking' | 'shipping' | 'listing' | 'restoring' | 'deleting'} busy
  * @property {{ forgotten: number, rejected: number } | null} deleted - what the last deletion did
- * @property {{ joined: number, heads: number, increments: number, skipped: number, copied?: number } | null} restored - `copied`: todos taken over from archived lists other than the open one
+ * @property {{ joined: number, heads: number, increments: number, skipped: number, copied?: number, duplicates: number, gaps: number, scope: 'list' | 'account' } | null} restored - `copied`: todos taken over from archived lists other than the open one; `duplicates`/`gaps`: sequence numbers carried twice (two devices numbering on their own) or missing; `scope`: whether the account's whole archive was read because this list's chain was empty
  * @property {{ stage: 'listing' | 'downloading' | 'joining' | 'collecting' | 'uploading' | 'keeping' | 'deleting', done: number, total: number } | null} progress - what a restore or a backup is doing now; `total` 0 when no share makes sense
  * @property {{ credits: number, hourly: number | null, mib: number | null, days: number | null, at: number } | null} credits - the archive account on Aleph: balance, last full hour's expense, and how long the balance lasts at that rate
  */
@@ -152,6 +153,7 @@ export const archiveStore = writable({
 	lastError: null,
 	failures: 0,
 	increments: null,
+	elsewhere: null,
 	busy: '',
 	restored: null,
 	credits: null,
@@ -248,6 +250,18 @@ async function backendSecret(kind) {
 }
 
 /**
+ * The name of the open list's chain at the store (keys.js, `listRefFor`);
+ * null before the list is open or the archive unlocked.
+ */
+async function currentRef() {
+	const db = get(todoDBStore);
+	if (!keys || !db) return null;
+	return listRefFor(keys.refKey, String(db.address));
+}
+
+/** @typedef {'list' | 'account'} ArchiveScope this list's chain, or everything the account keeps on the channel */
+
+/**
  * The Aleph account the archive is kept for and billed to: the owner when one
  * is set, else the archive key itself. Listing, credits and FORGET go by it.
  */
@@ -262,7 +276,7 @@ function payer() {
  *
  * @param {BackendKind} kind
  */
-async function buildBackend(kind) {
+async function buildBackend(kind, { ref = /** @type {string | null} */ (null) } = {}) {
 	if (!keys) throw new Error('unlock the archive first');
 	const { withEncryption } = await import('@le-space/orbitdb-storage-bridge/backends/encryption');
 	/** @type {any} */
@@ -281,7 +295,9 @@ async function buildBackend(kind) {
 				// grant to this key and books the cost to the owner.
 				...(owner ? { owner } : {}),
 				sign: (_address, text) => sign(text),
-				channel: ALEPH_CHANNEL
+				channel: ALEPH_CHANNEL,
+				// This list's chain, told apart from the account's others (keys.js).
+				...(ref ? { ref } : {})
 			})
 		});
 	} else if (kind === 'pinata') {
@@ -309,7 +325,7 @@ async function buildBackend(kind) {
  */
 async function stateFromStore(address) {
 	try {
-		const items = await listArchive();
+		const items = await listArchive({ scope: 'list' });
 		if (items.length === 0 || !backend) return null;
 		const { readIncrement } = await import('@le-space/orbitdb-storage-bridge/live-backup');
 		const newest = await readIncrement(await backend.getBlob(items[0].id));
@@ -332,6 +348,8 @@ async function stateFromStore(address) {
 
 /** The name every increment goes up under; the listing filters by it. */
 const NAME_PREFIX = 'archived01-';
+/** @param {string | null} ref the chain's segment of a blob name; before chains were told apart, none */
+const namePrefixFor = (ref) => (ref ? `${NAME_PREFIX}${ref}-` : NAME_PREFIX);
 
 function refresh() {
 	if (!live) return;
@@ -356,8 +374,9 @@ export async function startArchive() {
 	await stopArchive();
 
 	const kind = get(archiveStore).backend;
-	backend = await buildBackend(kind);
 	const address = String(db.address);
+	const ref = await listRefFor(keys.refKey, address);
+	backend = await buildBackend(kind, { ref });
 	const key = stateKey(kind, address);
 	const { createLiveBackup } = await import('@le-space/orbitdb-storage-bridge/live-backup');
 	live = createLiveBackup({
@@ -388,8 +407,9 @@ export async function startArchive() {
 			save: async (/** @type {unknown} */ state) => remember(key, JSON.stringify(state))
 		},
 		name: (/** @type {number} */ sequence, /** @type {Date} */ at) =>
-			// Opaque: the service sees a sequence number, not the list or the time.
-			`${NAME_PREFIX}${String(sequence).padStart(6, '0')}-${at.getTime().toString(36).slice(-4)}.car`,
+			// Opaque: the service sees the chain's name and a sequence number, not
+			// the list or the time.
+			`${namePrefixFor(ref)}${String(sequence).padStart(6, '0')}-${at.getTime().toString(36).slice(-4)}.car`,
 		onShipped: (/** @type {any} */ shipped) => {
 			patch({
 				lastShipped: {
@@ -478,38 +498,62 @@ export async function chooseBackend(kind) {
  * answers for a device that has stored nothing, which is the case that
  * matters. Elsewhere the service's own listing, filtered by name.
  */
-export async function listArchive() {
+export async function listArchive({ scope = /** @type {ArchiveScope} */ ('list') } = {}) {
 	if (!keys) throw new Error('unlock the archive first');
 	const kind = get(archiveStore).backend;
 	patch({ busy: 'listing', lastError: null, progress: { stage: 'listing', done: 0, total: 0 } });
 	try {
+		const ref = scope === 'list' ? await currentRef() : null;
 		/** @type {{ id: string, name?: string, size?: number, time?: number }[]} */
 		let items;
+		/** @type {number | null} */
+		let elsewhere = null;
 		if (kind === 'aleph') {
 			const { listAlephStores } = await import(
 				'@le-space/orbitdb-storage-bridge/backends/aleph-pin'
 			);
 			// Every page: the API cuts at 50 by default, and a chain of increments is
 			// longer than that after a few sessions. The oldest entries live there.
-			/** @type {any[]} */
-			const stores = [];
-			for (let page = 1; ; page++) {
-				const { stores: some, total } = await listAlephStores({
+			const all = async (/** @type {string | null} */ byRef) => {
+				/** @type {any[]} */
+				const stores = [];
+				let total = null;
+				for (let page = 1; ; page++) {
+					const answer = await listAlephStores({
+						owner: payer(),
+						channel: ALEPH_CHANNEL,
+						...(byRef ? { ref: byRef } : {}),
+						pagination: 100,
+						page
+					});
+					stores.push(...answer.stores);
+					total = answer.total;
+					if (answer.stores.length === 0 || (total != null && stores.length >= total)) break;
+					if (total == null && answer.stores.length < 100) break;
+				}
+				return { stores, total: total ?? stores.length };
+			};
+			const chain = await all(ref);
+			items = chain.stores.map((s) => ({ id: s.cid, time: s.time * 1000 }));
+			if (ref) {
+				// What else the account keeps: one page is enough for the count.
+				const account = await listAlephStores({
 					owner: payer(),
 					channel: ALEPH_CHANNEL,
-					pagination: 100,
-					page
+					pagination: 1
 				});
-				stores.push(...some);
-				if (some.length === 0 || (total != null && stores.length >= total)) break;
-				if (total == null && some.length < 100) break;
+				elsewhere = Math.max(0, (account.total ?? 0) - items.length);
 			}
-			items = stores.map((s) => ({ id: s.cid, time: s.time * 1000 }));
 		} else {
-			const b = backend ?? (await buildBackend(kind));
+			const b = backend ?? (await buildBackend(kind, { ref }));
 			const listed = typeof b.list === 'function' ? await b.list() : [];
-			items = listed
-				.filter((/** @type {any} */ h) => !h.name || String(h.name).startsWith(NAME_PREFIX))
+			const ours = listed.filter(
+				(/** @type {any} */ h) => !h.name || String(h.name).startsWith(NAME_PREFIX)
+			);
+			const chain = ours.filter(
+				(/** @type {any} */ h) => !h.name || String(h.name).startsWith(namePrefixFor(ref))
+			);
+			items = chain
 				.map((/** @type {any} */ h) => ({
 					id: String(h.id),
 					...(h.name ? { name: h.name } : {}),
@@ -517,8 +561,9 @@ export async function listArchive() {
 					...(typeof h.time === 'number' ? { time: h.time } : {})
 				}))
 				.sort((/** @type {any} */ a, /** @type {any} */ b) => (b.time ?? 0) - (a.time ?? 0));
+			if (ref) elsewhere = ours.length - chain.length;
 		}
-		patch({ increments: items });
+		patch({ increments: items, elsewhere });
 		return items;
 	} catch (error) {
 		patch({ lastError: message(error) });
@@ -534,11 +579,19 @@ export async function listArchive() {
  * that is not an increment — or that this key does not open — is skipped and
  * counted, not fatal.
  */
-export async function restoreArchive() {
+export async function restoreArchive({ scope = /** @type {ArchiveScope} */ ('list') } = {}) {
 	if (!keys) throw new Error('unlock the archive first');
 	const db = get(todoDBStore);
 	if (!db) throw new Error('no list is open');
-	const items = get(archiveStore).increments ?? (await listArchive());
+	let items = await listArchive({ scope });
+	// Nothing under this list's name, but the account holds increments: from
+	// before chains were told apart, or a list whose address has changed. The
+	// whole account then, as a restore used to read it; what is of other lists
+	// is copied, not joined (below).
+	if (scope === 'list' && items.length === 0 && (get(archiveStore).elsewhere ?? 0) > 0) {
+		scope = 'account';
+		items = await listArchive({ scope });
+	}
 	patch({
 		busy: 'restoring',
 		lastError: null,
@@ -546,7 +599,8 @@ export async function restoreArchive() {
 		progress: { stage: 'downloading', done: 0, total: items.length }
 	});
 	try {
-		const b = backend ?? (await buildBackend(get(archiveStore).backend));
+		const b =
+			backend ?? (await buildBackend(get(archiveStore).backend, { ref: await currentRef() }));
 		const { readIncrement, joinIncrements } = await import(
 			'@le-space/orbitdb-storage-bridge/live-backup'
 		);
@@ -582,10 +636,19 @@ export async function restoreArchive() {
 		let result = { joined: 0, heads: 0 };
 		let count = 0;
 		let copied = 0;
+		// Two devices number their chains on their own, so a sequence may come
+		// twice; OrbitDB's join is a merge and a duplicate costs nothing. A gap
+		// is joined too and named afterwards — what the store does not hold is
+		// entries nobody has, and refusing the rest would not bring them back.
+		let duplicates = 0;
+		let gaps = 0;
 		const mine = byAddress.get(current);
 		if (mine) {
 			count += mine.length;
-			result = await joinIncrements(db, { increments: mine });
+			const joinedChain = await joinIncrements(db, { increments: mine, allowGaps: true });
+			result = joinedChain;
+			duplicates += new Set(joinedChain.duplicates ?? []).size;
+			gaps += (joinedChain.gaps ?? []).length;
 		}
 		const others = [...byAddress.entries()].filter(([address]) => address !== current);
 		if (others.length > 0) {
@@ -600,10 +663,15 @@ export async function restoreArchive() {
 				const encryption = getActiveListEncryption();
 				const restored = await restoreFromIncrements(orbitdb, {
 					increments: theirs,
+					allowGaps: true,
 					// The passkey's key, so a sealed list of this passkey reads; an open
 					// one reads anyway.
 					open: { type: 'keyvalue', sync: false, ...(encryption ? { encryption } : {}) }
 				});
+				// 0.21.0 returns both; its declared type does not say so yet.
+				const chain = /** @type {{ duplicates?: number[], gaps?: number[] }} */ (restored);
+				duplicates += new Set(chain.duplicates ?? []).size;
+				gaps += (chain.gaps ?? []).length;
 				const other = /** @type {any} */ (
 					restored.databases.find((/** @type {any} */ d) => String(d.address) === address)
 				)?.database;
@@ -633,6 +701,9 @@ export async function restoreArchive() {
 			heads: result.heads,
 			increments: count,
 			skipped,
+			duplicates,
+			gaps,
+			scope,
 			...(copied ? { copied } : {})
 		};
 		patch({ restored });
@@ -736,9 +807,10 @@ export async function refreshCredits({ shippedBytes = 0 } = {}) {
  *
  * @returns {Promise<{ forgotten: number, rejected: number }>}
  */
-export async function deleteArchive() {
+export async function deleteArchive({ scope = /** @type {ArchiveScope} */ ('list') } = {}) {
 	if (!keys) throw new Error('unlock the archive first');
 	const kind = get(archiveStore).backend;
+	const ref = scope === 'list' ? await currentRef() : null;
 	patch({
 		busy: 'deleting',
 		lastError: null,
@@ -765,6 +837,8 @@ export async function deleteArchive() {
 			const result = await forgetAlephStores({
 				owner: owner ?? address,
 				channel: ALEPH_CHANNEL,
+				// This list's chain only, unless everything on the account was asked for.
+				...(ref ? { ref } : {}),
 				forget: createAlephForget({
 					sender: address,
 					...(owner ? { owner } : {}),
@@ -778,10 +852,10 @@ export async function deleteArchive() {
 			forgotten = result.forgotten.length;
 			rejected = result.rejected.length;
 		} else {
-			const b = backend ?? (await buildBackend(kind));
+			const b = backend ?? (await buildBackend(kind, { ref }));
 			const items = typeof b.list === 'function' ? await b.list() : [];
 			const mine = items.filter(
-				(/** @type {any} */ h) => !h.name || String(h.name).startsWith(NAME_PREFIX)
+				(/** @type {any} */ h) => !h.name || String(h.name).startsWith(namePrefixFor(ref))
 			);
 			for (const [index, item] of mine.entries()) {
 				try {
@@ -799,7 +873,14 @@ export async function deleteArchive() {
 		const db = get(todoDBStore);
 		if (db) forget(stateKey(kind, String(db.address)));
 		const deleted = { forgotten, rejected };
-		patch({ deleted, increments: [], restored: null, sequence: 0, lastShipped: null });
+		patch({
+			deleted,
+			increments: [],
+			elsewhere: null,
+			restored: null,
+			sequence: 0,
+			lastShipped: null
+		});
 		if (get(archiveStore).enabled) await startArchive();
 		void refreshCredits();
 		return deleted;

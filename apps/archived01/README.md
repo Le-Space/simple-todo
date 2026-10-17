@@ -109,9 +109,25 @@ the list back with the same passkey.
   same three words name a different list for every DID — and the same list for
   the same passkey on every device. Without a passkey the list stays the open
   one of the previous chapters.
+- **One chain per list.** Each watcher numbers its increments from 1, and an
+  account archives several lists (the words name a list per DID; the address
+  changed once already), so a listing of the whole account mixed chains and a
+  restore stopped at "two increments carry the same sequence". Every increment
+  now goes up under its list's chain name — an HMAC of the address under a key
+  from the passkey (`listRefFor`, `src/lib/archive/keys.js`): Aleph's `ref` on
+  the STORE, the first segment of the blob name elsewhere. Listing, numbering
+  and restore read this list's chain; the panel says how many increments the
+  account keeps beyond it, and a restore falls back to the whole account when
+  the chain is empty (older increments from before chains were told apart; the
+  todos of other lists are copied, not joined). Two devices still number on
+  their own, so a restore joins with `allowGaps` and reports duplicates
+  (harmless: the join is a merge) and gaps (increments the store does not
+  hold) instead of refusing. The store learns that increments belong together,
+  not which list it is.
 - **Delete the archive.** Increments never go away by themselves and each
-  costs by the hour. _Delete archive_ asks once, then forgets every increment
-  the account keeps on the channel — on Aleph a FORGET signed by the archive
+  costs by the hour. _Delete archive_ asks once and offers two scopes: this
+  list's chain, or everything the account keeps on the channel. It then
+  forgets the increments — on Aleph a FORGET signed by the archive
   key (for itself, or for the owner when the owner granted FORGET; otherwise
   the owner deletes from outside), elsewhere the service's own
   delete. The list stays; the watcher starts over, and the next increment

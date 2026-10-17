@@ -127,6 +127,10 @@ test.describe('Archive paid by an owner account', () => {
 			expect(aleph.stores()[0].sender).toBe(signer);
 			expect(aleph.stores()[0].content.address).toBe(owner);
 			expect(aleph.stores()[0].content.payment).toEqual({ type: 'credit' });
+			// This list's chain, named by a fingerprint from the passkey (keys.js):
+			// opaque to the store, the same on every device with the passkey.
+			const chain = aleph.stores()[0].content.ref;
+			expect(chain).toMatch(/^[0-9a-f]{32}$/);
 
 			await addTodo(page, todos[2]);
 			await expect(panel.getByTestId('archive-sequence')).toHaveText('2', {
@@ -138,6 +142,13 @@ test.describe('Archive paid by an owner account', () => {
 			// before anything is sent, and hands the owner the command instead.
 			await panel.getByTestId('archive-list').click();
 			await expect(panel.getByTestId('archive-increments').locator('li')).toHaveCount(2);
+			expect(aleph.stores().every((s) => s.content.ref === chain)).toBe(true);
+			// The listing asked for this chain, not the whole account.
+			expect(
+				aleph
+					.queries()
+					.some((q) => q.startsWith('/api/v0/messages.json') && q.includes(`refs=${chain}`))
+			).toBe(true);
 			await panel.getByTestId('archive-delete').click();
 			await panel.getByTestId('archive-delete-yes').click();
 			await expect(panel.getByTestId('archive-forget-not-granted')).toBeVisible();

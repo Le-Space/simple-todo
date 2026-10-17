@@ -159,10 +159,13 @@ export async function fakeAleph(page, options = {}) {
 		});
 	});
 
+	/** @type {string[]} every API path and query asked, in order */
+	const queries = [];
 	await page.route(`${API}/**`, async (route) => {
 		const request = route.request();
 		const url = new URL(request.url());
 		const path = url.pathname;
+		queries.push(url.pathname + url.search);
 		if (request.method() === 'POST' && path === '/api/v0/messages') {
 			const { message } = JSON.parse(request.postData() ?? '{}');
 			const fate = await judge(message);
@@ -187,10 +190,12 @@ export async function fakeAleph(page, options = {}) {
 		if (path === '/api/v0/messages.json') {
 			const owner = url.searchParams.get('owners') ?? '';
 			const channel = url.searchParams.get('channels');
+			const refs = url.searchParams.get('refs');
 			const pagination = Number(url.searchParams.get('pagination') ?? 50);
 			const pageNo = Number(url.searchParams.get('page') ?? 1);
 			const all = [...stores.values()]
 				.filter((s) => same(s.content.address, owner) && (!channel || s.channel === channel))
+				.filter((s) => !refs || refs.split(',').includes(s.content.ref))
 				.sort((a, b) => b.time - a.time);
 			const messages = all.slice((pageNo - 1) * pagination, pageNo * pagination).map((s) => ({
 				item_hash: s.item_hash,
@@ -226,6 +231,7 @@ export async function fakeAleph(page, options = {}) {
 			security.set(owner.toLowerCase(), { authorizations });
 		},
 		stores: () => [...stores.values()],
+		queries: () => [...queries],
 		blobs: () => [...blobs.keys()],
 		log: () => [...log]
 	};
