@@ -26,6 +26,10 @@ what Zama's v0.14 changes about it and what we do next:
 [apps/escrow01/docs/keys.md](apps/escrow01/docs/keys.md)
 ([Deutsch](apps/escrow01/docs/keys.de.md)).
 
+**Passkeys on Android without Google Play Services** (GrapheneOS): which
+credential provider gives the passkey its PRF, and what the chapters do without
+it — [docs/grapheneos.md](docs/grapheneos.md).
+
 ## A list, on another device
 
 The QR icon in every chapter's header shows the page as a code. The open list
