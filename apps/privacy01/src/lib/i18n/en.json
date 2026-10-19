@@ -36,6 +36,7 @@
 		"identityExistingFound": "A passkey from an earlier session is stored on this device.",
 		"identityExistingNone": "Nothing is stored in this browser. We will ask your authenticator, which only works if the passkey carries its own details.",
 		"prfMissing": "This authenticator has no PRF, so your signing key cannot be derived from the passkey. Each session gets a fresh one instead: the same DID, but a new identity document every time, and a second device gets its own.",
+		"prfMissingAndroid": "This authenticator has no PRF, so your signing key cannot be derived from the passkey. Each session gets a fresh one instead: the same DID, but a new identity document every time, and a second device gets its own. On Android without Google Play Services (GrapheneOS) a credential provider that supports PRF, such as Authnkey, fixes this: install it, make it the preferred passkey service, then register the passkey anew — see docs/grapheneos.md.",
 		"mnemonicLabel": "Shared list mnemonic",
 		"mnemonicHelp": "Share these three Spanish words to join the same public writable OrbitDB list. This is a share code, not a password or encryption key.",
 		"mnemonicPlaceholder": "luna-camino-verde",

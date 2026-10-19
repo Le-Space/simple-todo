@@ -81,6 +81,11 @@ gateways this is a real constraint: your DID is only portable across
 devices via passkey sync (iCloud Keychain, Google Password Manager, …), not
 across origins. Pin one canonical domain if stable identities matter.
 
+**Android without Google Play Services** (GrapheneOS): the PRF extension the
+identity is derived from needs a credential provider that implements CTAP2
+itself — which one does, how to set it up, and what the chapter does without
+PRF is in [docs/grapheneos.md](../../docs/grapheneos.md).
+
 ## 🎯 What is this?
 
 This is a **browser-only** local-first peer-to-peer todo application that operates without any traditional server infrastructure. It connects directly to other browsers and mobile devices through peer-to-peer connections, creating a truly decentralized experience. So far, a LibP2P signaling node is necessary to connect the peers, and in this version it also stores the todos since this browser version works with MemoryStorage only instead of local IPFSStorage (e.g. LevelBlockstore).

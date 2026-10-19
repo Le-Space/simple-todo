@@ -36,6 +36,7 @@
 		"identityExistingFound": "Auf diesem Gerät liegt ein Passkey aus einer früheren Sitzung.",
 		"identityExistingNone": "In diesem Browser ist nichts gespeichert. Wir fragen Ihren Authenticator — das gelingt nur, wenn der Passkey seine Angaben selbst mitführt.",
 		"prfMissing": "Dieser Authenticator hat kein PRF, daher lässt sich Ihr Signierschlüssel nicht aus dem Passkey ableiten. Stattdessen gibt es pro Sitzung einen neuen: derselbe DID, aber jedes Mal ein neues Identitätsdokument, und ein zweites Gerät bekommt ein eigenes.",
+		"prfMissingAndroid": "Dieser Authenticator hat kein PRF, daher lässt sich Ihr Signierschlüssel nicht aus dem Passkey ableiten. Stattdessen gibt es pro Sitzung einen neuen: derselbe DID, aber jedes Mal ein neues Identitätsdokument, und ein zweites Gerät bekommt ein eigenes. Auf Android ohne Google Play Services (GrapheneOS) hilft ein Credential Provider mit PRF, etwa Authnkey: installieren, als bevorzugten Passkey-Dienst wählen, dann den Passkey neu anlegen — siehe docs/grapheneos.md.",
 		"mnemonicLabel": "Merkwörter der geteilten Liste",
 		"mnemonicHelp": "Geben Sie diese drei spanischen Wörter weiter, um dieselbe öffentlich beschreibbare OrbitDB-Liste zu öffnen. Das ist ein Zugangscode, kein Passwort und kein Schlüssel.",
 		"mnemonicPlaceholder": "luna-camino-verde",
