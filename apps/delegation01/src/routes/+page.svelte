@@ -175,7 +175,22 @@
 		} catch {
 			// No storage: warn every time rather than not at all.
 		}
+		// A page cannot see GrapheneOS, nor whether Play Services exist. It can
+		// see Android, and on Android a passkey without PRF is exactly that case:
+		// no CTAP2 over NFC without a credential provider, or a provider
+		// (Passchain) that answers no PRF. The hint names the fix;
+		// docs/grapheneos.md has the rest.
+		if (onAndroid()) {
+			showToast($_('consent.prfMissingAndroid'), 'warning', 20_000);
+			return;
+		}
 		showToast($_('consent.prfMissing'), 'warning', 12_000);
+	}
+
+	/** Android as the browser reports it — Vanadium presents as Chrome on Android. */
+	function onAndroid() {
+		const data = /** @type {any} */ (navigator).userAgentData;
+		return data?.platform === 'Android' || /\bAndroid\b/.test(navigator.userAgent);
 	}
 
 	const handleModalClose = async () => {
