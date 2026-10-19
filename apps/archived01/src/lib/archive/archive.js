@@ -668,10 +668,8 @@ export async function restoreArchive({ scope = /** @type {ArchiveScope} */ ('lis
 					// one reads anyway.
 					open: { type: 'keyvalue', sync: false, ...(encryption ? { encryption } : {}) }
 				});
-				// 0.21.0 returns both; its declared type does not say so yet.
-				const chain = /** @type {{ duplicates?: number[], gaps?: number[] }} */ (restored);
-				duplicates += new Set(chain.duplicates ?? []).size;
-				gaps += (chain.gaps ?? []).length;
+				duplicates += new Set(restored.duplicates).size;
+				gaps += restored.gaps.length;
 				const other = /** @type {any} */ (
 					restored.databases.find((/** @type {any} */ d) => String(d.address) === address)
 				)?.database;
