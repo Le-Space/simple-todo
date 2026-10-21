@@ -38,7 +38,7 @@ To test this application, you need to:
 1. **Open Two Browser Windows**: You need at least two browser instances
 2. **Same URL**: Both browsers should load the same application URL
 3. **Relay Server**: A relay node must be running for peer discovery (in dev mode only - not included in this repo)
-4. **Accept Consent**: Check all consent boxes in both browsers before testing
+4. **Accept Consent**: Accept the notice in both browsers before testing
 
 ## Key Technologies Explained
 
@@ -312,10 +312,7 @@ async function loadTodos() {
 ### Testing Steps
 
 1. **Load the App**: Open the application in two different browsers
-2. **Accept Consent**: Check all consent boxes in both browsers:
-   - "I understand that this todo application is a demo app and will connect to a relay node"
-   - "I understand that the relay may store the entered data, making it visible to other users"
-   - "I understand that this todo application works with one global unencrypted database which is visible to others testing this app simultaneously"
+2. **Accept Consent**: Accept the notice in both browsers. The statement names what the app does with your data — the relay it connects to, that the relay may keep a copy, that the list is shared and unencrypted — and follows the choices made on the same screen.
    - "I understand that I need to open a second browser or mobile device with the same web address to test the replication functionality"
 3. **Wait for Connection**: The app will automatically discover and connect peers
 4. **Add Todos**: Create todos in one browser

@@ -97,7 +97,7 @@ init({
 // a module that can translate has, by construction, already loaded what makes
 // translation possible. Keys this chapter does not have fall back to the
 // English written at the component's call site.
-setTranslator(formatter);
+setTranslator(formatter, { locale: i18nLocale, setLocale });
 
 /*
 	`app.html` says `lang="en"`, and a German page that declares itself English is

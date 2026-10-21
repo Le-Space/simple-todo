@@ -92,7 +92,7 @@ init({
 // a module that can translate has, by construction, already loaded what makes
 // translation possible. Keys this chapter does not have fall back to the
 // English written at the component's call site.
-setTranslator(_);
+setTranslator(_, { locale: i18nLocale, setLocale });
 
 export { _, json, locale } from 'svelte-i18n';
 

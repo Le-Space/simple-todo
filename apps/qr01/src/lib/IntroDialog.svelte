@@ -22,7 +22,7 @@
 	import { _, locale } from '$lib/i18n/index.js';
 	import { simpleView } from './view-mode.js';
 	import { introOpen, closeIntro } from './intro-dialog.js';
-	import LanguageSwitcher from './LanguageSwitcher.svelte';
+	import LanguageSwitcher from '@simple-todo/ui/LanguageSwitcher.svelte';
 	import ViewModeToggle from './ViewModeToggle.svelte';
 	import { diagnosticRtcConfiguration } from './ice-mode.js';
 	import { ownDidStore } from './p2p-stores.js';

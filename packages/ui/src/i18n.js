@@ -31,6 +31,19 @@ const format = writable(null);
 let unsubscribe = null;
 
 /**
+ * The chapter's locale, as a store, and the way to change it — registered
+ * beside the translator, so the shared language switcher needs neither the
+ * chapter's `$lib/i18n` nor two props at every call site.
+ *
+ * @type {import('svelte/store').Writable<string | null>}
+ */
+const currentLocale = writable(null);
+/** @type {(() => void) | null} */
+let unsubscribeLocale = null;
+/** @type {((next: any) => void) | null} */
+let changeLocale = null;
+
+/**
  * Register the chapter's translator.
  *
  * Takes svelte-i18n's `_` as it is: a store whose value is the format function,
@@ -44,11 +57,29 @@ let unsubscribe = null;
  *
  * Passing nothing unregisters.
  *
+ * `locale` and `setLocale` are the chapter's: svelte-i18n's `locale` store
+ * and the chapter's own setter, which also remembers the choice. The shared
+ * `LanguageSwitcher` reads and calls them; a chapter that registers neither
+ * gets no switcher, which is right for a chapter without a catalogue.
+ *
  * @param {{ subscribe: (run: (value: any) => void) => unknown } | null} [store]
+ * @param {{ locale?: { subscribe: (run: (value: any) => void) => unknown }, setLocale?: (next: any) => void }} [options]
+ *   `setLocale` takes `any`, because a chapter types its setter to its own two codes.
  */
-export function setTranslator(store) {
+export function setTranslator(store, { locale, setLocale } = {}) {
 	unsubscribe?.();
 	unsubscribe = null;
+	unsubscribeLocale?.();
+	unsubscribeLocale = null;
+	changeLocale = typeof setLocale === 'function' ? setLocale : null;
+	if (locale && typeof locale.subscribe === 'function') {
+		const stop = locale.subscribe((value) =>
+			currentLocale.set(typeof value === 'string' ? value : null)
+		);
+		unsubscribeLocale = typeof stop === 'function' ? /** @type {() => void} */ (stop) : null;
+	} else {
+		currentLocale.set(null);
+	}
 
 	if (!store || typeof store.subscribe !== 'function') {
 		format.set(null);
@@ -73,7 +104,9 @@ export const t = derived(format, ($format) => {
 	 */
 	return (key, fallback, values) => {
 		const english = () =>
-			values ? fallback.replace(/\{(\w+)\}/g, (whole, name) => String(values[name] ?? whole)) : fallback;
+			values
+				? fallback.replace(/\{(\w+)\}/g, (whole, name) => String(values[name] ?? whole))
+				: fallback;
 		if (!$format) return english();
 		let translated;
 		try {
@@ -86,3 +119,21 @@ export const t = derived(format, ($format) => {
 		return !translated || translated === key ? english() : translated;
 	};
 });
+
+/**
+ * The registered chapter's locale: `'de'`, `'en'`, or `null` when no chapter
+ * has registered one.
+ *
+ * @type {import('svelte/store').Readable<string | null>}
+ */
+export const locale = derived(currentLocale, ($locale) => $locale);
+
+/**
+ * Change the registered chapter's locale. Does nothing when no chapter has
+ * registered a setter.
+ *
+ * @param {string} next
+ */
+export function setLocale(next) {
+	changeLocale?.(next);
+}

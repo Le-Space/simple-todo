@@ -37,7 +37,7 @@
 	import { placeRelayButtonForThisScreen } from '$lib/relay-fab-position.js';
 	import { formatVersions } from '@simple-todo/todo/build-info.js';
 	import ConsentModal from '@simple-todo/ui/ConsentModal.svelte';
-	import LanguageSwitcher from '$lib/LanguageSwitcher.svelte';
+	import LanguageSwitcher from '@simple-todo/ui/LanguageSwitcher.svelte';
 	import { clauses as consentClauses } from '$lib/consent-clauses.js';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
 	import ThemeToggle from '@simple-todo/ui/ThemeToggle.svelte';
