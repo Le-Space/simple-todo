@@ -21,7 +21,8 @@
 			"e2e/passkey-identity.spec.js",
 			"e2e/footer.spec.js",
 			"e2e/page-qr.spec.js",
-			"e2e/intro-network.spec.js"
+			"e2e/intro-network.spec.js",
+			"e2e/phone-layout.spec.js"
 		],
 		"lint": true,
 		"check": true,

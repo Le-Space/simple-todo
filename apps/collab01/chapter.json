@@ -21,7 +21,8 @@
 			"e2e/consent-screen.spec.js",
 			"e2e/storage-choice.spec.js",
 			"e2e/footer.spec.js",
-			"e2e/page-qr.spec.js"
+			"e2e/page-qr.spec.js",
+			"e2e/phone-layout.spec.js"
 		],
 		"check": true
 	},
