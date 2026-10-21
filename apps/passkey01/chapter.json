@@ -26,7 +26,8 @@
 			"e2e/page-qr.spec.js",
 			"e2e/consent-network.spec.js",
 			"e2e/passkey-session-rejoin.spec.js",
-			"e2e/anonymous-reads-passkey.spec.js"
+			"e2e/anonymous-reads-passkey.spec.js",
+			"e2e/phone-layout.spec.js"
 		],
 		"check": true
 	},

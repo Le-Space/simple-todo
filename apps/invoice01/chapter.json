@@ -25,7 +25,8 @@
 			"e2e/passkey-restore.spec.js",
 			"e2e/footer.spec.js",
 			"e2e/page-qr.spec.js",
-			"e2e/consent-network.spec.js"
+			"e2e/consent-network.spec.js",
+			"e2e/phone-layout.spec.js"
 		],
 		"check": true
 	},
