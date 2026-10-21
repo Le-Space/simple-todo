@@ -5,7 +5,7 @@
 	import { createListLink } from '@simple-todo/todo/list-link.js';
 	import { t } from '@simple-todo/ui/i18n.js';
 	import { derived } from 'svelte/store';
-	import { _, locale } from '$lib/i18n/index.js';
+	import { _, locale, json } from '$lib/i18n/index.js';
 	import { peerIdStore, initializationStore, ownDidStore } from '$lib/p2p-stores.js';
 	import PasskeyOnboarding from '$lib/PasskeyOnboarding.svelte';
 	import OnePasskeyIntro from '$lib/OnePasskeyIntro.svelte';
@@ -52,7 +52,9 @@
 	import { supportsDelegation } from '$lib/delegated-access.js';
 	import DelegatedAuthBadge from '$lib/DelegatedAuthBadge.svelte';
 	import { formatVersions } from '@simple-todo/todo/build-info.js';
-	import ConsentModal from '$lib/ConsentModal.svelte';
+	import ConsentModal from '@simple-todo/ui/ConsentModal.svelte';
+	import { NETWORK_ADDRESSES, NETWORK_CHECK } from '@simple-todo/ui/qr-intro-network.js';
+	import { clauses as consentClauses } from '$lib/consent-clauses.js';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
 	import ThemeToggle from '$lib/ThemeToggle.svelte';
 	import LocalFirstLink from '@simple-todo/ui/LocalFirstLink.svelte';
@@ -612,13 +614,17 @@
 	<ConsentModal
 		bind:show={showModal}
 		bind:rememberDecision
+		choices={{ identity: identityMode, storage: storageMode }}
+		clauses={consentClauses}
+		elementStrings={$json('consent.element')}
+		bind:technical={$technicalView}
+		hideSections={[NETWORK_CHECK, NETWORK_ADDRESSES]}
 		canProceed={mnemonicValid}
-		identity={identityMode}
-		storage={storageMode}
 		{error}
 		{notice}
 		on:proceed={handleModalClose}
 	>
+		<svelte:fragment slot="header"><LanguageSwitcher /></svelte:fragment>
 		<svelte:fragment slot="before-confirmation">
 			<OnePasskeyIntro confidential={budgetInfo.confidential} storage={storageMode} />
 			<StorageModeSelector bind:mode={storageMode} />

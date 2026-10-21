@@ -22,10 +22,12 @@
 			"relay": "Relay-Knoten machen Geräte miteinander bekannt und behalten unter Umständen eine Kopie der Liste, damit ein anderes Gerät sie später abholen kann.",
 			"sharedList": "Die Liste hinter den drei spanischen Wörtern ist offen: Wer die Wörter hat, kann sie lesen und beschreiben. Die Wörter sind ein Weg, sich zu treffen - kein Passwort.",
 			"readingIsOpen": "Ein Passkey sagt, wer etwas geschrieben hat. Er macht es nicht privat - hier ist nichts verschlüsselt, und wer die drei Wörter hat, liest alles, auch der Relay, der die Liste aufbewahrt.",
-			"identityPasskey": "Ihr Passkey weist Sie gegenüber den anderen Geräten aus und bleibt auf diesem Gerät. Niemand sonst kann in Ihrem Namen schreiben, und wir bekommen ihn nie zu sehen.",
+			"identityPasskey": "Ihr Passkey weist Sie gegenüber den anderen Geräten aus. Er bleibt bei Ihrem Authenticator – im Gerät, auf einem Sicherheitsschlüssel oder in einem Passwortmanager, der ihn womöglich zwischen Ihren Geräten abgleicht. Wir bekommen ihn nie zu sehen, und niemand sonst kann in Ihrem Namen schreiben.",
 			"identityAnonymous": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Schließen Sie ihn, ist sie weg, und nichts verbindet einen Besuch mit dem nächsten.",
-			"reload": "Auf diesem Gerät wird noch nichts gespeichert: Beim Neuladen fängt dieser Browser von vorn an.",
-			"cookies": "Es werden keine Tracking-Cookies verwendet. Wenn Sie \"nicht mehr anzeigen\" ankreuzen, ist diese Entscheidung das Einzige, was auf diesem Gerät gespeichert wird."
+			"cookies": "Es werden keine Tracking-Cookies verwendet. Wenn Sie \"nicht mehr anzeigen\" ankreuzen, ist diese Entscheidung das Einzige, was auf diesem Gerät gespeichert wird.",
+			"identityAnonymousKept": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Er behält sie, bis Sie die Website-Daten löschen; nichts verbindet sie mit Ihnen.",
+			"storageMemory": "Sie haben „nur im Arbeitsspeicher“ gewählt: Auf diesem Gerät wird nichts abgelegt, und beim Neuladen fängt dieser Browser von vorn an.",
+			"storagePersistent": "Sie haben „in diesem Browser behalten“ gewählt: Die Todos bleiben nach dem Neuladen da. Sie liegen unverschlüsselt im Speicher dieses Browsers, und wer ihn löscht, verliert sie."
 		},
 		"errorNoPasskey": "In diesem Browser ist kein Passkey hinterlegt, und Ihr Authenticator hat keinen herausgegeben. Legen Sie einen neuen an oder fahren Sie ohne fort.",
 		"errorNeedsLabel": "Bitte geben Sie dem neuen Passkey einen Namen.",

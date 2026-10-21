@@ -175,3 +175,42 @@ export async function passConsent(
 		() => document.querySelector('[data-testid="consent-modal"]')?.isOpen !== true
 	);
 }
+
+/**
+ * A press on the waiting proceed button leads to what it is waiting for.
+ *
+ * The acceptance tick sits inside the element's collapsed "what this means for
+ * your data"; on a phone the button naming it was the only thing in view, and
+ * a `disabled` button swallowed the press (archived01, 2026-10-17). The
+ * shared dialog keeps the button pressable (`aria-disabled`), and a press
+ * opens the statement, scrolls to the tick and focuses it. Folded first, as a
+ * phone shows it — the element opens the statement on a wide screen.
+ *
+ * @param {import('@playwright/test').Page} page
+ */
+export async function expectProceedRevealsTick(page) {
+	const state = () =>
+		page.$eval('[data-testid="consent-modal"]', (host) => {
+			const root = /** @type {any} */ (host).shadowRoot;
+			const box = root?.querySelector('input[part=accept]');
+			return {
+				open: box?.closest('details')?.open === true,
+				focused: root?.activeElement === box
+			};
+		});
+	await page.$eval('[data-testid="consent-modal"]', (host) => {
+		const details = /** @type {any} */ (host).shadowRoot?.querySelector('details.privacy');
+		if (details) details.open = false;
+	});
+	if ((await state()).open) throw new Error('the statement did not fold');
+	// `dispatchEvent`, because Playwright refuses to click an aria-disabled button.
+	await page.getByTestId('consent-proceed').dispatchEvent('click');
+	const deadline = Date.now() + 5000;
+	for (;;) {
+		const now = await state();
+		if (now.open && now.focused) return;
+		if (Date.now() > deadline)
+			throw new Error(`the press did not reveal the tick: ${JSON.stringify(now)}`);
+		await page.waitForTimeout(100);
+	}
+}

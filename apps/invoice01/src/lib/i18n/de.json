@@ -28,7 +28,8 @@
 			"cookies": "Es werden keine Tracking-Cookies verwendet. Wenn Sie \"nicht mehr anzeigen\" ankreuzen, ist diese Entscheidung das Einzige, was auf diesem Gerät gespeichert wird.",
 			"delegation": "Wer in eine Liste schreiben darf, entscheiden Sie. Eine Freigabe können Sie später wieder zurücknehmen — anders als ein herausgegebener Schlüssel, denn hier wird nichts verschlüsselt.",
 			"storageMemory": "Sie haben „nur im Arbeitsspeicher\" gewählt: Auf diesem Gerät wird nichts abgelegt, und beim Neuladen fängt dieser Browser von vorn an.",
-			"storagePersistent": "Sie haben „in diesem Browser behalten\" gewählt: Die Todos bleiben nach dem Neuladen da. Sie liegen unverschlüsselt im Speicher dieses Browsers, und wer ihn löscht, verliert sie."
+			"storagePersistent": "Sie haben „in diesem Browser behalten\" gewählt: Die Todos bleiben nach dem Neuladen da. Sie liegen unverschlüsselt im Speicher dieses Browsers, und wer ihn löscht, verliert sie.",
+			"identityAnonymousKept": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Er behält sie, bis Sie die Website-Daten löschen; nichts verbindet sie mit Ihnen."
 		},
 		"errorNoPasskey": "In diesem Browser ist kein Passkey hinterlegt, und Ihr Authenticator hat keinen herausgegeben. Legen Sie einen neuen an oder fahren Sie ohne fort.",
 		"errorNeedsLabel": "Bitte geben Sie dem neuen Passkey einen Namen.",

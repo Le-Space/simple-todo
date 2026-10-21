@@ -10,6 +10,7 @@
     "src"
   ],
   "dependencies": {
+    "@le-space/libp2p-webrtc-qr": "0.13.1",
     "@simple-todo/todo": "workspace:*",
     "svelte": "^5.0.0",
     "uqr": "0.1.3",

@@ -26,8 +26,10 @@
 			"keyIsForever": "When you give somebody access, they get a copy of the key. It cannot be taken back afterwards, and it opens everything written before as well.",
 			"identityPasskey": "Your passkey identifies you to the other devices. Nobody else can write as you.",
 			"identityAnonymous": "You are using a random identity that exists only in this browser. Close it and it is gone.",
-			"reload": "Nothing is stored on this device yet: reload the page and this browser starts over.",
-			"cookies": "No tracking cookies are used. If you tick \"don't show this again\", that choice is the only thing saved on this device."
+			"cookies": "No tracking cookies are used. If you tick \"don't show this again\", that choice is the only thing saved on this device.",
+			"identityAnonymousKept": "You are using a random identity that exists only in this browser. It keeps it until you clear the site data; nothing links it to you.",
+			"storageMemory": "You chose \"in memory only\": nothing is written to this device, and this browser starts over when the page reloads.",
+			"storagePersistent": "You chose \"keep them in this browser\": the lists survive a reload. The shared list sits unencrypted in this browser’s storage, a list of your own sealed with its key – and clearing the storage loses both."
 		},
 		"errorNoPasskey": "No passkey is stored in this browser, and your authenticator did not hand one over. Create a new one, or continue without one.",
 		"errorNeedsLabel": "Please give the new passkey a name.",

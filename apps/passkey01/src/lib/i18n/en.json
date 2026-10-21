@@ -22,10 +22,12 @@
 			"relay": "Relay nodes introduce devices to each other and may keep a copy of the list so another device can collect it later.",
 			"sharedList": "The list named by the three Spanish words is open: anyone who has those words can read it and write to it. Treat the words as a way to meet, not as a password.",
 			"readingIsOpen": "A passkey says who wrote something. It does not make it private - nothing here is encrypted, and anyone who has the three words reads everything, including the relay that stores it.",
-			"identityPasskey": "Your passkey identifies you to the other devices, and it stays on this device. Nobody else can write as you, and we never see it.",
+			"identityPasskey": "Your passkey identifies you to the other devices. It stays with your authenticator – in the device, on a security key, or in a password manager that may sync it between your devices. We never see it, and nobody else can write as you.",
 			"identityAnonymous": "You are using a random identity that exists only in this browser. Close it and it is gone, and nothing connects one visit to the next.",
-			"reload": "Nothing is stored on this device yet: reload the page and this browser starts over.",
-			"cookies": "No tracking cookies are used. If you tick \"don't show this again\", that choice is the only thing saved on this device."
+			"cookies": "No tracking cookies are used. If you tick \"don't show this again\", that choice is the only thing saved on this device.",
+			"identityAnonymousKept": "You are using a random identity that exists only in this browser. It keeps it until you clear the site data; nothing links it to you.",
+			"storageMemory": "You chose \"in memory only\": nothing is written to this device, and this browser starts over when the page reloads.",
+			"storagePersistent": "You chose \"keep them in this browser\": the todos survive a reload. They sit unencrypted in this browser’s storage, and clearing it loses them."
 		},
 		"errorNoPasskey": "No passkey is stored in this browser, and your authenticator did not hand one over. Create a new one, or continue without one.",
 		"errorNeedsLabel": "Please give the new passkey a name.",

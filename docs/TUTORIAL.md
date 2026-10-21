@@ -136,7 +136,7 @@ simple-todo/
 │   │   ├── db-actions.js        # Database operations
 │   │   ├── libp2p-config.js    # libp2p configuration
 │   │   ├── utils.js            # Utility functions
-│   │   └── ConsentModal.svelte # Consent modal component
+│   │   └── consent-clauses.js  # What this chapter says about your data (the dialog is shared: @simple-todo/ui)
 │   └── routes/
 │       └── +page.svelte        # Main application UI
 ├── package.json
@@ -162,7 +162,7 @@ simple-todo/
    - Relay node settings
    - Peer discovery setup
 
-4. **UI Components** (`src/routes/+page.svelte`, `src/lib/ConsentModal.svelte`)
+4. **UI Components** (`src/routes/+page.svelte`, `src/lib/consent-clauses.js`; the consent dialog itself is `@simple-todo/ui/ConsentModal.svelte`)
    - User interface for todo management
    - Consent modal for user awareness
    - Real-time peer status display

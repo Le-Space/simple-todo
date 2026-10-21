@@ -4,7 +4,7 @@
 	import { get } from 'svelte/store';
 	import { createListLink } from '@simple-todo/todo/list-link.js';
 	import { t } from '@simple-todo/ui/i18n.js';
-	import { _ } from '$lib/i18n/index.js';
+	import { _, json } from '$lib/i18n/index.js';
 	import { peerIdStore, initializationStore, ownDidStore } from '$lib/p2p-stores.js';
 	import PasskeyOnboarding from '$lib/PasskeyOnboarding.svelte';
 	import DidBadge from '@simple-todo/ui/DidBadge.svelte';
@@ -36,7 +36,9 @@
 	import { recallActiveList } from '$lib/db-actions.js';
 	import { placeRelayButtonForThisScreen } from '$lib/relay-fab-position.js';
 	import { formatVersions } from '@simple-todo/todo/build-info.js';
-	import ConsentModal from '$lib/ConsentModal.svelte';
+	import ConsentModal from '@simple-todo/ui/ConsentModal.svelte';
+	import LanguageSwitcher from '$lib/LanguageSwitcher.svelte';
+	import { clauses as consentClauses } from '$lib/consent-clauses.js';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
 	import ThemeToggle from '@simple-todo/ui/ThemeToggle.svelte';
 	import LocalFirstLink from '@simple-todo/ui/LocalFirstLink.svelte';
@@ -620,12 +622,14 @@
 	<ConsentModal
 		bind:show={showModal}
 		bind:rememberDecision
-		identity={identityMode}
-		storage={storageMode}
+		choices={{ identity: identityMode, storage: storageMode }}
+		clauses={consentClauses}
+		elementStrings={$json('consent.element')}
 		{error}
 		{notice}
 		on:proceed={handleModalClose}
 	>
+		<svelte:fragment slot="header"><LanguageSwitcher /></svelte:fragment>
 		<svelte:fragment slot="before-confirmation">
 			<StorageModeSelector bind:mode={storageMode} />
 			<PasskeyOnboarding bind:mode={identityMode} bind:label={passkeyLabel} />
