@@ -1,3 +1,5 @@
+import { isConsentOpen, passConsent, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+
 const DEFAULT_TIMEOUT = 120_000;
 
 /** Timestamped live progress line so CI logs show what remote runs are doing. */
@@ -44,17 +46,11 @@ export class TodoBrowserAgent {
 		remoteProgress(`[${this.name}] opening ${this.appUrl}...`);
 		await this.page.goto(this.appUrl, { waitUntil: 'domcontentloaded', timeout: this.timeout });
 
-		const modal = this.page.locator('div.fixed.inset-0.z-50');
-		await modal.waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {});
-		if (await modal.isVisible()) {
-			for (const checkbox of await modal.locator('input[type="checkbox"]').all()) {
-				await checkbox.check();
-			}
-			// Chapter-specific: collab01 replicates a Spanish-mnemonic-named shared
-			// OrbitDB list, so open that list by its mnemonic instead of the plain
-			// "Proceed to Test the App" flow.
-			await modal.getByTestId('shared-list-mnemonic-input').fill(mnemonic);
-			await this.page.getByRole('button', { name: 'Open shared list' }).click();
+		// The shared consent dialog: the list is named by its mnemonic before the
+		// statement is accepted. A remembered decision skips the dialog.
+		await waitForConsent(this.page, { timeout: 15_000 }).catch(() => {});
+		if (await isConsentOpen(this.page)) {
+			await passConsent(this.page, { mnemonic });
 		}
 
 		await this.todoInput().waitFor({ state: 'visible', timeout: this.timeout });
