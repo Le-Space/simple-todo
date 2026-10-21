@@ -9,7 +9,7 @@
 	import { peerIdStore, initializationStore, ownDidStore } from '$lib/p2p-stores.js';
 	import PasskeyOnboarding from '$lib/PasskeyOnboarding.svelte';
 	import OnePasskeyIntro from '$lib/OnePasskeyIntro.svelte';
-	import LanguageSwitcher from '$lib/LanguageSwitcher.svelte';
+	import LanguageSwitcher from '@simple-todo/ui/LanguageSwitcher.svelte';
 	import DidBadge from '$lib/DidBadge.svelte';
 	import AuditorView from '$lib/AuditorView.svelte';
 	import BalanceCard from '$lib/BalanceCard.svelte';

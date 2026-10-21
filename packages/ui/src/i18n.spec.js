@@ -1,7 +1,7 @@
 import { get } from 'svelte/store';
 import { readable, writable } from 'svelte/store';
 import { afterEach, describe, expect, it } from 'vitest';
-import { setTranslator, t } from './i18n.js';
+import { locale, setLocale, setTranslator, t } from './i18n.js';
 
 afterEach(() => setTranslator(null));
 
@@ -62,16 +62,54 @@ describe('the translator registry', () => {
 	});
 
 	it('fills placeholders in the translation and in the fallback alike', () => {
-		expect(get(t)('ui.listLink.openFailed', 'Could not open: {reason}', { reason: 'offline' })).toBe(
-			'Could not open: offline'
-		);
+		expect(
+			get(t)('ui.listLink.openFailed', 'Could not open: {reason}', { reason: 'offline' })
+		).toBe('Could not open: offline');
 		setTranslator(
 			readable((/** @type {string} */ key, /** @type {any} */ options) =>
 				key === 'ui.listLink.openFailed' ? `Nicht geöffnet: ${options?.values?.reason}` : key
 			)
 		);
-		expect(get(t)('ui.listLink.openFailed', 'Could not open: {reason}', { reason: 'offline' })).toBe(
-			'Nicht geöffnet: offline'
+		expect(
+			get(t)('ui.listLink.openFailed', 'Could not open: {reason}', { reason: 'offline' })
+		).toBe('Nicht geöffnet: offline');
+	});
+});
+
+describe('the locale beside the translator', () => {
+	it('is null, and switching does nothing, when no chapter registered one', () => {
+		expect(get(locale)).toBe(null);
+		expect(() => setLocale('de')).not.toThrow();
+	});
+
+	it("follows the chapter's locale store and calls its setter", () => {
+		const chapterLocale = writable('en');
+		/** @type {string[]} */
+		const asked = [];
+		setTranslator(
+			readable((/** @type {string} */ key) => key),
+			{
+				locale: chapterLocale,
+				setLocale: (next) => {
+					asked.push(next);
+					chapterLocale.set(next);
+				}
+			}
 		);
+		expect(get(locale)).toBe('en');
+		setLocale('de');
+		expect(asked).toEqual(['de']);
+		expect(get(locale)).toBe('de');
+	});
+
+	it('drops the previous locale with the previous translator', () => {
+		const first = writable('de');
+		setTranslator(
+			readable((/** @type {string} */ key) => key),
+			{ locale: first, setLocale: () => {} }
+		);
+		setTranslator(readable((/** @type {string} */ key) => key));
+		first.set('en');
+		expect(get(locale)).toBe(null);
 	});
 });

@@ -85,6 +85,6 @@ init({
 // The components in `@simple-todo/ui` reach this catalogue through here, next
 // to `init()` for the same reason `init()` is not in a layout: a module that
 // can translate has already loaded what makes translation possible.
-setTranslator(_);
+setTranslator(_, { locale: i18nLocale, setLocale });
 
 export { _, locale } from 'svelte-i18n';

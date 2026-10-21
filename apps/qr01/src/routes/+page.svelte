@@ -4,7 +4,7 @@
 	import { createListLink } from '@simple-todo/todo/list-link.js';
 	import { t } from '@simple-todo/ui/i18n.js';
 	import { _ } from '$lib/i18n/index.js';
-	import LanguageSwitcher from '$lib/LanguageSwitcher.svelte';
+	import LanguageSwitcher from '@simple-todo/ui/LanguageSwitcher.svelte';
 	import ViewModeToggle from '$lib/ViewModeToggle.svelte';
 	import IntroDialog from '$lib/IntroDialog.svelte';
 	import { hydrateIntro, openIntro } from '$lib/intro-dialog.js';

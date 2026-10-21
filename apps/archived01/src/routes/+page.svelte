@@ -30,7 +30,7 @@
 	import { clauses as consentClauses } from '$lib/consent-clauses.js';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
 	import ThemeToggle from '@simple-todo/ui/ThemeToggle.svelte';
-	import LanguageSwitcher from '$lib/LanguageSwitcher.svelte';
+	import LanguageSwitcher from '@simple-todo/ui/LanguageSwitcher.svelte';
 	import LocalFirstLink from '@simple-todo/ui/LocalFirstLink.svelte';
 	import AppFooter from '@simple-todo/ui/AppFooter.svelte';
 	import PageQr from '@simple-todo/ui/PageQr.svelte';

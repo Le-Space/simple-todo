@@ -3,7 +3,7 @@
  *
  * Read through `typeof` guards because these are Vite `define` substitutions,
  * not imports: anything consuming this module outside a Vite build (a Node
- * script, another app importing `ConsentModal.svelte`) simply sees no versions.
+ * script, a shared component outside this app's build) simply sees no versions.
  *
  * @returns {{ name: string, version: string }[]} only dependencies whose
  *   version was actually baked in — a name with no number is left out rather

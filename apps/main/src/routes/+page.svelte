@@ -24,7 +24,7 @@
 	import { formatBuildDate } from '@simple-todo/todo/build-info.js';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
 	import { _, json } from '$lib/i18n/index.js';
-	import LanguageSwitcher from '$lib/LanguageSwitcher.svelte';
+	import LanguageSwitcher from '@simple-todo/ui/LanguageSwitcher.svelte';
 	import ThemeToggle from '$lib/ThemeToggle.svelte';
 	import LocalFirstLink from '@simple-todo/ui/LocalFirstLink.svelte';
 	import AppFooter from '@simple-todo/ui/AppFooter.svelte';

@@ -88,6 +88,6 @@ init({
 // The components in `@simple-todo/ui` reach this catalogue through here, next to
 // `init()` for the same reason `init()` is not in a layout. Keys this chapter
 // does not have fall back to the English written at the component's call site.
-setTranslator(_);
+setTranslator(_, { locale: i18nLocale, setLocale });
 
 export { _, json, locale } from 'svelte-i18n';
