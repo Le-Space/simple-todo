@@ -18,9 +18,12 @@
 	honourStorageChoice();
 	import { formatVersions } from '$lib/build-info.js';
 	import { todosStore, addTodo, deleteTodo, toggleTodoComplete } from '$lib/db-actions.js';
-	import ConsentModal from '$lib/ConsentModal.svelte';
+	import ConsentModal from '@simple-todo/ui/ConsentModal.svelte';
+	import StorageModeSelector from '@simple-todo/ui/StorageModeSelector.svelte';
+	import { clauses as consentClauses } from '$lib/consent-clauses.js';
+	import { formatBuildDate } from '@simple-todo/todo/build-info.js';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
-	import { _ } from '$lib/i18n/index.js';
+	import { _, json } from '$lib/i18n/index.js';
 	import LanguageSwitcher from '$lib/LanguageSwitcher.svelte';
 	import ThemeToggle from '$lib/ThemeToggle.svelte';
 	import LocalFirstLink from '@simple-todo/ui/LocalFirstLink.svelte';
@@ -63,7 +66,19 @@
 	let relayNetworkEnabled = getRelayNetworkEnabled();
 	// Same reason as above: seeded from storage so the switch reflects this
 	// browser's existing choice rather than resetting to the default on every visit.
-	let persistentStorageEnabled = getPersistentStorageEnabled();
+	// The shared selector writes the choice the moment it is made, so what the
+	// browser had when the dialog opened is noted here — turning persistence off
+	// has to wipe what being on wrote, and the comparison needs the old value.
+	/** @type {'memory' | 'indexeddb'} As `StorageModeSelector` declares it. */
+	let storageMode = getPersistentStorageEnabled() ? 'indexeddb' : 'memory';
+	let persistentAtOpen = getPersistentStorageEnabled();
+	$: persistentStorageEnabled = storageMode === 'indexeddb';
+	$: if (showModal) persistentAtOpen = getPersistentStorageEnabled();
+	// The build, for the dialog's technical view: this chapter stamps its stack
+	// versions itself (build-info.js).
+	const consentVersion = `${formatVersions()} [${formatBuildDate(
+		typeof __BUILD_DATE__ !== 'undefined' ? __BUILD_DATE__ : ''
+	)}]`;
 
 	const handleModalClose = async () => {
 		showModal = false;
@@ -76,7 +91,7 @@
 		// for anyone who used the switch in that order. Before persisting the new
 		// value, so a wipe that fails leaves the old choice intact rather than
 		// claiming a clean slate it did not achieve.
-		if (!persistentStorageEnabled && getPersistentStorageEnabled()) {
+		if (!persistentStorageEnabled && persistentAtOpen) {
 			const { deleted } = await wipePersistentStorage();
 			console.info('Cleared persistent storage on switching to in-memory:', deleted);
 			try {
@@ -258,11 +273,41 @@
 {#if showModal}
 	<ConsentModal
 		bind:show={showModal}
-		bind:persistentStorageEnabled
-		bind:relayNetworkEnabled
 		bind:rememberDecision
+		choices={{ relay: relayNetworkEnabled, persistent: persistentStorageEnabled }}
+		clauses={consentClauses}
+		elementStrings={$json('consent.element')}
+		networkCheck="deferred"
+		version={consentVersion}
 		on:proceed={handleModalClose}
-	/>
+	>
+		<svelte:fragment slot="header"><LanguageSwitcher /></svelte:fragment>
+		<svelte:fragment slot="before-confirmation">
+			<!--
+				The storage choice, first among the decisions: it is the only one here
+				that changes what the app does rather than what has been read, and it
+				has to be made before Helia and OrbitDB are built.
+			-->
+			<StorageModeSelector bind:mode={storageMode} />
+			<!--
+				The relay switch stays this chapter's own: its value decides how the
+				libp2p node is built and is read before the node starts. A choice, not
+				an acknowledgement — unticking it is a valid way to continue.
+			-->
+			<label class="mt-4 flex cursor-pointer items-start gap-2 text-sm">
+				<input
+					type="checkbox"
+					bind:checked={relayNetworkEnabled}
+					data-testid="consent-relay-network"
+					class="mt-1"
+				/>
+				<span>
+					<span class="text-text">{$_('consent.relayLabel')}</span>
+					<span class="mt-0.5 block text-xs text-faint">{$_('consent.relayHint')}</span>
+				</span>
+			</label>
+		</svelte:fragment>
+	</ConsentModal>
 {/if}
 
 <main class="container mx-auto max-w-4xl p-6">

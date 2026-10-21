@@ -13,7 +13,8 @@
 		toggleTodoComplete
 	} from '$lib/db-actions.js';
 	import { formatVersions } from '@simple-todo/todo/build-info.js';
-	import ConsentModal from '$lib/ConsentModal.svelte';
+	import ConsentModal from '@simple-todo/ui/ConsentModal.svelte';
+	import { clauses as consentClauses } from '$lib/consent-clauses.js';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
 	import ThemeToggle from '@simple-todo/ui/ThemeToggle.svelte';
 	import LocalFirstLink from '@simple-todo/ui/LocalFirstLink.svelte';
@@ -261,13 +262,16 @@
 
 <!-- Only render the modal when needed -->
 {#if showModal}
+	<!--
+		The shared dialog, with this chapter's statement. No catalogue here, so
+		the element and the dialog speak their English defaults, and the header
+		slot stays empty: there is no language to switch to.
+	-->
 	<ConsentModal
 		bind:show={showModal}
-		title="Simple-Todo"
 		bind:rememberDecision
-		rememberLabel="Don't show this again on this device"
-		proceedButtonText="Open shared list"
-		disabledButtonText="Please check all boxes to continue"
+		choices={{ storage: storageMode }}
+		clauses={consentClauses}
 		canProceed={mnemonicValid}
 		on:proceed={handleModalClose}
 	>

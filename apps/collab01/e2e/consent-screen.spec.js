@@ -1,173 +1,154 @@
 import { test, expect } from '@playwright/test';
+import {
+	acceptNotice,
+	consentModal,
+	expectProceedRevealsTick,
+	isConsentOpen,
+	privacyClauses,
+	rememberDecision,
+	waitForConsent
+} from '@simple-todo/e2e-kit/consent.mjs';
 
-test.describe('Consent Screen', () => {
-	test('should display consent modal and allow proceeding after checking all boxes', async ({
+// Chapter (collab01): the shared consent dialog, in this chapter's English.
+// Four acknowledgement checkboxes used to gate the way out; one tick does now,
+// the element's, against a statement assembled from what was chosen.
+
+const timeout = 30000;
+
+test.describe('Consent screen', () => {
+	test('will not let you out until the statement is accepted', async ({ page }) => {
+		await page.goto('/');
+		await waitForConsent(page);
+
+		// The title is the element's own heading, in its shadow tree.
+		expect(
+			await page.evaluate(
+				() =>
+					document.querySelector('[data-testid="consent-modal"]')?.shadowRoot?.querySelector('h2')
+						?.textContent
+			)
+		).toContain('Simple-Todo');
+
+		const proceed = page.getByTestId('consent-proceed');
+		await expect(proceed).toHaveAttribute('aria-disabled', 'true');
+		await expect(proceed).toHaveText('Confirm the notice first');
+
+		await acceptNotice(page);
+		await expect(proceed).toHaveAttribute('aria-disabled', 'false');
+		await expect(proceed).toHaveText('Open shared list');
+
+		await proceed.click();
+		expect(await isConsentOpen(page)).toBe(false);
+		await expect(page.locator('main h1').filter({ hasText: 'Simple-Todo' })).toBeVisible();
+		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
+	});
+
+	test('a press on the waiting button opens the statement and puts the cursor on the tick', async ({
 		page
 	}) => {
 		await page.goto('/');
-
-		// Check that the consent modal is visible
-		const modal = page.locator('div.fixed.inset-0.z-50');
-		await expect(modal).toBeVisible();
-
-		// Check that the title is present in the modal
-		await expect(modal.locator('h1').filter({ hasText: 'Simple-Todo' })).toBeVisible();
-
-		// Check that all required checkboxes are present and initially unchecked
-		const relayConnectionCheckbox = page
-			.locator('label')
-			.filter({ hasText: /I understand this app uses libp2p peer-to-peer networking/ })
-			.locator('input[type="checkbox"]');
-		const dataVisibilityCheckbox = page
-			.locator('label')
-			.filter({ hasText: /I understand relay or peer nodes may cache/ })
-			.locator('input[type="checkbox"]');
-		const globalDatabaseCheckbox = page
-			.locator('label')
-			.filter({
-				hasText: /I understand todos are stored in a shared, unencrypted OrbitDB database/
-			})
-			.locator('input[type="checkbox"]');
-		const replicationTestingCheckbox = page
-			.locator('label')
-			.filter({ hasText: /I understand collaboration requires another browser or device/ })
-			.locator('input[type="checkbox"]');
-
-		// Verify all checkboxes are unchecked initially
-		await expect(relayConnectionCheckbox).not.toBeChecked();
-		await expect(dataVisibilityCheckbox).not.toBeChecked();
-		await expect(globalDatabaseCheckbox).not.toBeChecked();
-		await expect(replicationTestingCheckbox).not.toBeChecked();
-
-		// Check that the proceed button is disabled initially
-		const proceedButton = page
-			.locator('button')
-			.filter({ hasText: /Please check all boxes to continue/ });
-		await expect(proceedButton).toBeDisabled();
-
-		// Check each required checkbox
-		await relayConnectionCheckbox.check();
-		await dataVisibilityCheckbox.check();
-		await globalDatabaseCheckbox.check();
-		await replicationTestingCheckbox.check();
-
-		// Verify all checkboxes are now checked
-		await expect(relayConnectionCheckbox).toBeChecked();
-		await expect(dataVisibilityCheckbox).toBeChecked();
-		await expect(globalDatabaseCheckbox).toBeChecked();
-		await expect(replicationTestingCheckbox).toBeChecked();
-
-		// Check that the proceed button is now enabled and text changed
-		const enabledProceedButton = page.locator('button').filter({ hasText: /Open shared list/ });
-		await expect(enabledProceedButton).toBeEnabled();
-
-		// Click the proceed button
-		await enabledProceedButton.click();
-
-		// Wait for modal to close and main app to be visible
-		await expect(modal).not.toBeVisible();
-
-		// Check that the main app content is now visible (outside the modal)
-		await expect(page.locator('main h1').filter({ hasText: 'Simple-Todo' })).toBeVisible();
-
-		// Check for the loading spinner or main app content
-		const loadingSpinner = page.locator('text=Initializing P2P connection');
-		const addTodoForm = page.getByRole('textbox', { name: 'What needs to be done?' });
-
-		// Either loading spinner should be visible, or the todo form should be visible
-		await expect(loadingSpinner.or(addTodoForm)).toBeVisible();
+		await waitForConsent(page);
+		await expectProceedRevealsTick(page);
+		expect(await isConsentOpen(page)).toBe(true);
 	});
 
-	test('should remember consent decision when checkbox is checked', async ({ page }) => {
+	test('names the requirement that is actually holding the button', async ({ page }) => {
 		await page.goto('/');
+		await waitForConsent(page);
+		const proceed = page.getByTestId('consent-proceed');
+
+		// The mnemonic is generated and valid on arrival, so the tick is what holds it.
+		await expect(proceed).toHaveText('Confirm the notice first');
+		await consentModal(page).getByTestId('shared-list-mnemonic-input').fill('not three words');
+		await expect(proceed).toHaveText('Enter three Spanish words to continue');
+		await consentModal(page).getByTestId('shared-list-mnemonic-input').fill('bosque-coral-brisa');
+		await acceptNotice(page);
+		await expect(proceed).toHaveText('Open shared list');
+	});
+
+	test('should remember consent decision when the tick is set', async ({ page }) => {
+		await page.goto('/');
+		await waitForConsent(page);
 
 		// Remembering is itself something kept, so it needs the choice that keeps
 		// things: in memory mode nothing survives the reload by design (#9).
 		await page.getByTestId('storage-mode-indexeddb').check();
-
-		// Check the "Don't show this again" checkbox
-		const rememberCheckbox = page
-			.locator('label')
-			.filter({ hasText: /Don't show this again/ })
-			.locator('input[type="checkbox"]');
-		await rememberCheckbox.check();
-
-		// Check all required consent checkboxes
-		const relayConnectionCheckbox = page
-			.locator('label')
-			.filter({ hasText: /I understand this app uses libp2p peer-to-peer networking/ })
-			.locator('input[type="checkbox"]');
-		const dataVisibilityCheckbox = page
-			.locator('label')
-			.filter({ hasText: /I understand relay or peer nodes may cache/ })
-			.locator('input[type="checkbox"]');
-		const globalDatabaseCheckbox = page
-			.locator('label')
-			.filter({
-				hasText: /I understand todos are stored in a shared, unencrypted OrbitDB database/
-			})
-			.locator('input[type="checkbox"]');
-		const replicationTestingCheckbox = page
-			.locator('label')
-			.filter({ hasText: /I understand collaboration requires another browser or device/ })
-			.locator('input[type="checkbox"]');
-
-		await relayConnectionCheckbox.check();
-		await dataVisibilityCheckbox.check();
-		await globalDatabaseCheckbox.check();
-		await replicationTestingCheckbox.check();
-
-		// Click proceed
-		const proceedButton = page.locator('button').filter({ hasText: /Open shared list/ });
-		await proceedButton.click();
+		await rememberDecision(page);
+		await acceptNotice(page);
+		await page.getByTestId('consent-proceed').click();
+		await page.waitForFunction(
+			() => document.querySelector('[data-testid="consent-modal"]')?.isOpen !== true
+		);
 		const savedMnemonic = await page.evaluate(() =>
 			localStorage.getItem('simpleTodo.sharedListMnemonic.v1')
 		);
 		expect(savedMnemonic).toMatch(/^.+-.+-.+$/);
+		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 
-		// Wait for the app to load
-		await page.waitForTimeout(2000);
-
-		// Reload the page
 		await page.reload();
-
-		// The consent modal should not appear again
-		const modal = page.locator('div.fixed.inset-0.z-50');
-		await expect(modal).not.toBeVisible({ timeout: 5000 });
+		// The dialog does not come back; the list it remembered opens.
+		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
+		expect(await isConsentOpen(page)).toBe(false);
 		const sharedListDetails = page.getByTestId('shared-list-details');
-		await expect(sharedListDetails).toBeVisible({ timeout: 30000 });
+		await expect(sharedListDetails).toBeVisible({ timeout });
 		await sharedListDetails.getByText('Shared list', { exact: true }).click();
 		await expect(sharedListDetails.getByTestId('active-shared-list-name')).toHaveText(
 			savedMnemonic ?? ''
 		);
 
-		// Clean up localStorage for next test
-		await page.evaluate(() => {
-			localStorage.clear();
-		});
+		await page.evaluate(() => localStorage.clear());
 	});
 
-	test('should display all required consent information', async ({ page }) => {
+	test('says what this chapter does to your data, and follows the storage choice', async ({
+		page
+	}) => {
 		await page.goto('/');
+		await waitForConsent(page);
+		const clauses = privacyClauses(page);
 
-		// Check that all expected features are listed
-		const expectedFeatures = [
-			'No tracking cookies are used',
-			'only that consent choice is saved locally',
-			'local-first in your browser session',
-			'Helia, OrbitDB, and libp2p',
-			'connects to relay/bootstrap nodes and other peers',
-			'cache, pin, or replicate demo todo data',
-			'shared, unencrypted OrbitDB database',
-			'IPFS/IPNS or an HTTP gateway'
-		];
-
-		for (const feature of expectedFeatures) {
-			await expect(
-				page
-					.locator('li')
-					.filter({ hasText: new RegExp(feature.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') })
-			).toBeVisible();
+		for (const claim of [
+			'no server',
+			'public IPFS gateway',
+			'relay and bootstrap nodes',
+			'not encrypted',
+			'another browser or device',
+			'in memory only',
+			'No tracking cookies'
+		]) {
+			await expect(clauses.filter({ hasText: claim })).toHaveCount(1);
 		}
+		await expect(clauses).toHaveCount(7);
+		await expect(clauses.last()).toContainText('No tracking cookies');
+
+		// The storage line follows the choice, and only that line changes.
+		await page.getByTestId('storage-mode-indexeddb').check();
+		await expect(clauses.filter({ hasText: 'keep them in this browser' })).toHaveCount(1);
+		await expect(clauses.filter({ hasText: 'in memory only' })).toHaveCount(0);
+		await expect(page.locator('[data-testid=consent-modal] .privacy li.changed')).toHaveCount(1);
+	});
+
+	test('offers the technical view beside the plain one', async ({ page }) => {
+		await page.goto('/');
+		await waitForConsent(page);
+		const isTechnical = () =>
+			page.$eval(
+				'[data-testid="consent-modal"]',
+				(el) => /** @type {any} */ (el).technical === true
+			);
+		expect(await isTechnical()).toBe(false);
+		await expect(page.getByTestId('consent-version')).toHaveCount(0);
+		await page.getByTestId('consent-technical').click();
+		await expect.poll(isTechnical).toBe(true);
+		await expect(page.getByTestId('consent-version')).toBeVisible();
+	});
+
+	test('the close control that does nothing is not on screen', async ({ page }) => {
+		await page.goto('/');
+		await waitForConsent(page);
+		const hidden = await page.$eval('[data-testid="consent-modal"]', (el) => {
+			const control = /** @type {any} */ (el).shadowRoot?.querySelector('button[disabled]');
+			return !control || control.hidden === true;
+		});
+		expect(hidden).toBe(true);
 	});
 });

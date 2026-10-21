@@ -37,7 +37,7 @@ The `main` branch is the basic shared-list demo. Every browser opens the same de
 
 1. **Open Two Browser Windows** - You need at least two browser instances, a mobile device, or ask another distant person to open the app
 2. **Load the Same URL** - All app users should load the same app URL
-3. **Accept Consent** - Check all consent boxes in both browsers
+3. **Accept Consent** - Accept the notice in both browsers
 4. **Wait for Connection** - The app will automatically discover and connect peers
 5. **Add Todos** - Create todos in one browser and watch them appear in the other
 

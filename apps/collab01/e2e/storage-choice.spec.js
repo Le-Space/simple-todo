@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { takeStorageInventory } from '@simple-todo/e2e-kit/storage-inventory.mjs';
+import { acceptNotice, isConsentOpen, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
 
 const timeout = 90000;
 
@@ -16,34 +17,22 @@ const timeout = 90000;
  * databases are created either way, as empty shells, so their existence proves
  * nothing and their contents prove everything.
  *
- * The dialog here is this chapter's own Svelte modal, not the `qr-intro`
- * element the later chapters use, so the kit's consent helpers do not apply and
- * the ticks are found the way this chapter's other specs find them.
+ * The dialog is the shared one, so the kit's helpers apply. "Don't show this
+ * again" is left alone, which keeps the dialog available on reload — what the
+ * reload case needs.
  */
-const consentModal = (page) => page.locator('div.fixed.inset-0.z-50');
 
 /** @param {import('@playwright/test').Page} page */
 async function passConsent(page) {
-	const boxes = consentModal(page).locator('input[type="checkbox"]');
-	const count = await boxes.count();
-	for (let index = 0; index < count; index += 1) {
-		const box = boxes.nth(index);
-		// The last one is "don't show this again"; leaving it alone keeps the
-		// dialog available on reload, which is what the reload case needs.
-		if (await box.isChecked()) continue;
-		const label = (await box.evaluate((node) => node.closest('label')?.textContent ?? '')).trim();
-		if (label.startsWith("Don't show this again")) continue;
-		await box.check();
-	}
-	await page
-		.locator('button')
-		.filter({ hasText: /Open shared list/ })
-		.click();
-	await expect(consentModal(page)).not.toBeVisible();
+	await acceptNotice(page);
+	await page.getByTestId('consent-proceed').click();
+	await page.waitForFunction(
+		() => document.querySelector('[data-testid="consent-modal"]')?.isOpen !== true
+	);
 }
 async function openWith(page, mode) {
 	await page.goto('/');
-	await expect(consentModal(page)).toBeVisible({ timeout });
+	await waitForConsent(page, { timeout });
 	await page.getByTestId(`storage-mode-${mode}`).check();
 	await passConsent(page);
 	await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
@@ -52,10 +41,8 @@ async function openWith(page, mode) {
 async function reopen(page) {
 	await page.reload();
 	// Whether the dialog comes back is the app's business, not this test's.
-	await consentModal(page)
-		.waitFor({ state: 'visible', timeout: 10_000 })
-		.catch(() => {});
-	if (await consentModal(page).isVisible()) await passConsent(page);
+	await waitForConsent(page, { timeout: 10_000 }).catch(() => {});
+	if (await isConsentOpen(page)) await passConsent(page);
 	await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 }
 
