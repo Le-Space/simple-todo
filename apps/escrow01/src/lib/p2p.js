@@ -337,6 +337,18 @@ async function createOrbitDBInstance(heliaNode) {
 	// delegation rules — see delegated-access.js for why it is the base type.
 	registerDelegatedAccessController();
 	passkeyCredentialStore.set(activePasskeyCredential);
+	// Register the provider type first, on every path. It used to sit behind
+	// the passkey branch below, so a browser *without* a passkey never
+	// registered it — and OrbitDB cannot verify an identity whose provider it
+	// does not know: an anonymous peer silently kept none of the entries a
+	// passkey wrote, while the open list promised collaboration across both
+	// kinds of identity (#78).
+	try {
+		useIdentityProvider(OrbitDBWebAuthnIdentityProviderFunction);
+	} catch {
+		// Already registered — fine.
+	}
+
 	if (!activePasskeyCredential) {
 		ownDidStore.set(null);
 		return wrapInstance(
@@ -352,14 +364,6 @@ async function createOrbitDBInstance(heliaNode) {
 					: { identities: await createMemoryIdentities(heliaNode) })
 			})
 		);
-	}
-
-	// Register the provider type once so Identities can verify webauthn
-	// identities received from other peers.
-	try {
-		useIdentityProvider(OrbitDBWebAuthnIdentityProviderFunction);
-	} catch {
-		// Already registered — fine.
 	}
 
 	// The DID is the passkey's own P-256 key. OrbitDB signs entries with a
