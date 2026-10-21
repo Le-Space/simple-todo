@@ -26,8 +26,10 @@
 			"keyIsForever": "Wenn Sie jemandem Zugang geben, bekommt diese Person eine Kopie des Schlüssels. Zurückholen lässt sie sich nicht, und sie öffnet auch alles, was vorher geschrieben wurde.",
 			"identityPasskey": "Ihr Passkey weist Sie gegenüber den anderen Geräten aus. Niemand sonst kann in Ihrem Namen schreiben.",
 			"identityAnonymous": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Schließen Sie ihn, ist sie weg.",
-			"reload": "Auf diesem Gerät wird noch nichts gespeichert: Beim Neuladen fängt dieser Browser von vorn an.",
-			"cookies": "Es werden keine Tracking-Cookies verwendet. Wenn Sie \"nicht mehr anzeigen\" ankreuzen, ist diese Entscheidung das Einzige, was auf diesem Gerät gespeichert wird."
+			"cookies": "Es werden keine Tracking-Cookies verwendet. Wenn Sie \"nicht mehr anzeigen\" ankreuzen, ist diese Entscheidung das Einzige, was auf diesem Gerät gespeichert wird.",
+			"identityAnonymousKept": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Er behält sie, bis Sie die Website-Daten löschen; nichts verbindet sie mit Ihnen.",
+			"storageMemory": "Sie haben „nur im Arbeitsspeicher“ gewählt: Auf diesem Gerät wird nichts abgelegt, und beim Neuladen fängt dieser Browser von vorn an.",
+			"storagePersistent": "Sie haben „in diesem Browser behalten“ gewählt: Die Listen bleiben nach dem Neuladen da. Die geteilte Liste liegt unverschlüsselt im Speicher dieses Browsers, eine eigene Liste versiegelt mit ihrem Schlüssel – und wer den Speicher löscht, verliert beide."
 		},
 		"errorNoPasskey": "In diesem Browser ist kein Passkey hinterlegt, und Ihr Authenticator hat keinen herausgegeben. Legen Sie einen neuen an oder fahren Sie ohne fort.",
 		"errorNeedsLabel": "Bitte geben Sie dem neuen Passkey einen Namen.",

@@ -289,7 +289,8 @@
 			"cookies": "No tracking cookies are used. If you tick \"don't show this again\", that choice is the only thing saved on this device.",
 			"delegation": "You decide who may write to a list, and you can take a grant back later — unlike a key you handed out, because nothing here is encrypted.",
 			"storageMemory": "You chose \"in memory only\": nothing is written to this device, and this browser starts over when the page reloads.",
-			"storagePersistent": "You chose \"keep them in this browser\": the todos survive a reload. They sit unencrypted in this browser’s storage, and clearing it loses them."
+			"storagePersistent": "You chose \"keep them in this browser\": the todos survive a reload. They sit unencrypted in this browser’s storage, and clearing it loses them.",
+			"identityAnonymousKept": "You are using a random identity that exists only in this browser. It keeps it until you clear the site data; nothing links it to you."
 		},
 		"errorNoPasskey": "No passkey is stored in this browser, and your authenticator did not hand one over. Create a new one, or continue without one.",
 		"errorNeedsLabel": "Please give the new passkey a name.",

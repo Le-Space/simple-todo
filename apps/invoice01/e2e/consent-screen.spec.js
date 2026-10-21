@@ -9,7 +9,8 @@ import {
 	consentModal,
 	isConsentOpen,
 	passConsent,
-	waitForConsent
+	waitForConsent,
+	expectProceedRevealsTick
 } from '@simple-todo/e2e-kit/consent.mjs';
 
 const timeout = 30000;
@@ -40,10 +41,10 @@ test.describe('Consent screen', () => {
 		await waitForConsent(page);
 
 		const proceed = page.getByTestId('consent-proceed');
-		await expect(proceed).toBeDisabled();
+		await expect(proceed).toHaveAttribute('aria-disabled', 'true');
 
 		await acceptNotice(page);
-		await expect(proceed).toBeEnabled();
+		await expect(proceed).toHaveAttribute('aria-disabled', 'false');
 
 		await proceed.click();
 		expect(await isConsentOpen(page)).toBe(false);
@@ -62,7 +63,16 @@ test.describe('Consent screen', () => {
 
 		await acceptNotice(page);
 		await expect(proceed).toHaveText('Get started');
-		await expect(proceed).toBeEnabled();
+		await expect(proceed).toHaveAttribute('aria-disabled', 'false');
+	});
+
+	test('a press on the waiting button opens the statement and puts the cursor on the tick', async ({
+		page
+	}) => {
+		await page.goto('/');
+		await waitForConsent(page);
+		await expectProceedRevealsTick(page);
+		expect(await isConsentOpen(page)).toBe(true);
 	});
 
 	test('a failed start is readable, not hidden behind the dialog it reopens', async ({ page }) => {
