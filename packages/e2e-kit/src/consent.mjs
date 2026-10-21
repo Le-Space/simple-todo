@@ -140,15 +140,9 @@ export async function passConsent(
 		await page.getByTestId('passkey-label').fill(label);
 	}
 	if (persistent !== undefined) {
-		// Two names for one control: `main` still has the fieldset inline in its
-		// consent dialog (`consent-storage-…`), everyone else renders the shared
-		// `StorageModeSelector` (`storage-mode-…`). Asking for both keeps the
-		// specs out of that difference until main adopts the component.
-		const shared = page.getByTestId(persistent ? 'storage-mode-indexeddb' : 'storage-mode-memory');
-		const inline = page.getByTestId(
-			persistent ? 'consent-storage-indexeddb' : 'consent-storage-memory'
-		);
-		await ((await shared.count()) > 0 ? shared : inline).check();
+		// Every chapter renders the shared `StorageModeSelector` now; `main`
+		// adopted it with the shared dialog.
+		await page.getByTestId(persistent ? 'storage-mode-indexeddb' : 'storage-mode-memory').check();
 	}
 	if (p2p !== undefined) {
 		// Only where the dialog offers it (archived01): off, the chapter starts

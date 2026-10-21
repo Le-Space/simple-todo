@@ -1,20 +1,15 @@
 import { test, expect } from '@playwright/test';
+import { passConsent as kitPassConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import { expectPageQr, freshListWords, readListLink } from '@simple-todo/e2e-kit/page-qr.mjs';
 
 const timeout = 90000;
 
 /**
- * This chapter's own consent dialog: tick what it asks, open the list.
+ * The shared consent dialog: accept the statement, open the list.
  * @param {import('@playwright/test').Page} page
  */
 async function passConsent(page) {
-	const modal = page.locator('div.fixed.inset-0.z-50');
-	await expect(modal).toBeVisible();
-	for (const checkbox of await modal.locator('input[type="checkbox"]').all()) {
-		await checkbox.check();
-	}
-	await page.getByRole('button', { name: 'Open shared list' }).click();
-	await expect(modal).not.toBeVisible();
+	await kitPassConsent(page);
 }
 
 // The open list travels in the fragment, and the page QR carries the fragment:

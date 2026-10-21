@@ -6,8 +6,10 @@ import {
 	acceptNotice,
 	consentModal,
 	isAccepted,
+	isConsentOpen,
 	privacyClauses,
-	waitForConsent
+	waitForConsent,
+	expectProceedRevealsTick
 } from '@simple-todo/e2e-kit/consent.mjs';
 
 /** The English catalogue, which mirrors the element's own defaults. */
@@ -106,14 +108,14 @@ test.describe('Consent Screen', () => {
 		// The storage choice replaced the fourth acknowledgement. It is a choice,
 		// not a confirmation: it starts on the safe side and must never gate the
 		// proceed button, so ticking nothing here still lets a user continue.
-		const memoryOption = page.getByTestId('consent-storage-memory');
-		const indexedDbOption = page.getByTestId('consent-storage-indexeddb');
+		const memoryOption = page.getByTestId('storage-mode-memory');
+		const indexedDbOption = page.getByTestId('storage-mode-indexeddb');
 		await expect(memoryOption).toBeChecked();
 		await expect(indexedDbOption).not.toBeChecked();
 
 		// Check that the proceed button is disabled initially
 		const proceedButton = page.locator('button').filter({ hasText: /Please accept to continue/ });
-		await expect(proceedButton).toBeDisabled();
+		await expect(proceedButton).toHaveAttribute('aria-disabled', 'true');
 
 		await acceptNotice(page);
 		expect(await isAccepted(page)).toBe(true);
@@ -122,7 +124,7 @@ test.describe('Consent Screen', () => {
 		const enabledProceedButton = page
 			.locator('button')
 			.filter({ hasText: /Proceed to Test the App/ });
-		await expect(enabledProceedButton).toBeEnabled();
+		await expect(enabledProceedButton).toHaveAttribute('aria-disabled', 'false');
 
 		// Click the proceed button
 		await enabledProceedButton.click();
@@ -141,12 +143,21 @@ test.describe('Consent Screen', () => {
 		await expect(loadingSpinner.or(addTodoForm)).toBeVisible();
 	});
 
+	test('a press on the waiting button opens the statement and puts the cursor on the tick', async ({
+		page
+	}) => {
+		await page.goto('/');
+		await waitForConsent(page);
+		await expectProceedRevealsTick(page);
+		expect(await isConsentOpen(page)).toBe(true);
+	});
+
 	test('should remember consent decision when checkbox is checked', async ({ page }) => {
 		await page.goto('/');
 
 		// Remembering is itself something kept, so it needs the choice that keeps
 		// things: in memory mode nothing survives the reload by design (#9).
-		await page.getByTestId('consent-storage-indexeddb').check();
+		await page.getByTestId('storage-mode-indexeddb').check();
 
 		// Check the "Don't show this again" checkbox
 		const rememberCheckbox = page
@@ -270,7 +281,7 @@ test.describe('Consent Screen', () => {
 		await expect(marked).toContainText('No relay is contacted');
 
 		// The storage choice moves a different line.
-		await page.getByTestId('consent-storage-indexeddb').check();
+		await page.getByTestId('storage-mode-indexeddb').check();
 		const afterStorage = page.locator('[data-testid=consent-modal] .privacy li.changed');
 		await expect(afterStorage).toHaveCount(1);
 		await expect(afterStorage).toContainText('kept in this browser');
