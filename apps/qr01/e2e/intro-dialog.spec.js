@@ -16,6 +16,11 @@ import { PREVIEW_ORIGIN } from '@simple-todo/e2e-kit/preview-origin.mjs';
 
 const timeout = 90_000;
 
+// Every wait below is allowed `timeout`; the test has to outlive the longest
+// of them, or the assertion that gave up is reported as a test timeout with
+// the `finally` as the failing line (#90).
+test.setTimeout(timeout * 2);
+
 // The dialog is `<qr-intro>` from the transport package, so half of what these
 // tests touch lives in its shadow root. Playwright's locators pierce an open
 // one, and the element exposes the two checkboxes as parts precisely so nobody
@@ -102,7 +107,12 @@ test.describe('the first-launch introduction', () => {
 			await dialog.getByTestId('language-en').click();
 			await expect(dialog.getByTestId('intro-close')).toHaveText('Get started');
 
-			// The browser-and-NAT detail is for whoever asks for it.
+			// The browser-and-NAT detail is for whoever asks for it — and it is
+			// measured, so it stays out of reach until the statement is accepted:
+			// `deferNetworkCheck` hides the check and the caveats until then
+			// (`intro-network.spec.js` pins that). Accept first, then ask.
+			await expect(technicalOf(page)).toBeHidden();
+			await acceptStatement(page);
 			await expect(technicalOf(page)).toBeHidden();
 			await dialog.getByTestId('view-mode-toggle').click();
 			await expect(technicalOf(page)).toBeVisible();
@@ -172,6 +182,12 @@ test.describe('the first-launch introduction', () => {
 
 		try {
 			await openReadyApp(page, { intro: true, relay: false, timeout });
+			await expect(shown(page)).toBeVisible({ timeout });
+
+			// Nothing is measured before the statement is accepted — the check
+			// section is hidden and the probe deferred until then — so a verdict
+			// is only to be expected after this.
+			await acceptStatement(page);
 
 			// The probe runs for up to six seconds, so "checking" has to be visible
 			// and has to look like work rather than like a stall.
