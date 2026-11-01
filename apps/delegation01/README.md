@@ -323,11 +323,11 @@ The tutorial covers:
 ```bash
 # Clone repository
 git clone https://github.com/Le-Space/simple-todo.git
-# checkout main branch
-git checkout main
+cd simple-todo
 
-# install dependencies and start the development server
+# install dependencies, then start this chapter's development server
 pnpm install
+cd apps/delegation01
 pnpm dev
 ```
 
