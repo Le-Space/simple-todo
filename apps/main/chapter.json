@@ -29,7 +29,8 @@
 			"e2e/phone-layout.spec.js"
 		],
 		"lint": true,
-		"check": true
+		"check": true,
+		"relayButton": true
 	},
 	"title": "The base chapter: one shared todo list in the browser"
 }

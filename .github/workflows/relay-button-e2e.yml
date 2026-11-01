@@ -1,0 +1,117 @@
+name: Relay button E2E
+
+# The one spec that provisions a real relay: the Relay Button rents a VM on
+# Aleph, and two browsers then have to replicate through it. Nothing here is a
+# fake, so a run costs credits and takes the better part of an hour.
+#
+# Which chapter runs is decided the way everything else is — by `chapter.json`.
+# A chapter opts in with `ci.relayButton`, beside its `lint`, `check` and
+# `readme` gates; the ten copies of the spec are not identical, and a new
+# chapter should not inherit a bill it never asked for. A push that only moves
+# prose provisions nothing (`PICK_MODE=relay`).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      apps:
+        description: 'Chapters to run, space separated; empty means the ones that opted in'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: relay-button-e2e
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.pick.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - id: pick
+        run: node .github/pick-apps.mjs
+        env:
+          PICK_MODE: relay
+          PICK_REQUIRE_FLAG: relayButton
+          BASE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+          APPS_INPUT: ${{ inputs.apps }}
+
+  provision-and-replicate:
+    needs: discover
+    if: needs.discover.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
+    # Must exceed the spec's own 75-minute cap, or the job is killed while
+    # Playwright is still writing artifacts — which is one candidate for why the
+    # last failing run uploaded a screenshot but no trace.
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      # One relay at a time. Each chapter rents its own VM, and the wallet that
+      # pays for them is the same one.
+      max-parallel: 1
+      matrix:
+        app: ${{ fromJson(needs.discover.outputs.apps) }}
+    defaults:
+      run:
+        working-directory: apps/${{ matrix.app }}
+    env:
+      RELAY_BUTTON_E2E_PRIVATE_KEY: ${{ secrets.RELAY_BUTTON_E2E_PRIVATE_KEY }}
+      RELAY_BUTTON_E2E_SSH_PUBLIC_KEY: ${{ vars.RELAY_BUTTON_E2E_SSH_PUBLIC_KEY }}
+      E2E_RELAY_MODE: isolated
+      E2E_PUBLIC_RELAY_BOOTSTRAP_ADDR: /ip4/127.0.0.1/tcp/9/ws/p2p/12D3KooWN7RWonSmxzptUSFZ4DfXEBcLvVoAQpW8Wr3BhshcQPG6
+    steps:
+      - uses: actions/checkout@v6
+      # The build stamps the chapter's last commit, so it asks git. This job
+      # runs as root in the Playwright container while the checkout belongs to
+      # the runner's user, and git refuses a repository it does not own.
+      - name: Git may read the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+        working-directory: .
+      # The version comes from packageManager in the root manifest; naming it
+      # here as well makes the action refuse with ERR_PNPM_BAD_PM_VERSION.
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+        working-directory: .
+      - name: Require relay deployment credentials
+        run: test -n "$RELAY_BUTTON_E2E_PRIVATE_KEY" && test -n "$RELAY_BUTTON_E2E_SSH_PUBLIC_KEY"
+      # Fail in seconds with an actionable message when the pinned rootfs was
+      # pruned from Aleph, instead of burning ~14 minutes on a provisioning run
+      # that ends in a bare "Aleph rejected this deployment (error 301)". The
+      # manifest is a brand asset now, so the path has to be named.
+      - name: Verify the pinned rootfs still exists on Aleph
+        run: node tools/aleph/check-rootfs-manifest.mjs
+        working-directory: .
+        env:
+          ROOTFS_MANIFEST_PATH: packages/brand/static/rootfs-manifest.json
+      - name: Provision relay and verify two-browser replication
+        run: pnpm exec playwright test e2e/relay-button-provisioning.spec.js --project=chromium --workers=1 --reporter=list
+      - name: Write relay E2E job summary
+        if: always()
+        run: node ../../tools/aleph/write-relay-e2e-summary.mjs
+      - name: Upload relay E2E evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relay-button-e2e-${{ matrix.app }}-${{ github.run_id }}
+          # The whole directory, not just relay-button/: Playwright writes traces
+          # and videos into per-test folders beside it, and uploading only the
+          # evidence subfolder silently dropped both.
+          path: apps/${{ matrix.app }}/test-results/
+          if-no-files-found: warn
+          retention-days: 14

@@ -73,3 +73,53 @@ test('deploying: a workflow change alone deploys nothing', () => {
 	const picked = pickApps({ changed: ['.github/workflows/deploy.yml'], all, mode: 'deploy' });
 	assert.deepEqual(picked, { apps: [], mayAffect: all });
 });
+
+// The relay runs rent a VM, so the question is not "could this concern the
+// chapter" but "could this break a relay". `all` here is already the list of
+// chapters that opted in, which is what the workflow passes.
+test('relay: prose rents nothing', () => {
+	const picked = pickApps({
+		changed: ['README.md', 'docs/FROZEN.md', 'apps/main/README.md', 'apps/main/docs/demo.md'],
+		all: ['main'],
+		mode: 'relay'
+	});
+	assert.deepEqual(picked, { apps: [], mayAffect: [] });
+});
+
+test('relay: the provisioning spec itself is the point of the run', () => {
+	// `deploy` mode calls everything under e2e/ a non-input. Here it is the input.
+	const picked = pickApps({
+		changed: ['apps/main/e2e/relay-button-provisioning.spec.js'],
+		all: ['main'],
+		mode: 'relay'
+	});
+	assert.deepEqual(picked.apps, ['main']);
+});
+
+test('relay: a shared change reaches the relay path', () => {
+	for (const file of ['packages/net/src/libp2p-config.js', 'pnpm-lock.yaml']) {
+		assert.deepEqual(
+			pickApps({ changed: [file], all: ['main'], mode: 'relay' }).apps,
+			['main'],
+			file
+		);
+	}
+});
+
+test('relay: another chapter’s change rents nothing', () => {
+	const picked = pickApps({
+		changed: ['apps/qr01/src/lib/x.js'],
+		all: ['main'],
+		mode: 'relay'
+	});
+	assert.deepEqual(picked.apps, []);
+});
+
+test('relay: prose beside real code still runs', () => {
+	const picked = pickApps({
+		changed: ['apps/main/README.md', 'apps/main/src/lib/p2p.js'],
+		all: ['main'],
+		mode: 'relay'
+	});
+	assert.deepEqual(picked.apps, ['main']);
+});

@@ -1,0 +1,36 @@
+name: Aleph Playwright runner janitor
+
+# What sweeps up after the relay E2E. A leaked VM is not a stale resource, it
+# is money leaving the wallet every hour, so this runs on its own schedule
+# rather than at the end of a job that may have been killed.
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup:
+    # The reusable workflow stays in NiKrause/relay-button: that is the live
+    # repository (Le-Space/relay-button is a fork, months behind), and pointing
+    # a janitor at a stale copy is how its sweeping rules quietly stop matching.
+    uses: NiKrause/relay-button/.github/workflows/playwright-runner-janitor.yml@main
+    with:
+      repository_scope: Le-Space/simple-todo
+      ttl_ms: 3600000
+      # The provisioning spec names its ephemeral relay VMs
+      # `simple-todo-e2e-<timestamp>`, which matches no
+      # `playwright-<repository>-` prefix. Two of them therefore ran 47 h and
+      # drained the E2E wallet from 846k to 35k credits while seven janitor runs
+      # reported success (NiKrause/simple-todo#88). All ten chapters still use
+      # that name, so the prefix stays.
+      extra_name_prefixes: simple-todo-e2e-
+      # This wallet only ever funds ephemeral E2E VMs — the production relay is
+      # funded separately — so anything past the TTL that the janitor cannot
+      # sweep is money burning and must turn the run red rather than warn.
+      fail_on_unswept: true
+    secrets:
+      ALEPH_PRIVATE_KEY: ${{ secrets.ALEPH_PLAYWRIGHT_PRIVATE_KEY || secrets.RELAY_BUTTON_E2E_PRIVATE_KEY }}
