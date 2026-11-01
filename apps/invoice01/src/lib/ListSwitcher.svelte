@@ -73,6 +73,9 @@
 						<span class="ml-1 text-faint"
 							>· {$_(`lists.switcher.role.${entry.role}`, { default: entry.role })}</span
 						>
+						{#if entry.sealed}<span class="ml-1 text-faint" data-testid="list-switcher-sealed"
+								>· {$_('lists.switcher.sealed')}</span
+							>{/if}
 						{#if active}<span class="ml-1 text-emerald-700 dark:text-emerald-400"
 								>· {$_('lists.switcher.open')}</span
 							>{/if}

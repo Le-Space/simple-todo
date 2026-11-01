@@ -98,6 +98,32 @@ not collected from the list it lives in. [`docs/invoicing.md`](./docs/invoicing.
 ([Deutsch](./docs/invoicing.de.md)) has the rules it follows, and the ones it
 leaves alone.
 
+### Sealed lists, and a second passkey
+
+**Seal it**, ticked when a list is made, seals its entries: the relay and
+anybody with the address keep bytes they cannot read. It is off unless
+ticked, because nobody else reads a sealed list either — not a DID granted
+write permission, not the delegate of a todo, which is what the next two
+sections are about. Lists made before stay as they were.
+
+The key comes from the passkey, through a **vault**
+(`src/lib/list-vault.js`, kept by the provider's `createVaultKeeper`, in
+Le-Space/belege's format): one root, sealed under a vault key, and a slot per
+passkey. As in Belege, the root is the PRF output of the passkey that made
+the vault, so that passkey reaches its sealed lists on every device, vault or
+not. Under *Lists → Passkeys of these lists* it can give a **second passkey**
+— the backup key in the drawer — a slot. That one opens the sealed lists
+where the vault is kept, in this browser: start with *Use an existing
+passkey* and tick *Another passkey of these lists*. It reads the first
+passkey's lists, through the registry address the vault carries, and writes
+once its DID is granted under write permissions.
+
+Nothing about this asks for a touch until it is used. A browser that keeps a
+vault for the passkey asks once more at the start; the second passkey costs
+two touches when it is added. [`docs/vault.md`](./docs/vault.md)
+([Deutsch](./docs/vault.de.md)) has the touches, the limits and what removing
+a passkey can and cannot do.
+
 Everything below this section is inherited and still true.
 
 ## 🤝 Per-Todo Delegation (from `delegation01`)
@@ -178,12 +204,13 @@ until they are online together. A relay that accepts these entries needs a
 controller whose *address* carries its type — a change to the controller
 package, and a good follow-up exercise.
 
-### From `privacy01`, switched off
+### From `privacy01`, switched on per list
 
 This branch is cut from `privacy01`, so it also carries the per-entry
-sealing machinery from that chapter (`src/lib/db-encryption.js`,
-`entry-encryption.js`, `database-keys.js`, with their unit tests). Nothing
-imports it; lists here are as unencrypted as on `acl01`.
+sealing machinery from that chapter (`src/lib/db-encryption.js` and
+`entry-encryption.js`, with their unit tests). A list made with **Seal it**
+uses it, under a key from the lists' vault (see *Sealed lists, and a second
+passkey* above); every other list is as unencrypted as on `acl01`.
 
 The same goes for the signing key. `privacy01` later moved its passkey
 identity to a key that lives in memory only; that change came after this

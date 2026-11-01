@@ -43,7 +43,14 @@ import {
 	getPersistentStorageEnabled,
 	PERSISTENT_STORAGE_PATHS
 } from '@simple-todo/todo/storage-mode.js';
-import { initializeDatabase, todoDBAddressStore, todosStore } from './db-actions.js';
+import {
+	activeListStore,
+	initializeDatabase,
+	todoDBAddressStore,
+	todoDBStore,
+	todosStore
+} from './db-actions.js';
+import { isVaultOpen, listEncryption } from './list-vault.js';
 import {
 	getWebRTCEnabled,
 	setWebRTCEnabled,
@@ -110,6 +117,13 @@ let peerId = /** @type {string | null} */ (null);
  * @type {any | null}
  */
 let activePasskeyCredential = null;
+/**
+ * The PRF output the start read anyway (invoice01: at registration, and for
+ * a vault kept here), so the provider derives the signing key from it rather
+ * than touching the passkey again. Used once, then dropped.
+ * @type {Uint8Array | null}
+ */
+let startPrfOutput = null;
 let todoDB = /** @type {any} */ (null);
 let defaultTodoDbAddress = '';
 let activeTodoDatabaseName = '';
@@ -183,11 +197,12 @@ function createHeliaWithLibp2p(libp2pNode, stores = {}) {
  * This function should be called only after the user has accepted the consent modal
  */
 export async function initializeP2P(
-	options = /** @type {{ todoDbAddress?: string, todoDbName?: string, todoDbPrivate?: boolean, passkeyCredential?: any }} */ ({})
+	options = /** @type {{ todoDbAddress?: string, todoDbName?: string, todoDbPrivate?: boolean, todoDbSealed?: boolean, passkeyCredential?: any, prfOutput?: Uint8Array | null }} */ ({})
 ) {
 	if (Object.prototype.hasOwnProperty.call(options, 'passkeyCredential')) {
 		activePasskeyCredential = options.passkeyCredential ?? null;
 	}
+	startPrfOutput = options.prfOutput instanceof Uint8Array ? options.prfOutput : null;
 	console.log('🚀 Starting P2P initialization after user consent...');
 
 	try {
@@ -220,7 +235,8 @@ export async function initializeP2P(
 		orbitdb = await createOrbitDBInstance(helia);
 		setInitializationProgress(4);
 		todoDB = await openInitialTodoDatabase(options.todoDbAddress, options.todoDbName, {
-			private: options.todoDbPrivate === true
+			private: options.todoDbPrivate === true,
+			sealed: options.todoDbSealed === true
 		});
 
 		console.log('✅ Database opened successfully with OrbitDBAccessController:', {
@@ -240,7 +256,8 @@ export async function initializeP2P(
 				: options.todoDbPrivate === true
 					? 'private'
 					: 'shared',
-			name: options.todoDbPrivate === true ? (options.todoDbName ?? '') : undefined
+			name: options.todoDbPrivate === true ? (options.todoDbName ?? '') : undefined,
+			sealed: options.todoDbSealed === true && isVaultOpen()
 		});
 
 		// Mark initialization as complete
@@ -276,10 +293,12 @@ export async function restartP2P(options = /** @type {{ todoDbName?: string }} *
 		!options.todoDbName &&
 		Boolean(activeTodoDbAddress) &&
 		activeTodoDbAddress !== defaultTodoDbAddress;
+	const activeListSealed = get(activeListStore).sealed === true;
 
 	await stopP2P();
 	await initializeP2P({
 		todoDbAddress: shouldPreserveActiveTodoDb ? activeTodoDbAddress : '',
+		todoDbSealed: shouldPreserveActiveTodoDb && activeListSealed,
 		todoDbName: options.todoDbName || currentDatabaseName
 	});
 }
@@ -310,18 +329,24 @@ async function stopP2P() {
 /**
  * @param {string | undefined} address
  * @param {string | undefined} databaseName
- * @param {{ private?: boolean }} [options] `private` opens a list only this
- *   identity may write to — what invoice01 starts with, because an invoice
- *   belongs to whoever issues it and not to everybody who knows three words.
+ * @param {{ private?: boolean, sealed?: boolean }} [options] `private` opens a
+ *   list only this identity may write to — what invoice01 starts with, because
+ *   an invoice belongs to whoever issues it and not to everybody who knows
+ *   three words. `sealed` opens a remembered list with the lists' key, when the
+ *   start opened the vault; without it the sealed entries stay out of view.
  */
 async function openInitialTodoDatabase(address, databaseName, options = {}) {
 	const normalizedAddress = address?.trim() ?? '';
 
 	if (normalizedAddress.startsWith('/orbitdb/')) {
 		activeTodoDatabaseName = '';
+		if (options.sealed && !isVaultOpen()) {
+			console.warn('A sealed list, and no vault open to read it with:', normalizedAddress);
+		}
 		return orbitdb.open(normalizedAddress, {
 			type: 'keyvalue',
 			sync: true,
+			...(options.sealed && isVaultOpen() ? { encryption: await listEncryption() } : {}),
 			...(await createLogStorages())
 		});
 	}
@@ -422,11 +447,15 @@ async function createOrbitDBInstance(heliaNode) {
 	// keystore before the provider looks, it spares the passkey a touch that
 	// would only read the PRF output the restore already read.
 	await seedRestoredSigningKey(identities.keystore, activePasskeyCredential);
+	// `prfOutput` (invoice01, as archived01): read by the start once, for the
+	// lists' vault as much as for this one.
 	const identity = await identities.createIdentity({
 		provider: OrbitDBWebAuthnIdentityProviderFunction({
-			webauthnCredential: activePasskeyCredential
+			webauthnCredential: activePasskeyCredential,
+			...(startPrfOutput ? { prfOutput: startPrfOutput } : {})
 		})
 	});
+	startPrfOutput = null;
 	// The provider files a proof under `webauthn-identity-proof:…` in
 	// localStorage as well as in its own Map, with no way to hand it another
 	// store. In memory mode that is a trace the reader asked us not to leave, so
@@ -561,6 +590,16 @@ function installE2ETestHooks() {
 				: null,
 		hasOrbitDBIdentity: async (/** @type {unknown} */ hash) =>
 			typeof hash === 'string' && Boolean(await orbitdb?.identities?.getIdentity?.(hash)),
+		// For list-vault.spec.js, as archived01's sealed-list spec: whether each
+		// entry of the open list is sealed bytes. An entry opened with the key
+		// keeps its sealed form in `_payload`. Read-only.
+		getActiveLogSealing: async () => {
+			const db = /** @type {any} */ (get(todoDBStore));
+			const entries = (await db?.log?.values?.()) ?? [];
+			return entries.map((/** @type {any} */ e) => ({
+				sealed: e.payload instanceof Uint8Array || e._payload instanceof Uint8Array
+			}));
+		},
 		getWebRTCEnabled,
 		setWebRTCEnabled,
 		connectToMultiaddr

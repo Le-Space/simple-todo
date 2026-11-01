@@ -9,7 +9,13 @@ import {
 	isDelegationActiveFor
 } from './delegation.js';
 import { confirmDelegatedWrite } from './delegated-write-auth.js';
-import { rememberList, listRegistryStore, openListRegistry } from './list-registry.js';
+import {
+	rememberList,
+	listRegistryStore,
+	listRegistryAddress,
+	openListRegistry
+} from './list-registry.js';
+import { listEncryption, openListVault } from './list-vault.js';
 import { recall, remember } from '@simple-todo/todo/browser-memory.js';
 import { foldCancellations, isInvoiceKey } from './invoice/records.js';
 import { isInvoiceSettingsKey } from './invoice/settings.js';
@@ -111,7 +117,9 @@ export const ownIdentityIdStore = derived(
  *       'private' — created here, owner-only writes
  *       'guest'   — opened by address, someone else's list
  *
- * @typedef {{ kind: 'shared' | 'private' | 'guest', name: string, address: string }} ActiveList
+ * `sealed`: opened with the lists' key (list-vault.js), and to be opened with it again.
+ *
+ * @typedef {{ kind: 'shared' | 'private' | 'guest', name: string, address: string, sealed?: boolean }} ActiveList
  */
 export const activeListStore = writable(
 	/** @type {ActiveList} */ ({ kind: 'shared', name: '', address: '' })
@@ -157,14 +165,20 @@ function getDatabaseAddress(todoDB) {
 
 /**
  * @param {TodoDatabase | null} todoDB
- * @param {{ kind: 'shared' | 'private' | 'guest', name?: string }} [meta]
+ * @param {{ kind: 'shared' | 'private' | 'guest', name?: string, sealed?: boolean }} [meta]
  */
 function setActiveTodoDatabase(todoDB, meta) {
 	const address = getDatabaseAddress(todoDB);
 	todoDBStore.set(todoDB);
 	todoDBAddressStore.set(address);
 	if (!meta) return;
-	const list = { kind: meta.kind, name: meta.name ?? '', address };
+	/** @type {ActiveList} */
+	const list = {
+		kind: meta.kind,
+		name: meta.name ?? '',
+		address,
+		...(meta.sealed ? { sealed: true } : {})
+	};
 	activeListStore.set(list);
 	rememberActiveList(list);
 }
@@ -213,15 +227,16 @@ export function recallActiveList() {
 /**
  * @param {any} orbitdb
  * @param {TodoDatabase} todoDB
- * @param {{ kind?: 'shared' | 'private' | 'guest', name?: string }} [meta] what
- *   was opened. Defaults to the public three-word list, which is what the
+ * @param {{ kind?: 'shared' | 'private' | 'guest', name?: string, sealed?: boolean }} [meta]
+ *   what was opened. Defaults to the public three-word list, which is what the
  *   earlier chapters open and what a `#list=…` link asks for.
  */
 export async function initializeDatabase(orbitdb, todoDB, meta = {}) {
 	orbitdbStore.set(orbitdb);
 	setActiveTodoDatabase(todoDB, {
 		kind: meta.kind ?? 'shared',
-		name: meta.name ?? todoDB?.name ?? ''
+		name: meta.name ?? todoDB?.name ?? '',
+		sealed: meta.sealed
 	});
 
 	// OrbitDB's non-indexed keyvalue.all() traverses the complete append-only
@@ -323,6 +338,27 @@ async function tellRelayAboutList(address) {
 }
 
 /**
+ * What the registry knows about a list, once it has been read.
+ *
+ * Awaited rather than read off the store: a `#db=` link in the address bar is
+ * followed the moment the app is up, before the registry is open — and a
+ * sealed list opened then without its key stays that way, because OrbitDB
+ * hands the same handle out again. A registry that will not open knows
+ * nothing, which is what the store would have said.
+ *
+ * @param {any} orbitdb
+ * @param {string} address
+ */
+async function registryEntryFor(orbitdb, address) {
+	try {
+		await openListRegistry(orbitdb);
+	} catch (error) {
+		console.warn('List registry unavailable:', error);
+	}
+	return get(listRegistryStore).find((entry) => entry.address === address);
+}
+
+/**
  * Open an OrbitDB todo database by address and make it the active todo list.
  *
  * @param {string} address
@@ -345,20 +381,28 @@ export async function loadTodoDatabase(address) {
 	}
 
 	try {
+		// Prefer what the registry already knows: a list you created is yours even
+		// when you reach it through the switcher, and its friendly name is not the
+		// suffixed database name. Asked before opening, because a sealed list has
+		// to be opened with its key: OrbitDB keeps the first handle to an address
+		// and hands it out again, key or not.
+		const known = await registryEntryFor(orbitdb, normalizedAddress);
+		const remembered = recallActiveList();
+		const sealed =
+			known?.sealed === true ||
+			(remembered?.address === normalizedAddress && remembered.sealed === true);
+		if (sealed) await openListVault();
 		const loadedTodoDB = await orbitdb.open(normalizedAddress, {
 			type: 'keyvalue',
 			sync: true,
+			...(sealed ? { encryption: await listEncryption() } : {}),
 			...(await createLogStorages())
 		});
 
-		// Prefer what the registry already knows: a list you created is yours even
-		// when you reach it through the switcher, and its friendly name is not the
-		// suffixed database name.
-		const openedAddressForMeta = getDatabaseAddress(loadedTodoDB) || normalizedAddress;
-		const known = get(listRegistryStore).find((entry) => entry.address === openedAddressForMeta);
 		setActiveTodoDatabase(loadedTodoDB, {
 			kind: known?.role === 'owner' ? 'private' : 'guest',
-			name: known?.name || loadedTodoDB?.name || ''
+			name: known?.name || loadedTodoDB?.name || '',
+			sealed
 		});
 		setupDatabaseListeners(loadedTodoDB);
 		await loadTodos();
@@ -395,10 +439,17 @@ export async function loadTodoDatabase(address) {
  * acl01 controller plus one extra rule — a DID a single todo was delegated
  * to may complete or rename that todo without being in the write set.
  *
+ * invoice01: `sealed` seals its entries under the lists' key (list-vault.js),
+ * so the relay and anybody holding the address store bytes they cannot read.
+ * Only a passkey with a slot in the vault reads it -- which leaves out every
+ * other person granted below or handed a todo, the reason it is a choice.
+ * Making the first sealed list makes the vault, from this click.
+ *
  * @param {string} [name] optional human name; a unique suffix is always added
- * @returns {Promise<{ address: string, name: string }>}
+ * @param {{ sealed?: boolean }} [options]
+ * @returns {Promise<{ address: string, name: string, sealed: boolean }>}
  */
-export async function createPrivateTodoList(name = 'private-todos') {
+export async function createPrivateTodoList(name = 'private-todos', { sealed = false } = {}) {
 	const orbitdb = get(orbitdbStore);
 	if (!orbitdb) throw new Error('OrbitDB is not initialized yet.');
 
@@ -412,16 +463,22 @@ export async function createPrivateTodoList(name = 'private-todos') {
 	const words = name.trim() || generateSpanishMnemonic();
 	const suffix = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 	const dbName = `${words}-${suffix}`;
+	if (sealed) {
+		// The vault names the registry, so a second passkey finds this list too.
+		await openListRegistry(orbitdb);
+		await openListVault({ registry: listRegistryAddress() });
+	}
 	const privateDB = await orbitdb.open(dbName, {
 		type: 'keyvalue',
 		create: true,
 		sync: true,
 		AccessController: DelegatedListAccessController({ write: [orbitdb.identity.id] }),
+		...(sealed ? { encryption: await listEncryption() } : {}),
 		...(await createLogStorages())
 	});
 
 	const listName = words;
-	setActiveTodoDatabase(privateDB, { kind: 'private', name: listName });
+	setActiveTodoDatabase(privateDB, { kind: 'private', name: listName, sealed });
 	setupDatabaseListeners(privateDB);
 	await loadTodos();
 	const address = getDatabaseAddress(privateDB) || '';
@@ -432,14 +489,14 @@ export async function createPrivateTodoList(name = 'private-todos') {
 	// Record it, so the list survives a reload and shows up in the switcher.
 	// Best effort: a failing registry must not lose the list the user just made.
 	try {
-		await rememberList(orbitdb, { address, name: listName, role: 'owner' });
+		await rememberList(orbitdb, { address, name: listName, role: 'owner', sealed });
 	} catch (error) {
 		console.warn('Could not record the new list in the registry:', error);
 	}
 	// The caller needs both: the address is what gets shared, the name is what
 	// the user recognises it by. Returning only the address is what left the
 	// created list invisible (issue #114).
-	return { address, name: listName };
+	return { address, name: listName, sealed };
 }
 
 // Load all todos from the database
