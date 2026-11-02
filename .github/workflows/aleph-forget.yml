@@ -1,0 +1,55 @@
+name: Aleph targeted forget
+
+# Broadcasts a FORGET for messages the E2E wallet itself published — the last
+# resort when the janitor cannot sweep something. Manual only, and the script
+# refuses to run without CONFIRM_FORGET: a FORGET cannot be taken back.
+
+on:
+  workflow_dispatch:
+    inputs:
+      hashes:
+        description: Comma-separated full item hashes to FORGET (E2E wallet's own messages only)
+        required: true
+        type: string
+      channel:
+        description: Aleph channel of the original messages
+        required: false
+        default: ALEPH-CLOUDSOLUTIONS
+        type: string
+      reason:
+        description: Reason recorded in the FORGET message
+        required: false
+        default: Targeted maintenance forget
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  forget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # The script lives with the chapter that owns the relay work, and reads
+    # `viem` from that chapter's own dependencies — which is why this runs
+    # there rather than copying the file into a temporary npm project.
+    defaults:
+      run:
+        working-directory: apps/main
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+        working-directory: .
+      - name: Broadcast FORGET
+        env:
+          ALEPH_PRIVATE_KEY: ${{ secrets.RELAY_BUTTON_E2E_PRIVATE_KEY }}
+          FORGET_HASHES: ${{ inputs.hashes }}
+          FORGET_CHANNEL: ${{ inputs.channel }}
+          FORGET_REASON: ${{ inputs.reason }}
+          CONFIRM_FORGET: 'yes'
+        run: node scripts/aleph-forget.mjs

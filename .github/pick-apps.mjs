@@ -16,9 +16,17 @@
  * and a manual run (`workflow_dispatch`, input `apps`) deploys them when that
  * is wanted. Documentation, tests and escrow01's contracts are not build
  * inputs either: changing them deploys nothing.
+ *
+ * The relay button E2E (`PICK_MODE=relay`): like testing, except that prose
+ * provisions nothing. Each run rents a real relay VM on Aleph, so a push that
+ * only moves documentation must not start one, while a change to the spec
+ * itself — or to anything shared — must. `PICK_REQUIRE_FLAG` narrows the
+ * candidates to the chapters that asked for the run in their own
+ * `chapter.json`, beside the `lint`, `check` and `readme` gates, because a run
+ * somebody pays for is opt-in rather than something a new chapter inherits.
  */
 import { execFileSync } from 'node:child_process';
-import { appendFileSync, readdirSync } from 'node:fs';
+import { appendFileSync, readFileSync, readdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 /** The one file outside `apps/` that an app changes by itself. */
@@ -26,6 +34,13 @@ const LOCKFILE = 'pnpm-lock.yaml';
 
 /** An app declaring its own dependencies. */
 const APP_MANIFEST = /^apps\/[^/]+\/package\.json$/;
+
+/**
+ * Changes that cannot break a relay. Separate from `NOT_BUILT` on purpose: that
+ * list also excludes `e2e/`, and a change to the provisioning spec is exactly
+ * what the relay run exists to check.
+ */
+const PROSE = [/\.md$/i, /^docs\//, /^apps\/[^/]+\/docs\//];
 
 /** Paths inside an app that never reach its build. */
 const NOT_BUILT = [
@@ -39,7 +54,7 @@ const NOT_BUILT = [
 ];
 
 /**
- * @param {{ changed: string[], all: string[], mode?: 'test' | 'deploy' }} input
+ * @param {{ changed: string[], all: string[], mode?: 'test' | 'deploy' | 'relay' }} input
  * @returns {{ apps: string[], mayAffect: string[] }} `mayAffect`: in deploy
  *   mode, the apps a change outside their folders could concern
  */
@@ -47,6 +62,16 @@ export function pickApps({ changed, all, mode = 'test' }) {
 	if (changed.length === 0) return { apps: [], mayAffect: [] };
 	const outside = changed.filter((f) => !f.startsWith('apps/'));
 	const inside = changed.filter((f) => f.startsWith('apps/'));
+
+	if (mode === 'relay') {
+		const relevant = changed.filter((f) => !PROSE.some((rule) => rule.test(f)));
+		if (relevant.length === 0) return { apps: [], mayAffect: [] };
+		// Anything shared reaches the relay path, the lockfile included: the
+		// transport is libp2p, and a version of it arrives through `packages/net`.
+		if (relevant.some((f) => !f.startsWith('apps/'))) return { apps: all, mayAffect: [] };
+		const touched = new Set(relevant.map((f) => f.split('/')[1]));
+		return { apps: all.filter((a) => touched.has(a)), mayAffect: [] };
+	}
 
 	if (mode !== 'deploy') {
 		// The root lockfile moves whenever any app takes a dependency, and it
@@ -75,9 +100,20 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
 		.filter((e) => e.isDirectory())
 		.map((e) => e.name)
 		.sort();
-	const mode = process.env.PICK_MODE === 'deploy' ? 'deploy' : 'test';
+	const mode = ['deploy', 'relay'].includes(process.env.PICK_MODE) ? process.env.PICK_MODE : 'test';
+
+	// A chapter opts into a run that costs something. Without a flag asked for,
+	// every chapter is a candidate, which is what testing and deploying want.
+	const flag = (process.env.PICK_REQUIRE_FLAG ?? '').trim();
+	const eligible = flag
+		? all.filter(
+				(a) => JSON.parse(readFileSync(`apps/${a}/chapter.json`, 'utf8')).ci?.[flag] === true
+			)
+		: all;
 
 	const { apps, mayAffect } = (() => {
+		// An explicitly named chapter wins over the flag: that is how the one
+		// variant nobody opted in for gets checked when somebody wants it.
 		const asked = (process.env.APPS_INPUT ?? '').trim();
 		if (asked) return { apps: asked.split(/\s+/).filter((a) => all.includes(a)), mayAffect: [] };
 
@@ -86,14 +122,14 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
 		// No base to compare with: a first push, or a manual run with no list.
 		// Tests run everything; a deploy with nothing named deploys everything
 		// only when asked to by hand, which is the manual run with empty input.
-		if (!base || !head || /^0+$/.test(base)) return { apps: all, mayAffect: [] };
+		if (!base || !head || /^0+$/.test(base)) return { apps: eligible, mayAffect: [] };
 
 		const changed = execFileSync('git', ['diff', '--name-only', `${base}...${head}`], {
 			encoding: 'utf8'
 		})
 			.split('\n')
 			.filter(Boolean);
-		return pickApps({ changed, all, mode });
+		return pickApps({ changed, all: eligible, mode });
 	})();
 
 	console.log(`apps (${mode}): ${apps.join(', ') || '(keine)'}`);
