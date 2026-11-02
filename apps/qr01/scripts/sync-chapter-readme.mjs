@@ -27,6 +27,10 @@ import path from 'node:path';
 import { CHAPTER_PARTS } from '../src/lib/chapter-parts.js';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+// The lockfile is the workspace's, not the chapter's: `pnpm install` at the
+// root resolves every app from that one file, so a copy in here would only
+// keep the versions it was last written with.
+const workspaceDir = path.resolve(rootDir, '../..');
 
 export const START_MARKER = '<!-- chapter-parts:start -->';
 export const END_MARKER = '<!-- chapter-parts:end -->';
@@ -119,7 +123,7 @@ export async function buildReadme() {
 	const [readme, packageJson, lockfile, translations] = await Promise.all([
 		readFile(path.join(rootDir, 'README.md'), 'utf8'),
 		readFile(path.join(rootDir, 'package.json'), 'utf8'),
-		readFile(path.join(rootDir, 'pnpm-lock.yaml'), 'utf8'),
+		readFile(path.join(workspaceDir, 'pnpm-lock.yaml'), 'utf8'),
 		readFile(path.join(rootDir, 'src/lib/i18n/en.json'), 'utf8')
 	]);
 
