@@ -216,8 +216,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.0
-        version: 0.10.11-rc.0(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.1
+        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -454,8 +454,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.0
-        version: 0.10.11-rc.0(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.1
+        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -677,8 +677,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.0
-        version: 0.10.11-rc.0(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.1
+        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -912,8 +912,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.0
-        version: 0.10.11-rc.0(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.1
+        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -1153,8 +1153,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.0
-        version: 0.10.11-rc.0(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.1
+        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -1397,8 +1397,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.0
-        version: 0.10.11-rc.0(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.1
+        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -1629,8 +1629,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.0
-        version: 0.10.11-rc.0(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.1
+        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -1861,8 +1861,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.0
-        version: 0.10.11-rc.0(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.1
+        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -2093,8 +2093,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.0
-        version: 0.10.11-rc.0(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.1
+        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -2328,8 +2328,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.0
-        version: 0.10.11-rc.0(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.1
+        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -6721,8 +6721,8 @@ packages:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
     engines: {node: '>= 0.8.0'}
 
-  orbitdb-relay@0.10.11-rc.0:
-    resolution: {integrity: sha512-ds61yA10GmTusX9pXSrmermviu56uzZkeTLRJpoSuJP/Bx2wC+XdFzYDWlOIFpETT3R0n8b0i/sfkcyacewH0Q==}
+  orbitdb-relay@0.10.11-rc.1:
+    resolution: {integrity: sha512-lQ2CAAHR/YrFWmRQ4b5D4vODRcWtZed30PKgtoxzhh/88/+Otu2TMZ/inqaLegvEcXGZb0MFWVivXEyFLR7u2Q==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -8711,10 +8711,10 @@ snapshots:
     dependencies:
       '@helia/interface': 6.2.1
       '@helia/utils': 2.5.2
-      '@libp2p/interface': 3.2.5
+      '@libp2p/interface': 3.3.1
       '@libp2p/logger': 6.2.14
       '@libp2p/peer-collections': 7.0.25
-      '@libp2p/utils': 7.3.1
+      '@libp2p/utils': 7.4.2
       '@multiformats/multiaddr': 13.0.3
       any-signal: 4.2.0
       interface-blockstore: 6.0.2
@@ -8840,7 +8840,7 @@ snapshots:
 
   '@helia/delegated-routing-v1-http-api-client@6.0.1':
     dependencies:
-      '@libp2p/interface': 3.2.5
+      '@libp2p/interface': 3.3.1
       '@libp2p/peer-id': 6.0.13
       '@multiformats/multiaddr': 13.0.3
       any-signal: 4.2.0
@@ -8870,7 +8870,7 @@ snapshots:
 
   '@helia/fallback-router@1.1.0':
     dependencies:
-      '@helia/interface': 7.1.0
+      '@helia/interface': 7.1.2
       '@multiformats/uri-to-multiaddr': 10.0.0
       multiformats: 14.0.5
       uint8arrays: 6.1.1
@@ -8898,7 +8898,7 @@ snapshots:
 
   '@helia/interface@6.2.1':
     dependencies:
-      '@libp2p/interface': 3.2.5
+      '@libp2p/interface': 3.3.1
       '@multiformats/dns': 1.0.15
       '@multiformats/multiaddr': 13.0.3
       interface-blockstore: 6.0.2
@@ -9031,8 +9031,8 @@ snapshots:
 
   '@helia/trustless-gateway-client@1.0.4':
     dependencies:
-      '@helia/interface': 7.1.0
-      '@helia/utils': 3.0.4
+      '@helia/interface': 7.1.2
+      '@helia/utils': 3.0.6
       '@libp2p/utils': 7.4.2
       '@multiformats/multiaddr': 13.0.3
       '@multiformats/multiaddr-matcher': 3.0.2
@@ -10180,8 +10180,8 @@ snapshots:
 
   '@libp2p/keychain@6.1.4':
     dependencies:
-      '@libp2p/crypto': 5.1.21
-      '@libp2p/interface': 3.2.5
+      '@libp2p/crypto': 5.1.24
+      '@libp2p/interface': 3.3.1
       '@noble/hashes': 2.2.0
       asn1js: 3.0.10
       interface-datastore: 10.0.1
@@ -10248,8 +10248,8 @@ snapshots:
 
   '@libp2p/multistream-select@7.0.24':
     dependencies:
-      '@libp2p/interface': 3.2.5
-      '@libp2p/utils': 7.3.1
+      '@libp2p/interface': 3.3.1
+      '@libp2p/utils': 7.4.2
       it-length-prefixed: 11.0.1
       uint8arraylist: 3.0.2
       uint8arrays: 6.1.1
@@ -10357,7 +10357,7 @@ snapshots:
   '@libp2p/peer-store@12.0.24':
     dependencies:
       '@libp2p/crypto': 5.1.24
-      '@libp2p/interface': 3.2.5
+      '@libp2p/interface': 3.3.1
       '@libp2p/peer-collections': 7.0.25
       '@libp2p/peer-id': 6.0.13
       '@libp2p/peer-record': 9.0.13
@@ -11897,7 +11897,7 @@ snapshots:
 
   blockstore-core@7.0.1:
     dependencies:
-      '@libp2p/logger': 6.2.11
+      '@libp2p/logger': 6.2.14
       abort-error: 1.0.2
       interface-blockstore: 7.0.1
       interface-store: 8.0.0
@@ -12351,7 +12351,7 @@ snapshots:
 
   datastore-core@12.0.1:
     dependencies:
-      '@libp2p/logger': 6.2.11
+      '@libp2p/logger': 6.2.14
       abort-error: 1.0.2
       interface-datastore: 10.0.1
       interface-store: 8.0.0
@@ -13366,7 +13366,7 @@ snapshots:
   ipns@10.1.6:
     dependencies:
       '@libp2p/crypto': 5.1.24
-      '@libp2p/interface': 3.2.5
+      '@libp2p/interface': 3.3.1
       '@libp2p/logger': 6.2.14
       cborg: 5.1.7
       interface-datastore: 9.0.3
@@ -14467,7 +14467,7 @@ snapshots:
       type-check: 0.4.0
       word-wrap: 1.2.5
 
-  orbitdb-relay@0.10.11-rc.0(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6)):
+  orbitdb-relay@0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6)):
     dependencies:
       '@chainsafe/libp2p-noise': 17.0.0
       '@chainsafe/libp2p-quic': 2.1.3
