@@ -216,8 +216,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.1
-        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.2
+        version: 0.10.11-rc.2(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -454,8 +454,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.1
-        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.2
+        version: 0.10.11-rc.2(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -677,8 +677,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.1
-        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.2
+        version: 0.10.11-rc.2(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -912,8 +912,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.1
-        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.2
+        version: 0.10.11-rc.2(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -1153,8 +1153,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.1
-        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.2
+        version: 0.10.11-rc.2(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -1397,8 +1397,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.1
-        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.2
+        version: 0.10.11-rc.2(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -1629,8 +1629,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.1
-        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.2
+        version: 0.10.11-rc.2(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -1861,8 +1861,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.1
-        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.2
+        version: 0.10.11-rc.2(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -2093,8 +2093,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.1
-        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.2
+        version: 0.10.11-rc.2(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -2328,8 +2328,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       orbitdb-relay:
-        specifier: 0.10.11-rc.1
-        version: 0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: 0.10.11-rc.2
+        version: 0.10.11-rc.2(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -6721,8 +6721,8 @@ packages:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
     engines: {node: '>= 0.8.0'}
 
-  orbitdb-relay@0.10.11-rc.1:
-    resolution: {integrity: sha512-lQ2CAAHR/YrFWmRQ4b5D4vODRcWtZed30PKgtoxzhh/88/+Otu2TMZ/inqaLegvEcXGZb0MFWVivXEyFLR7u2Q==}
+  orbitdb-relay@0.10.11-rc.2:
+    resolution: {integrity: sha512-H2/Exwf8gnLs8vKDZkZsr3pDeO7DX7U5LFBEYKpfWfheChUO+oUoo16ljjcL4ng9jGTU/XTEvCG+rKmpTWUXCA==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -14467,7 +14467,7 @@ snapshots:
       type-check: 0.4.0
       word-wrap: 1.2.5
 
-  orbitdb-relay@0.10.11-rc.1(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6)):
+  orbitdb-relay@0.10.11-rc.2(encoding@0.1.13)(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6)):
     dependencies:
       '@chainsafe/libp2p-noise': 17.0.0
       '@chainsafe/libp2p-quic': 2.1.3
