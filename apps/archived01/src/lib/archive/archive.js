@@ -28,7 +28,8 @@
 import { writable, get } from 'svelte/store';
 import {
 	readPrfOutput,
-	PrfUnavailableError
+	PrfUnavailableError,
+	WebAuthnAuthenticationError
 } from '@le-space/orbitdb-identity-provider-webauthn-did';
 import { deriveArchiveKeys, listRefFor, sealer, sealText, openText } from './keys.js';
 import { createLocalBackend } from './local-backend.js';
@@ -211,8 +212,15 @@ export async function unlockArchive({ credential, prfOutput = null }) {
 		if (get(archiveStore).enabled) await startArchive();
 		return { address: keys.address };
 	} catch (error) {
+		// readPrfOutput refuses another passkey's answer: its output would
+		// derive another account and another backup key.
 		patch({
-			lastError: error instanceof PrfUnavailableError ? 'prf-unavailable' : message(error)
+			lastError:
+				error instanceof PrfUnavailableError
+					? 'prf-unavailable'
+					: error instanceof WebAuthnAuthenticationError
+						? 'other-passkey'
+						: message(error)
 		});
 		throw error;
 	} finally {

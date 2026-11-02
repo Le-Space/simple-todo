@@ -36,6 +36,7 @@
 			"noTracking": "No tracking cookies, no analytics. “Don’t show this again” remembers only that decision, on this device."
 		},
 		"errorNoPasskey": "No passkey is stored in this browser, and your authenticator did not hand one over. Create a new one, or continue without one.",
+		"errorOtherPasskey": "Another passkey of this site answered, not the one this browser started with. Nothing was sealed or archived with it. Start again, and answer with the passkey you started with here.",
 		"errorNeedsLabel": "Please give the new passkey a name.",
 		"errorStart": "Startup failed: {reason}",
 		"existingNeedsTap": "Your passkey asks for a tap on every start. That is why this dialog is back — nothing went wrong.",
@@ -158,6 +159,7 @@
 		"none": "The store holds nothing for this account.",
 		"restoredSummary": "{increments} increments read, {joined} state joined, {skipped} skipped.",
 		"prfUnavailable": "This authenticator gives no PRF output; no account and no key could be derived from it.",
+		"otherPasskey": "Another passkey answered than the one you started with. No account and no key were derived from it. Unlock again, and answer with your passkey.",
 		"prompts": "One touch of the passkey per session: it yields the identity and the archive keys together. The keys stay in memory until the tab closes.",
 		"credits": "Balance: {credits} credits",
 		"creditsLast": "lasts about {days} days",

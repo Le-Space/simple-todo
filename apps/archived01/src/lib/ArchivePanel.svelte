@@ -691,6 +691,8 @@
 			<p class="text-sm text-danger" data-testid="archive-error">
 				{#if $archiveStore.lastError === 'prf-unavailable'}{$_(
 						'archive.prfUnavailable'
+					)}{:else if $archiveStore.lastError === 'other-passkey'}{$_(
+						'archive.otherPasskey'
 					)}{:else}{localError ?? $archiveStore.lastError}{/if}
 			</p>
 		{/if}
