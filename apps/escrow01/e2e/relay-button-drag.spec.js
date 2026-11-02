@@ -96,7 +96,7 @@ for (const { name, viewport } of viewports) {
 
 /**
  * Known upstream defect, pinned so it announces its own fix. In
- * `@le-space/ui` 0.9.6 a draggable launcher opens its panel on `pointerup`
+ * `@le-space/ui` 0.12.4 (as in 0.9.6) a draggable launcher opens its panel on `pointerup`
  * only and drops its `click` handler, so Enter and Space on the focused
  * button do nothing. When the widget handles keyboard clicks again this test
  * starts passing, Playwright reports that as a failure, and `test.fail` goes.

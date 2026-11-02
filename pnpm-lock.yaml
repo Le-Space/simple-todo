@@ -56,8 +56,8 @@ importers:
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
       '@le-space/ui':
-        specifier: 0.9.6
-        version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
+        specifier: 0.12.4
+        version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
       '@libp2p/autonat':
         specifier: ^3.0.24
         version: 3.0.24
@@ -291,8 +291,8 @@ importers:
         specifier: 0.22.1
         version: 0.22.1(@storacha/client@2.1.4(encoding@0.1.13))(encoding@0.1.13)(lucide-svelte@0.539.0(svelte@5.37.2))(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))(svelte@5.37.2)
       '@le-space/ui':
-        specifier: 0.9.6
-        version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
+        specifier: 0.12.4
+        version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
       '@libp2p/autonat':
         specifier: ^3.0.24
         version: 3.0.24
@@ -520,8 +520,8 @@ importers:
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
       '@le-space/ui':
-        specifier: 0.9.6
-        version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
+        specifier: 0.12.4
+        version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
       '@libp2p/autonat':
         specifier: ^3.0.24
         version: 3.0.24
@@ -752,8 +752,8 @@ importers:
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
       '@le-space/ui':
-        specifier: 0.9.6
-        version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
+        specifier: 0.12.4
+        version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
       '@libp2p/autonat':
         specifier: ^3.0.24
         version: 3.0.24
@@ -990,8 +990,8 @@ importers:
         specifier: 0.1.0
         version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.12.2(@orbitdb/core@4.0.0))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))
       '@le-space/ui':
-        specifier: 0.9.6
-        version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
+        specifier: 0.12.4
+        version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
       '@libp2p/autonat':
         specifier: ^3.0.24
         version: 3.0.24
@@ -1228,8 +1228,8 @@ importers:
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
       '@le-space/ui':
-        specifier: 0.9.6
-        version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
+        specifier: 0.12.4
+        version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
       '@libp2p/autonat':
         specifier: ^3.0.24
         version: 3.0.24
@@ -1469,8 +1469,8 @@ importers:
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
       '@le-space/ui':
-        specifier: 0.9.6
-        version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
+        specifier: 0.12.4
+        version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
       '@libp2p/autonat':
         specifier: ^3.0.24
         version: 3.0.24
@@ -1701,8 +1701,8 @@ importers:
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
       '@le-space/ui':
-        specifier: 0.9.6
-        version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
+        specifier: 0.12.4
+        version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
       '@libp2p/autonat':
         specifier: ^3.0.24
         version: 3.0.24
@@ -1933,8 +1933,8 @@ importers:
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
       '@le-space/ui':
-        specifier: 0.9.6
-        version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
+        specifier: 0.12.4
+        version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
       '@libp2p/autonat':
         specifier: ^3.0.24
         version: 3.0.24
@@ -2165,8 +2165,8 @@ importers:
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
       '@le-space/ui':
-        specifier: 0.9.6
-        version: 0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
+        specifier: 0.12.4
+        version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
       '@libp2p/autonat':
         specifier: ^3.0.24
         version: 3.0.24
@@ -3437,6 +3437,9 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
+  '@le-space/aleph-bootstrap@0.12.4':
+    resolution: {integrity: sha512-IEJIfOWxgwYLf9qvysTdPD80G15O/pPXPGYNFLtpH74K1aeWL8vJBwF5MxOG5zAuCpusesSRipokSvWdZPRTtQ==}
+
   '@le-space/aleph-bootstrap@0.7.0':
     resolution: {integrity: sha512-6FhMU7PDXJPdL8X9Fag199kqUTG7CoTaqG94pW8L47ayLvk+GvmBxTJXatOYZ5lCAZPUOpG9FSCWQrkve/bR9w==}
 
@@ -3452,8 +3455,11 @@ packages:
   '@le-space/aleph-bootstrap@0.9.6':
     resolution: {integrity: sha512-LVtXuD8H+mbOtRkIQx/er/wFCjKwL4NKk3qxQ2ibcfOlpwm5FzI7NDkg7mHwCnvYmt0jT4MvoaD4oWxoundswQ==}
 
-  '@le-space/browser@0.9.6':
-    resolution: {integrity: sha512-1QiQk7E8c72ju81eKjm7dP+lVVhiA5n5HWnlV3gAn8ggNbWp+wIDbFuDdBjktYBvmZpxyvJnWVjaloteGJ7Jtw==}
+  '@le-space/browser@0.12.4':
+    resolution: {integrity: sha512-ZKQouA7JM26VClv2JwcF9ojoU7ubVZfW0om60Y/8msBy276of8TTcKGfCHHwnei/EKgKBWiU/KppZHsaTNLsbg==}
+
+  '@le-space/core@0.12.4':
+    resolution: {integrity: sha512-K+GPUAll/p+dIO6FJrx4XUfLUJY0dRnRXv5wSpdeane2G12mB5v5w0Q9iK0dM1sgtiWlXEVejGB/23PeI+XtSw==}
 
   '@le-space/core@0.7.0':
     resolution: {integrity: sha512-4hqzMs9uHVC152V/5n+hRycd5FiNcb1OPRlGsctAZVnfOnTPlFuA9mZbwZG9jj80l+qUi7sW9GfYg4hGM1JgeA==}
@@ -3564,6 +3570,9 @@ packages:
   '@le-space/rootfs@0.9.6':
     resolution: {integrity: sha512-r6jkCHflyEugtXOrnzpDrogi6y3Z6IYZTMcO3w1xKhPFE+NljjA/ZkH9D4e4C8wdwHMjlJcYBIuUSZ5jR8CL2Q==}
 
+  '@le-space/shared-types@0.12.4':
+    resolution: {integrity: sha512-hPG1VplWItCoaL1Omg1yqVznNI3KwmVhPscSRMEsVJorNBTxMY6qYCH+ICcifaMzdBqupBFy5EczwnSA3tzMlA==}
+
   '@le-space/shared-types@0.7.0':
     resolution: {integrity: sha512-b84OYM7DNlQu60/u2jaiohqGTww1B8GqplUIrZCMqDAg2dF8KZGXfEcUcRl75IqUko5RBT5rebhgBIUJb2ufQg==}
 
@@ -3588,8 +3597,8 @@ packages:
   '@le-space/ucanto-principal@9.1.2':
     resolution: {integrity: sha512-vWRXFPLKQwfC7CXhgrl3p11cOgEWHcgQyosR4EztgKfHmKAbYOn2y7VQpr4pEtJHw/iB92EJSyJBGYecTmF/2g==}
 
-  '@le-space/ui@0.9.6':
-    resolution: {integrity: sha512-0dLjlkuBWy6adApIDd6MMce3kWTAZDUA4oXRwS44iooD2+yUQiWadYrSZmDKlznxOhpVfN5RMnKMids3Q/DM3g==}
+  '@le-space/ui@0.12.4':
+    resolution: {integrity: sha512-52t03Dr6+9RepYfv8xJv/CausAsg6MWIZirBz0RTIcD7yZZjV6xaLZnNYFWr2lOUMKQHBqwgDXi+0PAtMYpT1Q==}
     peerDependencies:
       react: 19.2.6
       react-dom: 19.2.6
@@ -9371,6 +9380,16 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@le-space/aleph-bootstrap@0.12.4(typescript@5.9.2)(zod@4.6.5)':
+    dependencies:
+      '@libp2p/bootstrap': 11.0.47
+      viem: 2.56.8(typescript@5.9.2)(zod@4.6.5)
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - zod
+
   '@le-space/aleph-bootstrap@0.7.0(typescript@5.9.2)(zod@4.6.5)':
     dependencies:
       '@libp2p/bootstrap': 11.0.47
@@ -9421,7 +9440,17 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@le-space/browser@0.9.6': {}
+  '@le-space/browser@0.12.4': {}
+
+  '@le-space/core@0.12.4(typescript@5.9.2)(zod@4.6.5)':
+    dependencies:
+      '@le-space/aleph-bootstrap': 0.12.4(typescript@5.9.2)(zod@4.6.5)
+      '@le-space/shared-types': 0.12.4
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - zod
 
   '@le-space/core@0.7.0(typescript@5.9.2)(zod@4.6.5)':
     dependencies:
@@ -9776,6 +9805,8 @@ snapshots:
 
   '@le-space/rootfs@0.9.6': {}
 
+  '@le-space/shared-types@0.12.4': {}
+
   '@le-space/shared-types@0.7.0': {}
 
   '@le-space/shared-types@0.8.0': {}
@@ -9809,10 +9840,10 @@ snapshots:
       multiformats: 13.4.2
       one-webcrypto: 1.0.3
 
-  '@le-space/ui@0.9.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)':
+  '@le-space/ui@0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)':
     dependencies:
-      '@le-space/browser': 0.9.6
-      '@le-space/core': 0.9.6(typescript@5.9.2)(zod@4.6.5)
+      '@le-space/browser': 0.12.4
+      '@le-space/core': 0.12.4(typescript@5.9.2)(zod@4.6.5)
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
       svelte: 5.37.2

@@ -1,7 +1,7 @@
 /**
  * Where the relay button starts on a phone (invoice01).
  *
- * The widget (`@le-space/ui` 0.9.6) puts its launcher 22 px from the bottom
+ * The widget (`@le-space/ui` 0.12.4) puts its launcher 22 px from the bottom
  * right corner and has no way to be told about anything else down there. On a
  * phone that corner is the tab bar's now, so the launcher sat on top of the
  * lists and network tabs and took their taps.
@@ -21,7 +21,7 @@ export const NARROW_SCREEN = '(max-width: 639.98px)';
 
 /** The widget's own distance from the edges (`FAB_EDGE_MARGIN`). */
 const EDGE = 22;
-/** The launcher's size in 0.9.6, which the widget measures only once it is on screen. */
+/** The launcher's size (unchanged from 0.9.6 to 0.12.4), which the widget measures only once it is on screen. */
 const LAUNCHER = { width: 166, height: 44 };
 /** Between the launcher and the top of the tab bar. */
 const GAP = 16;
