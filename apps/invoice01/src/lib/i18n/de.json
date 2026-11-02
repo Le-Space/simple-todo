@@ -99,7 +99,9 @@
 		"storageMemoryLabel": "Nur im Arbeitsspeicher",
 		"storageMemoryHint": "Aufgaben und Schlüssel liegen nur im Arbeitsspeicher und sind beim Neuladen weg. Auf dem Gerät bleibt nichts — Ihre Identität kommt beim nächsten Mal über den Passkey zurück, mit drei Berührungen.",
 		"storagePersistentLabel": "In diesem Browser behalten",
-		"storagePersistentHint": "Die Todos liegen in der IndexedDB des Browsers und überstehen einen Neustart. Verschlüsselt sind sie dort nicht: Wer den Speicher dieses Browsers lesen kann, liest sie mit."
+		"storagePersistentHint": "Die Todos liegen in der IndexedDB des Browsers und überstehen einen Neustart. Verschlüsselt sind sie dort nicht: Wer den Speicher dieses Browsers lesen kann, liest sie mit.",
+		"identityAnother": "Einen anderen Passkey dieser Listen verwenden",
+		"identityAnotherHint": "Fragt Ihren Authenticator, statt den hier gespeicherten Passkey zu nehmen — für den zweiten Schlüssel, wenn der erste nicht zur Hand ist. Zwei Berührungen, dann eine weitere, um die Listen zu öffnen."
 	},
 	"invoice": {
 		"tab": "Rechnungen",
@@ -348,7 +350,11 @@
 			"created": "Die Liste {name} ist angelegt, und Sie schreiben jetzt hinein.",
 			"share": "Geben Sie diese Adresse weiter, damit andere die Liste öffnen können. Lesen können sie sofort, schreiben erst mit Schreibrechten, die Sie weiter unten erteilen.",
 			"copy": "Kopieren",
-			"copied": "Kopiert"
+			"copied": "Kopiert",
+			"seal": "Versiegeln: nur Ihre Passkeys können sie lesen",
+			"sealHint": "Die Einträge werden mit einem Schlüssel aus Ihrem Passkey versiegelt; das Relay und jeder mit der Adresse halten nur Bytes, die sie nicht lesen können. Wem Sie unten Schreibrechte geben oder ein Todo übergeben, der kann sie ebenfalls nicht lesen. Die erste versiegelte Liste fragt Ihren Passkey unter Umständen einmal.",
+			"sealNeedsPasskey": "Versiegeln geht nur mit Passkey: der Schlüssel kommt aus ihm.",
+			"createdSealed": "Versiegelt: lesen können sie nur die Passkeys unter „Passkeys dieser Listen“."
 		},
 		"switcher": {
 			"heading": "Ihre Listen",
@@ -359,6 +365,7 @@
 				"guest": "Gast"
 			},
 			"open": "geöffnet",
+			"sealed": "versiegelt",
 			"forget": "Vergessen",
 			"forgetTitle": "Nur aus dieser Übersicht entfernen; die Datenbank selbst bleibt unverändert"
 		},
@@ -396,6 +403,25 @@
 			"hint": "Drei spanische Wörter statt einer Adresse. Wer sie kennt, darf die Liste lesen und beschreiben — Rechnungen und Kundenanschriften gehören deshalb nicht hinein.",
 			"submit": "Öffnen",
 			"busy": "Wird geöffnet …"
+		},
+		"passkeys": {
+			"heading": "Passkeys dieser Listen",
+			"hint": "Ein zweiter Passkey — der Ersatzschlüssel in der Schublade — öffnet Ihre versiegelten Listen in diesem Browser, wenn der erste verloren ist. Er liest sie; schreiben darf er, sobald Sie seine DID unter Schreibrechte eintragen.",
+			"none": "Noch kein Tresor. Er entsteht mit der ersten versiegelten Liste oder mit einem zweiten Passkey, den Sie hier hinzufügen.",
+			"unnamed": "Passkey ohne Namen",
+			"thisOne": "(dieser)",
+			"remove": "Entfernen",
+			"labelDefault": "Ersatzschlüssel",
+			"labelPlaceholder": "Name für den neuen Passkey",
+			"add": "Zweiten Passkey hinzufügen",
+			"busy": "Warte auf den Passkey …",
+			"addHint": "Legt einen neuen Passkey an und fragt ihn einmal ab: zwei Berührungen am neuen Schlüssel.",
+			"memoryMode": "Diese Sitzung behält nichts; ein zweiter Passkey hätte seinen Platz nur, bis der Tab schließt. Wählen Sie im Startdialog, dass Dinge behalten werden, um einen hinzuzufügen.",
+			"added": "{label} öffnet diese Listen jetzt. Damit er auch schreiben darf, tragen Sie diese DID unter Schreibrechte ein:",
+			"alreadyThere": "dieser Passkey öffnet in diesem Browser schon andere Listen",
+			"cannotRemoveOwn": "der Passkey, mit dem Sie gerade arbeiten, kann sich nicht selbst entfernen",
+			"addFailed": "Der Passkey ließ sich nicht hinzufügen: {reason}",
+			"removeFailed": "Der Passkey ließ sich nicht entfernen: {reason}"
 		}
 	},
 	"header": {
@@ -551,5 +577,10 @@
 			"toastConnected": "🔗 Verbunden mit {peer}",
 			"toastDropped": "⚠️ {peer} hat die Verbindung kurz nach dem Aufbau geschlossen"
 		}
+	},
+	"vault": {
+		"unreadable": "Der Tresor, den dieser Browser für Ihre Listen hält, ist nicht lesbar. Er bleibt, wie er ist; versiegelte Listen bleiben zu, bis er repariert ist.",
+		"removedHere": "Dieser Passkey wurde aus den Listen dieses Browsers entfernt. Er geht als eigene Identität weiter, ohne sie.",
+		"openFailed": "Der Tresor für Ihre versiegelten Listen ließ sich nicht öffnen; sie bleiben in dieser Sitzung zu."
 	}
 }

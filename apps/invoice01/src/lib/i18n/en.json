@@ -99,7 +99,9 @@
 		"storageMemoryLabel": "In memory only",
 		"storageMemoryHint": "Todos and keys live in memory only and are gone on reload. Nothing is left on the device — your identity comes back through the passkey next time, in three touches.",
 		"storagePersistentLabel": "Keep them in this browser",
-		"storagePersistentHint": "Todos are stored in the browser's IndexedDB and survive a restart. They are not encrypted there, so anyone who can read this browser's storage can read them."
+		"storagePersistentHint": "Todos are stored in the browser's IndexedDB and survive a restart. They are not encrypted there, so anyone who can read this browser's storage can read them.",
+		"identityAnother": "Another passkey of these lists",
+		"identityAnotherHint": "Asks your authenticator instead of using the passkey stored here — for the second key, when the first is not at hand. Two touches, then one more to open the lists."
 	},
 	"invoice": {
 		"tab": "Invoices",
@@ -348,7 +350,11 @@
 			"created": "Created {name} — you are now writing to it.",
 			"share": "Share this address so others can open the list. They can read it right away; writing needs a grant below.",
 			"copy": "Copy",
-			"copied": "Copied"
+			"copied": "Copied",
+			"seal": "Seal it: only your passkeys can read it",
+			"sealHint": "Entries are sealed with a key from your passkey, so the relay and anybody with the address keep bytes they cannot read. Whoever you grant below or hand a todo to cannot read it either. The first sealed list may ask your passkey once.",
+			"sealNeedsPasskey": "Sealing needs a passkey: the key comes from it.",
+			"createdSealed": "Sealed: only the passkeys listed under “Passkeys of these lists” can read it."
 		},
 		"switcher": {
 			"heading": "Your lists",
@@ -359,6 +365,7 @@
 				"guest": "guest"
 			},
 			"open": "open",
+			"sealed": "sealed",
 			"forget": "Forget",
 			"forgetTitle": "Remove from this list of lists; the database itself is untouched"
 		},
@@ -396,6 +403,25 @@
 			"hint": "Three Spanish words instead of an address. Anyone who knows them may read the list and write to it — which is why invoices and customer addresses do not belong there.",
 			"submit": "Open",
 			"busy": "Opening …"
+		},
+		"passkeys": {
+			"heading": "Passkeys of these lists",
+			"hint": "A second passkey — the backup key in the drawer — opens your sealed lists in this browser when the first one is lost. It reads them; it writes once you grant its DID under write permissions.",
+			"none": "No vault yet. The first sealed list makes it, or a second passkey added here.",
+			"unnamed": "unnamed passkey",
+			"thisOne": "(this one)",
+			"remove": "Remove",
+			"labelDefault": "Backup key",
+			"labelPlaceholder": "Name for the new passkey",
+			"add": "Add a second passkey",
+			"busy": "Waiting for the passkey…",
+			"addHint": "Makes a new passkey and asks it once: two touches on the new key.",
+			"memoryMode": "This session keeps nothing, so a second passkey would hold its place only until the tab closes. Choose to keep things on the start screen to add one.",
+			"added": "{label} can open these lists now. To let it write as well, grant this DID under write permissions:",
+			"alreadyThere": "that passkey opens other lists in this browser already",
+			"cannotRemoveOwn": "the passkey you are using cannot remove itself",
+			"addFailed": "The passkey could not be added: {reason}",
+			"removeFailed": "The passkey could not be removed: {reason}"
 		}
 	},
 	"header": {
@@ -551,5 +577,10 @@
 			"toastConnected": "🔗 Connected to {peer}",
 			"toastDropped": "⚠️ {peer} closed the connection shortly after connect"
 		}
+	},
+	"vault": {
+		"unreadable": "The vault this browser keeps for your lists cannot be read. It is left as it is; sealed lists stay closed until it is repaired.",
+		"removedHere": "This passkey was removed from the lists kept in this browser. It goes on as its own identity, without them.",
+		"openFailed": "The vault for your sealed lists would not open; they stay closed in this session."
 	}
 }

@@ -70,6 +70,29 @@ export async function createPasskeyCredential({ userId, displayName }) {
 }
 
 /**
+ * One more passkey for the lists' vault (list-vault.js): made now, and not
+ * written down — this browser goes on with the passkey it started with. The
+ * label goes into both fields, as above.
+ *
+ * @param {string} label
+ * @returns {Promise<any>} the new credential
+ */
+export async function createAdditionalPasskey(label) {
+	return WebAuthnDIDProvider.createCredential({ userId: label, displayName: label });
+}
+
+/**
+ * The DID a credential's identity will have: what the permissions panel
+ * needs to let that passkey write.
+ *
+ * @param {any} credential as `createCredential` returns it
+ * @returns {Promise<string>}
+ */
+export function didOfCredential(credential) {
+	return WebAuthnDIDProvider.createDID(credential);
+}
+
+/**
  * What the provider needs, rebuilt from what the authenticator gave back.
  *
  * It reads `credentialId` (text), `rawCredentialId` (bytes) and `publicKey`
@@ -117,11 +140,15 @@ function credentialFromRestored(restored) {
  * cannot evaluate PRF -- an identity derived from something else would be a
  * different one wearing this name.
  *
- * @param {{ onTouch?: (step: { touch: number, of: number }) => void }} [options]
+ * `fromAuthenticator` passes over the stored one: the way in for another
+ * passkey of this browser's lists — the second key, when the first is not at
+ * hand (invoice01). What it finds is kept in place of the stored one.
+ *
+ * @param {{ onTouch?: (step: { touch: number, of: number }) => void, fromAuthenticator?: boolean }} [options]
  * @returns {Promise<any | null>} the credential, or null when nothing found
  */
-export async function recoverPasskeyCredential({ onTouch } = {}) {
-	const stored = loadWebAuthnCredential(CREDENTIAL_STORAGE_KEY);
+export async function recoverPasskeyCredential({ onTouch, fromAuthenticator = false } = {}) {
+	const stored = fromAuthenticator ? null : loadWebAuthnCredential(CREDENTIAL_STORAGE_KEY);
 	if (stored) return stored;
 
 	// A device with no passkey for this origin answers with a WebAuthn error --

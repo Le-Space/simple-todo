@@ -4,12 +4,17 @@
 	// it, after which the permissions panel appears for granting DIDs.
 	import { _, SLOT, around } from '$lib/i18n/index.js';
 	import { createPrivateTodoList } from './db-actions.js';
+	import { passkeyCredentialStore } from './p2p-stores.js';
 
 	let name = '';
+	// invoice01: a choice, and off unless ticked. A sealed list is readable only
+	// to the passkeys of these lists (list-vault.js) — not to anybody granted
+	// below or handed a todo, which is what this chapter is otherwise about.
+	let sealed = false;
 	let busy = false;
 	/** @type {string | null} */
 	let errorMessage = null;
-	/** @type {{ name: string, address: string } | null} */
+	/** @type {{ name: string, address: string, sealed: boolean } | null} */
 	let created = null;
 	let copied = false;
 
@@ -20,7 +25,7 @@
 		try {
 			// Keep the result. Dropping it is what made a created list invisible:
 			// the box promises "share its address" and then never showed one (#114).
-			created = await createPrivateTodoList(name);
+			created = await createPrivateTodoList(name, { sealed: sealed && canSeal });
 			name = '';
 		} catch (error) {
 			errorMessage = error instanceof Error ? error.message : String(error);
@@ -28,6 +33,9 @@
 			busy = false;
 		}
 	}
+
+	// A sealed list's key comes from a passkey; an anonymous identity has none.
+	$: canSeal = Boolean($passkeyCredentialStore?.rawCredentialId);
 
 	async function copyAddress() {
 		if (!created?.address) return;
@@ -63,6 +71,21 @@
 			{busy ? $_('lists.create.busy') : $_('lists.create.submit')}
 		</button>
 	</div>
+	<label class="mt-2 flex cursor-pointer items-start gap-2 text-xs">
+		<input
+			type="checkbox"
+			bind:checked={sealed}
+			disabled={!canSeal || busy}
+			data-testid="new-list-seal"
+			class="mt-0.5"
+		/>
+		<span>
+			<span class="font-medium text-heading">{$_('lists.create.seal')}</span>
+			<span class="block text-faint" data-testid="new-list-seal-hint">
+				{canSeal ? $_('lists.create.sealHint') : $_('lists.create.sealNeedsPasskey')}
+			</span>
+		</span>
+	</label>
 	{#if errorMessage}
 		<p class="mt-2 text-xs text-red-600" data-testid="new-list-error">{errorMessage}</p>
 	{/if}
@@ -78,6 +101,11 @@
 				{sentence.before}<strong data-testid="new-list-created-name">{created.name}</strong
 				>{sentence.after}
 			</p>
+			{#if created.sealed}
+				<p class="mt-1 text-xs text-faint" data-testid="new-list-created-sealed">
+					{$_('lists.create.createdSealed')}
+				</p>
+			{/if}
 			<p class="mt-2 text-xs text-faint">
 				{$_('lists.create.share')}
 			</p>

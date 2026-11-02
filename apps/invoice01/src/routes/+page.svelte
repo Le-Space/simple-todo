@@ -13,6 +13,8 @@
 		hasStoredPasskeyCredential,
 		recoverPasskeyCredential
 	} from '$lib/passkey-identity.js';
+	import { readPrfOutput } from '@le-space/orbitdb-identity-provider-webauthn-did/vault';
+	import { openListVault, setVaultCredential, vaultStatus } from '$lib/list-vault.js';
 	import {
 		todosStore,
 		todoDBStore,
@@ -67,6 +69,7 @@
 	honourStorageChoice();
 	import SharedListDetails from '$lib/SharedListDetails.svelte';
 	import PermissionsPanel from '$lib/PermissionsPanel.svelte';
+	import ListPasskeysPanel from '$lib/ListPasskeysPanel.svelte';
 	import OpenDatabaseForm from '$lib/OpenDatabaseForm.svelte';
 	import NewPrivateListButton from '$lib/NewPrivateListButton.svelte';
 	import ListSwitcher from '$lib/ListSwitcher.svelte';
@@ -101,6 +104,8 @@
 	/** @type {'create' | 'existing' | 'anonymous'} */
 	let identityMode = 'create';
 	let passkeyLabel = get(_)('consent.identityLabelDefault');
+	/** Past the stored passkey, to the authenticator: another passkey of these lists. */
+	let askAuthenticator = false;
 
 	/** @type {string | null} */
 	let toastMessage = null;
@@ -254,7 +259,7 @@
 	 * it; a list anybody can write to is not where it goes.
 	 *
 	 * @param {string} words the public three-word list this browser would open
-	 * @returns {{ todoDbAddress?: string, todoDbName?: string, todoDbPrivate?: boolean }}
+	 * @returns {{ todoDbAddress?: string, todoDbName?: string, todoDbPrivate?: boolean, todoDbSealed?: boolean }}
 	 */
 	function listToOpen(words) {
 		// A `#list=` link names a public list by its words, which is a name and
@@ -268,7 +273,8 @@
 		// The list this browser had open, by address: its blocks are here, so
 		// opening it needs nobody. A bookmark used to land in the public list
 		// instead, which is where somebody's invoices went missing.
-		if (remembered && !listLink.initial.address) return { todoDbAddress: remembered.address };
+		if (remembered && !listLink.initial.address)
+			return { todoDbAddress: remembered.address, todoDbSealed: remembered.sealed === true };
 		/*
 			And otherwise the public three-word list, as in every chapter before
 			this one.
@@ -316,18 +322,63 @@
 	 * already here — but a cleared cache, a half-written log or a list somebody
 	 * deleted would otherwise leave the app on its dialog with an error.
 	 *
-	 * @param {{ todoDbAddress?: string, todoDbName?: string }} choice
+	 * @param {{ todoDbAddress?: string, todoDbName?: string, todoDbSealed?: boolean }} choice
 	 * @param {string} words the public list to fall back to
-	 * @param {any} passkeyCredential
+	 * @param {{ passkeyCredential: any, prfOutput: Uint8Array | null }} identity
 	 */
-	async function startWithFallback(choice, words, passkeyCredential) {
+	async function startWithFallback(choice, words, identity) {
 		try {
-			await startP2P({ ...choice, passkeyCredential });
+			await startP2P({ ...choice, ...identity });
 		} catch (err) {
 			if (!choice.todoDbAddress) throw err;
 			console.warn('Remembered list could not be opened, falling back:', err);
-			await startP2P({ todoDbName: words, passkeyCredential });
+			await startP2P({ todoDbName: words, ...identity });
 		}
+	}
+
+	/**
+	 * The lists' vault (list-vault.js), and the PRF output the start reads for it.
+	 *
+	 * Read only where it is needed, so a passkey that never sealed a list and
+	 * never got a second one is asked exactly as often as before: when this
+	 * browser keeps a vault with this passkey's slot (one touch, and the vault
+	 * opens), and at registration, where the provider reads it anyway and now
+	 * takes ours. The one read at registration is held for the session, so the
+	 * first sealed list or second passkey costs no touch of this one.
+	 *
+	 * @param {any} credential the passkey this session runs as, or null
+	 * @param {boolean} creating registered just now
+	 * @returns {Promise<Uint8Array | null>} for the provider
+	 */
+	async function prepareListVault(credential, creating) {
+		setVaultCredential(credential);
+		if (!credential) return null;
+		let kept = { here: false, removed: false };
+		try {
+			kept = await vaultStatus();
+		} catch (err) {
+			// Never replaced: it may hold the only copy of a vault.
+			console.warn('The kept vaults cannot be read:', err);
+			showToast($_('vault.unreadable'), 'warning', 12_000);
+		}
+		if (kept.removed) showToast($_('vault.removedHere'), 'warning', 12_000);
+		const wanted = kept.here || (creating && credential.extensionSupport?.prf !== false);
+		if (!wanted) return null;
+		const prfOutput = await readPrfOutput(credential).catch((err) => {
+			console.warn('The passkey gave no PRF output:', err);
+			return null;
+		});
+		if (!prfOutput) return null;
+		setVaultCredential(credential, { prfOutput });
+		if (kept.here) {
+			try {
+				await openListVault({ prfOutput });
+			} catch (err) {
+				console.warn('The vault would not open:', err);
+				showToast($_('vault.openFailed'), 'warning', 12_000);
+			}
+		}
+		return prfOutput;
 	}
 
 	const handleModalClose = async () => {
@@ -367,7 +418,9 @@
 					displayName: passkeyLabel.trim()
 				});
 			} else if (identityMode === 'existing') {
-				passkeyCredential = await recoverPasskeyCredential();
+				passkeyCredential = await recoverPasskeyCredential({
+					fromAuthenticator: askAuthenticator
+				});
 				if (!passkeyCredential) {
 					throw new IdentityChoiceError($_('consent.errorNoPasskey'));
 				}
@@ -377,15 +430,15 @@
 			} catch {
 				// ignore storage errors
 			}
+			const prfOutput = await prepareListVault(passkeyCredential, identityMode === 'create');
 
 			if ($initializationStore.isInitialized) {
 				await restartP2PLazy({ todoDbName: canonicalMnemonic });
 			} else {
-				await startWithFallback(
-					listToOpen(canonicalMnemonic),
-					canonicalMnemonic,
-					passkeyCredential
-				);
+				await startWithFallback(listToOpen(canonicalMnemonic), canonicalMnemonic, {
+					passkeyCredential,
+					prfOutput
+				});
 			}
 			activeMnemonic = canonicalMnemonic;
 			void listLink.openLinked();
@@ -455,7 +508,10 @@
 			} else if (recall(CONSENT_KEY) === 'true') {
 				showModal = false;
 				activeMnemonic = normalizeSpanishMnemonic(selectedMnemonic);
-				await startWithFallback(listToOpen(activeMnemonic), activeMnemonic, null);
+				await startWithFallback(listToOpen(activeMnemonic), activeMnemonic, {
+					passkeyCredential: null,
+					prfOutput: null
+				});
 				void listLink.openLinked();
 			}
 		} catch {
@@ -632,7 +688,7 @@
 		<svelte:fragment slot="header"><LanguageSwitcher /></svelte:fragment>
 		<svelte:fragment slot="before-confirmation">
 			<StorageModeSelector bind:mode={storageMode} />
-			<PasskeyOnboarding bind:mode={identityMode} bind:label={passkeyLabel} />
+			<PasskeyOnboarding bind:mode={identityMode} bind:label={passkeyLabel} bind:askAuthenticator />
 		</svelte:fragment>
 	</ConsentModal>
 {/if}
@@ -713,6 +769,7 @@
 			<ListSwitcher />
 			<OpenDatabaseForm />
 			<PermissionsPanel />
+			<ListPasskeysPanel />
 		{:else}
 			<p class="mt-4 text-sm text-faint">{$_('sections.lists.waiting')}</p>
 		{/if}

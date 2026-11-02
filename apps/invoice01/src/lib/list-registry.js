@@ -2,6 +2,7 @@ import { accessControllerKeepingLogsInMemory } from '@simple-todo/todo/keep-logs
 import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import { writable, get } from 'svelte/store';
 import { OrbitDBAccessController } from '@orbitdb/core';
+import { vaultRegistryAddress } from './list-vault.js';
 
 /**
  * The list registry (acl01, issue #114).
@@ -26,11 +27,25 @@ import { OrbitDBAccessController } from '@orbitdb/core';
  *
  * The registry itself is still world-readable to anyone who obtains its
  * address. It hides *which* registry is yours, not its contents.
+ *
+ * ## A second passkey reads the first one's registry
+ *
+ * The same signature is what a second passkey cannot make: it has another
+ * identity, so it would derive another name and an empty registry. The lists'
+ * vault (list-vault.js) therefore carries the registry's address, written in
+ * when the vault is made, and whoever opens the vault opens that registry by
+ * address. Only the identity that made it writes to it; the second passkey
+ * reads the lists and records none.
  */
 
 const DOMAIN = 'simple-todo/list-registry/v1';
 
-/** @typedef {{ address: string, name: string, role: 'owner' | 'guest', createdAt: number }} ListEntry */
+/**
+ * `sealed`: the list's entries are sealed under the lists' key (list-vault.js),
+ * so opening it needs the vault. Absent on every list from before.
+ *
+ * @typedef {{ address: string, name: string, role: 'owner' | 'guest', createdAt: number, sealed?: boolean }} ListEntry
+ */
 
 /** Lists known to this identity, newest first. */
 export const listRegistryStore = writable(/** @type {ListEntry[]} */ ([]));
@@ -50,6 +65,8 @@ export const listRegistryNameStore = writable('');
 let registryDB = null;
 /** @type {Promise<any> | null} */
 let opening = null;
+/** False for the registry a second passkey reads: only its maker writes there. */
+let registryWritable = true;
 
 /**
  * Derive the registry's database name for this identity.
@@ -85,20 +102,17 @@ export async function openListRegistry(orbitdb) {
 	if (opening) return opening;
 
 	opening = (async () => {
-		const name = await deriveRegistryName(orbitdb);
-		listRegistryNameStore.set(name);
-		console.log(`📇 list registry: ${name}`);
-		const db = await orbitdb.open(name, {
-			type: 'keyvalue',
-			create: true,
-			sync: true,
-			AccessController: accessControllerKeepingLogsInMemory(
-				OrbitDBAccessController({ write: [orbitdb.identity.id] })
-			),
-			// Memory-only when that is what was chosen: the registry is a database
-			// like any other, and its log defaults to LevelStorage.
-			...(await createLogStorages())
-		});
+		const named = vaultRegistryAddress();
+		const db = named
+			? await orbitdb.open(named, {
+					type: 'keyvalue',
+					sync: true,
+					...(await createLogStorages())
+				})
+			: await openOwnRegistry(orbitdb);
+		listRegistryNameStore.set(db.name ?? '');
+		console.log(`📇 list registry: ${db.name}${named ? ' (from the vault)' : ''}`);
+		registryWritable = !named || (await mayWrite(db, orbitdb.identity.id));
 		registryDB = db;
 		db.events.on('update', () => {
 			void refreshRegistry();
@@ -118,6 +132,46 @@ export async function openListRegistry(orbitdb) {
 	});
 
 	return opening;
+}
+
+/**
+ * This identity's own registry, under the name only it can derive.
+ *
+ * @param {any} orbitdb
+ */
+async function openOwnRegistry(orbitdb) {
+	const name = await deriveRegistryName(orbitdb);
+	return orbitdb.open(name, {
+		type: 'keyvalue',
+		create: true,
+		sync: true,
+		AccessController: accessControllerKeepingLogsInMemory(
+			OrbitDBAccessController({ write: [orbitdb.identity.id] })
+		),
+		// Memory-only when that is what was chosen: the registry is a database
+		// like any other, and its log defaults to LevelStorage.
+		...(await createLogStorages())
+	});
+}
+
+/**
+ * Whether this identity is among a registry's writers.
+ *
+ * @param {any} db
+ * @param {string} id
+ */
+async function mayWrite(db, id) {
+	try {
+		const capabilities = await db.access?.capabilities?.();
+		return Array.from(capabilities?.write ?? []).some((writer) => writer === id || writer === '*');
+	} catch {
+		return false;
+	}
+}
+
+/** The open registry's address, or '' before it is open. */
+export function listRegistryAddress() {
+	return registryDB?.address?.toString?.() ?? '';
 }
 
 /**
@@ -160,11 +214,14 @@ async function refreshRegistry() {
  * updates the entry instead of duplicating it.
  *
  * @param {any} orbitdb
- * @param {{ address: string, name: string, role: 'owner' | 'guest' }} entry
+ * @param {{ address: string, name: string, role: 'owner' | 'guest', sealed?: boolean }} entry
  */
-export async function rememberList(orbitdb, { address, name, role }) {
+export async function rememberList(orbitdb, { address, name, role, sealed }) {
 	if (!address) return;
 	const db = await openListRegistry(orbitdb);
+	// A second passkey reads the lists of the passkey that made them and records
+	// none: the registry is that identity's (see above).
+	if (!registryWritable) return;
 	const known = get(listRegistryStore).find((e) => e.address === address);
 	/** @type {ListEntry} */
 	const value = {
@@ -173,7 +230,9 @@ export async function rememberList(orbitdb, { address, name, role }) {
 		// list by address knows no name for it.
 		name: name || known?.name || '',
 		role: known?.role === 'owner' ? 'owner' : role,
-		createdAt: known?.createdAt ?? Date.now()
+		createdAt: known?.createdAt ?? Date.now(),
+		// Once sealed, always: a later visit by address knows nothing about it.
+		...(sealed || known?.sealed ? { sealed: true } : {})
 	};
 	await db.put(address, value);
 	await refreshRegistry();
@@ -188,6 +247,9 @@ export async function rememberList(orbitdb, { address, name, role }) {
  */
 export async function forgetList(orbitdb, address) {
 	const db = await openListRegistry(orbitdb);
+	if (!registryWritable) {
+		throw new Error('These lists belong to the passkey that made them; only it can forget one.');
+	}
 	await db.del(address);
 	await refreshRegistry();
 }
@@ -196,6 +258,7 @@ export async function forgetList(orbitdb, address) {
 export function resetListRegistry() {
 	registryDB = null;
 	opening = null;
+	registryWritable = true;
 	listRegistryStore.set([]);
 	listRegistryReadyStore.set(false);
 	listRegistryNameStore.set('');

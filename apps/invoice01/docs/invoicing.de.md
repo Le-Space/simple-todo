@@ -90,22 +90,21 @@ entfernt nichts aus dem Log, und jede Kopie behält, was sie schon hat.
 Genau das tut die App, und sie sagt es dort, wo jemand löscht. Sie verspricht
 keine Löschung, die sie nicht leisten kann.
 
-**Noch nicht versiegelt — aber der Weg steht fest.** Das Verzeichnis liegt in
-der Liste, wer die Liste bekommt, bekommt es mit. Rechnungen gehören deshalb in
-eine eigene Liste, nicht in eine geteilte.
+**Versiegelt, wenn die Liste es ist.** Das Verzeichnis liegt in der Liste, wer
+die Liste bekommt, bekommt es mit — es sei denn, die Liste wurde mit
+**Versiegeln** angelegt. Dann bekommt ihre OrbitDB-Datenbank die
+`encryption`-Option (`payloadEncryption` aus `entry-encryption.js`, von
+`privacy01`) mit einem Schlüssel aus dem Passkey, über den Tresor der Listen:
+Das Relay und jeder mit der Adresse halten Blöcke, die sie nicht lesen können,
+und der Passkey, der die Liste angelegt hat — und ein zweiter, dem er ein Fach
+gegeben hat — lesen sie. Versiegeln ist eine Wahl beim Anlegen, weil eine
+versiegelte Liste auch sonst niemand liest: nicht, wer Schreibrechte bekommt,
+und nicht, wem ein Todo übergeben wird. [`vault.de.md`](./vault.de.md) erklärt
+die Einzelheiten.
 
-Der Plan, entschieden am 24.09.2026: Die OrbitDB-Datenbank der Liste bekommt die
-`encryption`-Option — `payloadEncryption` aus `entry-encryption.js`, das dieses
-Kapitel von `privacy01` ohnehin mitbringt — und der Schlüssel kommt aus dem
-Passkey statt aus dem Local Storage. Der Identity-Provider exportiert
-`extractPrfSeedFromCredential`; damit leitet dasselbe Credential, das schon die
-Identität _ist_, auch den Schlüssel ab: Ein Passkey öffnet die Liste auf jedem
-Gerät, auf dem er vorhanden ist, es wird nichts übergeben, und wer die Liste
-sonst hat, hat unlesbare Blöcke. `database-keys.js` ist die Naht, die sich
-ändert; was dort „Phase 2" heißt, ist genau das.
-
-Gebaut ist es nicht, und dieser Absatz ist die ehrliche Beschreibung dessen, wo
-das Verzeichnis bis dahin steht.
+Rechnungen gehören deshalb in eine eigene, versiegelte Liste. Eine Liste von vor
+dem Versiegeln bleibt, wie sie war; ihre Kunden ziehen um, indem man sie in
+einer versiegelten Liste noch einmal behält.
 
 ## Eine Position, und worum es ging
 

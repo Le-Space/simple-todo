@@ -19,6 +19,12 @@
 	// label suggested the first one meant something.
 	export let label = '';
 
+	// invoice01: the stored passkey is the one this browser starts with, and a
+	// second passkey of its lists (list-vault.js) has to get past it. Ticked, the
+	// authenticator is asked which passkey it holds -- two touches, as on a
+	// device that kept nothing.
+	export let askAuthenticator = false;
+
 	const hasStoredPasskey = hasStoredPasskeyCredential();
 
 	$: options = [
@@ -72,6 +78,21 @@
 			</label>
 		{/each}
 	</div>
+
+	{#if mode === 'existing' && hasStoredPasskey}
+		<label class="mt-3 flex cursor-pointer items-start gap-2 text-sm">
+			<input
+				type="checkbox"
+				bind:checked={askAuthenticator}
+				data-testid="passkey-ask-authenticator"
+				class="mt-0.5"
+			/>
+			<span>
+				<span class="font-medium">{$_('consent.identityAnother')}</span>
+				<span class="block text-xs text-gray-500">{$_('consent.identityAnotherHint')}</span>
+			</span>
+		</label>
+	{/if}
 
 	{#if mode === 'create'}
 		<div class="mt-3">

@@ -87,22 +87,19 @@ replica keeps the entry it already has.
 So the app does exactly that, and says so where somebody deleting can read it.
 It does not offer an erasure it cannot perform.
 
-**Not sealed yet — and the way it will be is decided.** The directory lives in
-the list, so whoever the list is shared with gets it. Invoices therefore belong
-in a list of your own rather than a shared one.
+**Sealed when the list is.** The directory lives in the list, so whoever the
+list is shared with gets it — unless the list was made with **Seal it**. Then
+its OrbitDB database gets the `encryption` option (`payloadEncryption` in
+`entry-encryption.js`, from `privacy01`) under a key from the passkey, by way
+of the lists' vault: the relay and anybody holding the address keep blocks they
+cannot read, and the passkey that made the list — and a second one it was given
+— read it. Sealing is a choice made when the list is made, because nobody else
+reads a sealed list either: not a person granted write permission, not one
+handed a todo. [`vault.md`](./vault.md) has the details.
 
-The plan, settled on 2026-09-24: the list's own OrbitDB database gets the
-`encryption` option — `payloadEncryption` in `entry-encryption.js`, which this
-chapter already carries from `privacy01` — and the key comes from the passkey,
-not from local storage. The identity provider exports
-`extractPrfSeedFromCredential`, so the same credential that already _is_ the
-identity derives the key: one passkey opens the list on every device it is
-present on, nothing is handed over, and a list somebody else holds is blocks
-they cannot read. `database-keys.js` is the seam that changes; what it calls
-"Phase 2" is this.
-
-It is not built yet, and this paragraph is the honest description of where that
-leaves the directory in the meantime.
+Invoices therefore belong in a sealed list of your own. A list made before
+sealing existed stays as it was; its customers move by being kept again in a
+sealed list.
 
 ## A line, and what it was about
 
