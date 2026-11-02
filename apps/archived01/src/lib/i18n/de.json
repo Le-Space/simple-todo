@@ -36,6 +36,7 @@
 			"noTracking": "Keine Tracking-Cookies, keine Analyse. „Nicht mehr anzeigen“ merkt sich nur diese Entscheidung auf diesem Gerät."
 		},
 		"errorNoPasskey": "In diesem Browser ist kein Passkey hinterlegt, und Ihr Authenticator hat keinen herausgegeben. Legen Sie einen neuen an oder fahren Sie ohne fort.",
+		"errorOtherPasskey": "Geantwortet hat ein anderer Passkey dieser Seite, nicht der, mit dem dieser Browser gestartet ist. Mit ihm wurde nichts versiegelt und nichts archiviert. Starten Sie erneut, und antworten Sie mit dem Passkey, mit dem Sie hier gestartet sind.",
 		"errorNeedsLabel": "Bitte geben Sie dem neuen Passkey einen Namen.",
 		"errorStart": "Der Start ist fehlgeschlagen: {reason}",
 		"existingNeedsTap": "Ihr Passkey verlangt bei jedem Start eine Bestätigung. Deshalb ist dieser Dialog wieder da — es ist nichts schiefgegangen.",
@@ -158,6 +159,7 @@
 		"none": "Der Speicher hält nichts für dieses Konto.",
 		"restoredSummary": "{increments} Inkremente gelesen, {joined} Stand übernommen, {skipped} übersprungen.",
 		"prfUnavailable": "Dieser Authenticator gibt kein PRF heraus; daraus ließe sich kein Konto und kein Schlüssel ableiten.",
+		"otherPasskey": "Geantwortet hat ein anderer Passkey als der, mit dem Sie gestartet sind. Aus ihm wurde weder ein Konto noch ein Schlüssel abgeleitet. Entsperren Sie erneut, und antworten Sie mit Ihrem Passkey.",
 		"prompts": "Eine Berührung des Passkeys pro Sitzung: Sie liefert die Identität und die Archivschlüssel zugleich. Die Schlüssel bleiben im Arbeitsspeicher, bis der Tab schließt.",
 		"credits": "Guthaben: {credits} Credits",
 		"creditsLast": "reicht etwa {days} Tage",

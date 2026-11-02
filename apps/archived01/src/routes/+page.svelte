@@ -246,8 +246,19 @@
 			let prfOutput = null;
 			if (passkeyCredential && (identityMode === 'create' || wantsPrf)) {
 				await announce(steps, 'prf');
-				const { readPrfOutput } = await import('@le-space/orbitdb-identity-provider-webauthn-did');
-				prfOutput = await readPrfOutput(passkeyCredential).catch(() => null);
+				const { readPrfOutput, WebAuthnAuthenticationError } = await import(
+					'@le-space/orbitdb-identity-provider-webauthn-did'
+				);
+				prfOutput = await readPrfOutput(passkeyCredential).catch((e) => {
+					// Another passkey of this site answered. Its PRF output would
+					// seal the list and pay the archive under keys that are not
+					// this passkey's, and going on without one would write in the
+					// clear what was chosen sealed. So the start stops.
+					if (e instanceof WebAuthnAuthenticationError) {
+						throw new IdentityChoiceError($_('consent.errorOtherPasskey'));
+					}
+					return null;
+				});
 				rememberPrfOutput(prfOutput);
 				// Chosen, and not possible: say so, rather than seal nothing quietly.
 				if (sealOn && !prfOutput) showToast($_('sealList.noPrf'), 'warning', 8000);

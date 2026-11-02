@@ -51,6 +51,13 @@ the list back with the same passkey.
   derives the same account and the same key, lists the account's increments on
   Aleph by owner, and restores — with nothing stored beforehand.
 
+  The PRF output is asked of this browser's passkey by name (provider 0.12.2).
+  Before, with two passkeys of this site on one authenticator, either could
+  answer, and the other one's output gives another account and another key.
+  If an authenticator answers with the other one anyway, the start stops and
+  says so, instead of writing in the clear a list chosen sealed
+  (`e2e/two-passkeys.spec.js`).
+
 - **Who pays, on Aleph — your choice.** By default the archive key is also the
   account holding the credits: nothing to set up, but the key lives in the tab,
   and whoever gets it (a bad dependency, an injected script) can spend the
