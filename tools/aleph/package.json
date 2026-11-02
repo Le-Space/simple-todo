@@ -12,7 +12,7 @@
     "@chainsafe/libp2p-noise": "^17.0.0",
     "@chainsafe/libp2p-yamux": "^8.0.1",
     "@le-space/core": "0.7.0",
-    "@le-space/node": "0.7.0",
+    "@le-space/node": "0.12.4",
     "@le-space/playwright": "0.7.0",
     "@libp2p/ping": "^3.1.9",
     "@libp2p/webrtc": "^6.0.27",
