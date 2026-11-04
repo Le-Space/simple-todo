@@ -62,16 +62,17 @@
 			const { discoverScopedBootstrapMultiaddrs } = await import(
 				'@simple-todo/net/aleph-bootstrap-discovery.js'
 			);
-			// Scope discovery to our relay profile AND our production registration.
+			// Scope discovery to our relay profile and to Le Space's own relays.
 			// The Aleph channel is shared with other profiles (e.g.
-			// universal-connectivity's `uc-go-peer`), and orphaned registrations
-			// of erased E2E relays (`simple-todo-e2e-*`) otherwise flood the probe
-			// wave with dead addresses (issue #84).
+			// universal-connectivity's `uc-go-peer`) and open to anyone's posts:
+			// orphaned registrations of erased E2E relays (`simple-todo-e2e-*`)
+			// flooded the probe wave with dead addresses (issue #84). A relay counts
+			// when the Aleph account that runs it is Le Space's and its instance on
+			// Aleph says so (#104); a test that wants its own relay names its
+			// registration id instead.
 			const discovered = await discoverScopedBootstrapMultiaddrs({
 				profile: import.meta.env.VITE_RELAY_BOOTSTRAP_PROFILE || 'orbitdb-relay',
-				registrationId:
-					import.meta.env.VITE_RELAY_BOOTSTRAP_REGISTRATION_ID ||
-					'relay:orbitdb-relay:orbitdb-relay'
+				registrationId: import.meta.env.VITE_RELAY_BOOTSTRAP_REGISTRATION_ID
 			});
 			const candidates = selectValidBrowserBootstrapMultiaddrs(discovered);
 			discoveredAddressCount = candidates.length;
