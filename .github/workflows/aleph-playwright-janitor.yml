@@ -28,9 +28,15 @@ jobs:
       # reported success (NiKrause/simple-todo#88). All ten chapters still use
       # that name, so the prefix stays.
       extra_name_prefixes: simple-todo-e2e-
-      # This wallet only ever funds ephemeral E2E VMs — the production relay is
-      # funded separately — so anything past the TTL that the janitor cannot
-      # sweep is money burning and must turn the run red rather than warn.
+      # Since 2026-11-02 the production relay, relay-main-ekb, runs from this
+      # wallet too (deployed with relay-button; the chapters find it by this
+      # account, #104). It is meant to live, so it is named here and neither
+      # swept nor reported. A redeploy under another name needs that name here,
+      # or this run turns red for it.
+      keep_name_prefixes: relay-main-ekb
+      # Everything else this wallet funds is an ephemeral E2E VM, so anything
+      # past the TTL that the janitor can neither sweep nor keep is money
+      # burning and must turn the run red rather than warn.
       fail_on_unswept: true
     secrets:
       ALEPH_PRIVATE_KEY: ${{ secrets.ALEPH_PLAYWRIGHT_PRIVATE_KEY || secrets.RELAY_BUTTON_E2E_PRIVATE_KEY }}
