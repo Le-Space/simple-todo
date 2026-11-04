@@ -2437,6 +2437,9 @@ importers:
       '@multiformats/multiaddr':
         specifier: ^13.0.3
         version: 13.0.3
+      '@scure/bip39':
+        specifier: 1.6.0
+        version: 1.6.0
       '@simple-todo/todo':
         specifier: workspace:*
         version: link:../todo
