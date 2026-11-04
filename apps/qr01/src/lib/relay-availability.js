@@ -129,9 +129,7 @@ export async function checkRelayAvailability() {
 			// unscoped query would spend the probe budget on corpses.
 			const discovered = await discoverScopedBootstrapMultiaddrs({
 				profile: import.meta.env.VITE_RELAY_BOOTSTRAP_PROFILE || 'orbitdb-relay',
-				registrationId:
-					import.meta.env.VITE_RELAY_BOOTSTRAP_REGISTRATION_ID ||
-					'relay:orbitdb-relay:orbitdb-relay'
+				registrationId: import.meta.env.VITE_RELAY_BOOTSTRAP_REGISTRATION_ID
 			});
 			return selectValidBrowserBootstrapMultiaddrs(discovered);
 		}

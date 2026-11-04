@@ -83,12 +83,13 @@ const fallback = process.env.RELAY_BOOTSTRAP_FALLBACK?.trim() || '';
 // browsers cannot form a shared circuit with (a `uc-go-peer` relay leaves two
 // orbitdb browsers stuck at `candidates: 0`).
 const profile = process.env.RELAY_BOOTSTRAP_PROFILE?.trim() || 'orbitdb-relay';
-// Bake only the production registration into the site bundle: ephemeral E2E
-// relays (`relay:<profile>:simple-todo-e2e-*`) may be alive during a build,
-// pass the ping probe, and then become permanent dial noise for every
-// visitor once their VM is erased (issue #84).
-const registrationId =
-	process.env.RELAY_BOOTSTRAP_REGISTRATION_ID?.trim() || 'relay:orbitdb-relay:orbitdb-relay';
+// Bake only Le Space's own relays into the site bundle: those whose Aleph
+// account is Le Space's and whose instance on Aleph says so (#104). Ephemeral
+// E2E relays (`relay:<profile>:simple-todo-e2e-*`) may be alive during a
+// build, pass the ping probe, and then become permanent dial noise for every
+// visitor once their VM is erased (issue #84); they run from other accounts.
+// RELAY_BOOTSTRAP_REGISTRATION_ID names one registration instead, unchecked.
+const registrationId = process.env.RELAY_BOOTSTRAP_REGISTRATION_ID?.trim() || null;
 
 let resolution = resolveBootstrapMultiaddrs({ override, fallback });
 if (resolution.source !== 'override') {

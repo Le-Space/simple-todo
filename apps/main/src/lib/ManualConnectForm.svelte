@@ -85,12 +85,11 @@
 				// shared with other relay profiles (e.g. universal-connectivity's
 				// `uc-go-peer`) that an orbitdb browser cannot replicate through.
 				profile: import.meta.env.VITE_RELAY_BOOTSTRAP_PROFILE || 'orbitdb-relay',
-				// Scope to the production registration: ephemeral E2E relays register
-				// as `simple-todo-e2e-*` and their orphaned records otherwise flood
-				// the probe wave with dead addresses (issue #84).
-				registrationId:
-					import.meta.env.VITE_RELAY_BOOTSTRAP_REGISTRATION_ID ||
-					'relay:orbitdb-relay:orbitdb-relay'
+				// Only Le Space's relays: the Aleph account that runs one must be Le
+				// Space's, and its instance on Aleph must say so (#104). Ephemeral E2E
+				// relays run from other accounts and stay out (issue #84); a test that
+				// wants its own relay names its registration id instead.
+				registrationId: import.meta.env.VITE_RELAY_BOOTSTRAP_REGISTRATION_ID
 			});
 			const candidates = selectValidBrowserBootstrapMultiaddrs(discovered);
 			discoveredAddressCount = candidates.length;
