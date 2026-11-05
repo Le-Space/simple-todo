@@ -50,7 +50,7 @@ the escrow half of [de2do](https://github.com/NiKrause/de2do).
 
 ### Try it
 
-1. The app: on branch `escrow01`, `pnpm install` and `pnpm dev`. Create a passkey, create a private
+1. The app: `pnpm install` at the repository root, then `pnpm dev` in `apps/escrow01`. Create a passkey, create a private
    list in the **Lists** tab, and add a todo delegated to another DID with a budget. Tick it as the
    delegate, release it as the owner, and open the auditor view from the **Account** tab. With the fake,
    amounts are readable only in the browser tab that locked them.
