@@ -995,7 +995,7 @@ von EntryPoint und Paymaster; die Sperre allein kostete im Smoke-Test vom 2026-0
 
 ## Quellen
 
-Repository, Branch `escrow01`:
+Repository, `apps/escrow01`:
 
 - [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js): `ensureAccount`, `accountOf`,
   `lock`, `release`, `decryptAmount`, `balance`, `renewReadKey`.

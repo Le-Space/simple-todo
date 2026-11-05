@@ -407,7 +407,7 @@ bleibt.
 
 ## Quellen
 
-Repository (Branch `escrow01`):
+Repository (`apps/escrow01`):
 
 - [`contracts/scripts/smoke-sepolia.ts`](../contracts/scripts/smoke-sepolia.ts): Konstanten 61-102,
   Relayer-Wiederholungen 280-316, `transact` 319-350, SDK-Einrichtung 473-493, `encrypt` 504-512,

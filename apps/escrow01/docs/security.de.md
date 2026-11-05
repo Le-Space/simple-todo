@@ -424,7 +424,7 @@ ist, kann niemand wiederherstellen, und der Schlüssel, der das Gas bezahlt, ist
 
 ## Quellen
 
-Repository (Branch `escrow01`):
+Repository (`apps/escrow01`, Zeilennummern vom 2026-10-02):
 
 - [`contracts/src/ConfidentialTodoEscrow.sol`](../contracts/src/ConfidentialTodoEscrow.sol): Prüfstelle
   49-52, Konstruktor 71-78, `lock` 100-136 (allow an die Prüfstelle 132), `release` 143-148, `refund`
