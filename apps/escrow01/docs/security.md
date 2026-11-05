@@ -386,7 +386,7 @@ can restore an account whose passkey is lost, and the key that pays for gas is r
 
 ## Sources
 
-Repository (branch `escrow01`):
+Repository (`apps/escrow01`, line numbers as of 2026-10-02):
 
 - [`contracts/src/ConfidentialTodoEscrow.sol`](../contracts/src/ConfidentialTodoEscrow.sol): auditor
   49-52, constructor 71-78, `lock` 100-136 (allow to auditor 132), `release` 143-148, `refund` 150-158.

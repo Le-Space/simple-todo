@@ -673,7 +673,7 @@ Versuch. Was der Smoke-Test gegen solche Fehler unternimmt (Bestätigungen, Wied
 
 ## Quellen
 
-Repository (Branch `escrow01`):
+Repository (`apps/escrow01`):
 
 - [`contracts/src/ConfidentialTodoEscrow.sol`](../contracts/src/ConfidentialTodoEscrow.sol) Zeilen
   100-136 (`lock`), [`contracts/scripts/smoke-sepolia.ts`](../contracts/scripts/smoke-sepolia.ts)

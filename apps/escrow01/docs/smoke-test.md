@@ -380,7 +380,7 @@ longer exists, and an underfunded escrow that stays `Locked` under the second `t
 
 ## Sources
 
-Repository (branch `escrow01`):
+Repository (`apps/escrow01`):
 
 - [`contracts/scripts/smoke-sepolia.ts`](../contracts/scripts/smoke-sepolia.ts): constants 61-102,
   relayer retries 280-316, `transact` 319-350, SDK set-up 473-493, `encrypt` 504-512, `userDecrypt`

@@ -364,7 +364,7 @@ Beteiligte den Vorgang von der Chain und entschlüsselt den Betrag im eigenen Br
 
 ## Quellen
 
-Repository (Branch `escrow01`):
+Repository (`apps/escrow01`, Zeilennummern vom 2026-09-23):
 
 - [`contracts/src/ConfidentialTodoEscrow.sol`](../contracts/src/ConfidentialTodoEscrow.sol): Rollen
   und Immutables Zeilen 44-54, Events 56-59, Konstruktor 71-78, `lock` 100-136, `release` 143-148,

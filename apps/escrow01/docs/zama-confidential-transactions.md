@@ -611,7 +611,7 @@ smoke test does against such failures (confirmations, retries) is in [smoke-test
 
 ## Sources
 
-Repository (branch `escrow01`):
+Repository (`apps/escrow01`):
 
 - [`contracts/src/ConfidentialTodoEscrow.sol`](../contracts/src/ConfidentialTodoEscrow.sol) lines
   100-136 (`lock`), [`contracts/scripts/smoke-sepolia.ts`](../contracts/scripts/smoke-sepolia.ts)

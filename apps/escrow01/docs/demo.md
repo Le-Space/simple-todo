@@ -61,7 +61,7 @@ All commands in the `contracts/` directory.
    [4653](https://community.zama.org/t/sepolia-user-decrypt-fails-in-kms-share-reconstruction-9-13-gao-decoding-failure/4653).
    Check <https://github.com/zama-ai/fhevm/releases> for a switch of Sepolia to v0.14 or a new v0.13
    release.
-6. **App.** Start `pnpm dev` on branch `escrow01`. Create a passkey in both browser profiles, set the
+6. **App.** Start `pnpm dev` in `apps/escrow01`. Create a passkey in both browser profiles, set the
    language to DE and check that the profiles connect through the relay (relay set-up: README, section
    "Local Relay"). Play all scenes through once.
 7. **Sepolia mode.** `.env.local` with the settings from
@@ -429,7 +429,7 @@ Not answers, but questions this chapter cannot settle:
 
 ## Sources
 
-Repository (branch `escrow01`):
+Repository (`apps/escrow01`, line numbers as of 2026-10-02):
 
 - [`src/lib/budget-service-fake.js`](../src/lib/budget-service-fake.js): starting balance 64-70, lock
   175-236, auditor list 287-307, levers `expireReadKey` and `seedExamples` 324-355.

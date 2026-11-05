@@ -340,7 +340,7 @@ Sepolia every party reads the escrow from the chain and decrypts the amount in t
 
 ## Sources
 
-Repository (branch `escrow01`):
+Repository (`apps/escrow01`, line numbers as of 2026-09-23):
 
 - [`contracts/src/ConfidentialTodoEscrow.sol`](../contracts/src/ConfidentialTodoEscrow.sol): roles
   and immutables lines 44-54, events 56-59, constructor 71-78, `lock` 100-136, `release` 143-148,

@@ -950,7 +950,7 @@ EntryPoint and paymaster; the lock alone cost 682,630 gas in the smoke test of 2
 
 ## Sources
 
-Repository, branch `escrow01`:
+Repository, `apps/escrow01`:
 
 - [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js): `ensureAccount`, `accountOf`,
   `lock`, `release`, `decryptAmount`, `balance`, `renewReadKey`.
