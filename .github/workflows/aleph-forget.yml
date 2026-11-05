@@ -29,12 +29,6 @@ jobs:
   forget:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # The script lives with the chapter that owns the relay work, and reads
-    # `viem` from that chapter's own dependencies — which is why this runs
-    # there rather than copying the file into a temporary npm project.
-    defaults:
-      run:
-        working-directory: apps/main
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
@@ -44,7 +38,8 @@ jobs:
           cache: pnpm
       - name: Install
         run: pnpm install --frozen-lockfile
-        working-directory: .
+      # `viem` comes from `tools/aleph`, which declares it: node resolves an
+      # import from the importing file's own directory, not from the cwd.
       - name: Broadcast FORGET
         env:
           ALEPH_PRIVATE_KEY: ${{ secrets.RELAY_BUTTON_E2E_PRIVATE_KEY }}
@@ -52,4 +47,4 @@ jobs:
           FORGET_CHANNEL: ${{ inputs.channel }}
           FORGET_REASON: ${{ inputs.reason }}
           CONFIRM_FORGET: 'yes'
-        run: node scripts/aleph-forget.mjs
+        run: node tools/aleph/aleph-forget.mjs
