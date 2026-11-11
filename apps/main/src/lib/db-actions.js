@@ -245,13 +245,19 @@ async function readRecentTodos(todoDB) {
 	return todos;
 }
 
-/** @param {TodoItem[]} todos */
+/**
+ * Newest first, in place.
+ *
+ * Each date is parsed once. Parsing inside the comparator meant two `Date`
+ * objects per comparison: with 250 todos about 3,300 on the first load, and
+ * about 500 each time an entry arrives and the list is sorted again. One per
+ * todo is enough.
+ *
+ * @param {TodoItem[]} todos
+ */
 function sortTodos(todos) {
-	return todos.sort((a, b) => {
-		const dateA = new Date(a.createdAt || 0).getTime();
-		const dateB = new Date(b.createdAt || 0).getTime();
-		return dateB - dateA;
-	});
+	const createdAt = new Map(todos.map((todo) => [todo, new Date(todo.createdAt || 0).getTime()]));
+	return todos.sort((a, b) => Number(createdAt.get(b)) - Number(createdAt.get(a)));
 }
 
 /**
