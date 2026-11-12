@@ -50,8 +50,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.13.1
-        version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.1
+        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
@@ -282,8 +282,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.13.1
-        version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.1
+        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
@@ -743,8 +743,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.13.1
-        version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.1
+        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-access-controller-delegated-todo':
         specifier: 0.1.0
         version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.12.2(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
@@ -978,8 +978,8 @@ importers:
         specifier: 0.9.6
         version: 0.9.6(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.13.1
-        version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.1
+        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-access-controller-delegated-todo':
         specifier: 0.1.0
         version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.12.2(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
@@ -1219,8 +1219,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.13.1
-        version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.1
+        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-access-controller-delegated-todo':
         specifier: 0.1.0
         version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.12.2(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
@@ -1463,8 +1463,8 @@ importers:
         specifier: 0.8.0
         version: 0.8.0(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.13.1
-        version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.1
+        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
@@ -1695,8 +1695,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.13.1
-        version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.1
+        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
@@ -1927,8 +1927,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.13.1
-        version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.1
+        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
@@ -2159,8 +2159,8 @@ importers:
         specifier: 0.9.4
         version: 0.9.4(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.13.1
-        version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.1
+        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
@@ -2469,8 +2469,8 @@ importers:
   packages/ui:
     dependencies:
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.13.1
-        version: 0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.1
+        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@simple-todo/todo':
         specifier: workspace:*
         version: link:../todo
@@ -3537,8 +3537,8 @@ packages:
   '@le-space/iso-webauthn-varsig@0.3.0':
     resolution: {integrity: sha512-qU3ptOP8ew2ZVr506N8joGsDXQNGjRq7VYBkmNdQKuFmbpDtjYyaSH2qyy0x3M8heghVzbB6SxhQM7o3U06w6Q==}
 
-  '@le-space/libp2p-webrtc-qr@0.13.1':
-    resolution: {integrity: sha512-deqXQhlNo4RbwfiLqBxl4PvFH3r35lMdSKWo1CbM3582rGt2BZu2Y+NQAvHcUC0Mg0VklMI4FOj5912TWLD6Mw==}
+  '@le-space/libp2p-webrtc-qr@0.14.1':
+    resolution: {integrity: sha512-scZz+8j+J13OEmK3Y1MEAGl++LLeUAA8/E3H2pbotIvKrDYsMqCN31GKm9c03bOPgoS6+ZtoIyjvzAYm3OQvQQ==}
     peerDependencies:
       '@multiformats/multiaddr': ^13.0.3
       ggwave: ^0.4.0
@@ -8917,10 +8917,10 @@ snapshots:
     dependencies:
       '@helia/interface': 6.2.1
       '@helia/utils': 2.5.2
-      '@libp2p/interface': 3.3.1
+      '@libp2p/interface': 3.4.0
       '@libp2p/logger': 6.2.14
       '@libp2p/peer-collections': 7.0.25
-      '@libp2p/utils': 7.4.2
+      '@libp2p/utils': 7.4.5
       '@multiformats/multiaddr': 13.0.3
       any-signal: 4.2.0
       interface-blockstore: 6.0.2
@@ -9011,9 +9011,9 @@ snapshots:
       '@helia/bitswap': 3.2.3
       '@helia/interface': 6.2.1
       '@helia/utils': 2.5.2
-      '@libp2p/interface': 3.2.5
-      '@libp2p/peer-id': 6.0.13
-      '@libp2p/utils': 7.3.1
+      '@libp2p/interface': 3.4.0
+      '@libp2p/peer-id': 6.0.18
+      '@libp2p/utils': 7.4.5
       '@multiformats/multiaddr': 13.0.3
       '@multiformats/multiaddr-matcher': 3.0.2
       '@multiformats/multiaddr-to-uri': 12.0.0
@@ -9226,8 +9226,8 @@ snapshots:
     dependencies:
       '@helia/delegated-routing-v1-http-api-client': 6.0.1
       '@helia/interface': 6.2.1
-      '@libp2p/interface': 3.2.5
-      '@libp2p/peer-id': 6.0.13
+      '@libp2p/interface': 3.4.0
+      '@libp2p/peer-id': 6.0.18
       '@multiformats/uri-to-multiaddr': 10.0.0
       ipns: 10.1.6
       it-first: 3.0.11
@@ -9271,9 +9271,9 @@ snapshots:
     dependencies:
       '@helia/interface': 6.2.1
       '@ipld/dag-pb': 4.1.7
-      '@libp2p/interface': 3.2.5
+      '@libp2p/interface': 3.4.0
       '@libp2p/logger': 6.2.14
-      '@libp2p/utils': 7.3.1
+      '@libp2p/utils': 7.4.5
       '@multiformats/murmur3': 2.2.8
       interface-blockstore: 6.0.2
       ipfs-unixfs: 12.0.2
@@ -9325,9 +9325,9 @@ snapshots:
       '@ipld/dag-cbor': 9.2.7
       '@ipld/dag-json': 10.2.9
       '@ipld/dag-pb': 4.1.7
-      '@libp2p/interface': 3.2.5
+      '@libp2p/interface': 3.4.0
       '@libp2p/keychain': 6.1.4
-      '@libp2p/utils': 7.3.1
+      '@libp2p/utils': 7.4.5
       '@multiformats/dns': 1.0.15
       '@multiformats/multiaddr': 13.0.3
       any-signal: 4.2.0
@@ -9724,11 +9724,11 @@ snapshots:
     dependencies:
       iso-base: '@le-space/iso-base@4.3.0'
 
-  '@le-space/libp2p-webrtc-qr@0.13.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)':
+  '@le-space/libp2p-webrtc-qr@0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)':
     dependencies:
-      '@libp2p/interface': 3.3.1
-      '@libp2p/peer-id': 6.0.16
-      '@libp2p/utils': 7.4.2
+      '@libp2p/interface': 3.4.0
+      '@libp2p/peer-id': 6.0.18
+      '@libp2p/utils': 7.4.5
       '@multiformats/multiaddr': 13.0.3
       it-length-prefixed: 11.0.1
       it-pushable: 3.2.4
@@ -9736,7 +9736,7 @@ snapshots:
       multiformats: 14.0.5
       p-defer: 4.0.1
       p-event: 7.1.0
-      p-timeout: 7.0.1
+      p-timeout: 7.0.2
       protons-runtime: 7.0.0
       race-signal: 2.0.0
       uint8-varint: 3.0.0

@@ -95,7 +95,7 @@ A tutorial chapter — the fifth. Each one adds a single idea to the one before 
 
 ### What it is built from
 
-- **The connection** — `@le-space/libp2p-webrtc-qr@0.13.1`  
+- **The connection** — `@le-space/libp2p-webrtc-qr@0.14.1`  
   A WebRTC session negotiated from a code held up to a camera, with nothing in the middle to arrange it.
 - **Your signature** — `@le-space/orbitdb-identity-provider-webauthn-did@0.12.2`  
   A passkey becomes a DID. A secp256k1 key signs your entries; it is kept unencrypted in this browser, so once it is set up nothing asks for the passkey again.
