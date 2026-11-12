@@ -91,3 +91,17 @@ test('the way out is disabled until the statement is accepted', async ({ page })
 
 	await expect(proceed).toBeEnabled();
 });
+
+test('Escape is not a way past the statement', async ({ page }) => {
+	test.setTimeout(90_000);
+	await page.goto(PREVIEW_ORIGIN);
+	await page.locator('qr-intro').waitFor({ state: 'attached', timeout: 30_000 });
+	await page.waitForFunction(() => document.querySelector('qr-intro')?.isOpen === true);
+
+	await page.keyboard.press('Escape');
+	await page.waitForTimeout(1000);
+
+	// Still there, still asking, and the way out still waits for the tick.
+	expect(await page.evaluate(() => document.querySelector('qr-intro')?.isOpen)).toBe(true);
+	await expect(page.getByTestId('intro-close')).toBeDisabled();
+});

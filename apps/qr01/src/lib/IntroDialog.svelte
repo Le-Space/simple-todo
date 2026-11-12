@@ -276,6 +276,13 @@
 			relayVerdict.set(event.detail?.source ?? 'none');
 		});
 		introEl.addEventListener('close', (/** @type {any} */ event) => {
+			// The buttons wait for the statement; a close the browser makes by
+			// itself, on Escape, does not. Without the statement accepted the
+			// introduction comes back and is not counted as read.
+			if (introEl.accepted !== true) {
+				void introEl.open();
+				return;
+			}
 			closeIntro(event.detail?.remember === true);
 		});
 

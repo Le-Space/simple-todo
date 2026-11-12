@@ -286,4 +286,29 @@ test.describe('Consent Screen', () => {
 		await expect(afterStorage).toHaveCount(1);
 		await expect(afterStorage).toContainText('kept in this browser');
 	});
+
+	test('Escape is not a way past the statement', async ({ page }) => {
+		// The chapter starts when the dialog reports a close, and a browser
+		// closes a dialog on Escape. Only an accepted statement may start it.
+		/** @type {string[]} */
+		const started = [];
+		page.on('console', (message) => {
+			if (message.text().includes('Starting P2P initialization')) started.push(message.text());
+		});
+		await page.goto('/');
+		await waitForConsent(page);
+
+		await page.keyboard.press('Escape');
+		await page.waitForTimeout(1500);
+
+		// Still asking, and nothing has started.
+		expect(await isConsentOpen(page)).toBe(true);
+		expect(await isAccepted(page)).toBe(false);
+		expect(started).toEqual([]);
+
+		// And it is still a working dialog.
+		await acceptNotice(page);
+		await page.getByTestId('consent-proceed').click();
+		await expect.poll(() => started.length, { timeout: 30_000 }).toBe(1);
+	});
 });

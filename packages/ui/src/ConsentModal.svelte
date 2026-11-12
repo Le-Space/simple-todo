@@ -217,6 +217,15 @@
 		introEl.strings = strings;
 
 		introEl.addEventListener('close', (/** @type {any} */ event) => {
+			// A chapter starts when this fires, and the proceed button is not the
+			// only way a dialog closes: the browser closes one by itself, on
+			// Escape. Only a close with the statement accepted and the chapter's
+			// own condition met is a decision; any other brings the dialog back
+			// and starts nothing.
+			if (!canProceed || introEl.accepted !== true) {
+				void introEl.open();
+				return;
+			}
 			rememberDecision = event.detail?.remember === true;
 			show = false;
 			dispatch('proceed');
