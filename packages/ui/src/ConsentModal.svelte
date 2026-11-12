@@ -138,16 +138,20 @@
 
 	$: if (ready) introEl.strings = strings;
 	$: if (ready) introEl.technical = technical;
+	// The element marks the lines a choice rewrote (0.14): it compares the
+	// statement with the one it painted last, and flashes what is new. This
+	// component did that from outside until then, reading the list out of the
+	// shadow root; what is left of it is the colour, further down.
+	//
+	// The choices go in before the statement, and the order is the point: the
+	// element paints when it is given the statement. Given the choices second,
+	// it paints twice on arrival - once for no choices, once for these - and
+	// marks whatever the second paint rewrote, before anybody chose anything.
+	$: if (ready) introEl.choices = choices;
 	$: if (ready) {
 		introEl.privacy = { accept: true, clauses };
 		watchAcceptance();
 		hideDeadCloseControl();
-	}
-	$: if (ready) {
-		introEl.choices = choices;
-		// After the assignment, not before: `set choices` repaints the panel
-		// synchronously, so by this line the new clauses are in the DOM.
-		markChangedClauses();
 	}
 	$: if (ready && show && !introEl.isOpen) void introEl.open();
 
@@ -208,70 +212,9 @@
 		box.addEventListener('change', () => (accepted = box.checked === true));
 	}
 
-	/**
-	 * The statement as it was last painted, so a choice can be told from a
-	 * repaint.
-	 *
-	 * @type {string[]}
-	 */
-	let paintedClauses = [];
-
-	/**
-	 * Flash the lines a choice just rewrote. The panel is the point of
-	 * assembling a statement — it says what *this* configuration means — and a
-	 * switch three inches away silently rewrote two of its sentences. Compared
-	 * by text, because the list is rebuilt whole on every repaint. Nothing is
-	 * marked on the first paint: flashing the whole statement on arrival
-	 * teaches nobody which line their choice moved.
-	 */
-	function markChangedClauses() {
-		const list = introEl?.shadowRoot?.querySelector('.privacy ul');
-		if (!list) return;
-		const next = [...list.children].map((item) => item.textContent ?? '');
-		if (paintedClauses.length > 0) {
-			next.forEach((text, index) => {
-				if (text !== paintedClauses[index]) list.children[index]?.classList.add('changed');
-			});
-		}
-		paintedClauses = next;
-	}
-
-	/*
-		The animation, inside the shadow root because that is where the clauses
-		live. A `part` on each clause would be the clean way and the element does
-		not offer one; appending a stylesheet is the reach that avoids forking it.
-		The colour comes from a custom property on the host, so it follows the
-		theme. Reduced motion gets the same signal without the blink.
-	*/
-	const HIGHLIGHT_STYLE = `
-		.privacy li.changed {
-			border-radius: 0.2rem;
-			animation: consent-changed 900ms ease-in-out 2;
-		}
-		@keyframes consent-changed {
-			0%, 100% { background: transparent; }
-			50% { background: var(--consent-changed); }
-		}
-		@media (prefers-reduced-motion: reduce) {
-			.privacy li.changed {
-				animation: none;
-				background: var(--consent-changed);
-			}
-		}
-	`;
-
 	onMount(async () => {
 		await import('@le-space/libp2p-webrtc-qr/elements');
 		introEl.strings = strings;
-
-		// A plain style element rather than `adoptedStyleSheets`: one line, and
-		// nothing else writes to the shadow root's children apart from the
-		// element itself. The tag name is not spelled out in this block on
-		// purpose: Svelte's parser takes a literal style tag in a comment for
-		// the real thing.
-		const highlight = document.createElement('style');
-		highlight.textContent = HIGHLIGHT_STYLE;
-		introEl.shadowRoot?.append(highlight);
 
 		introEl.addEventListener('close', (/** @type {any} */ event) => {
 			rememberDecision = event.detail?.remember === true;
@@ -409,10 +352,10 @@
 		--qr-intro-panel-background: var(--surface-2);
 		--qr-intro-panel-border: var(--border);
 		--qr-intro-panel-color: var(--text);
-		--consent-changed: rgba(217, 119, 6, 0.3);
+		--qr-intro-changed: rgba(217, 119, 6, 0.3);
 	}
 
 	:global(html.dark) qr-intro {
-		--consent-changed: rgba(250, 204, 21, 0.4);
+		--qr-intro-changed: rgba(250, 204, 21, 0.4);
 	}
 </style>

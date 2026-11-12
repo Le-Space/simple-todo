@@ -65,6 +65,36 @@ test.describe('Passkey identities', () => {
 			await aliceContext.close();
 		}
 	});
+
+	test('a new passkey that is asked for its name can be created once it has one', async ({
+		page
+	}) => {
+		test.setTimeout(collaborationTimeout * 2);
+		await addVirtualAuthenticator(page);
+		await page.goto(testUrl);
+		await fillConsentModal(page);
+
+		// Proceed with "create a passkey" and no name: the start is refused at
+		// once, in the handler of the dialog's own close, and the dialog comes
+		// back with the reason.
+		await page.getByTestId('identity-mode-create').check();
+		await page.getByTestId('consent-proceed').click();
+		await expect(page.getByTestId('consent-error')).toContainText(/passkey a name/i);
+		await waitForConsent(page);
+
+		// The dialog that came back has to work. Reopened that fast, the element
+		// used to take the browser's late report of the first close for a second
+		// one, and then held itself for closed while showing: the name could be
+		// typed, and proceed did nothing (@le-space/libp2p-webrtc-qr before 0.14.1).
+		await page.getByTestId('passkey-label').fill('Alice');
+		await acceptNotice(page);
+		await page.getByTestId('consent-proceed').click();
+		await page.waitForFunction(
+			() => document.querySelector('[data-testid="consent-modal"]')?.isOpen !== true
+		);
+		await expectAppReady(page);
+		expect(await getOwnDid(page)).toMatch(/^did:key:/);
+	});
 });
 
 /**
