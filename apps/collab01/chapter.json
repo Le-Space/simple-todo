@@ -26,5 +26,6 @@
 		],
 		"check": true
 	},
-	"title": "A shared list behind three Spanish words"
+	"title": "A shared list behind three Spanish words",
+	"label": "Collab-Todo"
 }

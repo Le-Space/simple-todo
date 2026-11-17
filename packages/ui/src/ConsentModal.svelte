@@ -134,6 +134,11 @@
 	 * of them (another list, for instance) rather than to read it.
 	 */
 	export let advancedOpen = false;
+	/**
+	 * The dialog's heading, for a chapter without a catalogue to say it
+	 * through (collab01). Otherwise `consent.title`, then `app.title`.
+	 */
+	export let title = '';
 	/** The build, shown in the technical view. */
 	export let version = `${formatVersions()} [${formatBuildDate(
 		typeof __BUILD_DATE__ !== 'undefined' ? __BUILD_DATE__ : ''
@@ -163,7 +168,7 @@
 		.../** @type {Record<string, unknown>} */ (elementStrings ?? {}),
 		// The dialog's own heading where the chapter has one: the app's name is
 		// what the page header says, the dialog says what the app is for.
-		title: $t('consent.title', $t('app.title', 'Simple-Todo')),
+		title: title || $t('consent.title', $t('app.title', 'Simple-Todo')),
 		close: $t('consent.proceed', 'Open shared list'),
 		dontShow: $t('consent.remember', "Don't show this again on this device"),
 		// Two of the element's strings are functions of a count, so they cannot

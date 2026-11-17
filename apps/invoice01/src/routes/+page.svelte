@@ -699,10 +699,10 @@
 		<div class="flex flex-1 items-center gap-3">
 			<LocalFirstLink size={52} />
 			<div>
-				<h1 class="text-2xl font-bold text-heading sm:text-3xl">Simple-Todo</h1>
+				<h1 class="text-2xl font-bold text-heading sm:text-3xl">{$_('app.title')}</h1>
 				<p class="mt-1 text-sm text-faint">
 					{$_('header.tagline')} · {formatVersions({
-						appName: 'Simple-Todo'
+						appName: 'Invoice-Todo'
 					})} · {typeof __APP_BRANCH__ !== 'undefined' ? __APP_BRANCH__ : 'local'}
 				</p>
 			</div>

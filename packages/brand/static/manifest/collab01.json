@@ -1,6 +1,6 @@
 {
-  "name": "collab01 · Simple-Todo",
-  "short_name": "collab01",
+  "name": "Collab-Todo · Simple-Todo",
+  "short_name": "Collab-Todo",
   "description": "A shared list behind three Spanish words — a chapter of Simple-Todo, the local-first peer-to-peer todo list on OrbitDB, IPFS and libp2p.",
   "start_url": "/",
   "display": "standalone",

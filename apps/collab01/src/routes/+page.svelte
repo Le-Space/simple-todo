@@ -268,6 +268,7 @@
 		slot stays empty: there is no language to switch to.
 	-->
 	<ConsentModal
+		title="Collab-Todo"
 		bind:show={showModal}
 		bind:rememberDecision
 		choices={{ storage: storageMode }}
@@ -288,10 +289,10 @@
 		<div class="flex flex-1 items-center gap-3">
 			<LocalFirstLink size={52} />
 			<div>
-				<h1 class="text-2xl font-bold text-heading sm:text-3xl">Simple-Todo</h1>
+				<h1 class="text-2xl font-bold text-heading sm:text-3xl">Collab-Todo</h1>
 				<p class="mt-1 text-sm text-faint">
 					A local-first peer-to-peer PWA · {formatVersions({
-						appName: 'Simple-Todo'
+						appName: 'Collab-Todo'
 					})} · {typeof __APP_BRANCH__ !== 'undefined' ? __APP_BRANCH__ : 'local'}
 				</p>
 			</div>

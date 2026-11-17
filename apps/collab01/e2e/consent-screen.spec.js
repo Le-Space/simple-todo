@@ -27,7 +27,7 @@ test.describe('Consent screen', () => {
 					document.querySelector('[data-testid="consent-modal"]')?.shadowRoot?.querySelector('h2')
 						?.textContent
 			)
-		).toContain('Simple-Todo');
+		).toContain('Collab-Todo');
 
 		const proceed = page.getByTestId('consent-proceed');
 		await expect(proceed).toHaveAttribute('aria-disabled', 'true');
@@ -39,7 +39,7 @@ test.describe('Consent screen', () => {
 
 		await proceed.click();
 		expect(await isConsentOpen(page)).toBe(false);
-		await expect(page.locator('main h1').filter({ hasText: 'Simple-Todo' })).toBeVisible();
+		await expect(page.locator('main h1').filter({ hasText: 'Collab-Todo' })).toBeVisible();
 		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 	});
 

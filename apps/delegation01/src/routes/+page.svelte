@@ -491,10 +491,10 @@
 		<div class="flex flex-1 items-center gap-3">
 			<LocalFirstLink size={52} />
 			<div>
-				<h1 class="text-heading text-2xl font-bold sm:text-3xl">Simple-Todo</h1>
+				<h1 class="text-heading text-2xl font-bold sm:text-3xl">{$_('app.title')}</h1>
 				<p class="text-faint mt-1 text-sm">
 					A local-first peer-to-peer PWA · {formatVersions({
-						appName: 'Simple-Todo'
+						appName: 'Delegation-Todo'
 					})} · {typeof __APP_BRANCH__ !== 'undefined' ? __APP_BRANCH__ : 'local'}
 				</p>
 			</div>

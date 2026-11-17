@@ -31,5 +31,6 @@
 		],
 		"check": true
 	},
-	"title": "Invoices on top of delegation"
+	"title": "Invoices on top of delegation",
+	"label": "Invoice-Todo"
 }

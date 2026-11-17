@@ -11,7 +11,7 @@
 	     chapter used to say "Simple-Todo". The version stays, it is how a reader
 	     tells which build they are looking at. -->
 	<title
-		>acl01 · Simple-Todo {typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}</title
+		>acl01 · ACL-Todo {typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}</title
 	>
 </svelte:head>
 

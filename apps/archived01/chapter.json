@@ -34,5 +34,6 @@
 		],
 		"check": true
 	},
-	"title": "Every change archived as it happens, with one passkey touch"
+	"title": "Every change archived as it happens, with one passkey touch",
+	"label": "Archive-Todo"
 }

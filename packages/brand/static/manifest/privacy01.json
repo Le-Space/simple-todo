@@ -1,6 +1,6 @@
 {
-  "name": "privacy01 · Simple-Todo",
-  "short_name": "privacy01",
+  "name": "Privacy-Todo · Simple-Todo",
+  "short_name": "Privacy-Todo",
   "description": "Entries are sealed; holding the address is not reading it — a chapter of Simple-Todo, the local-first peer-to-peer todo list on OrbitDB, IPFS and libp2p.",
   "start_url": "/",
   "display": "standalone",
