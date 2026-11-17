@@ -15,8 +15,10 @@ const timeout = 90000;
 async function openWith(page, mode) {
 	await page.goto('/');
 	await waitForConsent(page);
-	await page.getByTestId(`storage-mode-${mode}`).check();
-	await passConsent(page);
+	// Through the helper, which opens "Advanced" first: the storage choice is
+	// folded there, and a click on a folded radio waits for the test's whole
+	// budget.
+	await passConsent(page, { persistent: mode === 'indexeddb' });
 	await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 }
 

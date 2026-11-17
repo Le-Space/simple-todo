@@ -1,20 +1,19 @@
 <script>
 	import '../app.css';
+	import { _ } from '$lib/i18n/index.js';
 	// import favicon from '$lib/assets/favicon.svg';
 
 	let { children } = $props();
 </script>
 
 <svelte:head>
-	<!-- The one place this app sets its title. The chapter comes first: in a
-	     strip of nine tabs the first characters are all anybody reads, and every
-	     chapter used to say "Simple-Todo". The version stays, it is how a reader
-	     tells which build they are looking at. -->
-	<title
-		>escrow01 · Simple-Todo {typeof __APP_VERSION__ !== 'undefined'
-			? __APP_VERSION__
-			: '0.0.0'}</title
-	>
+	<!-- The one place this app sets its title, and it says what the app is for:
+	     escrow01 is sent to people who have never heard of the tutorial, and a
+	     tab reading "Simple-Todo 0.2.0" told them nothing. It follows the
+	     language on screen. The chapter's name stays at the end, for the reader
+	     with nine tabs open; the build is in the technical view, where somebody
+	     who needs it looks. -->
+	<title>{$_('app.pageTitle')} · escrow01</title>
 </svelte:head>
 
 {@render children?.()}

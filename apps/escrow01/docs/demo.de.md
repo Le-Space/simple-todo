@@ -110,10 +110,12 @@ Beispielwerte.
 
 ### Szene 1 · Ein Passkey
 
-**Zeigen.** Alice öffnet die App. Der Einwilligungsdialog beim Start enthält den Abschnitt „Ein
-Passkey für alles“; unter „Was gespeichert wird“ steht im Sepolia-Modus „Budgets verschlüsselt im
-Sepolia-Testnetz“, bei der Attrappe, dass Budgets nur zur Vorführung im Arbeitsspeicher liegen.
-Danach legt Alice ihren Passkey an. Im Sepolia-Modus steht im Tab „Konto“ zuerst „Wird eingerichtet.
+**Zeigen.** Alice öffnet die App. Der Startdialog heißt „Vertrauliche Treuhand-Zahlungen per
+Passkey“ und zeigt „Ein Passkey für alles“ mit „Bezahlen“ hervorgehoben; unter „Das Wichtigste zu
+Ihren Daten“ steht im Sepolia-Modus „Beträge liegen verschlüsselt auf einer Blockchain im Testnetz …“,
+bei der Attrappe, dass Beträge in dieser Vorschau nur im Arbeitsspeicher liegen. Alice hakt den
+Hinweis an und drückt „Starten“; „Passkey anlegen“ ist vorgewählt, also legt sie dabei ihren Passkey
+an. Im Sepolia-Modus steht im Tab „Konto“ zuerst „Wird eingerichtet.
 Openfort zahlt die Gebühr, eine Passkey-Bestätigung ist dafür nicht nötig.“ und nach etwa 20 Sekunden
 „Konto auf Sepolia“ mit Adresse und „Auf Etherscan ansehen“.
 
@@ -454,13 +456,15 @@ Repository (`apps/escrow01`, Zeilennummern vom 2026-10-02):
   175-236, Prüfansicht 287-307, Hebel `expireReadKey` und `seedExamples` 324-355.
 - [`src/lib/budget-store.js`](../src/lib/budget-store.js) 433-446 (`simpleTodoBudgetDemo` in der
   Konsole), [`src/routes/+page.svelte`](../src/routes/+page.svelte) 388-396 (`#pruefstelle`), 521-538
-  (Einwilligungsdialog) und 790-802 (Prüfstelle im Tab „Konto“),
+  (Einwilligungsdialog; seit dem 2026-11-17 Kurzform mit `summary`) und 790-802 (Prüfstelle im Tab
+  „Konto“),
   [`src/lib/sections.js`](../src/lib/sections.js) 23-41 (Tabs und Adress-Fragment),
   [`src/lib/AddTodoForm.svelte`](../src/lib/AddTodoForm.svelte) 218-223 (Hinweis unter dem Budget-Feld),
-  [`src/lib/OnePasskeyIntro.svelte`](../src/lib/OnePasskeyIntro.svelte) 18-33 („Ein Passkey für alles“,
-  „Was gespeichert wird“).
+  [`src/lib/OnePasskeyIntro.svelte`](../src/lib/OnePasskeyIntro.svelte) („Ein Passkey für alles“) und
+  [`src/lib/consent-clauses.js`](../src/lib/consent-clauses.js) (Kurzfassung und alle Hinweise; was
+  früher unter „Was gespeichert wird“ stand, steht seit dem 2026-11-17 dort).
 - [`src/lib/i18n/de.json`](../src/lib/i18n/de.json) und [`src/lib/i18n/en.json`](../src/lib/i18n/en.json):
-  Schlüssel `onboarding.storedBudgetsDemo`, `onboarding.storedBudgetsChain`,
+  Schlüssel `consent.summary.amountsDemo`, `consent.summary.amountsChain`,
   `budget.network.demo`, `budget.demoNotice`, `budget.form.hint`, `budget.chip.hidden`,
   `budget.notice.*`, `budget.auditor.*`, `budget.toast.receivedHidden`, `budget.toast.received`,
   `sections.account.auditorOpen`, `sections.account.chainAccount`, `sections.account.accountCreating`.

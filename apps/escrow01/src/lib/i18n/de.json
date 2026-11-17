@@ -1,6 +1,7 @@
 {
 	"app": {
-		"title": "Simple-Todo"
+		"title": "Simple-Todo",
+		"pageTitle": "Vertrauliche Treuhand per Passkey"
 	},
 	"language": {
 		"de": "Deutsch",
@@ -8,7 +9,9 @@
 	},
 	"header": {
 		"backToTodos": "Zurück zu den Aufgaben",
-		"tagline": "Eine Peer-to-Peer-PWA nach dem Local-first-Prinzip"
+		"tagline": "Aufgaben vergeben, Budgets verschlüsselt hinterlegen – eine Demo im Testnetz",
+		"title": "Vertrauliche Treuhand",
+		"titleShort": "Treuhand"
 	},
 	"sections": {
 		"label": "Bereiche",
@@ -92,21 +95,17 @@
 	},
 	"onboarding": {
 		"heading": "Ein Passkey für alles",
-		"intro": "Ihr Passkey meldet Sie an, unterschreibt Ihre Einträge und bestätigt Zahlungen. Sie brauchen kein Passwort, keine Seed-Phrase und keine separate Wallet.",
 		"signInTitle": "Anmelden",
 		"signInText": "Auf diesem Gerät, zum Beispiel mit Touch ID.",
 		"signTitle": "Unterschreiben",
-		"signText": "Jede Änderung trägt Ihre DID.",
+		"signText": "Jede Änderung trägt Ihre Unterschrift.",
 		"payTitle": "Bezahlen",
-		"payText": "Budgets in vertraulichen Token, bestätigt mit demselben Passkey. Ihr Konto dafür entsteht still im Hintergrund.",
-		"storedHeading": "Was gespeichert wird",
-		"storedDid": "Ihr öffentlicher Schlüssel und Ihre DID",
-		"storedListsPersistent": "Ihre Listen in diesem Browser",
-		"storedListsMemory": "Ihre Listen im Arbeitsspeicher dieses Browsers, bis Sie neu laden",
-		"storedBudgetsChain": "Budgets verschlüsselt im Sepolia-Testnetz",
-		"storedBudgetsDemo": "Budgets nur zur Vorführung im Arbeitsspeicher dieses Browsers: Nichts wird verschlüsselt, nichts erreicht eine Chain",
-		"storedKeys": "Schlüssel zum Unterschreiben und zum Lesen der Beträge, in diesem Browser",
-		"storedPasskey": "Der Passkey selbst verlässt Ihr Gerät nie"
+		"payText": "Budget für eine Aufgabe sperren und auszahlen, wenn die Arbeit erledigt ist. Der Betrag bleibt verschlüsselt.",
+		"promise": "Vergeben Sie eine Aufgabe und hinterlegen Sie das Budget treuhänderisch. Der Betrag bleibt verschlüsselt und wird ausgezahlt, wenn Sie ihn freigeben – bestätigt mit Ihrem Passkey, ohne Wallet und ohne Seed-Phrase.",
+		"promiseDemo": "Vergeben Sie eine Aufgabe und hinterlegen Sie das Budget treuhänderisch. Es wird ausgezahlt, wenn Sie es freigeben – bestätigt mit Ihrem Passkey, ohne Wallet und ohne Seed-Phrase.",
+		"signTextTechnical": "Jede Änderung trägt Ihre DID.",
+		"payTextDemo": "Budget für eine Aufgabe sperren und auszahlen, wenn die Arbeit erledigt ist. In dieser Vorschau ist der Betrag nicht verschlüsselt.",
+		"payTextTechnical": "Budgets in vertraulichen Token (ERC-7984), bestätigt mit demselben Passkey. Das Konto dafür (EIP-7702) entsteht still im Hintergrund."
 	},
 	"todo": {
 		"form": {
@@ -270,56 +269,65 @@
 	"consent": {
 		"warningHeading": "Noch früh",
 		"warningBody": "Dies ist eine lauffähige Demonstration, kein fertiges Produkt. Es tut, was es sagt, und das Format kann sich noch ändern - bewahren Sie alles, um das es Ihnen leidtäte, also auch woanders auf.",
-		"accept": "Ich habe das gelesen und bin einverstanden",
+		"accept": "Ich habe die Hinweise gelesen und bin einverstanden",
 		"proceed": "Geteilte Liste öffnen",
-		"proceedDisabled": "Drei spanische Wörter eingeben, um fortzufahren",
+		"proceedDisabled": "Bitte unter „Erweitert“ einen gültigen Teilen-Code eingeben.",
 		"proceedNeedsAccept": "Zuerst den Hinweis bestätigen",
 		"remember": "Auf diesem Gerät nicht mehr anzeigen",
 		"technical": "Technisch",
 		"simple": "Einfach",
 		"clause": {
 			"noServer": "Wir betreiben keinen Server, und nirgends bei uns liegt eine Kopie Ihrer Listen.",
-			"gateway": "Die App selbst kommt über ein öffentliches IPFS-Gateway, das sieht, dass Sie sie geladen haben. Mit einem eigenen Kubo-Knoten oder der IPFS-Companion-Erweiterung holen Sie sie stattdessen direkt aus dem Netz.",
+			"gateway": "Die App selbst kommt über einen öffentlichen Webdienst (ein Gateway), der sieht, dass Sie sie geladen haben.",
 			"relay": "Relay-Knoten machen Geräte miteinander bekannt und behalten unter Umständen eine Kopie einer Liste, damit ein anderes Gerät sie später abholen kann.",
-			"sharedList": "Die Liste hinter den drei spanischen Wörtern ist offen: Wer die Wörter hat, kann sie lesen und beschreiben. Die Wörter sind ein Weg, sich zu treffen - kein Passwort.",
+			"sharedList": "Die Liste hinter dem Teilen-Code ist offen: Wer ihre drei spanischen Wörter hat, kann sie lesen und beschreiben. Die Wörter sind ein Treffpunkt, kein Passwort.",
 			"privateList": "Eine Liste, die Sie selbst anlegen, bestimmt, wer hineinschreiben darf - Sie und wen Sie hineinlassen. Sie bestimmt nicht, wer sie lesen darf.",
-			"readingIsOpen": "Hier ist nichts verschlüsselt. Wer die Adresse einer Liste hat, kann alles darin lesen, auch der Relay, der sie aufbewahrt. Schreiben Sie nichts Privates in ein Todo.",
+			"readingIsOpen": "Todos und Listen sind nicht verschlüsselt. Wer die Adresse einer Liste hat, kann alles darin lesen, auch der Relay, der sie aufbewahrt. Schreiben Sie nichts Privates in ein Todo.",
 			"identityPasskey": "Ihr Passkey weist Sie gegenüber den anderen Geräten aus. Niemand sonst kann in Ihrem Namen schreiben.",
 			"identityAnonymous": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Schließen Sie ihn, ist sie weg.",
 			"cookies": "Es werden keine Tracking-Cookies verwendet. Wenn Sie \"nicht mehr anzeigen\" ankreuzen, ist diese Entscheidung das Einzige, was auf diesem Gerät gespeichert wird.",
-			"delegation": "Wer in eine Liste schreiben darf, entscheiden Sie. Eine Freigabe können Sie später wieder zurücknehmen — anders als ein herausgegebener Schlüssel, denn hier wird nichts verschlüsselt.",
+			"delegation": "Wer in eine Liste schreiben darf, entscheiden Sie. Eine Freigabe können Sie später wieder zurücknehmen — anders als ein herausgegebener Schlüssel, denn Listen werden nicht verschlüsselt.",
 			"storageMemory": "Sie haben „nur im Arbeitsspeicher\" gewählt: Auf diesem Gerät wird nichts abgelegt, und beim Neuladen fängt dieser Browser von vorn an.",
 			"storagePersistent": "Sie haben „in diesem Browser behalten\" gewählt: Die Todos bleiben nach dem Neuladen da. Sie liegen unverschlüsselt im Speicher dieses Browsers, und wer ihn löscht, verliert sie.",
-			"identityAnonymousKept": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Er behält sie, bis Sie die Website-Daten löschen; nichts verbindet sie mit Ihnen."
+			"identityAnonymousKept": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Er behält sie, bis Sie die Website-Daten löschen; nichts verbindet sie mit Ihnen.",
+			"amountsChain": "Ein Betrag wird auf Ihrem Gerät verschlüsselt, bevor er gesendet wird, und bleibt auf einer Blockchain im Testnetz verschlüsselt. Lesen können ihn nur Sie, die andere Seite und die Prüfstelle der Demo.",
+			"amountsChainTechnical": "Ein Betrag wird in Ihrem Browser verschlüsselt (Zama TFHE), bevor er gesendet wird, und bleibt im Sepolia-Testnetz als cUSDT-Guthaben nach ERC-7984 verschlüsselt. Entschlüsseln können ihn nur Sie, die andere Seite und die im Treuhandvertrag benannte Prüfstelle.",
+			"amountsPublic": "Öffentlich auf der Blockchain sind Absender, Empfänger und Zeitpunkt jeder Zahlung – nicht der Betrag.",
+			"amountsDemo": "In dieser Vorschau liegen Budgets nur im Arbeitsspeicher dieses Browsers: Nichts wird verschlüsselt, nichts erreicht eine Blockchain.",
+			"noBudgetWithoutPasskey": "Ohne Passkey können Sie kein Budget sperren: Der Passkey ist es, der eine Zahlung bestätigt.",
+			"gatewayTechnical": "Die App selbst kommt über ein öffentliches IPFS-Gateway, das sieht, dass Sie sie geladen haben. Mit einem eigenen Kubo-Knoten oder der IPFS-Companion-Erweiterung holen Sie sie stattdessen direkt aus dem Netz.",
+			"keys": "Dieser Browser behält die Verknüpfung zu Ihrem Passkey und die Schlüssel zum Unterschreiben und zum Lesen der Beträge. Der Passkey selbst verlässt Ihr Gerät nie.",
+			"keysTechnical": "Dieser Browser behält den öffentlichen Schlüssel und die DID Ihres Passkeys sowie die Schlüssel zum Signieren der Einträge und zum Lesen der Beträge. Der Passkey selbst verlässt Ihren Authenticator nie.",
+			"keysMemory": "Die Schlüssel zum Unterschreiben und zum Lesen der Beträge liegen im Arbeitsspeicher dieses Browsers und sind beim Neuladen weg. Der Passkey selbst verlässt Ihr Gerät nie.",
+			"keysMemoryTechnical": "Öffentlicher Schlüssel und DID Ihres Passkeys, der Signaturschlüssel und der Leseschlüssel liegen im Arbeitsspeicher dieses Tabs und sind beim Neuladen weg. Der Passkey selbst verlässt Ihren Authenticator nie."
 		},
 		"errorNoPasskey": "In diesem Browser ist kein Passkey hinterlegt, und Ihr Authenticator hat keinen herausgegeben. Legen Sie einen neuen an oder fahren Sie ohne fort.",
 		"errorNeedsLabel": "Bitte geben Sie dem neuen Passkey einen Namen.",
 		"errorStart": "Der Start ist fehlgeschlagen: {reason}",
-		"existingNeedsTap": "Ihr Passkey verlangt bei jedem Start eine Bestätigung. Deshalb ist dieser Dialog wieder da — es ist nichts schiefgegangen.",
 		"identityExistingFound": "Auf diesem Gerät liegt ein Passkey aus einer früheren Sitzung.",
-		"identityExistingNone": "In diesem Browser ist nichts gespeichert. Wir fragen Ihren Authenticator — das gelingt nur, wenn der Passkey seine Angaben selbst mitführt.",
+		"identityExistingNone": "In diesem Browser ist noch nichts verknüpft. Ihr Gerät oder Passwortmanager bietet den Passkey an — das gelingt nur, wenn der Passkey seine Angaben selbst mitführt.",
 		"prfMissing": "Dieser Authenticator kann Ihre Identität nicht auf ein zweites Gerät tragen (kein PRF). Mit demselben Passkey entsteht dort eine eigene Identität.",
 		"prfMissingAndroid": "Dieser Authenticator kann Ihre Identität nicht auf ein zweites Gerät tragen (kein PRF). Mit demselben Passkey entsteht dort eine eigene Identität. Auf Android ohne Google Play Services (GrapheneOS) hilft ein Credential Provider mit PRF, etwa Authnkey: installieren, als bevorzugten Passkey-Dienst wählen, dann den Passkey neu anlegen — siehe docs/grapheneos.md.",
-		"mnemonicLabel": "Merkwörter der geteilten Liste",
-		"mnemonicHelp": "Geben Sie diese drei spanischen Wörter weiter, um dieselbe öffentlich beschreibbare OrbitDB-Liste zu öffnen. Das ist ein Zugangscode, kein Passwort und kein Schlüssel.",
+		"mnemonicLabel": "Teilen-Code",
+		"mnemonicHelp": "Wer diese drei spanischen Wörter hat, öffnet dieselbe Liste und kann darin lesen und schreiben. Ein Treffpunkt, kein Passwort.",
 		"mnemonicPlaceholder": "luna-camino-verde",
 		"mnemonicSrError": "Bitte genau drei gültige spanische Wörter eingeben.",
 		"mnemonicGenerate": "Neue erzeugen",
 		"mnemonicCopy": "Kopieren",
 		"mnemonicCopied": "Kopiert!",
 		"mnemonicError": {
-			"empty": "Geben Sie die drei spanischen Merkwörter ein.",
+			"empty": "Geben Sie einen Teilen-Code aus drei spanischen Wörtern ein.",
 			"repeatedSeparator": "Verwenden Sie keine leeren Wörter und keine doppelten Trennzeichen.",
 			"wordCount": "Es müssen genau drei spanische Wörter sein.",
-			"unknownWord": "„{word}“ ist kein gültiges spanisches Merkwort."
+			"unknownWord": "„{word}“ ist kein gültiges Wort für einen Teilen-Code."
 		},
 		"identityLegend": "Ihre Identität",
 		"identityCreate": "Passkey anlegen",
-		"identityCreateHint": "Einen neuen WebAuthn-Passkey registrieren und Ihre OrbitDB-Identität (DID) daraus ableiten.",
-		"identityCreateHintAnother": "Einen weiteren WebAuthn-Passkey registrieren — eine zweite Identität neben der, die auf diesem Gerät schon liegt.",
+		"identityCreateHint": "Ihr Gerät legt einen Passkey an, zum Beispiel mit Touch ID. Damit melden Sie sich an, unterschreiben und bezahlen.",
+		"identityCreateHintAnother": "Ein weiterer Passkey — eine zweite Identität neben der, die auf diesem Gerät schon liegt.",
 		"identityExisting": "Vorhandenen Passkey verwenden",
 		"identityAnonymous": "Ohne Passkey fortfahren",
-		"identityAnonymousHint": "Eine zufällige Identität nur für diesen Browser, genau wie im vorigen Kapitel.",
+		"identityAnonymousHint": "Eine zufällige Identität nur für diesen Browser. Ohne Passkey können Sie kein Budget sperren.",
 		"identityLabelPlaceholder": "Name für diesen Passkey (z. B. Alice)",
 		"identityLabelHint": "Nur eine Bezeichnung für die Passkey-Auswahl. Ihre Identität ergibt sich aus dem Schlüssel, nicht aus diesem Namen. Zwei Personen auf diesem Gerät dürfen denselben Namen verwenden.",
 		"element": {
@@ -369,9 +377,36 @@
 		"showNotice": "Hinweis anzeigen",
 		"storageLegend": "Wo Ihre Todos liegen",
 		"storageMemoryLabel": "Nur im Arbeitsspeicher",
-		"storageMemoryHint": "Aufgaben und Schlüssel liegen nur im Arbeitsspeicher und sind beim Neuladen weg. Auf dem Gerät bleibt einzig die Verknüpfung zu Ihrem Passkey, damit Sie Ihre Identität wiederfinden.",
+		"storageMemoryHint": "Aufgaben und Schlüssel liegen nur im Arbeitsspeicher und sind beim Neuladen weg; auf das Gerät wird nichts geschrieben. Ihr Passkey bleibt bei Ihrem Gerät oder Passwortmanager, damit Sie Ihre Identität wiederfinden.",
 		"storagePersistentLabel": "In diesem Browser behalten",
-		"storagePersistentHint": "Die Todos liegen in der IndexedDB des Browsers und überstehen einen Neustart. Verschlüsselt sind sie dort nicht: Wer den Speicher dieses Browsers lesen kann, liest sie mit."
+		"storagePersistentHint": "Die Todos bleiben in diesem Browser und überstehen einen Neustart. Verschlüsselt sind sie dort nicht: Wer den Speicher dieses Browsers lesen kann, liest sie mit.",
+		"title": "Vertrauliche Treuhand-Zahlungen per Passkey",
+		"readyCreate": "Ihr Gerät legt dabei einen Passkey an, zum Beispiel mit Touch ID.",
+		"readyExisting": "Ihr Gerät fragt nach Ihrem Passkey.",
+		"readyAnonymous": "Ohne Passkey können Sie die Listen ausprobieren, aber kein Budget sperren.",
+		"summary": {
+			"amountsChain": "Beträge liegen verschlüsselt auf einer Blockchain im Testnetz. Lesen können sie nur die beiden Beteiligten und die Prüfstelle der Demo; für alle sichtbar ist nur, wer wem wann gezahlt hat.",
+			"amountsChainTechnical": "Beträge liegen verschlüsselt im Sepolia-Testnetz (Zama FHE, ERC-7984). Entschlüsseln können sie nur die beiden Beteiligten und die Prüfstelle der Demo; Absender, Empfänger und Zeitpunkt jeder Überweisung sind öffentlich.",
+			"amountsDemo": "In dieser Vorschau bleiben Beträge im Arbeitsspeicher dieses Browsers: Nichts wird verschlüsselt, nichts erreicht eine Blockchain.",
+			"lists": "Todos und Listen sind nicht verschlüsselt: Wer die Adresse einer Liste kennt, kann sie lesen. Schreiben Sie nichts Vertrauliches in ein Todo.",
+			"networkMemory": "Wir betreiben keinen Server, und dieser Browser behält nach dem Neuladen nichts. Relays verbinden die Geräte und können eine Kopie einer Liste behalten.",
+			"networkKept": "Wir betreiben keinen Server. Ihre Todos bleiben in diesem Browser, bis Sie ihn leeren; Relays verbinden die Geräte und können eine Kopie einer Liste behalten.",
+			"demo": "Eine Demo: Es fließt kein echtes Geld, und das Format kann sich noch ändern."
+		},
+		"group": {
+			"amounts": "Beträge – verschlüsselt",
+			"amountsDemo": "Beträge – nur Vorschau",
+			"lists": "Todos und Listen – nicht verschlüsselt",
+			"network": "Netz, Speicher und Identität"
+		},
+		"identityCreateHintTechnical": "Einen neuen WebAuthn-Passkey registrieren und Ihre OrbitDB-Identität (DID) daraus ableiten.",
+		"identityCreateHintAnotherTechnical": "Einen weiteren WebAuthn-Passkey registrieren — eine zweite Identität neben der, die auf diesem Gerät schon liegt.",
+		"identityExistingNoneTechnical": "In diesem Browser ist nichts gespeichert. Wir fragen Ihren Authenticator — das gelingt nur, wenn der Passkey seine Angaben selbst mitführt (auffindbares Credential mit PRF).",
+		"identityLabelDefault": "Treuhand-Demo",
+		"mnemonicHelpTechnical": "Geben Sie diese drei spanischen Wörter weiter, um dieselbe öffentlich beschreibbare OrbitDB-Liste zu öffnen. Das ist ein Zugangscode, kein Passwort und kein Schlüssel.",
+		"linkedList": "Diese Adresse öffnet die gemeinsame Liste „{words}“. Ändern können Sie sie unter „Erweitert“.",
+		"useExisting": "Schon einen Passkey für diese Demo? Stattdessen damit anmelden",
+		"useNew": "Stattdessen einen neuen Passkey anlegen"
 	},
 	"lists": {
 		"create": {
@@ -566,5 +601,13 @@
 		"notDelegated": "Diese Aufgabe ist nicht delegiert.",
 		"onlyOwnerRevokes": "Die Delegation zurücknehmen kann nur, wer die Aufgabe angelegt hat.",
 		"revokeFailed": "Die Delegation konnte nicht zurückgenommen werden: {reason}"
+	},
+	"welcome": {
+		"title": "Willkommen zurück",
+		"text": "Auf diesem Gerät ist Ihr Passkey verknüpft. Bestätigen Sie mit ihm, um die Treuhand-Demo zu öffnen.",
+		"continue": "Mit Passkey fortfahren",
+		"waiting": "Warte auf Ihren Passkey …",
+		"more": "Andere Optionen und alle Hinweise",
+		"accepted": "Es gelten die Hinweise, denen Sie beim ersten Start mit diesem Passkey zugestimmt haben."
 	}
 }

@@ -1,5 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { acceptNotice, consentModal, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import {
+	acceptNotice,
+	consentModal,
+	continueWithPasskey,
+	isWelcomeOpen,
+	openAdvanced,
+	waitForConsent
+} from '@simple-todo/e2e-kit/consent.mjs';
 import { openSection } from './sections.mjs';
 
 // Chapter (passkey01): Alice and Bob each register a WebAuthn passkey in
@@ -55,7 +62,8 @@ test.describe('Passkey identities', () => {
 				await expectTodoWithAuthor(page, bobTodo, bobDid);
 			}
 
-			// Reload → the app preselects passkey recovery; the DID must survive.
+			// Reload → the passkey again, by the short step where the device keeps
+			// the link, by the dialog where it keeps nothing; the DID must survive.
 			await alice.reload();
 			await proceedWithExistingPasskey(alice);
 			const recoveredDid = await getOwnDid(alice);
@@ -110,9 +118,14 @@ async function openReadyAppWithNewPasskey(page, { label }) {
 
 /** @param {import('@playwright/test').Page} page */
 async function proceedWithExistingPasskey(page) {
+	await waitForConsent(page);
+	if (await isWelcomeOpen(page)) {
+		await continueWithPasskey(page);
+		await expectAppReady(page);
+		return;
+	}
 	await fillConsentModal(page);
-	// A remembered passkey session preselects "Use an existing passkey".
-	await expect(page.getByTestId('identity-mode-existing')).toBeChecked();
+	await page.getByTestId('identity-mode-existing').check();
 	await page.getByTestId('consent-proceed').click();
 	await page.waitForFunction(
 		() => document.querySelector('[data-testid="consent-modal"]')?.isOpen !== true
@@ -123,6 +136,7 @@ async function proceedWithExistingPasskey(page) {
 /** @param {import('@playwright/test').Page} page */
 async function fillConsentModal(page) {
 	await waitForConsent(page);
+	await openAdvanced(page);
 	await consentModal(page).getByTestId('shared-list-mnemonic-input').fill(sharedMnemonic);
 	// Ticked here rather than at the click, so this helper still hands back a
 	// dialog its callers can leave whenever they choose to.

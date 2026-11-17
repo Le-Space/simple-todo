@@ -104,11 +104,13 @@ example values.
 
 ### Scene 1 · One passkey
 
-**Show.** Alice opens the app. The consent dialog at start contains the section "Ein Passkey für
-alles" ("One passkey for everything"); under "Was gespeichert wird" ("What is stored") it says
-"Budgets verschlüsselt im Sepolia-Testnetz" ("Budgets encrypted on the Sepolia testnet") in Sepolia
-mode, and with the fake that budgets live only in memory for the demonstration. Then Alice creates her
-passkey. In Sepolia mode the "Konto" tab first says "Wird eingerichtet. Openfort zahlt die Gebühr, eine
+**Show.** Alice opens the app. The start dialog is titled "Vertrauliche Treuhand-Zahlungen per
+Passkey" ("Confidential escrow payments with a passkey") and shows "Ein Passkey für alles" ("One
+passkey for everything") with "Bezahlen" ("Pay") set apart; under "Das Wichtigste zu Ihren Daten"
+("What this means for your data, in short") it says in Sepolia mode that amounts are encrypted on a
+blockchain test network, and with the fake that amounts stay in memory in this preview. Alice ticks
+the notice and presses "Starten" ("Start"); "Passkey anlegen" ("Create a passkey") is preselected, so
+that is when she creates her passkey. In Sepolia mode the "Konto" tab first says "Wird eingerichtet. Openfort zahlt die Gebühr, eine
 Passkey-Bestätigung ist dafür nicht nötig." ("Being set up. Openfort pays the fee, no passkey
 confirmation needed.") and after about 20 seconds shows "Konto auf Sepolia" with the address and "Auf
 Etherscan ansehen" ("View on Etherscan").
@@ -435,12 +437,14 @@ Repository (`apps/escrow01`, line numbers as of 2026-10-02):
   175-236, auditor list 287-307, levers `expireReadKey` and `seedExamples` 324-355.
 - [`src/lib/budget-store.js`](../src/lib/budget-store.js) 433-446 (`simpleTodoBudgetDemo` in the
   console), [`src/routes/+page.svelte`](../src/routes/+page.svelte) 388-396 (`#pruefstelle`), 521-538
-  (consent dialog) and 790-802 (auditor card in the "Konto" tab),
+  (consent dialog; the short form with `summary` since 2026-11-17) and 790-802 (auditor card in the
+  "Konto" tab),
   [`src/lib/sections.js`](../src/lib/sections.js) 23-41 (tabs and the URL fragment),
-  [`src/lib/AddTodoForm.svelte`](../src/lib/AddTodoForm.svelte) 218-223 (note below the budget field), [`src/lib/OnePasskeyIntro.svelte`](../src/lib/OnePasskeyIntro.svelte) 18-33 ("Ein
-  Passkey für alles", "Was gespeichert wird").
+  [`src/lib/AddTodoForm.svelte`](../src/lib/AddTodoForm.svelte) 218-223 (note below the budget field), [`src/lib/OnePasskeyIntro.svelte`](../src/lib/OnePasskeyIntro.svelte) ("Ein
+  Passkey für alles") and [`src/lib/consent-clauses.js`](../src/lib/consent-clauses.js) (the summary
+  and all notices; what "Was gespeichert wird" said lives there since 2026-11-17).
 - [`src/lib/i18n/de.json`](../src/lib/i18n/de.json) and [`src/lib/i18n/en.json`](../src/lib/i18n/en.json):
-  keys `onboarding.storedBudgetsDemo`, `onboarding.storedBudgetsChain`, `budget.network.demo`,
+  keys `consent.summary.amountsDemo`, `consent.summary.amountsChain`, `budget.network.demo`,
   `budget.demoNotice`, `budget.form.hint`, `budget.chip.hidden`, `budget.notice.*`, `budget.auditor.*`,
   `budget.toast.receivedHidden`, `budget.toast.received`, `sections.account.auditorOpen`,
   `sections.account.chainAccount`, `sections.account.accountCreating`.

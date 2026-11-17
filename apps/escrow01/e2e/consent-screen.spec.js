@@ -6,6 +6,7 @@ import {
 	acceptNotice,
 	consentModal,
 	isConsentOpen,
+	openAdvanced,
 	passConsent,
 	waitForConsent,
 	expectProceedRevealsTick
@@ -15,15 +16,14 @@ import { openSection } from './sections.mjs';
 const timeout = 30000;
 
 /**
- * The statement the dialog assembles, read from the element's shadow tree.
+ * The statement the dialog assembles, under "All notices". Read from the DOM
+ * whether the section is unfolded or not: what is accepted is what is there.
  *
  * @param {import('@playwright/test').Page} page
  */
 const clauses = (page) =>
-	page.$$eval('[data-testid="consent-modal"]', (els) =>
-		[...(els[0].shadowRoot?.querySelectorAll('.privacy ul li') ?? [])].map(
-			(item) => item.textContent?.trim() ?? ''
-		)
+	page.$$eval('[data-testid="consent-clauses"] li', (items) =>
+		items.map((item) => item.textContent?.trim() ?? '')
 	);
 
 /** The English catalogue, which mirrors the element's own defaults. */
@@ -42,14 +42,15 @@ test.describe('Consent screen', () => {
 		await acceptNotice(page);
 		await expect(proceed).toHaveAttribute('aria-disabled', 'false');
 
+		// Without a passkey: this profile has no authenticator to create one with.
+		await openAdvanced(page);
+		await page.getByTestId('identity-mode-anonymous').check();
 		await proceed.click();
 		expect(await isConsentOpen(page)).toBe(false);
 		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 	});
 
-	test('a press on the waiting button opens the statement and puts the cursor on the tick', async ({
-		page
-	}) => {
+	test('a press on the waiting button puts the cursor on the tick above it', async ({ page }) => {
 		await page.goto('/');
 		await waitForConsent(page);
 		await expectProceedRevealsTick(page);
@@ -57,22 +58,86 @@ test.describe('Consent screen', () => {
 	});
 
 	test('names the requirement that is actually holding the button', async ({ page }) => {
-		// One label for two blockers sent people to a field that was already
-		// filled: the mnemonic arrives generated and valid, so what holds the
-		// button is the tick further down.
+		// The button says what it does — "Start" — and the line beside it says
+		// what it is waiting for. One label for two blockers once sent people to
+		// a field that was already filled.
 		await page.goto('/');
 		await waitForConsent(page);
 
 		const proceed = page.getByTestId('consent-proceed');
-		await expect(proceed).toHaveText('Confirm the notice first');
+		const hint = page.getByTestId('consent-hint');
+		await expect(proceed).toHaveText('Start');
+		await expect(hint).toContainText('Confirm the notices above first.');
 
+		await openAdvanced(page);
 		await page.getByTestId('shared-list-mnemonic-input').fill('not a mnemonic at all');
-		await expect(proceed).toHaveText('Enter three Spanish words to continue');
+		await expect(hint).toContainText('Enter a valid share code under “Advanced” to start.');
+		await expect(proceed).toHaveText('Start');
 
 		await page.getByTestId('shared-list-mnemonic-input').fill('brisa-arena-sal');
 		await acceptNotice(page);
-		await expect(proceed).toHaveText('Open shared list');
+		await expect(hint).not.toContainText('Confirm the notices');
 		await expect(proceed).toHaveAttribute('aria-disabled', 'false');
+	});
+
+	test('waits neutrally: grey while it waits, the app colour once it can go', async ({ page }) => {
+		// A faded coral read as an error before anybody had done anything.
+		await page.goto('/');
+		await waitForConsent(page);
+
+		const proceed = page.getByTestId('consent-proceed');
+		const colour = () => proceed.evaluate((el) => getComputedStyle(el).backgroundColor);
+		const waiting = await colour();
+		await acceptNotice(page);
+		await expect.poll(colour).not.toBe(waiting);
+		const [r, g, b] = (await colour()).match(/\d+/g).map(Number);
+		// Coral: red well above the others.
+		expect(r - Math.max(g, b)).toBeGreaterThan(80);
+		const [wr, wg, wb] = waiting.match(/\d+/g).map(Number);
+		// Grey: no channel far from the others.
+		expect(Math.max(wr, wg, wb) - Math.min(wr, wg, wb)).toBeLessThan(30);
+	});
+
+	test('the first screen is the story, four sentences and the button — the rest is folded', async ({
+		page
+	}) => {
+		await page.goto('/');
+		await waitForConsent(page);
+
+		await expect(page.getByTestId('consent-promise')).toBeVisible();
+		await expect(page.getByTestId('one-passkey-pay')).toBeVisible();
+		await expect(page.getByTestId('consent-summary').locator('li')).toHaveCount(4);
+		for (const folded of ['consent-notices', 'consent-advanced']) {
+			await expect(page.getByTestId(folded)).not.toHaveAttribute('open', '');
+		}
+		// The words that belong to the technical view are not on the first screen.
+		const shown = await page.evaluate(() => document.querySelector('qr-intro')?.innerText ?? '');
+		for (const term of ['DID', 'OrbitDB', 'IndexedDB', 'Kubo', 'IPFS', 'Sepolia', 'WebAuthn']) {
+			expect(shown, term).not.toContain(term);
+		}
+		expect(shown).not.toContain('mnemonic');
+		expect(shown).not.toContain('previous chapter');
+	});
+
+	test('a first start creates a passkey; without one, the dialog says what is lost', async ({
+		page
+	}) => {
+		await page.goto('/');
+		await waitForConsent(page);
+
+		await expect(page.getByTestId('identity-mode-create')).toBeChecked();
+		await expect(page.getByTestId('consent-ready-hint')).toContainText('create a passkey');
+
+		// Beside the button, for somebody who already has one: no second identity
+		// by accident.
+		await page.getByTestId('consent-switch-passkey').click();
+		await expect(page.getByTestId('identity-mode-existing')).toBeChecked();
+		await expect(page.getByTestId('consent-ready-hint')).toContainText('ask for your passkey');
+
+		await openAdvanced(page);
+		await page.getByTestId('identity-mode-anonymous').check();
+		await expect(page.getByTestId('consent-ready-hint')).toContainText('cannot lock a budget');
+		expect((await clauses(page)).join(' ')).toContain('Without a passkey you cannot lock a budget');
 	});
 
 	test('a failed start is readable, not hidden behind the dialog it reopens', async ({ page }) => {
@@ -83,6 +148,7 @@ test.describe('Consent screen', () => {
 		await waitForConsent(page);
 
 		// Nothing was ever registered in this profile, so recovery cannot succeed.
+		await openAdvanced(page);
 		await page.getByTestId('identity-mode-existing').check();
 		await acceptNotice(page);
 		await page.getByTestId('consent-proceed').click();
@@ -152,6 +218,7 @@ test.describe('Consent screen', () => {
 		await page.goto('/');
 		await waitForConsent(page);
 
+		await openAdvanced(page);
 		await page.getByTestId('storage-mode-memory').check();
 		expect((await clauses(page)).join(' ')).toContain('nothing is written to this device');
 
@@ -172,21 +239,45 @@ test.describe('Consent screen', () => {
 		expect(statement).toContain('who may write');
 
 		// And the sentence this chapter exists to make people read: write access
-		// is not read access. Nothing here is encrypted, so an address is enough
-		// to read everything — including for the relay that stores it.
+		// is not read access. Todos and lists are not encrypted, so an address is
+		// enough to read everything — including for the relay that stores it.
 		expect(statement).toContain('does not decide who may read');
-		expect(statement).toContain('Nothing here is encrypted');
+		expect(statement).toContain('Todos and lists are not encrypted');
 	});
 
-	test('rewrites the line a choice changes, and only that line', async ({ page }) => {
+	test('says which part is encrypted and which is not, under separate headings', async ({
+		page
+	}) => {
+		// "Nothing here is encrypted" used to stand beside "Budgets, encrypted".
+		// Both were true of different things; the headings now say which.
 		await page.goto('/');
 		await waitForConsent(page);
 
+		const headings = await page.$$eval('[data-testid="consent-clauses"] h4', (items) =>
+			items.map((item) => item.textContent?.trim() ?? '')
+		);
+		expect(headings).toContain('Todos and lists — not encrypted');
+		expect(headings.some((heading) => heading.startsWith('Amounts'))).toBe(true);
+		expect((await clauses(page)).join(' ')).not.toContain('Nothing here is encrypted');
+	});
+
+	test('marks the lines a choice rewrote, and only those', async ({ page }) => {
+		await page.goto('/');
+		await waitForConsent(page);
+		await page.getByTestId('consent-notices').evaluate((el) => (el.open = true));
+
 		const before = await clauses(page);
-		await page.getByTestId('identity-mode-create').check();
-		await expect
-			.poll(async () => (await clauses(page)).filter((c, i) => c !== before[i]).length)
-			.toBe(1);
+		await openAdvanced(page);
+		await page.getByTestId('identity-mode-anonymous').check();
+		await expect.poll(async () => (await clauses(page)).join('|')).not.toBe(before.join('|'));
+
+		const rewritten = (await clauses(page)).filter((line) => !before.includes(line));
+		expect(rewritten.length).toBeGreaterThan(0);
+		const marked = await page.$$eval(
+			'[data-testid="consent-clauses"] li.consent-changed',
+			(items) => items.map((item) => item.textContent?.trim() ?? '')
+		);
+		expect(marked.sort()).toEqual(rewritten.sort());
 	});
 
 	test('offers the technical view beside the plain one', async ({ page }) => {
@@ -201,27 +292,88 @@ test.describe('Consent screen', () => {
 		await expect.poll(isTechnical).toBe(true);
 	});
 
-	test('on a phone, the acceptance tick is reachable from the foot', async ({ browser }) => {
-		// The dialog's body scrolls and its foot does not, so the tick that the
-		// button names can sit a screen and a half above the fold while the
-		// button naming it is in view.
-		const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
-		const page = await context.newPage();
+	for (const viewport of [
+		{ width: 1512, height: 800 },
+		{ width: 390, height: 844 },
+		{ width: 360, height: 640 }
+	]) {
+		test(`fits a ${viewport.width}x${viewport.height} window, with the tick and the button in view`, async ({
+			browser
+		}) => {
+			// The element capped its height on the content box, so padding and
+			// border came on top: at 800px the dialog ran 5px past both edges of
+			// the window. And the tick sits in the foot, directly above the button,
+			// so neither scrolls away — with every section unfolded, too.
+			const context = await browser.newContext({ viewport });
+			const page = await context.newPage();
+			await page.goto('/');
+			await waitForConsent(page);
+			await page.getByTestId('consent-notices').evaluate((el) => (el.open = true));
+			await openAdvanced(page);
+
+			const boxes = await page.evaluate(() => {
+				const host = document.querySelector('[data-testid="consent-modal"]');
+				const dialog = host?.shadowRoot?.querySelector('dialog')?.getBoundingClientRect();
+				const of = (/** @type {string} */ id) =>
+					document.querySelector(`[data-testid="${id}"]`)?.getBoundingClientRect();
+				return { dialog, tick: of('consent-accept'), button: of('consent-proceed') };
+			});
+			const inside = (/** @type {DOMRect | undefined} */ box) =>
+				!!box && box.top >= 0 && box.bottom <= viewport.height;
+			expect(inside(boxes.dialog), JSON.stringify(boxes.dialog)).toBe(true);
+			expect(inside(boxes.tick)).toBe(true);
+			expect(inside(boxes.button)).toBe(true);
+			expect(boxes.button.top).toBeGreaterThan(boxes.tick.top);
+
+			await context.close();
+		});
+	}
+
+	for (const [locale, code] of /** @type {const} */ ([
+		['en-US', 'en'],
+		['de-DE', 'de']
+	])) {
+		test(`marks the language on screen, and nothing else (${code})`, async ({ browser }) => {
+			// The dialog opened with the cursor on the first control — the German
+			// flag — and its focus ring read as "German is selected" on an English
+			// page. The cursor now starts at the text, and only the language on
+			// screen is marked.
+			const context = await browser.newContext({ locale });
+			const page = await context.newPage();
+			await page.goto('/');
+			await waitForConsent(page);
+
+			const modal = consentModal(page);
+			await expect(modal.getByTestId(`language-${code}`)).toHaveAttribute('aria-pressed', 'true');
+			await expect(modal.getByTestId(`language-${code === 'de' ? 'en' : 'de'}`)).toHaveAttribute(
+				'aria-pressed',
+				'false'
+			);
+			expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe(
+				'consent-start'
+			);
+			expect(await page.evaluate(() => document.documentElement.lang)).toBe(code);
+
+			// And a switch changes both.
+			const other = code === 'de' ? 'en' : 'de';
+			await modal.getByTestId(`language-${other}`).click();
+			await expect(modal.getByTestId(`language-${other}`)).toHaveAttribute('aria-pressed', 'true');
+			await expect(page.getByTestId('consent-proceed')).toHaveText(
+				other === 'de' ? 'Starten' : 'Start'
+			);
+
+			await context.close();
+		});
+	}
+
+	test('the tab and the dialog say what the app is for', async ({ page }) => {
 		await page.goto('/');
 		await waitForConsent(page);
 
-		const tickBox = () =>
-			page.$eval('[data-testid="consent-modal"]', (el) => {
-				const tick = el.shadowRoot?.querySelector('input[part=accept]');
-				const box = tick.getBoundingClientRect();
-				return { top: box.top, onScreen: box.top >= 0 && box.bottom <= window.innerHeight };
-			});
-
-		expect((await tickBox()).onScreen).toBe(false);
-		await page.getByTestId('consent-show-notice').click();
-		await expect.poll(async () => (await tickBox()).onScreen).toBe(true);
-
-		await context.close();
+		await expect(page).toHaveTitle('Confidential escrow by passkey · escrow01');
+		expect(await page.evaluate(() => document.querySelector('qr-intro')?.strings.title)).toBe(
+			'Confidential escrow payments with a passkey'
+		);
 	});
 
 	test('the close control that does nothing is not on screen', async ({ page }) => {
@@ -232,7 +384,9 @@ test.describe('Consent screen', () => {
 		await waitForConsent(page);
 
 		const dead = await page.$eval('[data-testid="consent-modal"]', (el) => {
-			const control = el.shadowRoot?.querySelector('button[disabled]');
+			// Not disabled in the short form — there is no statement in the element
+			// to gate it — and it would only bring the dialog straight back.
+			const control = el.shadowRoot?.querySelector('button.close');
 			return control ? { hidden: control.hidden, aria: control.getAttribute('aria-hidden') } : null;
 		});
 		expect(dead).toEqual({ hidden: true, aria: 'true' });
@@ -257,7 +411,7 @@ test.describe('Consent screen', () => {
 
 			const statement = (await clauses(page)).join(' ');
 			expect(statement).toContain('Wir betreiben keinen Server');
-			expect(statement).toContain('nichts verschlüsselt');
+			expect(statement).toContain('nicht verschlüsselt');
 			// Not a single English clause left behind: a half-translated statement
 			// reads as a decision rather than an omission.
 			expect(statement).not.toContain('We run no server');

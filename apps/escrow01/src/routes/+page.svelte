@@ -9,6 +9,7 @@
 	import { peerIdStore, initializationStore, ownDidStore } from '$lib/p2p-stores.js';
 	import PasskeyOnboarding from '$lib/PasskeyOnboarding.svelte';
 	import OnePasskeyIntro from '$lib/OnePasskeyIntro.svelte';
+	import PasskeyWelcomeBack from '$lib/PasskeyWelcomeBack.svelte';
 	import LanguageSwitcher from '@simple-todo/ui/LanguageSwitcher.svelte';
 	import DidBadge from '$lib/DidBadge.svelte';
 	import AuditorView from '$lib/AuditorView.svelte';
@@ -54,7 +55,7 @@
 	import { formatVersions } from '@simple-todo/todo/build-info.js';
 	import ConsentModal from '@simple-todo/ui/ConsentModal.svelte';
 	import { NETWORK_ADDRESSES, NETWORK_CHECK } from '@simple-todo/ui/qr-intro-network.js';
-	import { clauses as consentClauses } from '$lib/consent-clauses.js';
+	import { clauses as consentClauses, summary as consentSummary } from '$lib/consent-clauses.js';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
 	import ThemeToggle from '$lib/ThemeToggle.svelte';
 	import LocalFirstLink from '@simple-todo/ui/LocalFirstLink.svelte';
@@ -109,9 +110,47 @@
 	const CONSENT_KEY = `consentAccepted@${typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}`;
 	const IDENTITY_MODE_KEY = 'simpleTodo.identityMode';
 
+	/**
+	 * Whether somebody comes back with a passkey already linked to this device.
+	 * A passkey is linked only after the consent dialog was accepted, so this is
+	 * also the one trace of that acceptance that "in memory only" leaves behind.
+	 * Those people get the short passkey step instead of the dialog.
+	 */
+	function returningWithPasskey() {
+		try {
+			return recall(IDENTITY_MODE_KEY) === 'passkey' || hasStoredPasskeyCredential();
+		} catch {
+			return false;
+		}
+	}
+
+	/** Whether the last start on this device was deliberately without a passkey. */
+	function lastStartWasAnonymous() {
+		try {
+			return recall(IDENTITY_MODE_KEY) === 'anon';
+		} catch {
+			return false;
+		}
+	}
+
+	const welcomeBack = returningWithPasskey();
+
+	/*
+		A first start creates a passkey: paying is what this demo shows, and only a
+		passkey session can lock a budget. Somebody who chose to go without one
+		last time keeps that choice; somebody with a linked passkey is asked for it.
+	*/
 	/** @type {'create' | 'existing' | 'anonymous'} */
-	let identityMode = 'anonymous';
-	let passkeyLabel = '';
+	let identityMode = welcomeBack ? 'existing' : lastStartWasAnonymous() ? 'anonymous' : 'create';
+	// Only a label in the passkey picker, so a sensible one is filled in rather
+	// than a required field nobody expected on the way to "Start".
+	let passkeyLabel = get(_)('consent.identityLabelDefault');
+
+	// The short passkey step, and what it shows while and after it asks.
+	let showWelcome = welcomeBack;
+	let welcomeBusy = false;
+	/** @type {string | null} */
+	let welcomeError = null;
 
 	/** @type {string | null} */
 	let toastMessage = null;
@@ -119,8 +158,6 @@
 	let toastType = 'default';
 	/** @type {string | null} */
 	let error = null;
-	/** @type {string | null} */
-	let notice = null;
 	/*
 		Seeded from the stored preference, not from a literal. With `bind:mode`
 		the parent's initial value wins, so a hard-coded 'memory' here overwrote
@@ -143,6 +180,8 @@
 	const listLink = createListLink({
 		openWords: (words) => {
 			selectedMnemonic = words;
+			linkedWords = words;
+			showWelcome = false;
 			showModal = true;
 		},
 		openAddress: openLinkedList
@@ -174,8 +213,25 @@
 	$: mnemonicValid = isValidSpanishMnemonic(selectedMnemonic);
 
 	// Modal state
-	let showModal = true;
+	let showModal = !welcomeBack;
 	let rememberDecision = false;
+	/**
+	 * The list a link brought, named on the dialog's first screen: the short
+	 * form keeps the share code under "Advanced", and a reader should see which
+	 * list they are about to join without opening it.
+	 *
+	 * @type {string | null}
+	 */
+	let linkedWords = null;
+	/** Opens the dialog on its settings, for "change the list". */
+	let consentOpensAdvanced = false;
+
+	$: readyHint =
+		identityMode === 'create'
+			? $_('consent.readyCreate')
+			: identityMode === 'existing'
+				? $_('consent.readyExisting')
+				: $_('consent.readyAnonymous');
 
 	/**
 	 * A choice the person made that cannot be carried out — no passkey behind
@@ -225,10 +281,38 @@
 		return data?.platform === 'Android' || /\bAndroid\b/.test(navigator.userAgent);
 	}
 
-	const handleModalClose = async () => {
+	const handleModalClose = () => start('dialog');
+
+	/** The short passkey step's button: the same start, with the passkey linked here. */
+	async function continueWithPasskey() {
+		if (welcomeBusy) return;
+		welcomeBusy = true;
+		welcomeError = null;
+		identityMode = 'existing';
+		await start('welcome');
+		welcomeBusy = false;
+	}
+
+	/** From the short passkey step to the full dialog. */
+	function openFullConsent() {
+		showWelcome = false;
+		showModal = true;
+	}
+
+	/**
+	 * Start with what was chosen. `from` says where the press came from, so a
+	 * failure is shown there: the short passkey step keeps its own error rather
+	 * than turning into the full dialog it was meant to spare.
+	 *
+	 * @param {'dialog' | 'welcome'} from
+	 */
+	async function start(from) {
 		// The dialog shows this now, so a stale one would accuse the attempt that
 		// is only just starting.
 		error = null;
+		// Both describe how the dialog was opened this time, not the next time.
+		consentOpensAdvanced = false;
+		linkedWords = null;
 		const canonicalMnemonic = normalizeSpanishMnemonic(selectedMnemonic);
 		selectedMnemonic = canonicalMnemonic;
 		try {
@@ -265,6 +349,9 @@
 			} catch {
 				// ignore storage errors
 			}
+			// The passkey answered; what follows is the app starting, which the
+			// page behind shows better than a step that says "waiting for passkey".
+			if (from === 'welcome') showWelcome = false;
 
 			if ($initializationStore.isInitialized) {
 				await restartP2PLazy({ todoDbName: canonicalMnemonic });
@@ -275,15 +362,20 @@
 			void listLink.openLinked();
 			warnIfIdentityCannotTravel(passkeyCredential);
 		} catch (err) {
-			showModal = true;
 			const reason = err instanceof Error ? err.message : String(err);
-			error =
+			const message =
 				err instanceof IdentityChoiceError
 					? reason
 					: $_('consent.errorStart', { values: { reason } });
+			if (from === 'welcome' && showWelcome) {
+				welcomeError = message;
+			} else {
+				showModal = true;
+				error = message;
+			}
 			console.error('P2P initialization failed:', err);
 		}
-	};
+	}
 
 	// Loaded on demand, not at page load. `p2p.js` pulls libp2p, Helia, OrbitDB
 	// and gossipsub, and none of it is needed to render the consent dialog —
@@ -317,6 +409,7 @@
 	onMount(async () => {
 		try {
 			selectedMnemonic = listLink.initial.words ?? loadOrGenerateMnemonic();
+			linkedWords = listLink.initial.words ?? null;
 			if (listLink.initial.rejected.length > 0) {
 				showToast(
 					get(t)(
@@ -330,13 +423,9 @@
 			// something kept, and memory mode keeps nothing -- while the passkey
 			// link is what actually decides whether there is an identity to come
 			// back to (#9).
-			const rememberedIdentityMode = recall(IDENTITY_MODE_KEY);
-			if (rememberedIdentityMode === 'passkey' || hasStoredPasskeyCredential()) {
-				// A WebAuthn prompt needs a user gesture, so a remembered passkey
-				// session cannot auto-start: preselect recovery and show the modal.
-				identityMode = 'existing';
-				notice = $_('consent.existingNeedsTap');
-			} else if (recall(CONSENT_KEY) === 'true') {
+			// A WebAuthn prompt needs a user gesture, so a remembered passkey session
+			// cannot auto-start: it gets the short passkey step (`welcomeBack`).
+			if (!welcomeBack && recall(CONSENT_KEY) === 'true') {
 				showModal = false;
 				activeMnemonic = normalizeSpanishMnemonic(selectedMnemonic);
 				await startP2P({ todoDbName: activeMnemonic, passkeyCredential: null });
@@ -609,24 +698,72 @@
 	/>
 </svelte:head>
 
-<!-- Only render the modal when needed -->
+<!--
+	The way in. Somebody back with a passkey linked to this device gets the
+	short step that asks for it; everybody else, and anybody who asks for more
+	from that step, gets the dialog.
+-->
+{#if showWelcome}
+	<PasskeyWelcomeBack
+		busy={welcomeBusy}
+		error={welcomeError}
+		on:continue={continueWithPasskey}
+		on:more={openFullConsent}
+	/>
+{/if}
+
 {#if showModal}
+	<!--
+		The short form (`summary`): what this is for, four sentences about the
+		data, the full statement and the settings each one click away, and the
+		acceptance directly above "Start". The settings keep their defaults.
+	-->
 	<ConsentModal
 		bind:show={showModal}
 		bind:rememberDecision
 		choices={{ identity: identityMode, storage: storageMode }}
 		clauses={consentClauses}
+		summary={consentSummary}
+		{readyHint}
+		advancedOpen={consentOpensAdvanced}
 		elementStrings={$json('consent.element')}
 		bind:technical={$technicalView}
 		hideSections={[NETWORK_CHECK, NETWORK_ADDRESSES]}
 		canProceed={mnemonicValid}
 		{error}
-		{notice}
 		on:proceed={handleModalClose}
 	>
 		<svelte:fragment slot="header"><LanguageSwitcher /></svelte:fragment>
 		<svelte:fragment slot="before-confirmation">
-			<OnePasskeyIntro confidential={budgetInfo.confidential} storage={storageMode} />
+			<OnePasskeyIntro confidential={budgetInfo.confidential} />
+			{#if linkedWords}
+				<p
+					class="mt-4 rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-text"
+					data-testid="consent-linked-list"
+				>
+					{$_('consent.linkedList', { values: { words: linkedWords } })}
+				</p>
+			{/if}
+		</svelte:fragment>
+		<!--
+			"Create a passkey" is the default, and in memory mode the page cannot
+			tell a first visit from a return: nothing is kept. Somebody who already
+			has a passkey for this demo must not create a second identity by
+			pressing "Start", so the other way is right beside it.
+		-->
+		<svelte:fragment slot="beside-start">
+			{#if identityMode === 'create' || identityMode === 'existing'}
+				<button
+					type="button"
+					on:click={() => (identityMode = identityMode === 'create' ? 'existing' : 'create')}
+					data-testid="consent-switch-passkey"
+					class="mt-1 text-left text-xs text-text underline underline-offset-2 hover:text-heading"
+				>
+					{identityMode === 'create' ? $_('consent.useExisting') : $_('consent.useNew')}
+				</button>
+			{/if}
+		</svelte:fragment>
+		<svelte:fragment slot="advanced">
 			<StorageModeSelector bind:mode={storageMode} />
 			<SharedListSelector bind:value={selectedMnemonic} />
 			<PasskeyOnboarding bind:mode={identityMode} bind:label={passkeyLabel} />
@@ -661,7 +798,15 @@
 						>
 					</p>
 				{:else}
-					<h1 class="truncate text-xl font-bold text-heading sm:text-3xl">Simple-Todo</h1>
+					<!-- The full name everywhere but on a phone, where the switches beside it
+					     leave room for one word; the heading's name stays the full one. -->
+					<h1
+						class="truncate text-xl font-bold text-heading sm:text-3xl"
+						aria-label={$_('header.title')}
+					>
+						<span class="sm:hidden" aria-hidden="true">{$_('header.titleShort')}</span>
+						<span class="hidden sm:inline" aria-hidden="true">{$_('header.title')}</span>
+					</h1>
 					<!-- On a phone the list's name is the better use of the line. -->
 					<p class="mt-0.5 hidden text-sm text-faint sm:block" data-testid="app-tagline">
 						{$_('header.tagline')}
@@ -760,6 +905,7 @@
 					activeList={$activeListStore}
 					on:change={() => {
 						selectedMnemonic = activeMnemonic;
+						consentOpensAdvanced = true;
 						showModal = true;
 					}}
 				/>

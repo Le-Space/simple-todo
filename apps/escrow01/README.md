@@ -44,14 +44,23 @@ the escrow half of [de2do](https://github.com/NiKrause/de2do).
   Account tab says "Demo without a chain". The tests run against it.
 - **OrbitDB stores no amounts.** A todo's `budget` field holds status, token, escrow, `todoRef`,
   transaction hashes and the last error. The chain is the source of truth for what is locked.
+- **The start dialog says what this is for.** Its title names the use case — confidential escrow
+  payments with a passkey — and its first screen holds the promise, "One passkey for everything" with
+  **Pay** set apart, four sentences about the data, and the acceptance tick directly above **Start**.
+  The full statement ("All notices": amounts encrypted, todos and lists not) and the settings
+  ("Advanced": storage, share code, identity) are folded, with their defaults unchanged except one: a
+  first start creates a passkey, because only a passkey session can lock a budget. Choosing to go
+  without one says so beside the button. Back on a device that keeps things, the passkey link is
+  there and a return is one tap ("Welcome back"); in memory mode nothing is kept, not even that link,
+  so the dialog returns, with "Already have a passkey for this demo?" beside **Start**.
 - **The page opens on the todos.** Lists, account and network are tabs, at the foot of a phone's
   screen and under the header elsewhere. The URL fragment names the tab, so `#listen`, `#konto`,
   `#netzwerk` and the auditor view's `#pruefstelle` link straight to one.
 
 ### Try it
 
-1. The app: `pnpm install` at the repository root, then `pnpm dev` in `apps/escrow01`. Create a passkey, create a private
-   list in the **Lists** tab, and add a todo delegated to another DID with a budget. Tick it as the
+1. The app: `pnpm install` at the repository root, then `pnpm dev` in `apps/escrow01`. Tick the notices
+   and press **Start**, which creates a passkey; create a private list in the **Lists** tab, and add a todo delegated to another DID with a budget. Tick it as the
    delegate, release it as the owner, and open the auditor view from the **Account** tab. With the fake,
    amounts are readable only in the browser tab that locked them.
 2. On Sepolia: put the settings from [Configuration](docs/passkey-account.md#configuration) into
@@ -325,8 +334,8 @@ This branch extends the basic `main` tutorial with a three-word Spanish shared-l
 
 1. **Open Two Browser Windows** - You need at least two browser instances, a mobile device, or ask another distant person to open the app
 2. **Load the Same URL** - All app users should load the same app URL
-3. **Choose the Shared List** - Copy the three-word mnemonic from the first browser and paste it into the second
-4. **Accept Consent and Open** - Accept the notice and select **Open shared list**
+3. **Choose the Shared List** - Under **Advanced** in the start dialog, copy the three-word share code from the first browser and paste it into the second
+4. **Accept and Start** - Tick the acceptance above the button and press **Start**
 5. **Wait for Connection** - The app will automatically discover and connect peers
 6. **Add Todos** - Create todos in one browser and watch them appear in the other
 
