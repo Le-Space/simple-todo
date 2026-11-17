@@ -18,18 +18,19 @@ import { basename, join } from 'node:path';
 
 /**
  * @param {string} chapterDir the chapter's folder, `apps/<chapter>`
- * @returns {{ commit: string, date: string }} the full sha and the commit's ISO
- *   date — or two empty strings without git, which leaves the stamp out rather
- *   than dating it by the clock
+ * @returns {{ commit: string, date: string, chapter: string }} the full sha and
+ *   the commit's ISO date — or two empty strings without git, which leaves the
+ *   stamp out rather than dating it by the clock — and the chapter's folder
+ *   name, which needs no git
  */
 export function chapterCommit(chapterDir) {
+	const chapter = basename(chapterDir);
 	/** @param {string[]} args @param {string} cwd */
 	const git = (args, cwd) =>
 		execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
 
 	try {
 		const root = git(['rev-parse', '--show-toplevel'], chapterDir);
-		const chapter = basename(chapterDir);
 		const others = readdirSync(join(root, 'apps'), { withFileTypes: true })
 			.filter((entry) => entry.isDirectory() && entry.name !== chapter)
 			.map((entry) => `:(exclude)apps/${entry.name}`);
@@ -37,9 +38,9 @@ export function chapterCommit(chapterDir) {
 			['log', '-1', '--format=%H%n%cI', '--', '.', ...others],
 			root
 		).split('\n');
-		return commit && date ? { commit, date } : { commit: '', date: '' };
+		return commit && date ? { commit, date, chapter } : { commit: '', date: '', chapter };
 	} catch {
 		// A tarball, or a checkout without git.
-		return { commit: '', date: '' };
+		return { commit: '', date: '', chapter };
 	}
 }

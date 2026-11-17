@@ -15,14 +15,18 @@
 	 * round node *is* the mark. Here the mark is decorative and the link is named
 	 * by its text, so a screen reader says "Made with Le Space" once.
 	 *
-	 * Then what is deployed: the commit and its instant, in the reader's locale,
+	 * Next, a GitHub mark and the chapter's name, linking the chapter's folder on
+ * GitHub (`apps/<chapter>` on main): the page is a lesson, and its code is the
+ * rest of it. Left out outside a chapter build.
+ *
+ * Then what is deployed: the commit and its instant, in the reader's locale,
 	 * clock and zone, UTC on hover (the Le-Space time and date convention). Both
 	 * are the chapter's last commit, baked in at build time; a build without git
 	 * has neither and shows nothing rather than a date from the clock.
 	 *
 	 * A chapter passes its own links as children; they follow the credit.
 	 */
-	import { builtFrom } from '@simple-todo/todo/build-info.js';
+	import { builtFrom, chapterSource } from '@simple-todo/todo/build-info.js';
 	import { describeMoment } from '@simple-todo/todo/moment.js';
 	import { t } from './i18n.js';
 
@@ -30,6 +34,7 @@
 	let { children } = $props();
 
 	const build = builtFrom();
+	const source = chapterSource();
 	// Formatted here, in the browser: only the reader's browser knows their
 	// locale, clock and zone, and the bytes on IPFS stay the same for everyone.
 	const moment = build ? describeMoment(build.when) : null;
@@ -67,6 +72,23 @@
 			</svg>
 			<span class="underline">Le Space</span>
 		</a>
+		{#if source}
+			<span aria-hidden="true">·</span>
+			<a
+				href={source.url}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="inline-flex items-center gap-1 hover:text-text"
+				data-testid="chapter-source"
+			>
+				<svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true" class="flex-none">
+					<path
+						d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+					/>
+				</svg>
+				<span class="font-mono underline">{source.chapter}</span>
+			</a>
+		{/if}
 		{#if build && moment}
 			<span aria-hidden="true">·</span>
 			<span data-testid="build-stamp"
