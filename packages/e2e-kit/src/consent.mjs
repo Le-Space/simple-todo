@@ -13,6 +13,22 @@
 /** @param {import('@playwright/test').Page} page */
 export const consentModal = (page) => page.getByTestId('consent-modal');
 
+/*
+	Two ways in. The dialog, and — where a chapter has it (escrow01) — the short
+	passkey step that stands in for it when somebody comes back with a passkey
+	already linked to this device. Both are a gate the app waits behind, so the
+	helpers below treat either as "the way in is showing".
+*/
+const GATE_IS_OPEN = () =>
+	document.querySelector('[data-testid="consent-modal"]')?.isOpen === true ||
+	document.querySelector('[data-testid="passkey-welcome"]')?.open === true;
+/** `GATE_IS_OPEN`, negated, as a function Playwright can ship to the page. */
+const GATE_IS_OPEN_NOT = () =>
+	!(
+		document.querySelector('[data-testid="consent-modal"]')?.isOpen === true ||
+		document.querySelector('[data-testid="passkey-welcome"]')?.open === true
+	);
+
 /**
  * Whether the dialog is showing.
  *
@@ -24,8 +40,54 @@ export const consentModal = (page) => page.getByTestId('consent-modal');
  *
  * @param {import('@playwright/test').Page} page
  */
-export const isConsentOpen = (page) =>
-	page.evaluate(() => document.querySelector('[data-testid="consent-modal"]')?.isOpen === true);
+export const isConsentOpen = (page) => page.evaluate(GATE_IS_OPEN);
+
+/**
+ * Whether the short passkey step is showing instead of the dialog.
+ *
+ * @param {import('@playwright/test').Page} page
+ */
+export const isWelcomeOpen = (page) =>
+	page.evaluate(() => document.querySelector('[data-testid="passkey-welcome"]')?.open === true);
+
+/**
+ * From the short passkey step to the full dialog, for a caller that wants a
+ * choice the step does not offer.
+ *
+ * @param {import('@playwright/test').Page} page
+ */
+export async function openFullConsent(page) {
+	await page.getByTestId('passkey-welcome-more').click();
+	await page.waitForFunction(
+		() => document.querySelector('[data-testid="consent-modal"]')?.isOpen === true
+	);
+}
+
+/**
+ * The short passkey step's one button. The passkey prompt follows, so a
+ * caller needs a (virtual) authenticator holding the passkey.
+ *
+ * @param {import('@playwright/test').Page} page
+ */
+export async function continueWithPasskey(page) {
+	await page.getByTestId('passkey-welcome-continue').click();
+}
+
+/**
+ * Open the dialog's "Advanced" section, where the short form keeps the
+ * chapter's settings. A no-op for the long form, which has none.
+ *
+ * Opened rather than clicked: a test that sets a choice is not testing the
+ * disclosure, and a click on an open one would close it again.
+ *
+ * @param {import('@playwright/test').Page} page
+ */
+export async function openAdvanced(page) {
+	await page.evaluate(() => {
+		const section = document.querySelector('[data-testid="consent-advanced"]');
+		if (section instanceof HTMLDetailsElement) section.open = true;
+	});
+}
 
 /**
  * The assembled statement's clauses.
@@ -44,25 +106,33 @@ export const isConsentOpen = (page) =>
  * @param {import('@playwright/test').Page} page
  */
 export const isAccepted = (page) =>
-	page.evaluate(
-		() =>
+	page.evaluate(() => {
+		// The short form's tick is the dialog's own; the long form's is the element's.
+		const own = document.querySelector('[data-testid="consent-accept"]');
+		if (own instanceof HTMLInputElement) return own.checked;
+		return (
 			document
 				.querySelector('[data-testid="consent-modal"]')
 				?.shadowRoot?.querySelector('input[part=accept]')?.checked === true
-	);
+		);
+	});
 
-export const privacyClauses = (page) => consentModal(page).locator('.privacy ul li');
+/**
+ * The statement's lines, in either form: the element's panel (long) or the
+ * dialog's "All notices" (short). Read with `allTextContents`, which does not
+ * care that the short form keeps them folded.
+ *
+ * @param {import('@playwright/test').Page} page
+ */
+export const privacyClauses = (page) =>
+	consentModal(page).locator('.privacy ul li, [data-testid="consent-clauses"] li');
 
 /**
  * @param {import('@playwright/test').Page} page
  * @param {{ timeout?: number }} [options]
  */
 export async function waitForConsent(page, { timeout = 30_000 } = {}) {
-	await page.waitForFunction(
-		() => document.querySelector('[data-testid="consent-modal"]')?.isOpen === true,
-		undefined,
-		{ timeout }
-	);
+	await page.waitForFunction(GATE_IS_OPEN, undefined, { timeout });
 }
 
 /**
@@ -71,6 +141,11 @@ export async function waitForConsent(page, { timeout = 30_000 } = {}) {
  * @param {import('@playwright/test').Page} page
  */
 export async function acceptNotice(page) {
+	const own = page.getByTestId('consent-accept');
+	if ((await own.count()) > 0) {
+		await own.check();
+		return;
+	}
 	await page.evaluate(() => {
 		const box = document
 			.querySelector('[data-testid="consent-modal"]')
@@ -87,6 +162,12 @@ export async function acceptNotice(page) {
  * @param {import('@playwright/test').Page} page
  */
 export async function rememberDecision(page) {
+	const own = page.getByTestId('consent-remember');
+	if ((await own.count()) > 0) {
+		await openAdvanced(page);
+		await own.check();
+		return;
+	}
 	await page.evaluate(() => {
 		const box = document
 			.querySelector('[data-testid="consent-modal"]')
@@ -117,6 +198,32 @@ export async function passConsent(
 	{ identity = 'anonymous', label, mnemonic, persistent, relay, p2p, seal, remember = false } = {}
 ) {
 	await waitForConsent(page);
+
+	/*
+		The short passkey step offers one thing: go on with the passkey linked to
+		this device. A caller asking for exactly that takes it; a caller asking
+		for anything else gets the full dialog, as before the step existed.
+
+		The step appears only where the device keeps things — in memory mode
+		nothing links the passkey to it — so `persistent: true` is what it does
+		anyway, and only `persistent: false` asks for something else.
+	*/
+	if (await isWelcomeOpen(page)) {
+		const onlyThePasskey =
+			identity === 'existing' &&
+			persistent !== false &&
+			[label, mnemonic, relay, p2p, seal].every((choice) => choice === undefined) &&
+			!remember;
+		if (onlyThePasskey) {
+			await continueWithPasskey(page);
+			await page.waitForFunction(GATE_IS_OPEN_NOT);
+			return;
+		}
+		await openFullConsent(page);
+	}
+
+	// The short form folds the settings away; a caller setting one needs them.
+	await openAdvanced(page);
 
 	if (mnemonic !== undefined) {
 		await page.getByTestId('shared-list-mnemonic-input').fill(mnemonic);
@@ -165,9 +272,7 @@ export async function passConsent(
 
 	await acceptNotice(page);
 	await page.getByTestId('consent-proceed').click();
-	await page.waitForFunction(
-		() => document.querySelector('[data-testid="consent-modal"]')?.isOpen !== true
-	);
+	await page.waitForFunction(GATE_IS_OPEN_NOT);
 }
 
 /**
@@ -183,6 +288,21 @@ export async function passConsent(
  * @param {import('@playwright/test').Page} page
  */
 export async function expectProceedRevealsTick(page) {
+	/*
+		The short form keeps its tick directly above the button, in the foot that
+		does not scroll: nothing to unfold, so the press only has to put the
+		cursor on it.
+	*/
+	const own = page.getByTestId('consent-accept');
+	if ((await own.count()) > 0) {
+		await page.getByTestId('consent-proceed').dispatchEvent('click');
+		await page.waitForFunction(
+			() => document.activeElement === document.querySelector('[data-testid="consent-accept"]'),
+			undefined,
+			{ timeout: 5000 }
+		);
+		return;
+	}
 	const state = () =>
 		page.$eval('[data-testid="consent-modal"]', (host) => {
 			const root = /** @type {any} */ (host).shadowRoot;
