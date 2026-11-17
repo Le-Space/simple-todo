@@ -386,15 +386,14 @@
 	}
 
 	/**
-	 * Two corrections to the element's stylesheet, until its own release
-	 * carries them.
+	 * The short form's own layout, in the element's stylesheet: one column,
+	 * narrower than the two-column long form, with a title that names the app
+	 * and gets a line of its own on a phone. The element has no parts for these,
+	 * so they go into its shadow root.
 	 *
-	 * Its dialog caps its height at the viewport minus 2rem — on the content
-	 * box, so the padding and the border come on top: 42px, and at 800px the
-	 * dialog ran 5px past the top and the bottom of the window, foot and button
-	 * included (2026-11-17). And the short form is one column, narrower than the
-	 * two-column long form, with a title that names the app and gets a line of
-	 * its own on a phone.
+	 * The dialog fitting the window is the element's own since 0.14.3: its caps
+	 * measured the content box, so padding and border came on top — 5px past
+	 * both edges at 800px (libp2p-webrtc-qr#196). This patched it until then.
 	 */
 	function patchElementStyle() {
 		const root = introEl?.shadowRoot;
@@ -402,7 +401,6 @@
 		const style = document.createElement('style');
 		style.setAttribute('data-consent-modal', '');
 		style.textContent = [
-			'dialog { box-sizing: border-box; }',
 			':host([data-compact]) dialog { max-width: 42rem; }',
 			':host([data-compact]) h2 { font-size: 1.2rem; line-height: 1.3; }',
 			':host([data-compact]) .foot { margin-top: 0.75rem; }',
