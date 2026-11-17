@@ -92,7 +92,8 @@ test.describe('Content Security Policy', () => {
 			await page.keyboard.press('Escape');
 			await page.getByRole('button', { name: /Switch to (light|dark) mode/ }).click();
 			await page.getByTestId('language-de').click();
-			await expect(page.getByRole('heading', { name: 'Archiv' })).toBeVisible();
+			// Exact: the page heading "Archive-Todo" contains "Archiv" too.
+			await expect(page.getByRole('heading', { name: 'Archiv', exact: true })).toBeVisible();
 
 			// One violation is known and harmless: cbor-x (via @le-space/iso-passkeys,
 			// the provider's WebAuthn parser) probes `new Function("")` once in a
