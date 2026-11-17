@@ -31,5 +31,6 @@
 		],
 		"check": true
 	},
-	"title": "Your identity is a passkey, not a random key"
+	"title": "Your identity is a passkey, not a random key",
+	"label": "Passkey-Todo"
 }

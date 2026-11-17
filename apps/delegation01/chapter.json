@@ -29,5 +29,6 @@
 			"e2e/phone-layout.spec.js"
 		],
 		"check": true
-	}
+	},
+	"label": "Delegation-Todo"
 }

@@ -503,7 +503,7 @@
 		<div class="flex flex-1 items-center gap-3">
 			<LocalFirstLink size={52} />
 			<div>
-				<h1 class="text-2xl font-bold text-heading sm:text-3xl">Simple-Todo</h1>
+				<h1 class="text-2xl font-bold text-heading sm:text-3xl">{$_('app.title')}</h1>
 				<!--
 					Four lines of stack versions and a build timestamp were what the
 					header said about this app. They moved into the network details,
@@ -532,7 +532,7 @@
 			<PeerIdCard compact peerId={myPeerId} />
 			<OwnMultiaddrs libp2p={$libp2pStore} />
 			<p class="text-xs break-words text-faint" data-testid="build-info">
-				{formatVersions({ appName: 'Simple-Todo' })} · {typeof __APP_BRANCH__ !== 'undefined'
+				{formatVersions({ appName: 'Archive-Todo' })} · {typeof __APP_BRANCH__ !== 'undefined'
 					? __APP_BRANCH__
 					: 'local'}
 			</p>

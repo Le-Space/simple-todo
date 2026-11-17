@@ -1,6 +1,6 @@
 {
-  "name": "delegation01 · Simple-Todo",
-  "short_name": "delegation01",
+  "name": "Delegation-Todo · Simple-Todo",
+  "short_name": "Delegation-Todo",
   "description": "Hand one todo to another DID, and take it back — a chapter of Simple-Todo, the local-first peer-to-peer todo list on OrbitDB, IPFS and libp2p.",
   "start_url": "/",
   "display": "standalone",

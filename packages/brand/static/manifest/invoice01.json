@@ -1,6 +1,6 @@
 {
-  "name": "invoice01 · Simple-Todo",
-  "short_name": "invoice01",
+  "name": "Invoice-Todo · Simple-Todo",
+  "short_name": "Invoice-Todo",
   "description": "Invoices on top of delegation — a chapter of Simple-Todo, the local-first peer-to-peer todo list on OrbitDB, IPFS and libp2p.",
   "start_url": "/",
   "display": "standalone",

@@ -1,6 +1,6 @@
 {
-  "name": "acl01 · Simple-Todo",
-  "short_name": "acl01",
+  "name": "ACL-Todo · Simple-Todo",
+  "short_name": "ACL-Todo",
   "description": "Who may write is decided per DID — a chapter of Simple-Todo, the local-first peer-to-peer todo list on OrbitDB, IPFS and libp2p.",
   "start_url": "/",
   "display": "standalone",

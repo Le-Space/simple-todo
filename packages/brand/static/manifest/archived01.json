@@ -1,6 +1,6 @@
 {
-  "name": "archived01 · Simple-Todo",
-  "short_name": "archived01",
+  "name": "Archive-Todo · Simple-Todo",
+  "short_name": "Archive-Todo",
   "description": "Every change archived as it happens, with one passkey touch — a chapter of Simple-Todo, the local-first peer-to-peer todo list on OrbitDB, IPFS and libp2p.",
   "start_url": "/",
   "display": "standalone",

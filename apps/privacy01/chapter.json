@@ -28,5 +28,6 @@
 		],
 		"check": true
 	},
-	"title": "Entries are sealed; holding the address is not reading it"
+	"title": "Entries are sealed; holding the address is not reading it",
+	"label": "Privacy-Todo"
 }

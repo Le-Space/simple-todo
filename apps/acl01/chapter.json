@@ -28,5 +28,6 @@
 		],
 		"check": true
 	},
-	"title": "Who may write is decided per DID"
+	"title": "Who may write is decided per DID",
+	"label": "ACL-Todo"
 }
