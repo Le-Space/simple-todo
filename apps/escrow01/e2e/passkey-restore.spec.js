@@ -19,7 +19,13 @@
  * against the fake here, as everywhere without `VITE_BUDGET_SERVICE=zama`.
  */
 import { test, expect } from '@playwright/test';
-import { passConsent, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import {
+	continueWithPasskey,
+	isWelcomeOpen,
+	openFullConsent,
+	passConsent,
+	waitForConsent
+} from '@simple-todo/e2e-kit/consent.mjs';
 import { takeStorageInventory } from '@simple-todo/e2e-kit/storage-inventory.mjs';
 import {
 	addVirtualAuthenticator,
@@ -110,4 +116,41 @@ test('a device that keeps things restores the passkey too, and keeps it', async 
 	expect(kept).not.toContain('signingKey');
 
 	await writeTodo(page, `kept-${Date.now().toString(36)}`);
+});
+
+test('back on a device that keeps things, the passkey is one tap, not the whole dialog', async ({
+	page
+}) => {
+	// The notices were accepted before the passkey was ever linked here, so a
+	// return asks for the tap the passkey needs and nothing else. The dialog is
+	// a click away, for a change or a second reading.
+	test.setTimeout(300000);
+	await addVirtualAuthenticator(page);
+
+	await page.goto('/');
+	await waitForConsent(page);
+	await passConsent(page, { persistent: true, identity: 'create', label: 'Returner' });
+	await expect(todoInput(page)).toBeEnabled({ timeout: 90000 });
+	const before = await page.getByTestId('own-did-value').getAttribute('data-did');
+
+	await page.reload();
+	await waitForConsent(page);
+	expect(await isWelcomeOpen(page)).toBe(true);
+	expect(
+		await page.evaluate(() => document.querySelector('[data-testid="consent-modal"]')?.isOpen)
+	).not.toBe(true);
+	await expect(page.getByTestId('passkey-welcome-continue')).toBeFocused();
+
+	// "Other options" leads to the dialog, on "use the passkey you have".
+	await openFullConsent(page);
+	await expect(page.getByTestId('identity-mode-existing')).toBeChecked();
+
+	await recordCeremonies(page);
+	await page.reload();
+	await waitForConsent(page);
+	await continueWithPasskey(page);
+	await expect(todoInput(page)).toBeEnabled({ timeout: 120000 });
+	expect(await page.getByTestId('own-did-value').getAttribute('data-did')).toBe(before);
+	expect(await isWelcomeOpen(page)).toBe(false);
+	expect((await takeCeremonies(page)).every((ceremony) => ceremony.ok)).toBe(true);
 });

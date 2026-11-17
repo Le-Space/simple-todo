@@ -72,6 +72,17 @@ export const uiMessages = {
 				title: 'Copy to clipboard',
 				copied: 'Copied!',
 				copiedToClipboard: 'Copied to clipboard!'
+			},
+			language: {
+				label: 'Language'
+			},
+			consent: {
+				summaryHeading: 'What this means for your data, in short',
+				allNotices: 'All notices',
+				advanced: 'Advanced',
+				advancedHint: 'where data is kept, the list, your identity',
+				start: 'Start',
+				hintAccept: 'Confirm the notices above first.'
 			}
 		}
 	},
@@ -130,6 +141,17 @@ export const uiMessages = {
 				title: 'In die Zwischenablage kopieren',
 				copied: 'Kopiert!',
 				copiedToClipboard: 'In die Zwischenablage kopiert!'
+			},
+			language: {
+				label: 'Sprache'
+			},
+			consent: {
+				summaryHeading: 'Das Wichtigste zu Ihren Daten',
+				allNotices: 'Alle Hinweise',
+				advanced: 'Erweitert',
+				advancedHint: 'Speicherort, Liste, Identität',
+				start: 'Starten',
+				hintAccept: 'Bitte zuerst die Hinweise oben bestätigen.'
 			}
 		}
 	}

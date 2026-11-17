@@ -1,5 +1,6 @@
 <script>
 	import { _ } from '$lib/i18n/index.js';
+	import { technicalView } from './technical-view.js';
 	import {
 		MnemonicError,
 		generateSpanishMnemonic,
@@ -57,7 +58,7 @@
 		{$_('consent.mnemonicLabel')}
 	</label>
 	<p id="shared-list-help" class="mt-1 text-xs leading-relaxed text-text">
-		{$_('consent.mnemonicHelp')}
+		{$technicalView ? $_('consent.mnemonicHelpTechnical') : $_('consent.mnemonicHelp')}
 	</p>
 	<input
 		id="shared-list-mnemonic"
