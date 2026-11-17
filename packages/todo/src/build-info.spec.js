@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatBuildDate, formatVersions, shortCommit } from './build-info.js';
+import { chapterSource, formatBuildDate, formatVersions, shortCommit } from './build-info.js';
 
 describe('formatVersions', () => {
 	it('puts the app name in front of the app version', () => {
@@ -57,5 +57,29 @@ describe('formatBuildDate', () => {
 	it('says dev for a build without a commit, and shows anything else as it came', () => {
 		expect(formatBuildDate('')).toBe('dev');
 		expect(formatBuildDate('last tuesday')).toBe('last tuesday');
+	});
+});
+
+describe('chapterSource', () => {
+	it("links the chapter's folder on main", () => {
+		expect(chapterSource('escrow01')).toEqual({
+			chapter: 'escrow01',
+			url: 'https://github.com/Le-Space/simple-todo/tree/main/apps/escrow01'
+		});
+	});
+
+	it('leaves the link out without a chapter name, or with one that is not a folder name', () => {
+		expect(chapterSource('')).toBeNull();
+		expect(chapterSource('../packages')).toBeNull();
+		expect(chapterSource('Escrow 01')).toBeNull();
+	});
+
+	it('defaults to the chapter this build was made for', () => {
+		const source = chapterSource();
+		if (typeof __BUILD_CHAPTER__ === 'string' && __BUILD_CHAPTER__) {
+			expect(source?.chapter).toBe(__BUILD_CHAPTER__);
+		} else {
+			expect(source).toBeNull();
+		}
 	});
 });

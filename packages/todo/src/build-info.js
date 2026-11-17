@@ -71,6 +71,29 @@ export function builtFrom() {
 	return { commit, short, when };
 }
 
+/** Where the chapters' source lives. */
+export const SOURCE_REPOSITORY = 'https://github.com/Le-Space/simple-todo';
+
+/**
+ * This chapter's folder on GitHub, so a reader can go from the running page to
+ * the code that is its lesson.
+ *
+ * The chapter name is baked in by the chapter's vite.config.js
+ * (`__BUILD_CHAPTER__`, from `node/chapter-commit.js`) and needs no git. The
+ * link points at `main`, where the chapter is read and changed; the build
+ * stamp next to it already links the exact commit that is deployed.
+ *
+ * @param {string} [chapter] defaults to the baked chapter name
+ * @returns {{ chapter: string, url: string } | null} null outside a chapter build
+ */
+export function chapterSource(
+	chapter = typeof __BUILD_CHAPTER__ === 'string' ? __BUILD_CHAPTER__ : ''
+) {
+	const name = String(chapter ?? '').trim();
+	if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) return null;
+	return { chapter: name, url: `${SOURCE_REPOSITORY}/tree/main/apps/${name}` };
+}
+
 /**
  * A commit shortened to what a person compares.
  *

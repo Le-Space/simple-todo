@@ -89,6 +89,7 @@ export default defineConfig({
 		__APP_VERSION__: JSON.stringify(pkg.version),
 		__BUILD_DATE__: JSON.stringify(built.date),
 		__BUILD_COMMIT__: JSON.stringify(built.commit),
+		__BUILD_CHAPTER__: JSON.stringify(built.chapter),
 		__APP_BRANCH__: JSON.stringify(appBranch),
 		__ORBITDB_VERSION__: JSON.stringify(installedVersion('@orbitdb/core')),
 		__HELIA_VERSION__: JSON.stringify(installedVersion('helia')),

@@ -8,17 +8,22 @@
  * and name side by side with the gap between them, the heart filled with the
  * theme's coral.
  */
+import { basename } from 'node:path';
+
 import { chapterCommit } from '@simple-todo/todo/node/chapter-commit.js';
 import { localStamp, utcStamp } from '@simple-todo/todo/moment.js';
 
 /**
  * The signature line: "Made with [mark] Le Space", mark and name one link.
  *
+ * Then a GitHub mark and the chapter's name, linking the chapter's folder.
+ *
  * @param {import('@playwright/test').Page} page
  * @param {typeof import('@playwright/test').expect} expect
- * @param {{ language?: 'en' | 'de' }} [options] the language the page is in
+ * @param {{ language?: 'en' | 'de', chapterDir?: string }} [options] the
+ *   language the page is in, and the chapter folder (the suite runs in it)
  */
-export async function expectCredit(page, expect, { language = 'en' } = {}) {
+export async function expectCredit(page, expect, { language = 'en', chapterDir = process.cwd() } = {}) {
 	const footer = page.getByTestId('app-footer');
 	await expect(footer).toBeAttached();
 	await expect(footer).toContainText(language === 'de' ? 'Gebaut mit' : 'Made with');
@@ -60,6 +65,17 @@ export async function expectCredit(page, expect, { language = 'en' } = {}) {
 	expect(layout.height).toBeCloseTo(22, 0);
 	expect(layout.coral, 'the chapter defines --coral').toMatch(/^rgb/);
 	expect(layout.heart, 'the heart is the theme’s coral').toBe(layout.coral);
+
+	const chapter = basename(chapterDir);
+	const source = footer.getByTestId('chapter-source');
+	await expect(source).toHaveAttribute(
+		'href',
+		`https://github.com/Le-Space/simple-todo/tree/main/apps/${chapter}`
+	);
+	await expect(source).toHaveAttribute('target', '_blank');
+	await expect(source).toHaveText(chapter);
+	const mark = await source.locator('svg').evaluate((svg) => svg.getBoundingClientRect().width);
+	expect(mark, 'the GitHub mark is drawn at 12 px').toBeCloseTo(12, 0);
 }
 
 /**
