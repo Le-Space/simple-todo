@@ -50,8 +50,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.14.1
-        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.3
+        version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
@@ -282,8 +282,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.14.1
-        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.3
+        version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
@@ -743,8 +743,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.14.1
-        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.3
+        version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-access-controller-delegated-todo':
         specifier: 0.1.0
         version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.12.2(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
@@ -978,8 +978,8 @@ importers:
         specifier: 0.9.6
         version: 0.9.6(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.14.1
-        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.3
+        version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-access-controller-delegated-todo':
         specifier: 0.1.0
         version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.12.2(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
@@ -1219,8 +1219,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.14.1
-        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.3
+        version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-access-controller-delegated-todo':
         specifier: 0.1.0
         version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.12.2(@orbitdb/core@4.0.0))(@orbitdb/core@4.0.0)
@@ -1463,8 +1463,8 @@ importers:
         specifier: 0.8.0
         version: 0.8.0(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.14.1
-        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.3
+        version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
@@ -1695,8 +1695,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.14.1
-        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.3
+        version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
@@ -1927,8 +1927,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.14.1
-        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.3
+        version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
@@ -2159,8 +2159,8 @@ importers:
         specifier: 0.9.4
         version: 0.9.4(typescript@5.9.2)(zod@4.6.5)
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.14.1
-        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.3
+        version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
         specifier: 0.12.2
         version: 0.12.2(@orbitdb/core@4.0.0)
@@ -2469,8 +2469,8 @@ importers:
   packages/ui:
     dependencies:
       '@le-space/libp2p-webrtc-qr':
-        specifier: 0.14.1
-        version: 0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
+        specifier: 0.14.3
+        version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@simple-todo/todo':
         specifier: workspace:*
         version: link:../todo
@@ -3537,8 +3537,8 @@ packages:
   '@le-space/iso-webauthn-varsig@0.3.0':
     resolution: {integrity: sha512-qU3ptOP8ew2ZVr506N8joGsDXQNGjRq7VYBkmNdQKuFmbpDtjYyaSH2qyy0x3M8heghVzbB6SxhQM7o3U06w6Q==}
 
-  '@le-space/libp2p-webrtc-qr@0.14.1':
-    resolution: {integrity: sha512-scZz+8j+J13OEmK3Y1MEAGl++LLeUAA8/E3H2pbotIvKrDYsMqCN31GKm9c03bOPgoS6+ZtoIyjvzAYm3OQvQQ==}
+  '@le-space/libp2p-webrtc-qr@0.14.3':
+    resolution: {integrity: sha512-DCWNlSlg4Lu99ChlBbLBpjehcywCZOv4tkzeas+jBj7wb11gy7YkPvSd74TsVBE9XfcTcOzo9ldgH9kiHQUuDA==}
     peerDependencies:
       '@multiformats/multiaddr': ^13.0.3
       ggwave: ^0.4.0
@@ -9724,7 +9724,7 @@ snapshots:
     dependencies:
       iso-base: '@le-space/iso-base@4.3.0'
 
-  '@le-space/libp2p-webrtc-qr@0.14.1(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)':
+  '@le-space/libp2p-webrtc-qr@0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)':
     dependencies:
       '@libp2p/interface': 3.4.0
       '@libp2p/peer-id': 6.0.18
