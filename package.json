@@ -24,7 +24,8 @@
 			"@libp2p/gossipsub": "16.1.0",
 			"orbitdb-relay>@orbitdb/core": "4.0.0",
 			"react": "19.2.6",
-			"react-dom": "19.2.6"
+			"react-dom": "19.2.6",
+			"@libp2p/crypto@<5.1.22": "5.1.24"
 		},
 		"peerDependencyRules": {
 			"allowedVersions": {
