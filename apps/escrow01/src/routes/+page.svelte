@@ -7,8 +7,13 @@
 	import { derived } from 'svelte/store';
 	import { _, locale, json } from '$lib/i18n/index.js';
 	import { peerIdStore, initializationStore, ownDidStore } from '$lib/p2p-stores.js';
-	import PasskeyOnboarding from '$lib/PasskeyOnboarding.svelte';
 	import OnePasskeyIntro from '$lib/OnePasskeyIntro.svelte';
+	import StartChoices from '$lib/StartChoices.svelte';
+	import KeepInBrowser from '$lib/KeepInBrowser.svelte';
+	import JoinSharedList from '$lib/JoinSharedList.svelte';
+	import BudgetIcon from '$lib/BudgetIcon.svelte';
+	import DemoVideoButton from '$lib/DemoVideoButton.svelte';
+	import DemoVideoPlayer from '$lib/DemoVideoPlayer.svelte';
 	import PasskeyWelcomeBack from '$lib/PasskeyWelcomeBack.svelte';
 	import LanguageSwitcher from '@simple-todo/ui/LanguageSwitcher.svelte';
 	import DidBadge from '$lib/DidBadge.svelte';
@@ -77,9 +82,10 @@
 	import ConnectedPeers from '$lib/ConnectedPeers.svelte';
 	import PeerIdCard from '$lib/PeerIdCard.svelte';
 	import OwnMultiaddrs from '$lib/OwnMultiaddrs.svelte';
-	import SharedListSelector from '$lib/SharedListSelector.svelte';
-	import StorageModeSelector from '@simple-todo/ui/StorageModeSelector.svelte';
-	import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
+	import {
+		getPersistentStorageEnabled,
+		setPersistentStorageEnabled
+	} from '@simple-todo/todo/storage-mode.js';
 	import { honourStorageChoice } from '@simple-todo/todo/browser-memory.js';
 
 	// This chapter offers the choice, so what the app writes follows it. Said
@@ -206,12 +212,34 @@
 		persisted that overwrite. A reload silently moved everyone back to
 		in-memory, which is exactly the failure the storage choice exists to fix.
 	*/
-	/** @type {'memory' | 'indexeddb'} */
+	/*
+		escrow01 starts at "Keep in this browser", and it can be unticked: the
+		todos and the list survive a reload, and somebody with a passkey comes
+		back to one tap instead of the whole dialog.
+
+		A choice made earlier still wins. "In memory only" is stored as *nothing*
+		(see `storage-mode.js`), so it cannot be told apart from never having
+		been asked -- except where this browser also carries a remembered
+		consent, the one case where the dialog does not come back to ask. There
+		the earlier answer stands. Same rule as invoice01.
+	*/
 	/** @type {'memory' | 'indexeddb'} As `StorageModeSelector` declares it. */
-	let storageMode = getPersistentStorageEnabled() ? 'indexeddb' : 'memory';
+	let storageMode = getPersistentStorageEnabled()
+		? 'indexeddb'
+		: recall(CONSENT_KEY) === 'true'
+			? 'memory'
+			: 'indexeddb';
 	/** @type {string | null} */
 	let myPeerId = null;
-	let selectedMnemonic = '';
+	/*
+		Which three-word list the start opens: this browser's own, or -- with
+		"Join a shared list" ticked -- the one behind the words typed there or
+		brought by a link.
+	*/
+	let ownMnemonic = '';
+	let joinList = false;
+	let joinWords = '';
+	$: selectedMnemonic = joinList ? joinWords : ownMnemonic;
 	let activeMnemonic = '';
 
 	// The open list travels in the URL fragment — `#list=` for the three words,
@@ -220,7 +248,8 @@
 	// typed ones: the reader sees which list it is before joining it.
 	const listLink = createListLink({
 		openWords: (words) => {
-			selectedMnemonic = words;
+			joinWords = words;
+			joinList = true;
 			linkedWords = words;
 			showWelcome = false;
 			showModal = true;
@@ -255,11 +284,16 @@
 
 	// Modal state
 	let showModal = !welcomeBack;
+	/**
+	 * Whether the dialog stays away on the next visit. Not a box of its own any
+	 * more: what "Keep in this browser" keeps includes the decision to start,
+	 * and with it unticked nothing is kept, that decision included (`start()`).
+	 */
 	let rememberDecision = false;
 	/**
-	 * The list a link brought, named on the dialog's first screen: the short
-	 * form keeps the share code under "Advanced", and a reader should see which
-	 * list they are about to join without opening it.
+	 * The list a link brought, named on the dialog's first screen: the share
+	 * code sits on the settings screen, and a reader should see which list
+	 * they are about to join without going there.
 	 *
 	 * @type {string | null}
 	 */
@@ -267,12 +301,18 @@
 	/** Opens the dialog on its settings, for "change the list". */
 	let consentOpensAdvanced = false;
 
-	$: readyHint =
+	// The button says what its press does: the press is the consent.
+	$: proceedText =
 		identityMode === 'create'
-			? $_('consent.readyCreate')
+			? $_('consent.start.create')
 			: identityMode === 'existing'
-				? $_('consent.readyExisting')
-				: $_('consent.readyAnonymous');
+				? $_('consent.start.existing')
+				: $_('consent.start.anonymous');
+	// One icon per sentence on the first screen, in `summary()`'s order.
+	/** @type {Array<'lock' | 'eye' | 'shield'>} */
+	const summaryIcons = ['lock', 'eye', 'shield'];
+	// The share code holds the button only where somebody asked to join a list.
+	$: canStart = !joinList || mnemonicValid;
 
 	/**
 	 * A choice the person made that cannot be carried out — no passkey behind
@@ -351,16 +391,24 @@
 		// The dialog shows this now, so a stale one would accuse the attempt that
 		// is only just starting.
 		error = null;
+		// Now, not when the dialog appeared: the storage choice is only a choice
+		// once somebody starts with it. The box writes nothing, so a preselected
+		// "keep it" stayed in memory without this. First, so that every
+		// `remember()` below lands where the choice says.
+		setPersistentStorageEnabled(storageMode === 'indexeddb');
+		// Kept means the decision to start is kept too, so the dialog does not
+		// come back; in memory mode it is not, and a reload asks again (#9).
+		rememberDecision = storageMode === 'indexeddb';
 		// Both describe how the dialog was opened this time, not the next time.
 		consentOpensAdvanced = false;
 		linkedWords = null;
 		const canonicalMnemonic = normalizeSpanishMnemonic(selectedMnemonic);
-		selectedMnemonic = canonicalMnemonic;
+		// The list started is this browser's list from now on (it is remembered
+		// as such just below); a dialog opened again shows what was started.
+		ownMnemonic = canonicalMnemonic;
+		if (joinList) joinWords = canonicalMnemonic;
 		try {
 			remember(SPANISH_MNEMONIC_STORAGE_KEY, canonicalMnemonic);
-			if (rememberDecision) {
-				remember(CONSENT_KEY, 'true');
-			}
 		} catch {
 			// ignore storage errors
 		}
@@ -407,15 +455,15 @@
 		// the user gesture of the proceed click.
 		let passkeyCredential = null;
 		if (identityMode === 'create') {
-			if (!passkeyLabel.trim()) {
-				throw new IdentityChoiceError($_('consent.errorNeedsLabel'));
-			}
+			// The name is asked for only in the technical view; an empty one is
+			// the default name, not a reason to stop on the way to the passkey.
+			const label = passkeyLabel.trim() || $_('consent.identityLabelDefault');
 			// The same label goes into both WebAuthn fields on purpose: they are
 			// the account name and the display name of one credential, and the
 			// picker shows them together. Neither identifies the passkey.
 			passkeyCredential = await createPasskeyCredential({
-				userId: passkeyLabel.trim(),
-				displayName: passkeyLabel.trim()
+				userId: label,
+				displayName: label
 			});
 		} else if (identityMode === 'existing') {
 			passkeyCredential = await recoverPasskeyCredential();
@@ -425,6 +473,9 @@
 		}
 		try {
 			remember(IDENTITY_MODE_KEY, passkeyCredential ? 'passkey' : 'anon');
+			// Only now, with the identity settled: kept from a start that failed
+			// at the passkey, it would start the next visit without one, unasked.
+			if (rememberDecision) remember(CONSENT_KEY, 'true');
 		} catch {
 			// ignore storage errors
 		}
@@ -473,8 +524,27 @@
 
 	onMount(async () => {
 		try {
-			selectedMnemonic = listLink.initial.words ?? loadOrGenerateMnemonic();
-			linkedWords = listLink.initial.words ?? null;
+			/*
+				Words in the address are not always a link somebody followed. After a
+				start the app writes the open list into the address itself, so a
+				reload, or a return to the same address, carried this browser's own
+				words back in -- and the dialog greeted every return with "this
+				address opens the shared list …", for a link nobody had followed.
+				Own words, and words a reload brings back where nothing is kept, are
+				this browser's list; anything else is a link.
+			*/
+			const stored = storedMnemonic();
+			const fromAddress = listLink.initial.words;
+			const followed =
+				fromAddress !== null &&
+				fromAddress !== stored &&
+				!(stored === null && cameBackToThisAddress());
+			ownMnemonic = fromAddress !== null && !followed ? fromAddress : loadOrGenerateMnemonic();
+			if (followed) {
+				joinWords = fromAddress;
+				joinList = true;
+				linkedWords = fromAddress;
+			}
 			if (listLink.initial.rejected.length > 0) {
 				showToast(
 					get(t)(
@@ -492,7 +562,9 @@
 			// cannot auto-start: it gets the short passkey step (`welcomeBack`).
 			if (!welcomeBack && recall(CONSENT_KEY) === 'true') {
 				showModal = false;
-				activeMnemonic = normalizeSpanishMnemonic(selectedMnemonic);
+				// From the values, not `selectedMnemonic`: its reactive update has not
+				// run yet inside this handler.
+				activeMnemonic = normalizeSpanishMnemonic(joinList ? joinWords : ownMnemonic);
 				await startP2P({ todoDbName: activeMnemonic, passkeyCredential: null });
 				void listLink.openLinked();
 			}
@@ -501,13 +573,36 @@
 		}
 	});
 
-	function loadOrGenerateMnemonic() {
+	/** This browser's own three words, if it keeps any. */
+	function storedMnemonic() {
 		try {
 			const saved = recall(SPANISH_MNEMONIC_STORAGE_KEY);
 			if (saved && isValidSpanishMnemonic(saved)) return normalizeSpanishMnemonic(saved);
 		} catch {
-			// Continue with an in-memory mnemonic when browser storage is unavailable.
+			// Nothing kept, or no storage to keep it in.
 		}
+		return null;
+	}
+
+	/**
+	 * Whether this page load is a reload or a step back to it, rather than a
+	 * link followed. In memory mode the words in the address are then the only
+	 * trace of the list this tab was on.
+	 */
+	function cameBackToThisAddress() {
+		try {
+			const [entry] = /** @type {PerformanceNavigationTiming[]} */ (
+				performance.getEntriesByType('navigation')
+			);
+			return entry?.type === 'reload' || entry?.type === 'back_forward';
+		} catch {
+			return false;
+		}
+	}
+
+	function loadOrGenerateMnemonic() {
+		const saved = storedMnemonic();
+		if (saved) return saved;
 		const generated = generateSpanishMnemonic();
 		try {
 			remember(SPANISH_MNEMONIC_STORAGE_KEY, generated);
@@ -782,26 +877,30 @@
 
 {#if showModal}
 	<!--
-		The short form (`summary`): what this is for, four sentences about the
-		data, the full statement and the settings each one click away, and the
-		acceptance directly above "Start". The settings keep their defaults.
+		The short form (`summary`): what this is for, three sentences about the
+		data and one button whose press is the consent, the other ways in as
+		links under it. The settings and the full statement are the dialog's
+		second screen ("Notices and settings"); the settings keep their defaults.
 	-->
 	<ConsentModal
 		bind:show={showModal}
-		bind:rememberDecision
 		choices={{ identity: identityMode, storage: storageMode }}
 		clauses={consentClauses}
 		summary={consentSummary}
-		{readyHint}
+		{proceedText}
 		advancedOpen={consentOpensAdvanced}
 		elementStrings={$json('consent.element')}
 		bind:technical={$technicalView}
 		hideSections={[NETWORK_CHECK, NETWORK_ADDRESSES]}
-		canProceed={mnemonicValid}
+		canProceed={canStart}
 		{error}
 		on:proceed={handleModalClose}
 	>
-		<svelte:fragment slot="header"><LanguageSwitcher /></svelte:fragment>
+		<!-- The video, when there is one, left in the row of the switches. -->
+		<svelte:fragment slot="header">
+			<DemoVideoButton variant="teaser" />
+			<LanguageSwitcher />
+		</svelte:fragment>
 		<svelte:fragment slot="before-confirmation">
 			<OnePasskeyIntro confidential={budgetInfo.confidential} />
 			{#if linkedWords}
@@ -813,31 +912,37 @@
 				</p>
 			{/if}
 		</svelte:fragment>
-		<!--
-			"Create a passkey" is the default, and in memory mode the page cannot
-			tell a first visit from a return: nothing is kept. Somebody who already
-			has a passkey for this demo must not create a second identity by
-			pressing "Start", so the other way is right beside it.
-		-->
+		<svelte:fragment slot="summary-icon" let:index>
+			<BudgetIcon name={summaryIcons[index] ?? 'shield'} size={18} />
+		</svelte:fragment>
 		<svelte:fragment slot="beside-start">
-			{#if identityMode === 'create' || identityMode === 'existing'}
-				<button
-					type="button"
-					on:click={() => (identityMode = identityMode === 'create' ? 'existing' : 'create')}
-					data-testid="consent-switch-passkey"
-					class="mt-1 text-left text-xs text-text underline underline-offset-2 hover:text-heading"
-				>
-					{identityMode === 'create' ? $_('consent.useExisting') : $_('consent.useNew')}
-				</button>
-			{/if}
+			<StartChoices bind:mode={identityMode} />
 		</svelte:fragment>
 		<svelte:fragment slot="advanced">
-			<StorageModeSelector bind:mode={storageMode} />
-			<SharedListSelector bind:value={selectedMnemonic} />
-			<PasskeyOnboarding bind:mode={identityMode} bind:label={passkeyLabel} />
+			<KeepInBrowser bind:mode={storageMode} />
+			<JoinSharedList bind:join={joinList} bind:value={joinWords} />
+			<!-- Only a label in the passkey picker, so only in the technical view. -->
+			{#if $technicalView && identityMode === 'create'}
+				<label class="block rounded-lg border border-border p-3 text-sm">
+					<span class="block font-medium text-heading">{$_('consent.identityLabelTitle')}</span>
+					<input
+						type="text"
+						bind:value={passkeyLabel}
+						placeholder={$_('consent.identityLabelPlaceholder')}
+						data-testid="passkey-label"
+						class="mt-2 w-full rounded-md border border-border bg-surface px-2 py-1.5 text-sm"
+					/>
+					<span class="mt-1 block text-xs text-faint" data-testid="passkey-label-hint">
+						{$_('consent.identityLabelHint')}
+					</span>
+				</label>
+			{/if}
 		</svelte:fragment>
 	</ConsentModal>
 {/if}
+
+<!-- The demo video, over the dialog or over the page: opened by the teaser or the header link. -->
+<DemoVideoPlayer />
 
 <main class="container mx-auto max-w-4xl px-4 pt-4 pb-28 sm:px-6 sm:pt-6 sm:pb-6">
 	<!--
@@ -896,6 +1001,9 @@
 				>
 			{/if}
 			<NetworkStatusDot />
+			<!-- Here rather than beside the switches: on a phone this group has a row of
+			     its own, and beside them it cut the German title down to "Treuh…". -->
+			<DemoVideoButton variant="link" />
 		</div>
 		<div class="col-start-2 row-start-1 flex items-center gap-1 sm:col-start-3 sm:gap-2">
 			<LanguageSwitcher />
@@ -972,7 +1080,8 @@
 					databaseAddress={$todoDBAddressStore}
 					activeList={$activeListStore}
 					on:change={() => {
-						selectedMnemonic = activeMnemonic;
+						joinWords = activeMnemonic;
+						joinList = true;
 						consentOpensAdvanced = true;
 						showModal = true;
 					}}

@@ -74,19 +74,63 @@ export async function continueWithPasskey(page) {
 }
 
 /**
- * Open the dialog's "Advanced" section, where the short form keeps the
- * chapter's settings. A no-op for the long form, which has none.
+ * Whether the dialog is the short form (escrow01): one button whose press is
+ * the consent, no tick, and the settings on a second screen. The element
+ * carries the mark; the long form of the other chapters does not.
  *
- * Opened rather than clicked: a test that sets a choice is not testing the
- * disclosure, and a click on an open one would close it again.
+ * @param {import('@playwright/test').Page} page
+ */
+export const isShortForm = (page) =>
+	page.evaluate(
+		() =>
+			document.querySelector('[data-testid="consent-modal"]')?.hasAttribute('data-compact') === true
+	);
+
+/**
+ * Open the short form's settings — its second screen, "Notices and settings".
+ * A no-op for the long form, which has none, and where they are open already.
+ *
+ * Through the link a person presses, under the button: the settings are
+ * `hidden` on the first screen, and a click on a hidden control waits for the
+ * test's whole budget.
  *
  * @param {import('@playwright/test').Page} page
  */
 export async function openAdvanced(page) {
-	await page.evaluate(() => {
-		const section = document.querySelector('[data-testid="consent-advanced"]');
-		if (section instanceof HTMLDetailsElement) section.open = true;
-	});
+	const link = page.getByTestId('consent-open-settings');
+	if ((await link.count()) > 0 && (await link.isVisible())) {
+		await link.click();
+		await page.getByTestId('consent-settings').waitFor({ state: 'visible' });
+	}
+}
+
+/**
+ * Back from the short form's settings to its first screen, where the other
+ * ways in are. A no-op anywhere else.
+ *
+ * @param {import('@playwright/test').Page} page
+ */
+export async function backToStart(page) {
+	const back = page.getByTestId('consent-back');
+	if ((await back.count()) > 0 && (await back.isVisible())) {
+		await back.click();
+		await page.getByTestId('consent-start').waitFor({ state: 'visible' });
+	}
+}
+
+/**
+ * The short form's identity: the way taken under the button. Each of the two
+ * ways not taken is a link (`consent-identity-<mode>`); the way already taken
+ * has none.
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {'anonymous' | 'create' | 'existing'} identity
+ */
+async function takeWay(page, identity) {
+	await backToStart(page);
+	const link = page.getByTestId(`consent-identity-${identity}`);
+	if ((await link.count()) > 0) await link.click();
+	await link.waitFor({ state: 'detached' });
 }
 
 /**
@@ -101,13 +145,15 @@ export async function openAdvanced(page) {
  * @param {import('@playwright/test').Page} page
  */
 /**
- * Whether the statement has been accepted.
+ * Whether the statement has been accepted. The short form has no tick — its
+ * button's press is the consent — so nothing there is accepted before the
+ * press, and this answers false.
  *
  * @param {import('@playwright/test').Page} page
  */
 export const isAccepted = (page) =>
 	page.evaluate(() => {
-		// The short form's tick is the dialog's own; the long form's is the element's.
+		// A tick of the dialog's own, where a chapter's dialog has one.
 		const own = document.querySelector('[data-testid="consent-accept"]');
 		if (own instanceof HTMLInputElement) return own.checked;
 		return (
@@ -146,6 +192,8 @@ export async function acceptNotice(page) {
 		await own.check();
 		return;
 	}
+	// The short form has nothing to tick: the press on its button is the consent.
+	if (await isShortForm(page)) return;
 	await page.evaluate(() => {
 		const box = document
 			.querySelector('[data-testid="consent-modal"]')
@@ -162,6 +210,17 @@ export async function acceptNotice(page) {
  * @param {import('@playwright/test').Page} page
  */
 export async function rememberDecision(page) {
+	/*
+		The short form has no box of its own for this: "Keep in this browser"
+		keeps the decision with everything else (escrow01), and with it unticked
+		nothing is kept, the decision included.
+	*/
+	const keep = page.getByTestId('storage-keep');
+	if ((await keep.count()) > 0) {
+		await openAdvanced(page);
+		await keep.check();
+		return;
+	}
 	const own = page.getByTestId('consent-remember');
 	if ((await own.count()) > 0) {
 		await openAdvanced(page);
@@ -222,10 +281,24 @@ export async function passConsent(
 		await openFullConsent(page);
 	}
 
-	// The short form folds the settings away; a caller setting one needs them.
+	const short = await isShortForm(page);
+	if (short && remember && persistent === false) {
+		// Remembering is itself something kept: unticked, the short form keeps
+		// nothing, and the dialog comes back after a reload by design (#9).
+		throw new Error('the short form cannot remember a decision while keeping nothing');
+	}
+	// The short form's identity is the way taken under its button, on the first
+	// screen; its settings are on the second.
+	if (short) await takeWay(page, identity);
+
+	// The short form keeps the settings on its second screen; a caller setting
+	// one needs them.
 	await openAdvanced(page);
 
 	if (mnemonic !== undefined) {
+		// Where the share code is asked for only by somebody joining a list.
+		const join = page.getByTestId('consent-join-list');
+		if ((await join.count()) > 0) await join.check();
 		await page.getByTestId('shared-list-mnemonic-input').fill(mnemonic);
 	}
 	/*
@@ -242,14 +315,26 @@ export async function passConsent(
 		default must not do.
 	*/
 	const identityControl = page.getByTestId(`identity-mode-${identity}`);
-	if ((await identityControl.count()) > 0) await identityControl.check();
+	if (!short && (await identityControl.count()) > 0) await identityControl.check();
 	if (label !== undefined) {
-		await page.getByTestId('passkey-label').fill(label);
+		const field = page.getByTestId('passkey-label');
+		/*
+			The short form asks for the passkey's name only in its technical view:
+			it is a label in the passkey picker and nothing else, and no spec reads
+			it back. Where the field is not on screen, the default name stands.
+		*/
+		if (!short || (await field.isVisible())) await field.fill(label);
 	}
 	if (persistent !== undefined) {
-		// Every chapter renders the shared `StorageModeSelector` now; `main`
-		// adopted it with the shared dialog.
-		await page.getByTestId(persistent ? 'storage-mode-indexeddb' : 'storage-mode-memory').check();
+		const keep = page.getByTestId('storage-keep');
+		if ((await keep.count()) > 0) {
+			// escrow01's own box: "Keep in this browser", ticked unless unticked.
+			await keep.setChecked(persistent);
+		} else {
+			// The other chapters render the shared `StorageModeSelector`; `main`
+			// adopted it with the shared dialog.
+			await page.getByTestId(persistent ? 'storage-mode-indexeddb' : 'storage-mode-memory').check();
+		}
 	}
 	if (p2p !== undefined) {
 		// Only where the dialog offers it (archived01): off, the chapter starts
@@ -288,8 +373,13 @@ export async function passConsent(
  * @param {import('@playwright/test').Page} page
  */
 export async function expectProceedRevealsTick(page) {
+	if (await isShortForm(page)) {
+		throw new Error(
+			'the short form has no tick: its button waits only for the chapter (see its consent spec)'
+		);
+	}
 	/*
-		The short form keeps its tick directly above the button, in the foot that
+		A tick of the dialog's own, directly above the button in the foot that
 		does not scroll: nothing to unfold, so the press only has to put the
 		cursor on it.
 	*/

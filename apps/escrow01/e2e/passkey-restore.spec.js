@@ -143,9 +143,14 @@ test('back on a device that keeps things, the passkey is one tap, not the whole 
 	).not.toBe(true);
 	await expect(page.getByTestId('passkey-welcome-continue')).toBeFocused();
 
-	// "Other options" leads to the dialog, on "use the passkey you have".
+	// "Other options" leads to the dialog, on "use the passkey you have", and
+	// without a hint at a link nobody followed (the app wrote the list into the
+	// address itself).
 	await openFullConsent(page);
-	await expect(page.getByTestId('identity-mode-existing')).toBeChecked();
+	await expect(page.getByTestId('consent-proceed')).toHaveText(
+		'Sign in with your passkey and start'
+	);
+	await expect(page.getByTestId('consent-linked-list')).toHaveCount(0);
 
 	await recordCeremonies(page);
 	await page.reload();

@@ -1,10 +1,11 @@
 import { get } from 'svelte/store';
 import { _ } from '$lib/i18n/index.js';
 import { budgetInfo } from '$lib/budget-store.js';
+import { todosEncrypted } from '$lib/todo-encryption.js';
 
 /**
  * What this chapter does with your data, in plain words, as a function of the
- * choices on the consent screen. The dialog itself is shared
+ * choices in the start dialog. The dialog itself is shared
  * (`@simple-todo/ui/ConsentModal.svelte`); the statement is the chapter's,
  * because what a chapter does with data is the chapter's to state. Read at
  * call time, so a language switch repaints it.
@@ -18,7 +19,9 @@ import { budgetInfo } from '$lib/budget-store.js';
  * The technical view names the machinery (IPFS, Kubo, Sepolia, DID); the plain
  * one says the same thing without it. No sentence is weaker in either.
  *
- * @typedef {{ identity?: string, storage?: string, technical?: boolean }} ConsentState
+ * @typedef {{ identity?: string, storage?: string, technical?: boolean, todosEncrypted?: boolean }} ConsentState
+ * `todosEncrypted` overrides the build's flag (`todo-encryption.js`), for a
+ * test that reads both wordings.
  * @param {ConsentState} state
  * @returns {Array<{ title: string, lines: string[] }>}
  */
@@ -26,6 +29,8 @@ export const clauses = (state) => {
 	const t = get(_);
 	const technical = state.technical === true;
 	const anonymous = state.identity === 'anonymous';
+	const kept = state.storage === 'indexeddb';
+	const encrypted = state.todosEncrypted ?? todosEncrypted;
 	const plainOr = (/** @type {string} */ key) => t(technical ? `${key}Technical` : key);
 
 	return [
@@ -41,7 +46,7 @@ export const clauses = (state) => {
 			]
 		},
 		{
-			title: t('consent.group.lists'),
+			title: t(encrypted ? 'consent.group.listsEncrypted' : 'consent.group.lists'),
 			lines: [
 				t('consent.clause.readingIsOpen'),
 				t('consent.clause.sharedList'),
@@ -59,30 +64,29 @@ export const clauses = (state) => {
 				plainOr('consent.clause.gateway'),
 				t('consent.clause.relay'),
 				anonymous
-					? state.storage === 'indexeddb'
+					? kept
 						? t('consent.clause.identityAnonymousKept')
 						: t('consent.clause.identityAnonymous')
 					: t('consent.clause.identityPasskey'),
-				...(anonymous
-					? []
-					: [
-							plainOr(
-								state.storage === 'indexeddb' ? 'consent.clause.keys' : 'consent.clause.keysMemory'
-							)
-						]),
-				state.storage === 'indexeddb'
-					? t('consent.clause.storagePersistent')
-					: t('consent.clause.storageMemory'),
-				t('consent.clause.cookies')
+				...(anonymous ? [] : [plainOr(kept ? 'consent.clause.keys' : 'consent.clause.keysMemory')]),
+				kept ? t('consent.clause.storagePersistent') : t('consent.clause.storageMemory'),
+				// What a browser extension sees: everything the page shows and keeps.
+				plainOr('consent.clause.extensions'),
+				// The decision to start is kept with everything else, or with nothing.
+				kept ? t('consent.clause.cookiesKept') : t('consent.clause.cookiesMemory')
 			]
 		}
 	];
 };
 
 /**
- * The same statement in four sentences, for the dialog's first screen: the
- * amounts, the lists, where things are kept, and that this is a demonstration.
- * The full statement stays one click away, unabridged.
+ * The statement in three sentences, for the dialog's first screen: the
+ * amounts, the lists, and the browser it runs in. The full statement is on the
+ * dialog's second screen, unabridged; that relays may hold a copy of a list
+ * stands there, where it has its context.
+ *
+ * In this order because the page hands each line an icon by its position
+ * (`summaryIcons` in `+page.svelte`): a lock, an eye, a shield.
  *
  * @param {ConsentState} state
  * @returns {string[]}
@@ -90,16 +94,17 @@ export const clauses = (state) => {
 export const summary = (state) => {
 	const t = get(_);
 	const technical = state.technical === true;
+	const encrypted = state.todosEncrypted ?? todosEncrypted;
+	const amounts = budgetInfo.confidential
+		? encrypted
+			? 'consent.summary.amountsAndLists'
+			: technical
+				? 'consent.summary.amountsTechnical'
+				: 'consent.summary.amounts'
+		: 'consent.summary.amountsDemo';
 	return [
-		budgetInfo.confidential
-			? t(technical ? 'consent.summary.amountsChainTechnical' : 'consent.summary.amountsChain')
-			: t('consent.summary.amountsDemo'),
-		t('consent.summary.lists'),
-		// "Nothing", with or without a passkey: in memory mode not even the link to
-		// the passkey stays (memory-mode-passkey.spec.js takes the inventory).
-		state.storage === 'indexeddb'
-			? t('consent.summary.networkKept')
-			: t('consent.summary.networkMemory'),
-		t('consent.summary.demo')
+		t(amounts),
+		t(encrypted ? 'consent.summary.listsEncrypted' : 'consent.summary.lists'),
+		t(technical ? 'consent.summary.extensionsTechnical' : 'consent.summary.extensions')
 	];
 };

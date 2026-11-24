@@ -100,18 +100,13 @@
 		"failed": "Passkey confirmation failed"
 	},
 	"onboarding": {
-		"heading": "One passkey for everything",
 		"signInTitle": "Sign in",
-		"signInText": "On this device, with Touch ID for example.",
 		"signTitle": "Sign",
-		"signText": "Every change carries your signature.",
 		"payTitle": "Pay",
-		"payText": "Lock a budget for a task and pay it out when the work is done. The amount stays encrypted.",
-		"promise": "Hand a task to someone and lock its budget in escrow. The amount stays encrypted and is paid out when you release it — confirmed with your passkey, with no wallet and no seed phrase.",
-		"promiseDemo": "Hand a task to someone and lock its budget in escrow. It is paid out when you release it — confirmed with your passkey, with no wallet and no seed phrase.",
-		"signTextTechnical": "Every change carries your DID.",
-		"payTextDemo": "Lock a budget for a task and pay it out when the work is done. In this preview the amount is not encrypted.",
-		"payTextTechnical": "Budgets in confidential tokens (ERC-7984), confirmed with the same passkey. The account for them (EIP-7702) is set up quietly in the background."
+		"promise": "Hand a task to someone and lock its budget in escrow. The amount stays encrypted and is paid out when you release it.",
+		"promiseDemo": "Hand a task to someone and lock its budget in escrow. It is paid out when you release it.",
+		"chipNote": "All with one passkey – no wallet, no seed phrase.",
+		"chipNoteTechnical": "One WebAuthn passkey for all three: it carries your DID, signs every entry and confirms each payment in confidential tokens (ERC-7984); the account for them (EIP-7702) is set up in the background."
 	},
 	"todo": {
 		"form": {
@@ -276,10 +271,8 @@
 	"consent": {
 		"warningHeading": "Early days",
 		"warningBody": "This is a working demonstration rather than a finished product. It does what it says, and the format may still change - so keep anything you would be sorry to lose somewhere else as well.",
-		"accept": "I have read the notices and accept them",
 		"proceed": "Open shared list",
-		"proceedDisabled": "Enter a valid share code under “Advanced” to start.",
-		"proceedNeedsAccept": "Confirm the notice first",
+		"proceedDisabled": "Enter a valid share code under “Settings”, or untick “Join a shared list”.",
 		"remember": "Don't show this again on this device",
 		"technical": "Technical",
 		"simple": "Simple",
@@ -292,10 +285,9 @@
 			"readingIsOpen": "Todos and lists are not encrypted. Anyone who has a list’s address can read everything in it, including the relay that stores it. Do not put anything private in a todo.",
 			"identityPasskey": "Your passkey identifies you to the other devices. Nobody else can write as you.",
 			"identityAnonymous": "You are using a random identity that exists only in this browser. Close it and it is gone.",
-			"cookies": "No tracking cookies are used. If you tick \"don't show this again\", that choice is the only thing saved on this device.",
 			"delegation": "You decide who may write to a list, and you can take a grant back later — unlike a key you handed out, because lists are not encrypted.",
-			"storageMemory": "You chose \"in memory only\": nothing is written to this device, and this browser starts over when the page reloads.",
-			"storagePersistent": "You chose \"keep them in this browser\": the todos survive a reload. They sit unencrypted in this browser’s storage, and clearing it loses them.",
+			"storageMemory": "“Keep in this browser” is unticked: nothing is written to this device, and this browser starts over when the page reloads.",
+			"storagePersistent": "“Keep in this browser” is ticked: your todos survive a reload. They sit unencrypted in this browser’s storage, and clearing it loses them.",
 			"identityAnonymousKept": "You are using a random identity that exists only in this browser. It keeps it until you clear the site data; nothing links it to you.",
 			"amountsChain": "An amount is encrypted on your device before it is sent, and it stays encrypted on a blockchain test network. Only you, the other party and the demo’s auditor can read it.",
 			"amountsChainTechnical": "An amount is encrypted in your browser (Zama TFHE) before it is sent, and it stays encrypted on the Sepolia testnet as a cUSDT balance under ERC-7984. Only you, the other party and the auditor named in the escrow contract can decrypt it.",
@@ -306,35 +298,26 @@
 			"keys": "This browser keeps the link to your passkey and the keys for signing and for reading amounts. The passkey itself never leaves your device.",
 			"keysTechnical": "This browser keeps your passkey’s public key and DID, and the keys for signing entries and for reading amounts. The passkey itself never leaves your authenticator.",
 			"keysMemory": "The keys for signing and for reading amounts live in this browser’s memory and are gone on reload. The passkey itself never leaves your device.",
-			"keysMemoryTechnical": "Your passkey’s public key and DID, the signing key and the read key live in this tab’s memory and are gone on reload. The passkey itself never leaves your authenticator."
+			"keysMemoryTechnical": "Your passkey’s public key and DID, the signing key and the read key live in this tab’s memory and are gone on reload. The passkey itself never leaves your authenticator.",
+			"extensions": "A browser extension with access to this page can read what it shows and what it keeps in this browser, keys included, and can change the page. Safest is a browser or browser profile of your own, without extensions. The passkey itself stays in your authenticator.",
+			"extensionsTechnical": "An extension with access to this page reads what it shows and keeps in the browser (DOM, localStorage, IndexedDB, the OrbitDB signing key included) and can inject code into it. The passkey’s private key stays in the authenticator.",
+			"cookiesKept": "No tracking cookies are used. Because this browser keeps things, it also keeps that you started here: next time the app opens without this dialog (with a passkey, after one tap).",
+			"cookiesMemory": "No tracking cookies are used, and not even your decision to start is saved: after a reload this dialog asks again."
 		},
 		"errorNoPasskey": "No passkey is stored in this browser, and your authenticator did not hand one over. Create a new one, or continue without one.",
-		"errorNeedsLabel": "Please give the new passkey a name.",
 		"errorStart": "Startup failed: {reason}",
-		"identityExistingFound": "A passkey from an earlier session is stored on this device.",
-		"identityExistingNone": "Nothing is linked in this browser yet. Your device or password manager offers the passkey — this works only if the passkey carries its own details.",
 		"prfMissing": "This authenticator cannot carry your identity to a second device (no PRF). The same passkey produces a separate identity there.",
 		"prfMissingAndroid": "This authenticator cannot carry your identity to a second device (no PRF). The same passkey produces a separate identity there. On Android without Google Play Services (GrapheneOS) a credential provider that supports PRF, such as Authnkey, fixes this: install it, make it the preferred passkey service, then register the passkey anew — see docs/grapheneos.md.",
 		"mnemonicLabel": "Share code",
 		"mnemonicHelp": "Anyone with these three Spanish words opens the same list and can read and write in it. A way to meet, not a password.",
 		"mnemonicPlaceholder": "luna-camino-verde",
 		"mnemonicSrError": "Enter exactly three valid Spanish words.",
-		"mnemonicGenerate": "Generate new",
-		"mnemonicCopy": "Copy",
-		"mnemonicCopied": "Copied!",
 		"mnemonicError": {
 			"empty": "Enter a three-word Spanish share code.",
 			"repeatedSeparator": "Do not use empty words or repeated separators.",
 			"wordCount": "The share code must contain exactly three Spanish words.",
 			"unknownWord": "Unknown Spanish share-code word: {word}"
 		},
-		"identityLegend": "Your identity",
-		"identityCreate": "Create a passkey",
-		"identityCreateHint": "Your device creates a passkey, with Touch ID for example. You sign in, sign and pay with it.",
-		"identityCreateHintAnother": "Another passkey — a second identity beside the one already on this device.",
-		"identityExisting": "Use an existing passkey",
-		"identityAnonymous": "Continue without a passkey",
-		"identityAnonymousHint": "A random identity for this browser only. Without a passkey you cannot lock a budget.",
 		"identityLabelPlaceholder": "name for this passkey (e.g. Alice)",
 		"identityLabelHint": "Only a label for the passkey picker. Your identity comes from the key, not from this name — two people on this device may use the same one.",
 		"element": {
@@ -381,41 +364,55 @@
 		},
 		"relayReachable": "{count} known relays answered. No directory was queried.",
 		"relayDiscovered": "{count} relays found in the directory - the ones shipped with this app stayed silent.",
-		"showNotice": "Show the notice",
-		"storageLegend": "Where your todos are stored",
-		"storageMemoryLabel": "In memory only",
-		"storageMemoryHint": "Todos and keys live in memory only and are gone on reload; nothing is written to this device. Your passkey stays with your device or password manager, so you can find your identity again.",
-		"storagePersistentLabel": "Keep them in this browser",
-		"storagePersistentHint": "Todos stay in this browser and survive a restart. They are not encrypted there, so anyone who can read this browser’s storage can read them.",
 		"title": "Confidential escrow payments with a passkey",
-		"readyCreate": "Your device will ask you to create a passkey, with Touch ID for example.",
-		"readyExisting": "Your device will ask for your passkey.",
-		"readyAnonymous": "Without a passkey you can try the lists, but you cannot lock a budget.",
 		"summary": {
-			"amountsChain": "Amounts are encrypted on a blockchain test network. Only the two parties and the demo’s auditor can read them; anyone can see who paid whom, and when.",
-			"amountsChainTechnical": "Amounts are encrypted on the Sepolia testnet (Zama FHE, ERC-7984). Only the two parties and the demo’s auditor can decrypt them; sender, recipient and time of every transfer are public.",
 			"amountsDemo": "In this preview, amounts stay in this browser’s memory: nothing is encrypted and nothing reaches a blockchain.",
 			"lists": "Todos and lists are not encrypted: anyone who has a list’s address can read it. Put nothing confidential in a todo.",
-			"networkMemory": "We run no server, and this browser keeps nothing after a reload. Relays connect the devices and may hold a copy of a list.",
-			"networkKept": "We run no server. Your todos stay in this browser until you clear it; relays connect the devices and may hold a copy of a list.",
-			"demo": "A demonstration: no real money moves, and the format may still change."
+			"amounts": "Amounts are encrypted. Test network: no real money moves.",
+			"amountsTechnical": "Amounts are encrypted with Zama FHE (ERC-7984) on the Sepolia testnet: no real money moves.",
+			"amountsAndLists": "Amounts and your own lists are encrypted. Test network: no real money moves.",
+			"listsEncrypted": "Only a list behind three words stays open: anyone who has its words can read it.",
+			"extensions": "Safest in a browser or browser profile of your own, without extensions: an extension can read along, keys included.",
+			"extensionsTechnical": "An extension with access to this page reads what it shows and keeps in the browser (DOM, localStorage, IndexedDB, the OrbitDB signing key included) and can inject code into it. The passkey’s private key stays in the authenticator."
 		},
 		"group": {
 			"amounts": "Amounts — encrypted",
 			"amountsDemo": "Amounts — preview only",
 			"lists": "Todos and lists — not encrypted",
-			"network": "Network, storage and identity"
+			"network": "Network, storage and identity",
+			"listsEncrypted": "Your lists — encrypted"
 		},
-		"identityCreateHintTechnical": "Register a new WebAuthn passkey and derive your OrbitDB identity (DID) from it.",
-		"identityCreateHintAnotherTechnical": "Register another WebAuthn passkey — a second identity alongside the one already on this device.",
-		"identityExistingNoneTechnical": "Nothing is stored in this browser. We will ask your authenticator, which only works if the passkey carries its own details (a discoverable credential with PRF).",
 		"identityLabelDefault": "Escrow demo",
 		"mnemonicHelpTechnical": "Share these three Spanish words to join the same public writable OrbitDB list. This is a share code, not a password or encryption key.",
-		"linkedList": "This address opens the shared list “{words}”. You can change it under “Advanced”.",
-		"useExisting": "Already have a passkey for this demo? Use it instead",
-		"useNew": "Create a new passkey instead",
-		"errorStepCancelled": "Stopped before the next passkey prompt. Nothing was started: press Start to try again.",
-		"errorStepCancelledCreated": "Stopped before the next passkey prompt. Your new passkey exists already, so “Use an existing passkey” is selected: press Start to go on with it."
+		"linkedList": "You came through a link to the shared list “{words}”. You can change that under “Settings”.",
+		"errorStepCancelled": "Stopped before the next passkey prompt. Nothing was started: press the button to try again.",
+		"errorStepCancelledCreated": "Stopped before the next passkey prompt. Your new passkey exists already: “Sign in with your passkey and start” goes on with it.",
+		"start": {
+			"create": "Create a passkey and start",
+			"existing": "Sign in with your passkey and start",
+			"anonymous": "Start without a passkey"
+		},
+		"choice": {
+			"existing": "Already have a passkey? Sign in with it",
+			"create": "Create a new passkey",
+			"createAnother": "Create another passkey – a second identity",
+			"anonymous": "Look around without a passkey – no budget then",
+			"anonymousNote": "Without a passkey you cannot lock a budget."
+		},
+		"agreementBefore": "By starting you accept the ",
+		"agreementLink": "notices",
+		"agreementAfter": ".",
+		"settingsLink": "Settings",
+		"settingsHeading": "Notices and settings",
+		"back": "Back",
+		"technicalRow": "Technical view",
+		"technicalRowHint": "Shows the technical terms, versions and what happens under the hood.",
+		"keep": "Keep in this browser",
+		"keepHint": "Your todos and your list survive a reload, and next time one tap on your passkey is enough. Untick it on someone else’s or a shared computer: a reload then clears everything.",
+		"keepHintTechnical": "Ticked, this browser keeps the OrbitDB log and its blocks, the share code, your passkey’s public key and DID, and the OrbitDB signing key in IndexedDB and localStorage — the todos and the signing key unencrypted. Unticked, all of it lives in this tab’s memory and is gone on reload.",
+		"join": "Join a shared list",
+		"joinHint": "With the three-word share code somebody gave you.",
+		"identityLabelTitle": "Name of the new passkey"
 	},
 	"lists": {
 		"create": {
@@ -628,5 +625,14 @@
 		"waiting": "Waiting for your passkey…",
 		"more": "Other options and all notices",
 		"accepted": "The notices you accepted when you first started with this passkey still apply."
+	},
+	"video": {
+		"teaser": "How it works",
+		"short": "Video",
+		"title": "escrow01 – how it works",
+		"youtube": "Watch on YouTube",
+		"close": "Close",
+		"captions": "English",
+		"unsupported": "This browser cannot play the video here."
 	}
 }
