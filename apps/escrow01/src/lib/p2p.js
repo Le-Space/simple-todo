@@ -40,6 +40,7 @@ import {
 import { initializeDatabase, todoDBAddressStore, todosStore } from './db-actions.js';
 import {
 	getWebRTCEnabled,
+	initializeWebRTCSetting,
 	setWebRTCEnabled,
 	webrtcEnabledStore
 } from '@simple-todo/net/webrtc-settings.js';
@@ -188,6 +189,13 @@ export async function initializeP2P(
 	try {
 		// Set initialization state
 		setInitializationProgress(0);
+
+		// Read the stored WebRTC choice before the transports are decided, as
+		// main does since it found the same gap: escrow01 never called
+		// `initializeWebRTCSetting`, so `simpleTodo.webrtcEnabled` was never read
+		// and every spec that switched WebRTC off (delegation, list-peer-led) ran
+		// with WebRTC on. Nothing user-facing changes; no screen offers the switch.
+		initializeWebRTCSetting();
 
 		// Create libp2p configuration and node
 		const config = await createLibp2pConfig();
