@@ -30,7 +30,8 @@
 			"e2e/page-qr.spec.js",
 			"e2e/consent-network.spec.js",
 			"e2e/phone-layout.spec.js",
-			"e2e/link-preview.spec.js"
+			"e2e/link-preview.spec.js",
+			"e2e/passkey-steps.spec.js"
 		],
 		"check": true
 	}

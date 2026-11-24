@@ -406,7 +406,9 @@
 		"mnemonicHelpTechnical": "Geben Sie diese drei spanischen Wörter weiter, um dieselbe öffentlich beschreibbare OrbitDB-Liste zu öffnen. Das ist ein Zugangscode, kein Passwort und kein Schlüssel.",
 		"linkedList": "Diese Adresse öffnet die gemeinsame Liste „{words}“. Ändern können Sie sie unter „Erweitert“.",
 		"useExisting": "Schon einen Passkey für diese Demo? Stattdessen damit anmelden",
-		"useNew": "Stattdessen einen neuen Passkey anlegen"
+		"useNew": "Stattdessen einen neuen Passkey anlegen",
+		"errorStepCancelled": "Vor der nächsten Passkey-Abfrage angehalten. Gestartet wurde nichts: Mit „Starten“ geht es noch einmal los.",
+		"errorStepCancelledCreated": "Vor der nächsten Passkey-Abfrage angehalten. Ihr neuer Passkey ist schon angelegt, deshalb ist „Vorhandenen Passkey verwenden“ ausgewählt: Mit „Starten“ geht es damit weiter."
 	},
 	"lists": {
 		"create": {
