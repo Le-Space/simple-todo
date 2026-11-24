@@ -5,6 +5,7 @@
 	import { _ } from '$lib/i18n/index.js';
 	import { activeListStore } from './db-actions.js';
 	import { shortId } from '@simple-todo/todo/utils.js';
+	import ListPeerLed from './ListPeerLed.svelte';
 
 	/** The shared list has no name of its own; its three words are its name. */
 	export let mnemonic = '';
@@ -25,6 +26,7 @@
 		<h2 class="truncate text-2xl font-bold" data-testid="active-list-name">
 			{name || $_('lists.switcher.unnamed')}
 		</h2>
+		<ListPeerLed />
 	</div>
 	<a
 		href="#listen"

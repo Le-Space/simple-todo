@@ -10,6 +10,7 @@
 	import { onDestroy } from 'svelte';
 	import { _ } from '$lib/i18n/index.js';
 	import { networkStateStore } from './network-status.js';
+	import { hasDirectBrowserConnection } from './list-peers.js';
 	import { relayHttpStatusStore } from '@simple-todo/net/relay-status.js';
 	import { relayHttpOriginForPeer } from '@simple-todo/net/multiaddr-utils.js';
 	import { getRelayBootstrapAddrs } from '@simple-todo/net/relay-bootstrap-addrs.js';
@@ -137,9 +138,6 @@
 	/** @param {any} node */
 	function updateConnectionState(node) {
 		const connections = node.getConnections?.() ?? [];
-		const addresses = connections
-			.map((/** @type {any} */ connection) => connection.remoteAddr?.toString().toLowerCase())
-			.filter(Boolean);
 		connectedPeerCount = new Set(
 			connections
 				.map((/** @type {any} */ connection) => connection.remotePeer?.toString())
@@ -154,9 +152,10 @@
 		});
 		relayConnected = Boolean(relayConnection);
 		updateRelayHealth(relayConnection);
-		webRTCConnected = addresses.some((/** @type {string} */ address) =>
-			address.includes('/webrtc')
-		);
+		// Direct means WebRTC to another browser, read from the connection's
+		// limits: an address containing /webrtc also matches the relay's
+		// WebRTC-Direct address (list-peers.js).
+		webRTCConnected = hasDirectBrowserConnection(connections);
 	}
 
 	/** @param {any} connection */
