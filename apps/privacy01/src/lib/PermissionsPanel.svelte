@@ -4,7 +4,7 @@
 	// own replicated keyvalue store, so the DB address never changes and peers
 	// pick up permission changes live.
 	import { onDestroy } from 'svelte';
-	import { shareActiveListKeyWith, todoDBStore } from './db-actions.js';
+	import { rotateActiveListKey, shareActiveListKeyWith, todoDBStore } from './db-actions.js';
 	import { ownDidStore } from './p2p.js';
 
 	/** @type {string[]} */
@@ -13,6 +13,8 @@
 	let busy = false;
 	/** @type {string | null} */
 	let errorMessage = null;
+	/** @type {string | null} */
+	let noticeMessage = null;
 	/** @type {any} */
 	let currentDb = null;
 	/** @type {(() => void) | null} */
@@ -24,6 +26,7 @@
 		currentDb = db;
 		writeDids = [];
 		errorMessage = null;
+		noticeMessage = null;
 		if (!db) return;
 
 		void refresh();
@@ -78,6 +81,7 @@
 		if (!did) return;
 		busy = true;
 		errorMessage = null;
+		noticeMessage = null;
 		try {
 			await currentDb.access.grant('write', did);
 
@@ -112,12 +116,31 @@
 	}
 
 	/** @param {string} did */
+	const short = (did) => (did.length > 30 ? `${did.slice(0, 18)}…${did.slice(-8)}` : did);
+
+	/** @param {string} did */
 	async function revoke(did) {
 		busy = true;
 		errorMessage = null;
+		noticeMessage = null;
 		try {
 			await currentDb.access.revoke('write', did);
 			await refresh();
+
+			// Taking away write access does not take away the key, and a key
+			// cannot be taken back. So the list moves on to a new one, which this
+			// DID does not get (#120). What it already has stays its own: every
+			// earlier key, and with them every entry written up to now.
+			const rotated = await rotateActiveListKey(did);
+			if (rotated.rotated) {
+				const someWithoutKey = rotated.withoutKey?.length
+					? ` ${rotated.withoutKey.length === 1 ? 'One DID that keeps access has' : `${rotated.withoutKey.length} DIDs that keep access have`} published no encryption key yet and cannot read new entries until you add them again.`
+					: '';
+				noticeMessage = `Removed ${short(did)}. What is written from now on is sealed under a new key, which it does not get. It keeps what it already had: the earlier keys, and every entry written before now.${someWithoutKey}`;
+			} else if (rotated.reason !== 'list-not-sealed') {
+				errorMessage =
+					'Removed, but the key could not be changed yet: this browser is still opening the databases that carry it. Until it is, the removed DID can read new entries. Remove it again in a moment.';
+			}
 		} catch (error) {
 			errorMessage = `Revoke failed: ${error instanceof Error ? error.message : String(error)}`;
 		} finally {
@@ -135,6 +158,11 @@
 		<p class="mt-1 text-xs text-faint">
 			DIDs allowed to write to this list. Only list admins (the creator) can grant or revoke.
 		</p>
+		<p class="mt-1 text-xs text-faint" data-testid="permission-revoke-hint">
+			Removing a DID stops its writes and seals everything written afterwards under a new key it
+			does not get. What it already has stays readable to it: the earlier keys, and every entry
+			written before the removal.
+		</p>
 
 		<ul class="mt-3 space-y-1">
 			{#each writeDids as did (did)}
@@ -144,7 +172,7 @@
 					data-did={did}
 				>
 					<code class="truncate rounded bg-surface-2 px-1" title={did}>
-						{did.length > 30 ? `${did.slice(0, 18)}…${did.slice(-8)}` : did}
+						{short(did)}
 						{#if did === $ownDidStore}<span class="text-emerald-600"> (you)</span>{/if}
 					</code>
 					<button
@@ -181,6 +209,9 @@
 
 		{#if errorMessage}
 			<p class="mt-2 text-xs text-red-600" data-testid="permission-error">{errorMessage}</p>
+		{/if}
+		{#if noticeMessage}
+			<p class="mt-2 text-xs text-text" data-testid="permission-notice">{noticeMessage}</p>
 		{/if}
 	</section>
 {/if}

@@ -60,7 +60,7 @@ export async function openKeyDirectory(orbitdb) {
  */
 export async function publishOwnKey(orbitdb, directory) {
 	const did = orbitdb.identity.id;
-	const { publicKey } = await ownDeviceKeys(did);
+	const { publicKey } = await ownDeviceKeys(did, { keystore: orbitdb.keystore });
 
 	if ((await lookupKey(orbitdb, directory, did)) === publicKey) return publicKey;
 
