@@ -57,6 +57,16 @@ const connectionsTo = (page, remotePeer) =>
 		remotePeer
 	);
 
+/**
+ * An unlimited WebRTC connection: to a browser, not the relay's WebRTC-Direct.
+ *
+ * @param {any} connection
+ */
+const isDirectWebRTC = (connection) =>
+	!connection.limited &&
+	connection.remoteAddr.includes('/webrtc') &&
+	!connection.remoteAddr.includes('/webrtc-direct');
+
 test.describe('The LED under the list name', () => {
 	test('turns green when the other browser on the list is connected over WebRTC', async ({
 		browser
@@ -71,31 +81,34 @@ test.describe('The LED under the list name', () => {
 			await expect(led(alice.page)).toContainText('No other browser in this list');
 
 			bob = await openBrowser(browser, { mnemonic, webrtc: true });
-			for (const page of [alice.page, bob.page]) {
-				await expect(led(page)).toHaveAttribute('data-state', 'direct', { timeout });
+			const [aliceId, bobId] = await Promise.all([peerId(alice.page), peerId(bob.page)]);
+			const pairs = /** @type {const} */ ([
+				[alice.page, bobId],
+				[bob.page, aliceId]
+			]);
+
+			// libp2p first: without WebRTC between the two there is nothing for the
+			// LED to show, and a red here is the network, not the LED.
+			for (const [page, other] of pairs) {
+				await expect
+					.poll(async () => (await connectionsTo(page, other)).some(isDirectWebRTC), {
+						timeout,
+						message: 'no unlimited WebRTC connection between Alice and Bob'
+					})
+					.toBe(true);
+			}
+
+			// Then the LED must agree, within its own refresh.
+			for (const [page, other] of pairs) {
+				const connections = JSON.stringify(await connectionsTo(page, other));
+				await expect(led(page), connections).toHaveAttribute('data-state', 'direct', {
+					timeout: 10000
+				});
 				await expect(led(page)).toHaveAttribute('data-direct', '1');
 				await expect(led(page)).toContainText('Direct P2P with 1 browser');
 				await expect(led(page)).toBeVisible();
 				// Green text (identity-800), not the link cyan app.css gives every <a>.
 				await expect(led(page)).toHaveCSS('color', 'rgb(21, 94, 66)');
-			}
-
-			// Checked against libp2p: an unlimited WebRTC connection to the other browser.
-			const [aliceId, bobId] = await Promise.all([peerId(alice.page), peerId(bob.page)]);
-			for (const [page, other] of [
-				[alice.page, bobId],
-				[bob.page, aliceId]
-			]) {
-				const connections = await connectionsTo(page, other);
-				expect(
-					connections.some(
-						(/** @type {any} */ connection) =>
-							!connection.limited &&
-							connection.remoteAddr.includes('/webrtc') &&
-							!connection.remoteAddr.includes('/webrtc-direct')
-					),
-					JSON.stringify(connections)
-				).toBe(true);
 			}
 		} finally {
 			await bob?.context.close();
@@ -112,8 +125,27 @@ test.describe('The LED under the list name', () => {
 		let bob;
 		try {
 			bob = await openBrowser(browser, { mnemonic, webrtc: false });
-			for (const page of [alice.page, bob.page]) {
-				await expect(led(page)).toHaveAttribute('data-state', 'relay', { timeout });
+			const [aliceId, bobId] = await Promise.all([peerId(alice.page), peerId(bob.page)]);
+			const pairs = /** @type {const} */ ([
+				[alice.page, bobId],
+				[bob.page, aliceId]
+			]);
+
+			// libp2p first: a circuit between the two, or nothing reaches the other.
+			for (const [page, other] of pairs) {
+				await expect
+					.poll(
+						async () =>
+							(await connectionsTo(page, other)).some(
+								(/** @type {any} */ connection) => connection.limited
+							),
+						{ timeout, message: 'no circuit between Alice and Bob' }
+					)
+					.toBe(true);
+			}
+
+			for (const [page] of pairs) {
+				await expect(led(page)).toHaveAttribute('data-state', 'relay', { timeout: 10000 });
 				await expect(led(page)).toHaveAttribute('data-relayed', '1');
 				await expect(led(page)).toContainText('Via the relay with 1 browser');
 				// Amber text (data-800), not the link cyan.
@@ -122,11 +154,7 @@ test.describe('The LED under the list name', () => {
 
 			// Checked against libp2p: no unlimited connection to the other browser,
 			// so nothing it shows can have come directly.
-			const [aliceId, bobId] = await Promise.all([peerId(alice.page), peerId(bob.page)]);
-			for (const [page, other] of [
-				[alice.page, bobId],
-				[bob.page, aliceId]
-			]) {
+			for (const [page, other] of pairs) {
 				const connections = await connectionsTo(page, other);
 				expect(
 					connections.every((/** @type {any} */ connection) => connection.limited),
