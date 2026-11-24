@@ -368,7 +368,7 @@
 				"Gas is paid by a paymaster: Openfort runs bundler and paymaster for Sepolia and sponsors under a rule for that chain, asked through ERC-7677 (pm_getPaymasterStubData, pm_getPaymasterData). Your account holds no ETH; the browser holds only Openfort's public key pk_test_….",
 				"Budgets are cUSDT, a confidential token under ERC-7984 (Zama's cUSDTMock on Sepolia, 6 decimals). On chain amounts exist only as euint64 handles; the arithmetic runs on the ciphertexts in Zama's coprocessors.",
 				"Locking: your browser encrypts the amount with Zama's SDK (TFHE, WebAssembly) and gets the input proof through Zama's relayer. The escrow contract ConfidentialTodoEscrow (0x6Ee3Fa9d3aEdaAD189F5DeA9d859605c9D743429) takes it with FHE.fromExternal and moves it with confidentialTransferFrom.",
-				"Reading: a second secp256k1 key, the read key, sits in localStorage and is authorised for 24 hours for escrow and token through ACL.delegateForUserDecryption. It signs EIP-712 read requests; your browser assembles the plain value from shares of 13 KMS nodes, 9 of which are needed.",
+				"Reading: a second secp256k1 key, the read key, kept only sealed (AES-GCM under a key derived from the passkey's PRF output): in localStorage with \"keep in this browser\", in this tab's memory with \"in memory only\". It is authorised for 24 hours for escrow and token through ACL.delegateForUserDecryption. It signs EIP-712 read requests; your browser assembles the plain value from shares of 13 KMS nodes, 9 of which are needed.",
 				"Public remain the sender, recipient and time of every transfer, the link between account and read key (the DelegatedForUserDecryption event) and every read request on Zama's gateway chain. The amounts are not."
 			]
 		},

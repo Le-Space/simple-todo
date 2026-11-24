@@ -1,10 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { budgetErrorCode } from './budget.js';
 import { createZamaBudgetService, wasCancelled } from './budget-service-zama.js';
 import { getAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { createAccountStore, parseRecord } from './chain/account-store.js';
 import { parsePublished } from './chain/account-directory.js';
+import { forgetSession, honourStorageChoice } from '@simple-todo/todo/browser-memory.js';
+import { setPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
 import {
 	CHAIN_ID,
 	ESCROW_ADDRESS,
@@ -281,13 +283,22 @@ function world() {
 	 * A session of `did`. Pass the `storage` of an earlier one for the same
 	 * browser after a reload: what was stored stays, what was in memory is gone.
 	 *
+	 * `accounts` replaces the store altogether: `createAccountStore()` is the
+	 * one the page builds, on this browser's real storage.
+	 *
 	 * @param {string} did
-	 * @param {{ storage?: ReturnType<typeof memoryStorage>, prf?: ReturnType<typeof fakePrf> }} [options]
+	 * @param {{
+	 *   storage?: ReturnType<typeof memoryStorage>
+	 *   prf?: ReturnType<typeof fakePrf>
+	 *   accounts?: ReturnType<typeof createAccountStore>
+	 * }} [options]
 	 */
-	const serviceFor = (did, { storage = memoryStorage(), prf = fakePrf(did) } = {}) => {
+	const serviceFor = (
+		did,
+		{ storage = memoryStorage(), prf = fakePrf(did), accounts = createAccountStore(storage) } = {}
+	) => {
 		/** @type {string[]} */
 		const prompts = [];
-		const accounts = createAccountStore(storage);
 		const service = createZamaBudgetService({
 			identity: () => did,
 			credential: () => ({ did }),
@@ -939,5 +950,55 @@ describe('what the Sepolia service reads from outside', () => {
 		);
 		expect(parsePublished({ chainId: 1, address: address('b') }, CHAIN_ID)).toBeNull();
 		expect(parsePublished('0xabc', CHAIN_ID)).toBeNull();
+	});
+});
+
+describe('the account record and the storage choice', () => {
+	// The store the page builds, on this browser's real localStorage: what the
+	// live build does, with only the chain and the directory standing in.
+	afterEach(() => {
+		localStorage.clear();
+		forgetSession();
+	});
+
+	it('in memory only, the account is known in this tab and nothing reaches the device', async () => {
+		honourStorageChoice();
+		setPersistentStorageEnabled(false);
+		const w = world();
+		const bob = w.serviceFor(BOB, { accounts: createAccountStore() });
+		await bob.service.prepareAccount();
+
+		expect(bob.accounts.load(BOB, CHAIN_ID)?.address).toBe(w.state.created[0]);
+		expect(bob.accounts.load(BOB, CHAIN_ID)?.session?.sealed?.algorithm).toBe('AES-GCM');
+		expect(Object.keys(localStorage)).toEqual([]);
+
+		// Reloaded: the tab's memory is gone. The account is found again through
+		// the profile it published, and nothing new is created -- but the read
+		// key went with the tab, so reading needs a renewal.
+		forgetSession();
+		const again = w.serviceFor(BOB, { accounts: createAccountStore() });
+		expect(again.accounts.load(BOB, CHAIN_ID)).toBeNull();
+		await again.service.prepareAccount();
+		expect(w.state.created).toHaveLength(1);
+		expect(again.accounts.load(BOB, CHAIN_ID)?.address).toBe(w.state.created[0]);
+		expect((await again.service.readKeyStatus()).state).toBe('missing');
+		expect(Object.keys(localStorage)).toEqual([]);
+	});
+
+	it('kept in this browser, the record and its sealed read key outlive a reload', async () => {
+		honourStorageChoice();
+		setPersistentStorageEnabled(true);
+		const w = world();
+		const bob = w.serviceFor(BOB, { accounts: createAccountStore() });
+		await bob.service.prepareAccount();
+
+		const key = `simpleTodo.chainAccount.v1.${BOB}`;
+		expect(Object.keys(localStorage)).toContain(key);
+		expect(localStorage.getItem(key)).not.toMatch(/privateKey/i);
+
+		forgetSession();
+		const again = w.serviceFor(BOB, { accounts: createAccountStore() });
+		expect(again.accounts.load(BOB, CHAIN_ID)?.address).toBe(w.state.created[0]);
+		expect((await again.service.readKeyStatus()).state).toBe('locked');
 	});
 });

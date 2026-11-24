@@ -13,10 +13,12 @@
  * reason. And the touches are counted, because "in three touches" is a promise
  * the chapter makes in its own words.
  *
- * In this chapter the DID is also what the budget account is derived from, so
- * the same DID after a restore is the same account on Sepolia, holding the same
- * confidential balance (docs/money-flow.md). The budget screens themselves run
- * against the fake here, as everywhere without `VITE_BUDGET_SERVICE=zama`.
+ * In this chapter the DID is also how the budget account is found again: not
+ * derived from it (the account is a random setup key's address), but published
+ * under it (chain/account-directory.js), so the same DID after a restore looks
+ * up the same account on Sepolia, holding the same confidential balance. The
+ * budget screens themselves run against the fake here, as everywhere without
+ * `VITE_BUDGET_SERVICE=zama`.
  */
 import { test, expect } from '@playwright/test';
 import {
