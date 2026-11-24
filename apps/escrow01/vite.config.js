@@ -47,6 +47,12 @@ export default defineConfig({
 	// Workspace packages ship source, not a build; SvelteKit has to process them
 	// itself when it prerenders.
 	ssr: { noExternal: [/^@simple-todo\//] },
+	// The unit tests' browser server first meets `events` (the polyfill the
+	// libp2p and OrbitDB code imports) when page.svelte.spec.js loads the page.
+	// It then pre-bundles it mid-run and reloads, and a spec still importing
+	// fails with "Failed to fetch dynamically imported module" (#125's first CI
+	// run). Named here, it is bundled before any spec runs.
+	optimizeDeps: { include: ['events'] },
 	// Module workers: the passkey provider's standalone keystore worker, which the
 	// Sepolia wallet code pulls in, imports other modules, and Rollup cannot
 	// split an IIFE worker (Vite's default) into chunks.

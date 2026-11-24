@@ -247,7 +247,7 @@ test.describe('Consent screen', () => {
 		// The four questions this chapter is actually asked about.
 		expect(chapter).toContain('did:key');
 		expect(chapter).toContain('AES-GCM-256');
-		expect(chapter).toContain('ECDH P-256');
+		expect(chapter).toContain('X25519');
 		expect(chapter).toContain('privacy01.dbKey');
 
 		// And the element's network bullets are gone from it.

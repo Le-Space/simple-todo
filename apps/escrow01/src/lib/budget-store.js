@@ -15,7 +15,7 @@ import { finishLock, prepareLock, releaseBudgetOf } from './budget-flow.js';
 import { createBudgetService } from './budget-service.js';
 import { confirmDelegatedWrite, withPasskeyPrompt } from './delegated-write-auth.js';
 import { passkeyCredentialStore } from './p2p-stores.js';
-import { wasRegisteredHere } from './passkey-identity.js';
+import { wasRegisteredHere } from './registered-passkeys.js';
 import { translate } from './i18n/index.js';
 import {
 	addTodo,

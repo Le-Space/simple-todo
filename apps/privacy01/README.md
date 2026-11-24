@@ -42,44 +42,71 @@ collaboration the earlier chapters teach rather than protect it.
 
 ### How a second person gets in
 
-Every identity generates an **ECDH P-256 key pair** on first use and publishes the
-public half in a small, public directory. When you grant a DID write access, the
-app also seals a copy of that list's key to that DID's published key — an
-_envelope_. The wrapped copies replicate in the open, because each one opens only
-for its recipient.
+Every identity has an **X25519 key pair** for this one job, and publishes the
+public half in a small, public directory. The pair is not stored anywhere: it is
+derived (HKDF) from the identity's signing key, which the passkey provider in
+turn derives from the passkey's PRF output — so one passkey gives the same pair
+on every device. When you grant a DID write access, the app also seals a copy of
+each of that list's keys to that DID's published key — an _envelope_. The
+wrapped copies replicate in the open, because each one opens only for its
+recipient.
 
 ```
 your list key K ──AES-GCM──▶ the todos
        │
-       └──wrapped to Bob's public key──▶ published; only Bob can open it
+       ├──wrapped to Bob's public key──▶ published; only Bob can open it
+       └──wrapped to your own key─────▶ published; your other devices open it
 ```
 
-Two details that are easy to get wrong and are handled here:
+The owner is a recipient like any other: a copy for herself is sealed when the
+list is created, so the same passkey on a second device — or this browser after
+its storage was cleared — reads its own list.
+
+Details that are easy to get wrong and are handled here:
 
 - **The directory verifies who wrote an entry.** Anyone may publish into it, so
   without that check Eve could put _her_ key under Bob's DID and read everything
   Alice ever grants him. An entry counts only when the identity that signed it is
   the DID it claims.
-- **A key that arrives is picked up by reopening the list.** `orbitdb.open`
-  returns a database it already has open and ignores the options, so a list you
-  opened before you were admitted has to be closed first — otherwise the
-  decryptor is passed and silently dropped.
+- **A key copy counts only if an admin of the list wrote it.** The store of
+  copies is writable by anyone too, and Bob's public key is public — so Eve could
+  seal a key of her own choosing to Bob and file it as Alice's. It would open.
+  Bob would then read nothing Alice wrote and seal everything he writes under a
+  key Eve holds. So a copy is believed only when its signer is in the list's
+  `capabilities().admin`.
+- **Removing a reader starts a new key.** "Remove" takes away the write grant
+  _and_ starts a new key epoch: a fresh key, wrapped to everyone who stays,
+  under which every new entry is sealed. Each entry says which key sealed it, so
+  readers keep all of a list's keys and pick the right one.
+- **A key that arrives is picked up while the list is open.** A copy that
+  replicates in — a grant, a new epoch, the owner's own copy on a second device
+  — reaches the open list without a reload. `orbitdb.open` returns a database it
+  already has open and ignores the options, so a list opened in the clear before
+  a key was there is closed and reopened sealed.
+- **An entry this reader cannot open does not stop the sync.** A removed reader
+  still receives the list. Throwing on an entry it has no key for would end
+  OrbitDB's whole heads exchange, so such an entry is skipped instead.
 
 ### What this does _not_ do
 
 Stated plainly, because encryption invites more confidence than it earns:
 
-- **No revocation.** A key handed over cannot be taken back. Removing a reader
-  means a new key and re-wrapping for everyone else, and everything written under
-  the old key stays readable to whoever kept it. That is what a shared secret is.
-- **The keys sit in local storage in the clear** — the list keys and the device's
-  private half alike, no better protected than anything else in the browser.
-  Binding them to the passkey is the next step (#277 phase 1.5).
+- **Removing a reader takes nothing back.** A removed DID keeps every key it was
+  given, and with them every entry written before the removal — including those
+  it has already replicated. Only what is written afterwards is out of its
+  reach. A member who has not received the new key yet may still write under
+  the old one for a moment, and that entry is readable to the removed DID too.
+- **The list keys are cached in local storage in the clear**, no better
+  protected than anything else in the browser. The encryption key pair is not
+  stored; it is derived from the signing key each session.
 - **Metadata is not hidden.** Who wrote, how often and when stays visible to
   anyone replicating the list, including a relay. Only the contents are sealed.
 - **Nothing survives a reload yet.** This chapter runs Helia in memory
   (`createHeliaLight` with no blockstore), so a list created only in this browser
   does not come back — which is a property of the chapter, not of the encryption.
+  Your own key copy does come back on any device with your passkey, but the
+  entries have to come from a peer that holds them: a relay does not yet deliver
+  them to a browser that holds nothing (orbitdb/orbitdb#1255).
 - **A relay cannot replicate a sealed list properly.** That needs a _second_ key,
   for replication rather than content, and it is the subject of `privacy02`
   (#277 phase 2.5).
@@ -89,8 +116,10 @@ Stated plainly, because encryption invites more confidence than it earns:
 1. Create a private list and add a todo.
 2. Open the same address in a second browser with its own passkey — the list
    replicates and the todo is **not** readable.
-3. Grant that browser's DID write access in the permissions panel.
-4. Open the list by address again in the second browser: the todo is there.
+3. Grant that browser's DID write access in the permissions panel: the todo
+   appears there.
+4. Remove that DID again and add another todo. The second browser keeps the
+   first todo and does not get the new one.
 
 ## 🔑 Inherited from `acl01`: Per-DID Write Permissions
 

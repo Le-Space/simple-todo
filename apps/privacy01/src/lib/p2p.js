@@ -25,6 +25,7 @@ import { multiaddr } from '@multiformats/multiaddr';
 import { createLibp2pConfig } from '@simple-todo/net/libp2p-config.js';
 import { createMemoryIdentities } from '@simple-todo/todo/memory-identities.js';
 import { seedRestoredSigningKey } from '@simple-todo/todo/restored-signing-key.js';
+import { SIGNING_KEY_TYPE } from './passkey-identity.js';
 import { keepLogsWhereTheChoiceSays } from '@simple-todo/todo/keep-logs-in-memory.js';
 import { forgetByPrefix, recall, remember } from '@simple-todo/todo/browser-memory.js';
 import {
@@ -393,7 +394,7 @@ async function createOrbitDBInstance(heliaNode) {
 	const identity = await identities.createIdentity({
 		provider: OrbitDBWebAuthnIdentityProviderFunction({
 			webauthnCredential: activePasskeyCredential,
-			signingKeyType: 'Ed25519'
+			signingKeyType: SIGNING_KEY_TYPE
 		})
 	});
 	// The provider files a proof under `webauthn-identity-proof:…` in

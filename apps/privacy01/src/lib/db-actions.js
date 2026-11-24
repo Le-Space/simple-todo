@@ -4,11 +4,17 @@ import { OrbitDBAccessController } from '@orbitdb/core';
 import { peerIdStore } from './p2p-stores.js';
 import { rememberList, listRegistryStore, openListRegistry } from './list-registry.js';
 import { relayHttpStatusStore } from '@simple-todo/net/relay-status.js';
-import { openEncrypted } from './encrypted-open.js';
+import { isSealedDatabase, keyringFor, openEncrypted } from './encrypted-open.js';
 import { ownDeviceKeys } from './device-keys.js';
 import { openKeyDirectory, publishOwnKey } from './key-directory.js';
-import { keyForRecipient, openSharedKeys, shareKeyWith } from './shared-keys.js';
-import { storedDatabaseKey } from './database-keys.js';
+import {
+	adminsOf,
+	keysForRecipient,
+	openSharedKeys,
+	rotateKey,
+	shareKeyWith
+} from './shared-keys.js';
+import { rememberKeys, storedKeys } from './database-keys.js';
 
 /**
  * @typedef {{
@@ -180,6 +186,8 @@ export async function initializeDatabase(orbitdb, todoDB) {
 let keyDirectory = null;
 /** @type {any} */
 let sharedKeys = null;
+/** @type {Promise<void> | null} */
+let keySharingReady = null;
 
 /**
  * Open the directory and the store of wrapped copies, and publish this
@@ -187,48 +195,177 @@ let sharedKeys = null;
  *
  * @param {any} orbitdb
  */
-export async function openKeySharing(orbitdb) {
-	keyDirectory = await openKeyDirectory(orbitdb);
-	sharedKeys = await openSharedKeys(orbitdb);
-	await publishOwnKey(orbitdb, keyDirectory);
+export function openKeySharing(orbitdb) {
+	keySharingReady = (async () => {
+		keyDirectory = await openKeyDirectory(orbitdb);
+		sharedKeys = await openSharedKeys(orbitdb);
+
+		// A copy for the list on screen can arrive at any time: the owner granted
+		// this reader, rotated the key after removing somebody else, or -- on a
+		// second device of the owner -- the store simply replicated after the
+		// list was opened. Each of those has to reach the list without a reload.
+		sharedKeys.events.on('update', (/** @type {any} */ entry) => {
+			const key = entry?.payload?.key;
+			if (typeof key === 'string' && !key.startsWith(`${get(todoDBAddressStore)}|`)) return;
+			void refreshActiveKeys();
+		});
+		sharedKeys.events.on('join', () => void refreshActiveKeys());
+
+		await publishOwnKey(orbitdb, keyDirectory);
+	})();
+	// Once more now that the store is open: a list opened before it was had no
+	// copies to look at.
+	void keySharingReady.then(() => refreshActiveKeys()).catch(() => {});
+	return keySharingReady;
 }
 
-/**
- * The key for a list somebody granted this reader, if a copy was sealed for it.
- *
- * @param {string} address
- * @returns {Promise<Uint8Array | null>}
- */
-async function findSharedKey(address) {
-	const orbitdb = get(orbitdbStore);
-	if (!sharedKeys || !orbitdb) return null;
-
-	const did = orbitdb.identity.id;
-	const { privateKey } = await ownDeviceKeys(did);
-	return keyForRecipient(sharedKeys, { listAddress: address, did, privateKey });
-}
-
-/**
- * Let go of a database this browser already has open at that address.
- *
- * Only ever called when a key has just arrived for it, which is the one case
- * where the cached instance is the wrong one to keep.
- *
- * @param {string} address
- */
-async function closeExisting(address) {
-	const open = get(todoDBStore);
-	if (!open || getDatabaseAddress(open) !== address) return;
-
+/** Wait for the key-sharing databases, without failing whoever asked. */
+async function keySharingOpened() {
 	try {
-		await /** @type {any} */ (open).close();
-	} catch (error) {
-		console.warn('Could not close the list before reopening it sealed:', error);
+		await keySharingReady;
+	} catch {
+		// Reported where it was started; the caller goes on without copies.
 	}
+	return Boolean(sharedKeys && keyDirectory);
 }
 
 /**
- * Seal the active list's key for a DID that was just granted write access.
+ * This identity's encryption key pair, derived from its signing key.
+ *
+ * @param {any} orbitdb
+ */
+function ownKeys(orbitdb) {
+	return ownDeviceKeys(orbitdb.identity.id, { keystore: orbitdb.keystore });
+}
+
+/**
+ * The keys of a list an admin of it sealed for this reader.
+ *
+ * Needs the list itself, open: whose copies count is decided by its access
+ * controller, not by the store the copies are in (#120).
+ *
+ * @param {string} address
+ * @param {any} database the list, open
+ * @returns {Promise<import('./keyring.js').EpochKey[]>}
+ */
+async function findSharedKeys(address, database) {
+	const orbitdb = get(orbitdbStore);
+	if (!orbitdb || !(await keySharingOpened())) return [];
+
+	const { privateKey } = await ownKeys(orbitdb);
+	return keysForRecipient(sharedKeys, {
+		listAddress: address,
+		did: orbitdb.identity.id,
+		privateKey,
+		admins: await adminsOf(database?.access),
+		identities: orbitdb.identities
+	});
+}
+
+/** @type {Promise<void> | null} */
+let refreshing = null;
+let refreshAgain = false;
+
+/**
+ * Bring the keyring of the list on screen up to date with the store.
+ *
+ * New keys are used at once: the open database's encryptor reads the same
+ * keyring, so new entries are sealed under the newest key, and a reread opens
+ * entries that were sealed under a key this reader did not have yet. A list
+ * that was opened in the clear because no key was here has to be reopened.
+ *
+ * And the other direction, for an admin: a key of this list that has no copy
+ * for this identity in the store yet gets one. That is what lets the owner's
+ * second device read lists made before #120, and lists whose first copy could
+ * not be written because the store was not open yet.
+ *
+ * @returns {Promise<void>}
+ */
+function refreshActiveKeys() {
+	if (refreshing) {
+		refreshAgain = true;
+		return refreshing;
+	}
+	refreshing = (async () => {
+		do {
+			refreshAgain = false;
+			try {
+				await refreshActiveKeysOnce();
+			} catch (error) {
+				console.warn('Could not bring the list keys up to date:', error);
+			}
+		} while (refreshAgain);
+	})().finally(() => {
+		refreshing = null;
+	});
+	return refreshing;
+}
+
+async function refreshActiveKeysOnce() {
+	const orbitdb = get(orbitdbStore);
+	const database = get(todoDBStore);
+	const address = getDatabaseAddress(database);
+	if (!orbitdb || !database || !address.startsWith('/orbitdb/') || !sharedKeys) return;
+
+	const keyring = keyringFor(address);
+	const found = await findSharedKeys(address, database);
+	if (get(todoDBStore) !== database) return;
+
+	if (keyring.addAll(found) > 0) {
+		rememberKeys(address, keyring);
+		if (isSealedDatabase(database)) await loadTodos();
+		else await loadTodoDatabase(address);
+		return;
+	}
+
+	await copyMissingKeysToSelf(orbitdb, address, database, keyring, found);
+}
+
+/**
+ * @param {any} orbitdb
+ * @param {string} address
+ * @param {any} database
+ * @param {import('./keyring.js').Keyring} keyring
+ * @param {import('./keyring.js').EpochKey[]} found what the store already has for this identity
+ */
+async function copyMissingKeysToSelf(orbitdb, address, database, keyring, found) {
+	if (keyring.size === 0) return;
+	const did = orbitdb.identity.id;
+	if (!(await adminsOf(database?.access)).has(did)) return;
+
+	const present = new Set(found.map((key) => key.keyId));
+	const missing = keyring.all().filter((key) => !present.has(key.keyId));
+	if (missing.length === 0) return;
+
+	await shareKeyWith(
+		orbitdb,
+		{ directory: keyDirectory, store: sharedKeys },
+		{
+			listAddress: address,
+			recipientDid: did,
+			keys: missing,
+			recipientPublicKey: (await ownKeys(orbitdb)).publicKey
+		}
+	);
+}
+
+/**
+ * Every key this browser holds for a list: the live keyring, or what was
+ * written down when no database for it is open yet.
+ *
+ * @param {string} address
+ */
+async function keysOfList(address) {
+	const keyring = keyringFor(address);
+	if (keyring.size === 0) keyring.addAll((await storedKeys(address)) ?? []);
+	return keyring;
+}
+
+/**
+ * Seal the active list's keys for a DID that was just granted write access.
+ *
+ * Every epoch, not just the current one: a reader let in reads the list from
+ * its beginning, as one let in before any revoke would.
  *
  * Granting write access without this leaves somebody able to write to a list
  * they cannot read — which is what `acl01`'s two grant scenarios measure, and
@@ -240,19 +377,88 @@ async function closeExisting(address) {
 export async function shareActiveListKeyWith(did) {
 	const orbitdb = get(orbitdbStore);
 	const address = get(todoDBAddressStore);
-	if (!orbitdb || !sharedKeys || !keyDirectory || !address) {
+	if (!orbitdb || !address || !(await keySharingOpened())) {
 		return { shared: false, reason: 'not-ready' };
 	}
 
-	const databaseKey = storedDatabaseKey(address);
+	const keyring = await keysOfList(address);
 	// An unsealed list has no key to share, and that is not a failure: the
 	// default mnemonic list is deliberately in the clear.
-	if (!databaseKey) return { shared: false, reason: 'list-not-sealed' };
+	if (keyring.size === 0) return { shared: false, reason: 'list-not-sealed' };
 
 	return shareKeyWith(
 		orbitdb,
 		{ directory: keyDirectory, store: sharedKeys },
-		{ listAddress: address, recipientDid: did, databaseKey }
+		{ listAddress: address, recipientDid: did, keys: keyring.all() }
+	);
+}
+
+/**
+ * Start a new key epoch for the active list after a DID lost its access.
+ *
+ * Everybody who keeps access — writers, admins, and this identity — gets a
+ * copy of the new key; the removed DID does not. Entries written from now on
+ * are sealed under it, by this browser at once and by the others as soon as
+ * their copy arrives (`refreshActiveKeys`).
+ *
+ * @param {string} removedDid
+ * @returns {Promise<{ rotated: boolean, reason?: string, epoch?: number, withoutKey?: string[] }>}
+ */
+export async function rotateActiveListKey(removedDid) {
+	const orbitdb = get(orbitdbStore);
+	const database = get(todoDBStore);
+	const address = getDatabaseAddress(database);
+	if (!orbitdb || !database || !address || !(await keySharingOpened())) {
+		return { rotated: false, reason: 'not-ready' };
+	}
+
+	const keyring = await keysOfList(address);
+	if (keyring.size === 0) return { rotated: false, reason: 'list-not-sealed' };
+
+	const own = { did: orbitdb.identity.id, publicKey: (await ownKeys(orbitdb)).publicKey };
+	const capabilities = (await database.access?.capabilities?.()) ?? {};
+	/** @type {Set<string>} */
+	const recipients = new Set([...(capabilities.write ?? []), ...(capabilities.admin ?? [])]);
+	recipients.delete('*');
+	recipients.delete(removedDid);
+
+	const { key, results } = await rotateKey(
+		orbitdb,
+		{ directory: keyDirectory, store: sharedKeys },
+		{ listAddress: address, keyring, recipients: [...recipients], own }
+	);
+	rememberKeys(address, keyring);
+
+	return {
+		rotated: true,
+		epoch: key.epoch,
+		withoutKey: results.filter((result) => !result.shared).map((result) => result.did)
+	};
+}
+
+/**
+ * Seal the keys of a list this identity just created for itself.
+ *
+ * The key used to live only in the browser that created the list, so the same
+ * passkey on a second device could not read its owner's own list (#120). Now
+ * the owner is a recipient like any other, and reads her copy the same way.
+ *
+ * @param {any} orbitdb
+ * @param {string} address
+ */
+async function shareOwnCopy(orbitdb, address) {
+	const keyring = keyringFor(address);
+	if (keyring.size === 0 || !(await keySharingOpened())) return;
+
+	await shareKeyWith(
+		orbitdb,
+		{ directory: keyDirectory, store: sharedKeys },
+		{
+			listAddress: address,
+			recipientDid: orbitdb.identity.id,
+			keys: keyring.all(),
+			recipientPublicKey: (await ownKeys(orbitdb)).publicKey
+		}
 	);
 }
 
@@ -279,14 +485,14 @@ export async function loadTodoDatabase(address) {
 	}
 
 	try {
-		// Sealed only if this device already holds a key for this address, which
-		// is true exactly of a list it created. Somebody else's list opens in the
-		// clear — see `encrypted-open.js`.
+		// Sealed if this device holds a key for this address, or an admin of the
+		// list sealed one for this identity. Otherwise it opens in the clear —
+		// see `encrypted-open.js`.
 		const loadedTodoDB = await openEncrypted(
 			orbitdb,
 			normalizedAddress,
 			{ type: 'keyvalue', sync: true },
-			{ findSharedKey, closeExisting }
+			{ findSharedKeys }
 		);
 
 		// Prefer what the registry already knows: a list you created is yours even
@@ -311,6 +517,11 @@ export async function loadTodoDatabase(address) {
 		} catch (error) {
 			console.warn('Could not record the opened list in the registry:', error);
 		}
+
+		// Keys written down here may be behind: the owner can have started a new
+		// epoch since, and the store may already hold the copy, with no further
+		// change coming to announce it.
+		void refreshActiveKeys();
 
 		return {
 			address: openedAddress,
@@ -358,6 +569,15 @@ export async function createPrivateTodoList(name = 'private-todos') {
 	setupDatabaseListeners(privateDB);
 	await loadTodos();
 	const address = getDatabaseAddress(privateDB) || '';
+	// A copy of the key for the owner herself, so the list is hers on every
+	// device her passkey opens and not only in this browser (#120). Best effort
+	// like the registry below: a copy that could not be written now is written
+	// the next time the list is open and the store is (`refreshActiveKeys`).
+	try {
+		if (address) await shareOwnCopy(orbitdb, address);
+	} catch (error) {
+		console.warn('Could not seal a copy of the new list key for its owner:', error);
+	}
 	// Record it, so the list survives a reload and shows up in the switcher.
 	// Best effort: a failing registry must not lose the list the user just made.
 	try {
@@ -908,7 +1128,8 @@ if (typeof window !== 'undefined') {
 	 *   loadTodoDatabase?: typeof loadTodoDatabase,
 	 *   getTodoDatabaseAddress?: () => string,
 	 *   getTodoDatabasePeerCount?: () => number,
-	 *   getTodoCount?: () => number
+	 *   getTodoCount?: () => number,
+	 *   getTodoLogSummary?: () => Promise<{ entries: number, unreadable: number }>
 	 * }} */ (window);
 
 	browserWindow.deleteCurrentDatabase = deleteCurrentDatabase;
@@ -917,5 +1138,22 @@ if (typeof window !== 'undefined') {
 	browserWindow.getTodoDatabaseAddress = () => getDatabaseAddress(get(todoDBStore));
 	browserWindow.getTodoDatabasePeerCount = () => get(todoDBStore)?.peers?.size ?? 0;
 	browserWindow.getTodoCount = () => get(todosCountStore);
+	// How much of the active list this reader holds and how much of it is sealed
+	// under a key it does not have. On screen both look like "no todo"; a test
+	// that wants to tell "not replicated" from "replicated and unreadable" asks
+	// here.
+	//
+	// Unreadable is anything that is not a todo operation: a `SEALED` stand-in
+	// where the list is open with keys, and the sealed payload itself where it
+	// is open without any (./entry-encryption.js).
+	browserWindow.getTodoLogSummary = async () => {
+		const entries = (await get(todoDBStore)?.log?.values?.()) ?? [];
+		const isTodoOperation = (/** @type {any} */ entry) =>
+			entry?.payload?.op === 'PUT' || entry?.payload?.op === 'DEL';
+		return {
+			entries: entries.length,
+			unreadable: entries.filter((entry) => !isTodoOperation(entry)).length
+		};
+	};
 	console.log('🔧 deleteCurrentDatabase function is now available in browser console');
 }
