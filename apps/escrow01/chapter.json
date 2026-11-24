@@ -36,7 +36,8 @@
 			"e2e/default-database-collaboration.spec.js",
 			"e2e/replication-without-webrtc.spec.js",
 			"e2e/demo-video.spec.js",
-			"e2e/header-title.spec.js"
+			"e2e/header-title.spec.js",
+			"e2e/private-start.spec.js"
 		],
 		"check": true
 	}

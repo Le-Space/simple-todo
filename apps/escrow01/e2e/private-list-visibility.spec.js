@@ -68,10 +68,12 @@ test.describe('private list visibility (#114)', () => {
 	test('the page names the active list instead of the shared mnemonic', async ({ page }) => {
 		test.setTimeout(timeout * 3);
 		await addVirtualAuthenticator(page);
-		await openReadyApp(page);
+		// A shared list to start from: escrow01 lands in a private one of its own
+		// unless a link brings three words.
+		await openReadyApp(page, '/#list=sol-camino-verde');
 
-		// Before: the public list every visitor lands in, named by its words above
-		// the todos.
+		// Before: the shared list the link brought, named by its words above the
+		// todos.
 		const heading = page.getByTestId('active-list-heading');
 		await expect(heading).toBeVisible();
 		await expect(heading).toHaveAttribute('data-kind', 'shared');
@@ -174,9 +176,9 @@ async function addVirtualAuthenticator(page) {
  * can actually be written to.
  * @param {import('@playwright/test').Page} page
  */
-async function openReadyApp(page) {
+async function openReadyApp(page, url = testUrl) {
 	const runId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-	await page.goto(testUrl);
+	await page.goto(url);
 	await passConsent(page, { identity: 'create', label: `User ${runId}` });
 	await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 }

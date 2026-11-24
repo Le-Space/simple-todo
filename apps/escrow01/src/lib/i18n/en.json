@@ -119,7 +119,10 @@
 			"delegateDidPlaceholder": "did:key:… of the person who may complete it",
 			"expiry": "Delegation expires at",
 			"optional": "(optional)",
-			"delegateHint": "The delegate does not get write access to the list. They may only complete or rename this one todo, and you can revoke that at any time."
+			"delegateHint": "The delegate does not get write access to the list. They may only complete or rename this one todo, and you can revoke that at any time.",
+			"privateListHint": "Delegating a todo and locking a budget for it work in a private list. Everyone can write to this shared list.",
+			"privateListCreate": "Create a private list",
+			"privateListBusy": "Creating…"
 		},
 		"item": {
 			"toggle": "Toggle completion",
@@ -416,6 +419,11 @@
 		"identityLabelTitle": "Name of the new passkey"
 	},
 	"lists": {
+		"home": {
+			"name": "My todos",
+			"pending": "Made with your first todo",
+			"openFailed": "Your own list could not be opened, so you are in the shared one: {reason}"
+		},
 		"create": {
 			"heading": "Create a private list",
 			"hint": "Only your identity can write to it. Share its address and grant other DIDs below.",

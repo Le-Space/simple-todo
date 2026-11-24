@@ -38,6 +38,7 @@ import {
 	PERSISTENT_STORAGE_PATHS
 } from '@simple-todo/todo/storage-mode.js';
 import { initializeDatabase, todoDBAddressStore, todosStore } from './db-actions.js';
+import { resetListRegistry } from './list-registry.js';
 import {
 	getWebRTCEnabled,
 	initializeWebRTCSetting,
@@ -296,6 +297,11 @@ async function stopP2P() {
 	await Promise.allSettled(resources.map((resource) => resource?.stop?.() ?? resource?.close?.()));
 
 	todosStore.set([]);
+	// The registry belongs to the OrbitDB instance that just stopped, and maybe
+	// to another identity. Kept, it handed the next start a closed database and
+	// the previous identity's lists -- and the start now opens one of those as
+	// the home list (`openHomeList`), so it has to go with the rest.
+	resetListRegistry();
 }
 
 /**

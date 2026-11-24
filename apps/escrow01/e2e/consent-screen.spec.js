@@ -543,7 +543,14 @@ test.describe('Consent screen', () => {
 
 			// The simple view: whether the app is ready, and which list is open.
 			await expect(page.getByTestId('p2p-status-nav')).toHaveAttribute('data-view', 'simple');
-			await expect(page.getByTestId('active-list-heading')).toContainText('Geteilte Liste');
+			// escrow01 starts towards a list of one's own, named in the reader's
+			// language; it is made with the first todo, so the lists tab still shows
+			// the shared list open underneath.
+			await expect(page.getByTestId('active-list-heading')).toContainText('Private Liste');
+			await expect(page.getByTestId('active-list-name')).toHaveText('Meine Aufgaben');
+			await expect(page.getByTestId('active-list-pending')).toHaveText(
+				'Entsteht mit Ihrer ersten Aufgabe'
+			);
 			await expect(page.getByTestId('p2p-status-step')).toHaveCount(0);
 			await expect(page.getByTestId('network-details')).toHaveCount(0);
 

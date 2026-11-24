@@ -53,7 +53,10 @@
 		updateTodoText,
 		delegateTodo,
 		revokeTodoDelegation,
-		loadTodoDatabase
+		loadTodoDatabase,
+		openHomeList,
+		createPrivateTodoList,
+		homeListPendingStore
 	} from '$lib/db-actions.js';
 	import { supportsDelegation } from '$lib/delegated-access.js';
 	import DelegatedAuthBadge from '$lib/DelegatedAuthBadge.svelte';
@@ -391,6 +394,14 @@
 		// The dialog shows this now, so a stale one would accuse the attempt that
 		// is only just starting.
 		error = null;
+		// escrow01: a shared list only when one was asked for -- "Join a shared
+		// list" ticked, words from a link, or the dialog opened again to change
+		// the list. Anything else ends in one's own list (`openStartList`).
+		const wordsChosen = joinList;
+		// Held from before the start, not from when the home list begins to open:
+		// in between, the form would be enabled on the shared list for a moment,
+		// and a todo written then would vanish with the switch.
+		homeListOpening = !wordsChosen && !addressFromLink;
 		// Now, not when the dialog appeared: the storage choice is only a choice
 		// once somebody starts with it. The box writes nothing, so a preselected
 		// "keep it" stayed in memory without this. First, so that every
@@ -417,7 +428,7 @@
 		try {
 			// Numbered when there is a passkey: its later prompts each get a word
 			// on what they are for, and start from the click that answers it.
-			const begin = () => beginWith(from, canonicalMnemonic);
+			const begin = () => beginWith(from, canonicalMnemonic, wordsChosen);
 			await (prompts === null ? begin() : withPasskeySteps(prompts, begin));
 		} catch (err) {
 			const reason = err instanceof Error ? err.message : String(err);
@@ -440,6 +451,7 @@
 				showModal = true;
 				error = message;
 			}
+			homeListOpening = false;
 			console.error('P2P initialization failed:', err);
 		}
 	}
@@ -449,8 +461,9 @@
 	 *
 	 * @param {'dialog' | 'welcome'} from
 	 * @param {string} canonicalMnemonic
+	 * @param {boolean} wordsChosen escrow01: open that shared list, not one's own
 	 */
-	async function beginWith(from, canonicalMnemonic) {
+	async function beginWith(from, canonicalMnemonic, wordsChosen) {
 		// Resolve the identity choice first — WebAuthn calls must run inside
 		// the user gesture of the proceed click.
 		let passkeyCredential = null;
@@ -489,7 +502,7 @@
 			await startP2P({ todoDbName: canonicalMnemonic, passkeyCredential });
 		}
 		activeMnemonic = canonicalMnemonic;
-		void listLink.openLinked();
+		void openStartList(wordsChosen);
 		warnIfIdentityCannotTravel(passkeyCredential);
 	}
 
@@ -565,13 +578,70 @@
 				// From the values, not `selectedMnemonic`: its reactive update has not
 				// run yet inside this handler.
 				activeMnemonic = normalizeSpanishMnemonic(joinList ? joinWords : ownMnemonic);
+				homeListOpening = !joinList && !addressFromLink;
 				await startP2P({ todoDbName: activeMnemonic, passkeyCredential: null });
-				void listLink.openLinked();
+				void openStartList(joinList);
 			}
 		} catch {
-			// ignore storage errors
+			// ignore storage errors -- but do not leave the form locked for a home
+			// list that is now never going to open
+			homeListOpening = false;
 		}
 	});
+
+	/**
+	 * An address the page was opened with is followed once, on the first start.
+	 * A later restart -- another identity, another storage choice -- goes back
+	 * to one's own list instead of to a link that has already been followed.
+	 */
+	let addressFromLink = listLink.initial.address;
+	let homeListOpening = false;
+	let privateListBusy = false;
+
+	/**
+	 * escrow01: which list the start ends in.
+	 *
+	 * The shared list named by the three words is open by now -- `initializeP2P`
+	 * opens it, as before, and it stays open for whoever arrives with the same
+	 * words. What changes is the list on screen:
+	 *
+	 * - "Join a shared list" ticked, or words from a link: that shared list;
+	 * - an address from a link: that list;
+	 * - otherwise one's own private list, because delegation and budgets --
+	 *   what this chapter is about -- exist only there.
+	 *
+	 * @param {boolean} wordsChosen
+	 */
+	async function openStartList(wordsChosen) {
+		if (wordsChosen || addressFromLink) {
+			homeListOpening = false;
+			addressFromLink = null;
+			await listLink.openLinked();
+			return;
+		}
+		homeListOpening = true;
+		try {
+			await openHomeList($_('lists.home.name'));
+		} catch (err) {
+			const reason = err instanceof Error ? err.message : String(err);
+			showToast($_('lists.home.openFailed', { values: { reason } }), 'error', 6000);
+		} finally {
+			homeListOpening = false;
+		}
+	}
+
+	/** From the hint on a shared list: a private list, opened right away. */
+	async function handleCreatePrivateList() {
+		privateListBusy = true;
+		try {
+			await createPrivateTodoList($_('lists.home.name'));
+		} catch (err) {
+			const reason = err instanceof Error ? err.message : String(err);
+			showToast($_('lists.home.openFailed', { values: { reason } }), 'error', 6000);
+		} finally {
+			privateListBusy = false;
+		}
+	}
 
 	/** This browser's own three words, if it keeps any. */
 	function storedMnemonic() {
@@ -646,6 +716,17 @@
 	 */
 	const handleAddTodo = async (event) => {
 		const { text, delegateDid, delegationExpiresAt, budgetAmount } = event.detail;
+		// escrow01: the first todo makes the list of one's own the start pointed
+		// to, and goes into it.
+		if ($homeListPendingStore) {
+			try {
+				await openHomeList($_('lists.home.name'), { create: true });
+			} catch (err) {
+				const reason = err instanceof Error ? err.message : String(err);
+				showToast($_('lists.home.openFailed', { values: { reason } }), 'error', 6000);
+				return;
+			}
+		}
 		// escrow01: with a budget, the todo is written "being locked" and the lock
 		// follows; how it went shows on the row and in the notices, not here.
 		const result =
@@ -749,7 +830,8 @@
 
 	// A budget is paid to the delegate, so it exists only where delegation does,
 	// and only for a session the service can sign for.
-	$: budgetEnabled = delegationEnabled && (!budgetInfo.requiresPasskey || Boolean($ownDidStore));
+	$: budgetEnabled =
+		formDelegationEnabled && (!budgetInfo.requiresPasskey || Boolean($ownDidStore));
 	$: budgetsInList = $todosStore.some((todo) => todo.budget && todo.budget.status !== 'none');
 	// The starting funds are a sentence about *this* account, so it stops being
 	// true the moment the account holds anything -- a recipient's balance comes
@@ -827,6 +909,9 @@
 	// delegation01: the shared mnemonic list (IPFS controller) cannot take
 	// delegations; private lists and lists opened by address can.
 	$: delegationEnabled = supportsDelegation($todoDBStore);
+	// The form offers delegation and a budget for the list the first todo will
+	// make, too; the rows below belong to the list that is open.
+	$: formDelegationEnabled = delegationEnabled || $homeListPendingStore;
 
 	/**
 	 * @param {{ detail: { status: 'stable' | 'dropped', detail: string, remotePeer: string | null, remoteAddr: string } }} event
@@ -1059,23 +1144,29 @@
 		data-testid="section-aufgaben"
 	>
 		{#if $initializationStore.isInitialized}
-			<ActiveListHeading mnemonic={activeMnemonic} />
+			<ActiveListHeading
+				mnemonic={activeMnemonic}
+				pendingName={$homeListPendingStore ? $_('lists.home.name') : null}
+			/>
 		{/if}
 
 		<AddTodoForm
 			on:add={handleAddTodo}
-			disabled={!$initializationStore.isInitialized}
-			{delegationEnabled}
+			disabled={!$initializationStore.isInitialized || homeListOpening}
+			delegationEnabled={formDelegationEnabled}
 			{budgetEnabled}
 			budgetToken={budgetInfo.token.symbol}
 			budgetDecimals={budgetInfo.token.decimals}
 			budgetConfidential={budgetInfo.confidential}
+			offerPrivateList={$initializationStore.isInitialized && !homeListOpening}
+			{privateListBusy}
+			on:createPrivateList={handleCreatePrivateList}
 		/>
 
 		<BudgetNotices active={budgetsInList || showBalance} />
 
 		<TodoList
-			todos={$todosStore}
+			todos={$homeListPendingStore ? [] : $todosStore}
 			currentIdentityId={$ownIdentityIdStore}
 			{delegationEnabled}
 			on:delete={handleDelete}

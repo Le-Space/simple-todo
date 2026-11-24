@@ -9,24 +9,42 @@
 
 	/** The shared list has no name of its own; its three words are its name. */
 	export let mnemonic = '';
+	/**
+	 * escrow01: the name of the list of one's own that the first todo will make
+	 * -- set while there is none yet. The heading shows that list, not the shared
+	 * one still open underneath.
+	 * @type {string | null}
+	 */
+	export let pendingName = null;
 
 	const KINDS = ['shared', 'private', 'guest'];
 	$: list = $activeListStore;
-	$: kind = KINDS.includes(list?.kind) ? list.kind : 'shared';
-	$: name = kind === 'shared' ? mnemonic : list.name || shortId(list.address);
+	$: kind = pendingName ? 'private' : KINDS.includes(list?.kind) ? list.kind : 'shared';
+	$: name = pendingName
+		? pendingName
+		: kind === 'shared'
+			? mnemonic
+			: list.name || shortId(list.address);
 </script>
 
 <div
 	class="mb-4 flex items-end justify-between gap-3"
 	data-testid="active-list-heading"
 	data-kind={kind}
+	data-pending={pendingName ? 'true' : undefined}
 >
 	<div class="min-w-0">
 		<p class="text-xs font-medium text-faint">{$_(`lists.active.${kind}`)}</p>
 		<h2 class="truncate text-2xl font-bold" data-testid="active-list-name">
 			{name || $_('lists.switcher.unnamed')}
 		</h2>
-		<ListPeerLed />
+		{#if pendingName}
+			<p class="mt-0.5 text-xs text-faint" data-testid="active-list-pending">
+				{$_('lists.home.pending')}
+			</p>
+		{:else}
+			<ListPeerLed />
+		{/if}
 	</div>
 	<a
 		href="#listen"

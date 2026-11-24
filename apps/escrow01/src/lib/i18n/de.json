@@ -119,7 +119,10 @@
 			"delegateDidPlaceholder": "did:key:… der Person, die die Aufgabe erledigen darf",
 			"expiry": "Frist",
 			"optional": "(optional)",
-			"delegateHint": "Die delegierte Person bekommt keinen Schreibzugriff auf die Liste. Sie darf nur diese eine Aufgabe erledigen oder umbenennen, und Sie können das jederzeit zurücknehmen."
+			"delegateHint": "Die delegierte Person bekommt keinen Schreibzugriff auf die Liste. Sie darf nur diese eine Aufgabe erledigen oder umbenennen, und Sie können das jederzeit zurücknehmen.",
+			"privateListHint": "Aufgaben delegieren und ein Budget dafür sperren geht in einer privaten Liste. In diese geteilte Liste darf jeder schreiben.",
+			"privateListCreate": "Private Liste anlegen",
+			"privateListBusy": "Wird angelegt …"
 		},
 		"item": {
 			"toggle": "Als erledigt markieren oder wieder öffnen",
@@ -416,6 +419,11 @@
 		"identityLabelTitle": "Name des neuen Passkeys"
 	},
 	"lists": {
+		"home": {
+			"name": "Meine Aufgaben",
+			"pending": "Entsteht mit Ihrer ersten Aufgabe",
+			"openFailed": "Ihre eigene Liste ließ sich nicht öffnen, Sie sind in der geteilten: {reason}"
+		},
 		"create": {
 			"heading": "Private Liste anlegen",
 			"hint": "In die neue Liste darf nur Ihre Identität schreiben. Geben Sie deren Adresse weiter und erteilen Sie anderen DIDs weiter unten Schreibrechte.",
