@@ -64,6 +64,14 @@
 	import AppFooter from '@simple-todo/ui/AppFooter.svelte';
 	import PageQr from '@simple-todo/ui/PageQr.svelte';
 	import ToastNotification from '@simple-todo/ui/ToastNotification.svelte';
+	// Between two passkey prompts, what the next one is for (the provider's
+	// ./elements). From that entry rather than the root: it is the step module
+	// and the element, nothing else.
+	import {
+		connectPasskeyStepDialog,
+		withPasskeySteps,
+		PasskeyStepCancelled
+	} from '@le-space/orbitdb-identity-provider-webauthn-did/elements';
 	import P2PStatusNav from '$lib/P2PStatusNav.svelte';
 	import ErrorAlert from '$lib/ErrorAlert.svelte';
 	import AddTodoForm from '$lib/AddTodoForm.svelte';
@@ -150,6 +158,39 @@
 	// Only a label in the passkey picker, so a sensible one is filled in rather
 	// than a required field nobody expected on the way to "Start".
 	let passkeyLabel = get(_)('consent.identityLabelDefault');
+
+	/** @type {any} The <passkey-step-dialog> on this page. */
+	let passkeyStepDialog;
+
+	onMount(() => {
+		// E2E builds: the virtual authenticator needs no word in between, and
+		// every spec that creates a passkey would have to click through it. The
+		// spec for the dialog asks for it (e2e/passkey-steps.spec.js).
+		if (
+			import.meta.env.VITE_E2E === 'true' &&
+			!(/** @type {any} */ (globalThis).__simpleTodoPasskeySteps)
+		) {
+			return;
+		}
+		return connectPasskeyStepDialog(passkeyStepDialog);
+	});
+
+	/**
+	 * How many passkey prompts a start takes, counted in
+	 * e2e/passkey-restore.spec.js: a new passkey three (the passkey, the PRF
+	 * output its signing key comes from, the identity signature), one found
+	 * on the authenticator three (two touches, then the signature), one this
+	 * device keeps one (the signature). Every prompt after the first gets a
+	 * word on what it is for.
+	 *
+	 * @param {'create' | 'existing' | 'anonymous'} mode
+	 * @returns {number | null} null without a passkey
+	 */
+	function passkeyPromptsFor(mode) {
+		if (mode === 'create') return 3;
+		if (mode === 'existing') return hasStoredPasskeyCredential() ? 1 : 3;
+		return null;
+	}
 
 	// The short passkey step, and what it shows while and after it asks.
 	let showWelcome = welcomeBack;
@@ -359,50 +400,28 @@
 		} catch {
 			// ignore storage errors
 		}
+		const startedAs = identityMode;
+		const prompts = passkeyPromptsFor(identityMode);
 		try {
-			// Resolve the identity choice first — WebAuthn calls must run inside
-			// the user gesture of the proceed click.
-			let passkeyCredential = null;
-			if (identityMode === 'create') {
-				if (!passkeyLabel.trim()) {
-					throw new IdentityChoiceError($_('consent.errorNeedsLabel'));
-				}
-				// The same label goes into both WebAuthn fields on purpose: they are
-				// the account name and the display name of one credential, and the
-				// picker shows them together. Neither identifies the passkey.
-				passkeyCredential = await createPasskeyCredential({
-					userId: passkeyLabel.trim(),
-					displayName: passkeyLabel.trim()
-				});
-			} else if (identityMode === 'existing') {
-				passkeyCredential = await recoverPasskeyCredential();
-				if (!passkeyCredential) {
-					throw new IdentityChoiceError($_('consent.errorNoPasskey'));
-				}
-			}
-			try {
-				remember(IDENTITY_MODE_KEY, passkeyCredential ? 'passkey' : 'anon');
-			} catch {
-				// ignore storage errors
-			}
-			// The passkey answered; what follows is the app starting, which the
-			// page behind shows better than a step that says "waiting for passkey".
-			if (from === 'welcome') showWelcome = false;
-
-			if ($initializationStore.isInitialized) {
-				await restartP2PLazy({ todoDbName: canonicalMnemonic });
-			} else {
-				await startP2P({ todoDbName: canonicalMnemonic, passkeyCredential });
-			}
-			activeMnemonic = canonicalMnemonic;
-			void openStartList(wordsChosen);
-			warnIfIdentityCannotTravel(passkeyCredential);
+			// Numbered when there is a passkey: its later prompts each get a word
+			// on what they are for, and start from the click that answers it.
+			const begin = () => beginWith(from, canonicalMnemonic, wordsChosen);
+			await (prompts === null ? begin() : withPasskeySteps(prompts, begin));
 		} catch (err) {
 			const reason = err instanceof Error ? err.message : String(err);
-			const message =
+			let message =
 				err instanceof IdentityChoiceError
 					? reason
 					: $_('consent.errorStart', { values: { reason } });
+			if (err instanceof PasskeyStepCancelled) {
+				// Stopped between two prompts. A passkey created before the stop
+				// exists now: going on with it, not making a second one.
+				message =
+					startedAs === 'create'
+						? $_('consent.errorStepCancelledCreated')
+						: $_('consent.errorStepCancelled');
+				if (startedAs === 'create') identityMode = 'existing';
+			}
 			if (from === 'welcome' && showWelcome) {
 				welcomeError = message;
 			} else {
@@ -412,6 +431,53 @@
 			homeListOpening = false;
 			console.error('P2P initialization failed:', err);
 		}
+	}
+
+	/**
+	 * The start itself: the identity, then the network.
+	 *
+	 * @param {'dialog' | 'welcome'} from
+	 * @param {string} canonicalMnemonic
+	 * @param {boolean} wordsChosen escrow01: open that shared list, not one's own
+	 */
+	async function beginWith(from, canonicalMnemonic, wordsChosen) {
+		// Resolve the identity choice first — WebAuthn calls must run inside
+		// the user gesture of the proceed click.
+		let passkeyCredential = null;
+		if (identityMode === 'create') {
+			if (!passkeyLabel.trim()) {
+				throw new IdentityChoiceError($_('consent.errorNeedsLabel'));
+			}
+			// The same label goes into both WebAuthn fields on purpose: they are
+			// the account name and the display name of one credential, and the
+			// picker shows them together. Neither identifies the passkey.
+			passkeyCredential = await createPasskeyCredential({
+				userId: passkeyLabel.trim(),
+				displayName: passkeyLabel.trim()
+			});
+		} else if (identityMode === 'existing') {
+			passkeyCredential = await recoverPasskeyCredential();
+			if (!passkeyCredential) {
+				throw new IdentityChoiceError($_('consent.errorNoPasskey'));
+			}
+		}
+		try {
+			remember(IDENTITY_MODE_KEY, passkeyCredential ? 'passkey' : 'anon');
+		} catch {
+			// ignore storage errors
+		}
+		// The passkey answered; what follows is the app starting, which the
+		// page behind shows better than a step that says "waiting for passkey".
+		if (from === 'welcome') showWelcome = false;
+
+		if ($initializationStore.isInitialized) {
+			await restartP2PLazy({ todoDbName: canonicalMnemonic });
+		} else {
+			await startP2P({ todoDbName: canonicalMnemonic, passkeyCredential });
+		}
+		activeMnemonic = canonicalMnemonic;
+		void openStartList(wordsChosen);
+		warnIfIdentityCannotTravel(passkeyCredential);
 	}
 
 	// Loaded on demand, not at page load. `p2p.js` pulls libp2p, Helia, OrbitDB
@@ -793,6 +859,9 @@
 </script>
 
 <ToastNotification message={toastMessage} type={toastType} duration={toastDuration} />
+
+<!-- Between two passkey prompts: which one comes, what for, and "Continue". -->
+<passkey-step-dialog bind:this={passkeyStepDialog} lang={$locale ?? 'en'}></passkey-step-dialog>
 
 <svelte:head>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />

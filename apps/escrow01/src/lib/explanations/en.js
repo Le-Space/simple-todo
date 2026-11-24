@@ -307,7 +307,7 @@ export default {
 				heading: 'Why a second key',
 				points: [
 					'Zama v0.13 accepts only ECDSA permits (65-byte signatures), so a passkey account cannot sign a decryption permit itself.',
-					'So the browser holds a secp256k1 read key that the account authorizes once per contract, for the token and for the escrow; `localStorage` keeps it only sealed, under a key derived from the passkey.'
+					'So the browser holds a secp256k1 read key that the account authorizes once per contract, for the token and for the escrow; it keeps it only sealed, under a key derived from the passkey, and only in this tab\'s memory if you chose "in memory only".'
 				],
 				sources: ['security.passkeyWallet', 'zama.versions', 'account.reading']
 			},
@@ -348,7 +348,7 @@ export default {
 			{
 				heading: 'What is stored',
 				points: [
-					'The read key is a secp256k1 key the account delegated Zama user decryption to; `localStorage` keeps it as a `SealedZamaSessionKey`: AES-GCM, a random IV, its address bound as associated data.',
+					'The read key is a secp256k1 key the account delegated Zama user decryption to; it is kept as a `SealedZamaSessionKey`: AES-GCM, a random IV, its address bound as associated data. With "keep in this browser" that is `localStorage`, with "in memory only" this tab\'s memory, gone on reload.',
 					'The sealing key comes from the passkey: its PRF output for the fixed input of this relying party, then HKDF-SHA256 with the info `simple-todo:escrow01:read-key-seal:v1`. It is not extractable and lives in memory for one session.',
 					"The same PRF output also yields the list signing key; HKDF's info keeps the two keys apart."
 				],

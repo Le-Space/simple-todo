@@ -39,16 +39,61 @@ export const SUPPORTED = /** @type {const} */ (['de', 'en']);
 const STORAGE_KEY = 'simpleTodo.locale';
 
 /**
+ * A language named by the address, `?lang=en` or `?lang=de`.
+ *
+ * It is how a link says which language it is for: escrow01's English preview
+ * (/en/, built by english-link-preview.js) sends people here with `?lang=en`.
+ * Read, not stored — storing it before the consent dialog would keep something
+ * on a device whose reader has not chosen yet.
+ *
+ * @returns {'de' | 'en' | null}
+ */
+function localeFromAddress() {
+	if (typeof location === 'undefined') return null;
+	try {
+		const asked = new URL(location.href).searchParams.get('lang');
+		return asked === 'de' || asked === 'en' ? asked : null;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * The address without `?lang=`, or null when it has none. The layout puts it
+ * in place once the router runs — this module is evaluated before SvelteKit
+ * has started, and the router writes the address it started on back over an
+ * earlier change. Removed so that a later switch of the flag is not undone by
+ * the next reload, and so that the address somebody copies is the plain one.
+ *
+ * @returns {URL | null}
+ */
+export function addressWithoutLocale() {
+	if (typeof location === 'undefined') return null;
+	try {
+		const url = new URL(location.href);
+		if (!url.searchParams.has('lang')) return null;
+		url.searchParams.delete('lang');
+		return url;
+	} catch {
+		return null;
+	}
+}
+
+/**
  * The language to start in.
  *
- * A stored choice wins, because somebody who reached for the flag meant it and
- * should not have to reach again. Otherwise the browser's own setting decides —
- * `de-AT` and `de-CH` are speakers of German, so only the primary subtag is
- * consulted. Anything else lands on English.
+ * A language the address names wins: a link made for an English reader has to
+ * open in English in a German browser. Then a stored choice, because somebody
+ * who reached for the flag meant it and should not have to reach again.
+ * Otherwise the browser's own setting decides — `de-AT` and `de-CH` are
+ * speakers of German, so only the primary subtag is consulted. Anything else
+ * lands on English.
  *
  * @returns {'de' | 'en'}
  */
 export function initialLocale() {
+	const fromAddress = localeFromAddress();
+	if (fromAddress) return fromAddress;
 	try {
 		const stored = recall(STORAGE_KEY);
 		if (stored === 'de' || stored === 'en') return stored;
@@ -100,8 +145,9 @@ init({
 setTranslator(formatter, { locale: i18nLocale, setLocale });
 
 /*
-	`app.html` says `lang="en"`, and a German page that declares itself English is
-	read aloud by a screen reader with English pronunciation. The document follows
+	`app.html` declares one language for crawlers — German, as its link-preview
+	tags are — and a page that declares a language it is not showing is read
+	aloud by a screen reader with the wrong pronunciation. The document follows
 	the language on screen instead.
 */
 i18nLocale.subscribe((value) => {

@@ -683,7 +683,9 @@ stateDiagram-v2
   holds `session: { address, sealed }` with `readKeyExpiresAt` in Unix seconds. `sealed` is the
   wallet's `SealedZamaSessionKey`: AES-GCM, a random 12-byte IV, the address bound as associated data.
   `toStored` in [`account-store.js`](../src/lib/chain/account-store.js) writes only the record's own
-  fields, so a plain key cannot slip in.
+  fields, so a plain key cannot slip in. With "in memory only" the record goes through
+  `browser-memory.js` into this tab's memory instead and is gone on reload: the account is found
+  again through its published profile, the read key has to be renewed.
 - **When the passkey is asked.** Reads that happen on their own — the balance on start, a budget
   chip — never ask: a sealed key makes them throw `read-access-locked`. "Show amounts"
   (`unlockReadKey`) and a lock open it (`openReadKey`), because somebody asked for those. A renewal
@@ -816,7 +818,7 @@ otherwise it reports that the delegate has no account for budgets yet, before th
 | Data                                                    | Where                                            | Who can see it                                                           |
 | ------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------ |
 | the passkey's private key                               | authenticator                                    | nobody                                                                   |
-| address, read key (sealed), expiry, setup transaction   | the browser's `localStorage`                     | whoever gets at this browser profile; the read key only with the passkey |
+| address, read key (sealed), expiry, setup transaction   | `localStorage` (kept) or this tab (memory only)  | whoever gets at this browser profile; the read key only with the passkey |
 | the opened read key, the sealing key                    | the memory of this tab, for the visit            | the page while it runs                                                   |
 | address per DID                                         | OrbitDB account directory                        | anyone who opens the database                                            |
 | budget status, `todoRef`, transaction hashes, no amount | the todo's OrbitDB list                          | whoever can read the list                                                |

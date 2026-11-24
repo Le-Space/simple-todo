@@ -4,7 +4,7 @@ This chapter says the passkey is the wallet. That is true, and it hides somethin
 "the passkey" is four different keys. One lives in the authenticator. One is derived from it. One is
 created and thrown away in the same minute. And one is neither derived nor held in hardware — an
 ordinary random key, which this browser keeps in `localStorage`, sealed under a key the passkey
-derives.
+derives (with "in memory only", in this tab's memory, gone on reload).
 
 The question that started this page was whether the account signs with the passkey's own P-256 key
 or with a key freshly derived from the passkey's PRF output every time. It signs with the credential

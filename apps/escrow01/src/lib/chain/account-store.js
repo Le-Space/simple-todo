@@ -10,9 +10,19 @@
  * once, as `legacyPrivateKey`, and the next save drops it. The setup key that
  * created the account is never stored anywhere: it is discarded as soon as the
  * passkey is registered.
+ *
+ * Where the record lives follows the storage choice, through the same facade
+ * as everything else this chapter remembers (`browser-memory.js`): with "keep
+ * in this browser" it is `localStorage`, with "in memory only" this tab's
+ * memory, gone on reload. It used to go to `localStorage` either way, so a
+ * reader who asked for nothing to be kept still left the account and its
+ * sealed read key behind. A reload in memory mode finds the account again
+ * through the profile it published (account-directory.js); the read key is
+ * gone with the tab and has to be renewed.
  */
 
 import { getAddress, isAddress } from 'viem';
+import { forget, recall, remember } from '@simple-todo/todo/browser-memory.js';
 
 const PREFIX = 'simpleTodo.chainAccount.v1.';
 
@@ -44,8 +54,9 @@ const PREFIX = 'simpleTodo.chainAccount.v1.';
 
 /**
  * @param {() => Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> | null} [storage]
+ *   The page's own storage by default; a test hands in another.
  */
-export function createAccountStore(storage = browserStorage) {
+export function createAccountStore(storage = followTheStorageChoice) {
 	return {
 		/**
 		 * @param {string} did
@@ -164,10 +175,10 @@ function toStored(record) {
 	};
 }
 
-function browserStorage() {
-	try {
-		return typeof localStorage === 'undefined' ? null : localStorage;
-	} catch {
-		return null;
-	}
+/** @type {Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>} */
+const choiceStorage = { getItem: recall, setItem: remember, removeItem: forget };
+
+/** `localStorage` or this tab's memory, as the storage choice says. */
+function followTheStorageChoice() {
+	return choiceStorage;
 }

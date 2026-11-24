@@ -311,7 +311,7 @@ export default {
 				heading: 'Warum ein zweiter Schlüssel',
 				points: [
 					'Zama v0.13 akzeptiert nur ECDSA-Permits (Signaturen mit 65 Bytes), deshalb kann ein Passkey-Konto kein Entschlüsselungs-Permit selbst signieren.',
-					'Deshalb hält der Browser einen secp256k1-Leseschlüssel, den das Konto einmal pro Vertrag autorisiert, für den Token und für die Treuhand; `localStorage` bewahrt ihn nur versiegelt auf, unter einem aus dem Passkey abgeleiteten Schlüssel.'
+					'Deshalb hält der Browser einen secp256k1-Leseschlüssel, den das Konto einmal pro Vertrag autorisiert, für den Token und für die Treuhand; er bewahrt ihn nur versiegelt auf, unter einem aus dem Passkey abgeleiteten Schlüssel, und mit „Nur im Arbeitsspeicher“ nur im Speicher dieses Tabs.'
 				],
 				sources: ['security.passkeyWallet', 'zama.versions', 'account.reading']
 			},
@@ -352,7 +352,7 @@ export default {
 			{
 				heading: 'Was gespeichert ist',
 				points: [
-					'Der Leseschlüssel ist ein secp256k1-Schlüssel, dem das Konto die Nutzer-Entschlüsselung bei Zama delegiert hat; `localStorage` bewahrt ihn als `SealedZamaSessionKey` auf: AES-GCM, ein zufälliger IV, seine Adresse als Associated Data gebunden.',
+					'Der Leseschlüssel ist ein secp256k1-Schlüssel, dem das Konto die Nutzer-Entschlüsselung bei Zama delegiert hat; aufbewahrt wird er als `SealedZamaSessionKey`: AES-GCM, ein zufälliger IV, seine Adresse als Associated Data gebunden. Mit „In diesem Browser behalten“ liegt er in `localStorage`, mit „Nur im Arbeitsspeicher“ im Speicher dieses Tabs und ist beim Neuladen weg.',
 					'Der Siegelschlüssel kommt vom Passkey: seine PRF-Antwort auf den festen Eingabewert dieser Relying Party, dann HKDF-SHA256 mit der Info `simple-todo:escrow01:read-key-seal:v1`. Er ist nicht exportierbar und lebt eine Sitzung lang im Speicher.',
 					'Aus derselben PRF-Antwort entsteht auch der Signierschlüssel der Liste; die HKDF-Info hält die beiden Schlüssel auseinander.'
 				],
