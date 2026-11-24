@@ -10,6 +10,7 @@ import {
 } from './delegation.js';
 import { confirmDelegatedWrite } from './delegated-write-auth.js';
 import { rememberList, listRegistryStore, openListRegistry } from './list-registry.js';
+import { listNameFromDatabase, privateListDatabaseName } from './list-name.js';
 import { relayHttpStatusStore } from '@simple-todo/net/relay-status.js';
 import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import { translate } from './i18n/index.js';
@@ -216,12 +217,13 @@ export async function loadTodoDatabase(address) {
 
 		// Prefer what the registry already knows: a list you created is yours even
 		// when you reach it through the switcher, and its friendly name is not the
-		// suffixed database name.
+		// suffixed database name. A guest knows only the database name, so the
+		// suffix the owner's page added comes off (list-name.js).
 		const openedAddressForMeta = getDatabaseAddress(loadedTodoDB) || normalizedAddress;
 		const known = get(listRegistryStore).find((entry) => entry.address === openedAddressForMeta);
 		setActiveTodoDatabase(loadedTodoDB, {
 			kind: known?.role === 'owner' ? 'private' : 'guest',
-			name: known?.name || loadedTodoDB?.name || ''
+			name: known?.name || listNameFromDatabase(loadedTodoDB?.name)
 		});
 		setupDatabaseListeners(loadedTodoDB);
 		await loadTodos();
@@ -230,7 +232,7 @@ export async function loadTodoDatabase(address) {
 		try {
 			await rememberList(orbitdb, {
 				address: openedAddress,
-				name: loadedTodoDB?.name ?? '',
+				name: listNameFromDatabase(loadedTodoDB?.name),
 				role: 'guest'
 			});
 		} catch (error) {
@@ -267,8 +269,7 @@ export async function createPrivateTodoList(name = 'private-todos') {
 	const orbitdb = get(orbitdbStore);
 	if (!orbitdb) throw new Error(translate('errors.orbitdbNotReady'));
 
-	const suffix = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-	const dbName = `${name.trim() || 'private-todos'}-${suffix}`;
+	const dbName = privateListDatabaseName(name);
 	const privateDB = await orbitdb.open(dbName, {
 		type: 'keyvalue',
 		create: true,
