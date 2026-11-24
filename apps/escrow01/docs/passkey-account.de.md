@@ -312,7 +312,12 @@ sequenceDiagram
    [`budget-service-zama.js`](../src/lib/budget-service-zama.js) nimmt zuerst ein Konto, das dieser
    Browser kennt; sonst sucht es 3 Sekunden lang ein Konto, das dieselbe DID bereits veröffentlicht
    hat (ein zweites Gerät mit demselben synchronisierten Passkey), und prüft es auf der Chain; erst
-   dann richtet es ein neues ein.
+   dann richtet es ein neues ein. Von sich aus tut es das nur für einen Passkey, den diese Seite
+   registriert hat (`wasRegisteredHere` in [`passkey-identity.js`](../src/lib/passkey-identity.js)).
+   Bei jedem anderen sieht ein Profil, das nur langsam repliziert, genauso aus wie keines, und ein
+   neues Konto wäre ein zweites für dieselbe DID, veröffentlicht über das erste. Deshalb fragt der
+   Konto-Tab (Phase `not-found`, Fehler `account-not-found`): „Erneut suchen“ wartet bis zu 20
+   Sekunden, „Neues Konto anlegen“ richtet eines ein.
 2. **Die UserOperation.** Absender ist die Adresse des Einrichtungsschlüssels. Sie führt die
    Autorisierung als `eip7702Auth` mit, ihr `initCode` beginnt mit der Markierung `0x7702`, und der
    Bundler setzt die Autorisierung in die `authorizationList` einer Typ-4-Transaktion. Die Signatur

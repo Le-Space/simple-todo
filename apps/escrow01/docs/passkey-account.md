@@ -304,6 +304,11 @@ sequenceDiagram
    [`budget-service-zama.js`](../src/lib/budget-service-zama.js) first takes an account this browser
    knows; otherwise it looks for 3 seconds for an account the same DID already published (a second
    device with the same synced passkey) and checks it on chain; only then does it set up a new one.
+   On its own it does that only for a passkey this page registered (`wasRegisteredHere` in
+   [`passkey-identity.js`](../src/lib/passkey-identity.js)). For any other passkey a profile that is
+   slow to replicate looks exactly like none, and creating would give the DID a second account
+   published over the first. So the account tab asks instead (phase `not-found`, error
+   `account-not-found`): "Search again" waits up to 20 seconds, "Create a new account" sets one up.
 2. **The user operation.** Its sender is the setup key's address. It carries the authorization as
    `eip7702Auth`, its `initCode` starts with the marker `0x7702`, and the bundler puts the authorization
    into the `authorizationList` of a type-4 transaction. The signature is

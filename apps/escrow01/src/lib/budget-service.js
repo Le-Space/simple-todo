@@ -112,7 +112,8 @@ export function budgetServiceKind(value) {
  *   credential: () => any
  *   orbitdb: () => any
  *   prompt: (action: string, run: (hooks: { onPrompt: () => void, onSigned: () => void }) => Promise<any>) => Promise<any>
- *   onAccount: (status: { phase: 'none' | 'creating' | 'ready' | 'failed', address: string | null, error: string | null }) => void
+ *   onAccount: (status: { phase: 'none' | 'creating' | 'not-found' | 'ready' | 'failed', address: string | null, error: string | null }) => void
+ *   isNewPasskey?: () => boolean
  * }} ZamaOptions
  */
 
@@ -124,7 +125,7 @@ export function budgetServiceKind(value) {
  *   fake?: Omit<Parameters<typeof createFakeBudgetService>[0], 'identity' | 'confirm'>
  *   zama?: ZamaOptions
  * }} options
- * @returns {BudgetService & { prepareAccount?: () => Promise<void>, demo?: any }}
+ * @returns {BudgetService & { prepareAccount?: (options?: { intent?: 'start' | 'search' | 'create' }) => Promise<void>, demo?: any }}
  */
 export function createBudgetService({ kind, identity, confirm, fake = {}, zama }) {
 	if (budgetServiceKind(kind) === 'zama') {
@@ -147,9 +148,17 @@ export function createBudgetService({ kind, identity, confirm, fake = {}, zama }
  * wallet code arrive.
  *
  * @param {ZamaOptions & { identity: () => string | null | undefined, endpoints: import('./chain/config.js').ChainEndpoints }} options
- * @returns {BudgetService & { prepareAccount: () => Promise<void> }}
+ * @returns {BudgetService & { prepareAccount: (options?: { intent?: 'start' | 'search' | 'create' }) => Promise<void> }}
  */
-function createLazyZamaService({ identity, endpoints, credential, orbitdb, prompt, onAccount }) {
+function createLazyZamaService({
+	identity,
+	endpoints,
+	credential,
+	orbitdb,
+	prompt,
+	onAccount,
+	isNewPasskey
+}) {
 	/** @type {Promise<any> | null} */
 	let loading = null;
 	function load() {
@@ -166,7 +175,8 @@ function createLazyZamaService({ identity, endpoints, credential, orbitdb, promp
 				chain: createSepoliaChain({ endpoints }),
 				directory: createAccountDirectory(orbitdb),
 				prompt,
-				onAccount
+				onAccount,
+				isNewPasskey
 			});
 		})();
 		loading.catch(() => {
