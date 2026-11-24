@@ -111,11 +111,10 @@ Beispielwerte.
 ### Szene 1 · Ein Passkey
 
 **Zeigen.** Alice öffnet die App. Der Startdialog heißt „Vertrauliche Treuhand-Zahlungen per
-Passkey“ und zeigt „Ein Passkey für alles“ mit „Bezahlen“ hervorgehoben; unter „Das Wichtigste zu
-Ihren Daten“ steht im Sepolia-Modus „Beträge liegen verschlüsselt auf einer Blockchain im Testnetz …“,
-bei der Attrappe, dass Beträge in dieser Vorschau nur im Arbeitsspeicher liegen. Alice hakt den
-Hinweis an und drückt „Starten“; „Passkey anlegen“ ist vorgewählt, also legt sie dabei ihren Passkey
-an. Im Sepolia-Modus steht im Tab „Konto“ zuerst „Wird eingerichtet.
+Passkey“ und zeigt „Anmelden · Unterschreiben · Bezahlen“ mit „Bezahlen“ hervorgehoben; darunter
+steht im Sepolia-Modus „Beträge sind verschlüsselt. Testnetz: Es fließt kein echtes Geld.“, bei der
+Attrappe, dass Beträge in dieser Vorschau nur im Arbeitsspeicher liegen. Alice drückt „Passkey anlegen
+und starten“; der Druck ist die Zustimmung, und dabei legt sie ihren Passkey an. Im Sepolia-Modus steht im Tab „Konto“ zuerst „Wird eingerichtet.
 Openfort zahlt die Gebühr, eine Passkey-Bestätigung ist dafür nicht nötig.“ und nach etwa 20 Sekunden
 „Konto auf Sepolia“ mit Adresse und „Auf Etherscan ansehen“.
 
@@ -460,11 +459,11 @@ Repository (`apps/escrow01`, Zeilennummern vom 2026-10-02):
   „Konto“),
   [`src/lib/sections.js`](../src/lib/sections.js) 23-41 (Tabs und Adress-Fragment),
   [`src/lib/AddTodoForm.svelte`](../src/lib/AddTodoForm.svelte) 218-223 (Hinweis unter dem Budget-Feld),
-  [`src/lib/OnePasskeyIntro.svelte`](../src/lib/OnePasskeyIntro.svelte) („Ein Passkey für alles“) und
+  [`src/lib/OnePasskeyIntro.svelte`](../src/lib/OnePasskeyIntro.svelte) („Anmelden · Unterschreiben · Bezahlen“) und
   [`src/lib/consent-clauses.js`](../src/lib/consent-clauses.js) (Kurzfassung und alle Hinweise; was
   früher unter „Was gespeichert wird“ stand, steht seit dem 2026-11-17 dort).
 - [`src/lib/i18n/de.json`](../src/lib/i18n/de.json) und [`src/lib/i18n/en.json`](../src/lib/i18n/en.json):
-  Schlüssel `consent.summary.amountsDemo`, `consent.summary.amountsChain`,
+  Schlüssel `consent.summary.amountsDemo`, `consent.summary.amounts`,
   `budget.network.demo`, `budget.demoNotice`, `budget.form.hint`, `budget.chip.hidden`,
   `budget.notice.*`, `budget.auditor.*`, `budget.toast.receivedHidden`, `budget.toast.received`,
   `sections.account.auditorOpen`, `sections.account.chainAccount`, `sections.account.accountCreating`.

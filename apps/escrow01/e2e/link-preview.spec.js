@@ -58,7 +58,7 @@ test.describe('Link previews', () => {
 		try {
 			await page.goto('/en/');
 			await waitForConsent(page);
-			await expect(page.getByTestId('consent-proceed')).toHaveText('Start');
+			await expect(page.getByTestId('consent-proceed')).toHaveText('Create a passkey and start');
 			expect(await page.evaluate(() => document.documentElement.lang)).toBe('en');
 			// Taken from the address and removed from it: a later switch of the flag
 			// is not undone by a reload, and a copied address is the plain one.
@@ -79,7 +79,7 @@ test.describe('Link previews', () => {
 		try {
 			await page.goto('/?lang=de');
 			await waitForConsent(page);
-			await expect(page.getByTestId('consent-proceed')).toHaveText('Starten');
+			await expect(page.getByTestId('consent-proceed')).toHaveText('Passkey anlegen und starten');
 			expect(await page.evaluate(() => document.documentElement.lang)).toBe('de');
 		} finally {
 			await context.close();

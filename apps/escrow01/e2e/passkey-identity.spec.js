@@ -1,10 +1,8 @@
 import { test, expect } from '@playwright/test';
 import {
-	acceptNotice,
-	consentModal,
 	continueWithPasskey,
 	isWelcomeOpen,
-	openAdvanced,
+	passConsent,
 	waitForConsent
 } from '@simple-todo/e2e-kit/consent.mjs';
 import { openSection } from './sections.mjs';
@@ -104,15 +102,7 @@ async function addVirtualAuthenticator(page) {
  */
 async function openReadyAppWithNewPasskey(page, { label }) {
 	await page.goto(testUrl);
-	await fillConsentModal(page);
-
-	await page.getByTestId('identity-mode-create').check();
-	await page.getByTestId('passkey-label').fill(label);
-
-	await page.getByTestId('consent-proceed').click();
-	await page.waitForFunction(
-		() => document.querySelector('[data-testid="consent-modal"]')?.isOpen !== true
-	);
+	await passConsent(page, { identity: 'create', label, mnemonic: sharedMnemonic });
 	await expectAppReady(page);
 }
 
@@ -124,24 +114,8 @@ async function proceedWithExistingPasskey(page) {
 		await expectAppReady(page);
 		return;
 	}
-	await fillConsentModal(page);
-	await page.getByTestId('identity-mode-existing').check();
-	await page.getByTestId('consent-proceed').click();
-	await page.waitForFunction(
-		() => document.querySelector('[data-testid="consent-modal"]')?.isOpen !== true
-	);
+	await passConsent(page, { identity: 'existing', mnemonic: sharedMnemonic });
 	await expectAppReady(page);
-}
-
-/** @param {import('@playwright/test').Page} page */
-async function fillConsentModal(page) {
-	await waitForConsent(page);
-	await openAdvanced(page);
-	await consentModal(page).getByTestId('shared-list-mnemonic-input').fill(sharedMnemonic);
-	// Ticked here rather than at the click, so this helper still hands back a
-	// dialog its callers can leave whenever they choose to.
-	await acceptNotice(page);
-	return consentModal(page);
 }
 
 /** @param {import('@playwright/test').Page} page */

@@ -110,9 +110,10 @@
 	/**
 	 * The short form of the dialog. A chapter that hands in a summary — three or
 	 * four sentences, the same way it hands in `clauses` — gets a dialog somebody
-	 * outside the tutorial can read in ten seconds: the chapter's own story, the
-	 * summary, the full statement and the chapter's settings each behind a
-	 * disclosure, and the acceptance tick directly above the button it unlocks.
+	 * outside the tutorial can read in ten seconds: the chapter's own story and
+	 * the summary on the first screen, the chapter's settings and the full
+	 * statement on a second one ("Notices and settings"), and one button whose
+	 * press is the consent, with the sentence that says so under it.
 	 *
 	 * Without one, the dialog is the long form it always was: the statement in
 	 * the element's own panel beside the story, the tick at the end of it.
@@ -130,10 +131,16 @@
 	 */
 	export let readyHint = '';
 	/**
-	 * Short form only: open on the settings, for a dialog opened to change one
-	 * of them (another list, for instance) rather than to read it.
+	 * Short form only: open on the settings view, for a dialog opened to change
+	 * one of them (another list, for instance) rather than to read it.
 	 */
 	export let advancedOpen = false;
+	/**
+	 * Short form only: what the button says. The press is the consent, so the
+	 * label names what it does — "Create a passkey and start" — rather than
+	 * a bare "Start". The chapter's, because only the chapter knows.
+	 */
+	export let proceedText = '';
 	/**
 	 * The dialog's heading, for a chapter without a catalogue to say it
 	 * through (collab01). Otherwise `consent.title`, then `app.title`.
@@ -148,15 +155,25 @@
 	let introEl;
 	let ready = false;
 	let accepted = false;
-	/** Short form: "do not show this again", which moves out of the element's foot. */
-	let remember = false;
-	/** @type {HTMLInputElement | undefined} */
-	let acceptBox;
-	/** @type {HTMLDetailsElement | undefined} */
-	let advancedEl;
 	/** @type {HTMLElement | undefined} */
 	let startEl;
-	let nudge = false;
+	/** @type {HTMLElement | undefined} */
+	let settingsEl;
+	/*
+		The short form has no tick: the press on its button is the consent, and
+		the sentence under the button says so. Two screens in one dialog instead
+		of folds in a scrolling body: the first one to read, and "Notices and
+		settings" behind it, with a way back.
+	*/
+	/** @type {'start' | 'settings'} */
+	let view = advancedOpen ? 'settings' : 'start';
+	let noticesOpen = false;
+	/**
+	 * Whether the close that is coming is the button's. With no tick to ask,
+	 * this is what tells a decision from the browser closing the dialog by
+	 * itself (Escape): only a press of the button starts anything.
+	 */
+	let pressed = false;
 
 	$: compact = typeof summary === 'function';
 	/** @type {(() => Promise<void>) | null} */
@@ -315,17 +332,19 @@
 		Named in reading order — the mnemonic sits above the tick, so an invalid
 		one is what to say first.
 	*/
-	$: waiting = !accepted || !canProceed;
+	// The short form waits only for the chapter's own condition: its press is
+	// the consent, so there is no tick to wait for.
+	$: waiting = compact ? !canProceed : !accepted || !canProceed;
 	// What holds the button, if anything — and, beside it, what the press will
 	// do. Both at once: "without a passkey you cannot lock a budget" is worth
 	// reading before the tick, not only after it.
 	$: hint = !canProceed
 		? $t('consent.proceedDisabled', 'Enter three Spanish words to continue')
-		: !accepted
+		: !accepted && !compact
 			? $t('ui.consent.hintAccept', 'Confirm the notices above first.')
 			: '';
 	$: proceedLabel = compact
-		? $t('ui.consent.start', 'Start')
+		? proceedText || $t('ui.consent.start', 'Start')
 		: !canProceed
 			? $t('consent.proceedDisabled', 'Enter three Spanish words to continue')
 			: !accepted
@@ -351,8 +370,9 @@
 	/** A press on the waiting button leads to what it is waiting for. */
 	function onProceed() {
 		if (compact) {
-			if (!canProceed) return revealAdvanced();
-			if (!accepted) return pointAtTick();
+			if (!canProceed) return revealSettings();
+			// The press is the decision; the close it causes is the one that counts.
+			pressed = true;
 		} else {
 			if (!canProceed) return;
 			if (!accepted) return revealAcceptance();
@@ -360,22 +380,50 @@
 		introEl.close();
 	}
 
-	/** Short form: the tick is right above the button, so point at it. */
-	function pointAtTick() {
-		acceptBox?.focus();
-		nudge = false;
-		requestAnimationFrame(() => (nudge = true));
-	}
-
-	/** Short form: what holds the button lives in the settings, so open them. */
-	function revealAdvanced() {
-		advancedOpen = true;
-		requestAnimationFrame(() => advancedEl?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+	/**
+	 * Short form: what holds the button lives in the settings, so show them,
+	 * with the cursor on the field that is wrong where the chapter marks one.
+	 */
+	function revealSettings() {
+		showSettings();
+		requestAnimationFrame(() => {
+			const invalid = settingsEl?.querySelector('[aria-invalid="true"]');
+			if (invalid instanceof HTMLElement) invalid.focus();
+		});
 	}
 
 	/**
-	 * Short form: "do not show this again" leaves the foot, where it sat as a
-	 * second checkbox beside the one that matters, and goes into the settings.
+	 * Short form: from the first screen to "Notices and settings", at its top.
+	 *
+	 * @param {{ notices?: boolean }} [options] open on all notices, unfolded
+	 */
+	function showSettings({ notices = false } = {}) {
+		view = 'settings';
+		if (notices) noticesOpen = true;
+		requestAnimationFrame(() => {
+			introEl?.shadowRoot?.querySelector('.body')?.scrollTo({ top: 0 });
+			settingsEl?.focus({ preventScroll: true });
+			if (notices) {
+				settingsEl
+					?.querySelector('[data-testid="consent-notices"]')
+					?.scrollIntoView({ block: 'start' });
+			}
+		});
+	}
+
+	/** Short form: back to the first screen, where the cursor started. */
+	function showStart() {
+		view = 'start';
+		requestAnimationFrame(() => {
+			introEl?.shadowRoot?.querySelector('.body')?.scrollTo({ top: 0 });
+			startEl?.focus({ preventScroll: true });
+		});
+	}
+
+	/**
+	 * Short form: the element's own "do not show this again" stays out of its
+	 * foot, beside the one button that matters. Whether this dialog comes back
+	 * is the chapter's to decide (escrow01: whatever is kept in the browser).
 	 */
 	function placeDontShow() {
 		const box = introEl?.shadowRoot?.querySelector('input[part=dont-show]');
@@ -449,15 +497,35 @@
 			// only way a dialog closes: the browser closes one by itself, on
 			// Escape. Only a close with the statement accepted and the chapter's
 			// own condition met is a decision; any other brings the dialog back
-			// and starts nothing.
-			if (!canProceed || (compact ? !accepted : introEl.accepted !== true)) {
+			// and starts nothing. The short form has no tick, so there it is the
+			// press of its button that counts.
+			const decided = compact ? pressed : introEl.accepted === true;
+			pressed = false;
+			if (!canProceed || !decided) {
 				void introEl.open();
 				return;
 			}
-			rememberDecision = compact ? remember : event.detail?.remember === true;
+			// The short form has no "do not show this again": whether the dialog
+			// comes back is the chapter's to decide (escrow01: what it keeps).
+			if (!compact) rememberDecision = event.detail?.remember === true;
 			show = false;
 			dispatch('proceed');
 		});
+		/*
+			Short form: Escape is not a way out. The element lets the browser close
+			the dialog on Escape once its statement is accepted, and the short form
+			gives it no statement, so it counts as accepted from the start. Held
+			here instead; on the settings view it goes back to the first screen.
+			Where the browser closes it anyway (Chrome does on a second Escape
+			without a click in between), the close handler above brings it back.
+		*/
+		introEl.shadowRoot
+			?.querySelector('dialog')
+			?.addEventListener('cancel', (/** @type {Event} */ event) => {
+				if (!compact) return;
+				event.preventDefault();
+				if (view === 'settings') showStart();
+			});
 		if (networkCheck === 'deferred') measureNetwork = deferNetworkCheck(introEl);
 		else withoutNetworkCheck(introEl, hideSections);
 		ready = true;
@@ -471,7 +539,7 @@
 		to change the language of the screen they are currently failing to read
 		would be a poor joke. It is the chapter's, in the header slot.
 	-->
-	<div slot="header" class="flex shrink-0 items-center gap-2">
+	<div slot="header" class="flex shrink-0 items-center gap-2" class:consent-head-row={compact}>
 		<slot name="header" />
 		<button
 			type="button"
@@ -496,7 +564,13 @@
 		Where the cursor starts (see `openDialog`): the top of what there is to
 		read, not the first control.
 	-->
-	<div bind:this={startEl} tabindex="-1" class="outline-none" data-testid="consent-start">
+	<div
+		bind:this={startEl}
+		tabindex="-1"
+		class="outline-none"
+		data-testid="consent-start"
+		hidden={compact && view !== 'start'}
+	>
 		<!--
 			Long form: first, and quietly. It is a demonstration and saying so is
 			fair — but a warning that frightens people off is not a warning, it is a
@@ -520,81 +594,115 @@
 	</div>
 
 	{#if compact}
-		<section class="mt-4" data-testid="consent-summary">
-			<h3 class="text-heading text-sm font-semibold">
-				{$t('ui.consent.summaryHeading', 'What this means for your data, in short')}
-			</h3>
-			<ul class="text-text mt-1.5 flex list-disc flex-col gap-1 pl-5 text-sm leading-snug">
-				{#each summaryLines as line (line)}
-					<li>{line}</li>
+		<!--
+			The first screen's few sentences about the data, under the chapter's
+			story: short, each with the chapter's icon where it hands one in. The
+			full statement is on the second screen, unabridged.
+		-->
+		<section
+			class="border-border mt-4 border-t pt-3"
+			data-testid="consent-summary"
+			hidden={view !== 'start'}
+		>
+			<ul class="text-text flex flex-col gap-2 text-sm leading-snug">
+				{#each summaryLines as line, index (line)}
+					<li class="flex items-start gap-2.5">
+						{#if $$slots['summary-icon']}
+							<span class="text-faint mt-px flex h-[18px] w-[18px] shrink-0" aria-hidden="true">
+								<slot name="summary-icon" {index} />
+							</span>
+						{/if}
+						<span>{line}</span>
+					</li>
 				{/each}
 			</ul>
 		</section>
 
-		<details class="consent-fold mt-3" data-testid="consent-notices">
-			<summary class="text-heading text-sm font-medium">
-				{$t('ui.consent.allNotices', 'All notices')}
-			</summary>
-			<div class="mt-3 flex flex-col gap-4 text-sm" data-testid="consent-clauses">
-				{#each clauseGroups as group, index (index)}
-					<section>
-						{#if group.title}
-							<h4 class="text-faint text-xs font-semibold uppercase tracking-wide">
-								{group.title}
-							</h4>
-						{/if}
-						<ul class="text-text mt-1.5 flex list-disc flex-col gap-1.5 pl-5 leading-relaxed">
-							{#each group.lines as line (line)}
-								<li class:consent-changed={changedLines.has(line)}>{line}</li>
-							{/each}
-						</ul>
-					</section>
-				{/each}
-				<section data-testid="consent-warning">
-					<h4 class="text-faint text-xs font-semibold uppercase tracking-wide">
-						{$t('consent.warningHeading', 'Early days')}
-					</h4>
-					<p class="text-text mt-1.5 leading-relaxed">{warningBody}</p>
-				</section>
-			</div>
-		</details>
-
-		<details
-			class="consent-fold"
-			data-testid="consent-advanced"
-			bind:open={advancedOpen}
-			bind:this={advancedEl}
+		<!--
+			"Notices and settings": a second screen in the same dialog rather than
+			two folds in a scrolling body. Folded, they made the dialog itself
+			scroll on a phone, title and language switch out of view.
+		-->
+		<section
+			bind:this={settingsEl}
+			tabindex="-1"
+			class="outline-none"
+			hidden={view !== 'settings'}
+			data-testid="consent-settings"
+			aria-label={$t('consent.settingsHeading', 'Notices and settings')}
 		>
-			<summary class="text-heading text-sm font-medium">
-				{$t('ui.consent.advanced', 'Advanced')}
-				<span class="text-faint font-normal">
-					· {$t('ui.consent.advancedHint', 'where data is kept, the list, your identity')}</span
-				>
-			</summary>
-			<div class="mt-3 flex flex-col gap-3">
+			<button
+				type="button"
+				on:click={showStart}
+				data-testid="consent-back"
+				class="text-text hover:text-heading -ml-1 inline-flex min-h-10 items-center px-1 text-sm"
+			>
+				‹ {$t('consent.back', 'Back')}
+			</button>
+			<div class="mt-2 flex flex-col gap-3">
 				<slot name="advanced" />
-				<!-- Set apart from the settings above and from the tick in the foot below:
-				     it is about the next visit, not about this one. -->
-				<label class="border-border text-text mt-1 flex items-start gap-2 border-t pt-3 text-sm">
+				<label class="border-border flex cursor-pointer items-start gap-2.5 rounded-lg border p-3">
 					<input
 						type="checkbox"
-						bind:checked={remember}
-						data-testid="consent-remember"
+						bind:checked={technical}
+						data-testid="consent-technical-row"
 						class="mt-0.5 h-4 w-4 shrink-0"
 					/>
-					<span>{$t('consent.remember', "Don't show this again on this device")}</span>
+					<span class="text-sm">
+						<span class="text-heading block font-medium"
+							>{$t('consent.technicalRow', 'Technical view')}</span
+						>
+						<span class="text-faint block text-xs"
+							>{$t(
+								'consent.technicalRowHint',
+								'Shows the technical terms, versions and what happens under the hood.'
+							)}</span
+						>
+					</span>
 				</label>
+				<details
+					class="consent-fold border-border rounded-lg border px-3 py-2"
+					data-testid="consent-notices"
+					bind:open={noticesOpen}
+				>
+					<summary class="text-heading text-sm font-medium">
+						{$t('ui.consent.allNotices', 'All notices')}
+					</summary>
+					<div class="mb-1 mt-3 flex flex-col gap-4 text-sm" data-testid="consent-clauses">
+						{#each clauseGroups as group, index (index)}
+							<section>
+								{#if group.title}
+									<h4 class="text-faint text-xs font-semibold uppercase tracking-wide">
+										{group.title}
+									</h4>
+								{/if}
+								<ul class="text-text mt-1.5 flex list-disc flex-col gap-1.5 pl-5 leading-relaxed">
+									{#each group.lines as line (line)}
+										<li class:consent-changed={changedLines.has(line)}>{line}</li>
+									{/each}
+								</ul>
+							</section>
+						{/each}
+						<section data-testid="consent-warning">
+							<h4 class="text-faint text-xs font-semibold uppercase tracking-wide">
+								{$t('consent.warningHeading', 'Early days')}
+							</h4>
+							<p class="text-text mt-1.5 leading-relaxed">{warningBody}</p>
+						</section>
+					</div>
+				</details>
 			</div>
-		</details>
+		</section>
 	{/if}
 
 	{#if compact}
 		<!--
-			The tick directly above the button it unlocks, in the foot that never
-			scrolls away: it used to close the statement in the right-hand column,
-			a screen away from the button that named it.
+			One button, which says what it does, and the sentence that makes its
+			press the consent directly under it — in the foot that never scrolls
+			away. The tick it replaces asked people to confirm notices they had
+			not opened, and after a failed start it was empty again.
 		-->
-		<div slot="footer" class="flex w-full flex-col gap-3">
+		<div slot="footer" class="flex w-full flex-col gap-2">
 			{#if notice && !error}
 				<p
 					data-testid="consent-notice"
@@ -612,54 +720,60 @@
 					{error}
 				</p>
 			{/if}
-			<label
-				class="text-heading flex cursor-pointer items-start gap-2.5 text-sm font-medium"
-				class:consent-nudge={nudge}
-				on:animationend={() => (nudge = false)}
+			<!--
+				Not `disabled` while it waits: a disabled button swallows the press,
+				and the press is how somebody finds what it waits for (onProceed).
+				`aria-disabled` keeps it announced as not yet available. Grey while it
+				waits rather than a faded version of the colour it will have — a pale
+				red button reads as an error.
+			-->
+			<button
+				type="button"
+				aria-disabled={waiting}
+				aria-describedby="consent-agreement{hint || readyHint ? ' consent-hint' : ''}"
+				data-waiting={waiting ? 'true' : undefined}
+				on:click={onProceed}
+				data-testid="consent-proceed"
+				class="min-h-12 w-full rounded-lg px-6 py-3 font-semibold transition-colors {waiting
+					? 'border-border bg-surface-2 text-faint cursor-not-allowed border'
+					: 'bg-coral-700 hover:bg-coral-800 border border-transparent text-white'}"
 			>
-				<input
-					type="checkbox"
-					bind:checked={accepted}
-					bind:this={acceptBox}
-					data-testid="consent-accept"
-					class="mt-0.5 h-4 w-4 shrink-0"
-				/>
-				<span>{$t('consent.accept', 'I have read the notices and accept them')}</span>
-			</label>
-			<div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-				<!--
-					Not `disabled` while it waits: a disabled button swallows the press,
-					and the press is how somebody finds what it waits for (onProceed).
-					`aria-disabled` keeps it announced as not yet available. Grey while
-					it waits rather than a faded version of the colour it will have —
-					a pale red button reads as an error.
-				-->
-				<button
+				{proceedLabel}
+			</button>
+			{#if hint || readyHint}
+				<p id="consent-hint" class="text-faint text-center text-xs" data-testid="consent-hint">
+					{#if hint}<span class="text-text block">{hint}</span>{/if}
+					{#if readyHint}<span class="block" data-testid="consent-ready-hint">{readyHint}</span
+						>{/if}
+				</p>
+			{/if}
+			<p
+				id="consent-agreement"
+				class="text-faint text-center text-xs"
+				data-testid="consent-agreement"
+			>
+				{$t('consent.agreementBefore', 'By starting you accept the ')}<button
 					type="button"
-					aria-disabled={waiting}
-					aria-describedby={hint || readyHint ? 'consent-hint' : undefined}
-					data-waiting={waiting ? 'true' : undefined}
-					on:click={onProceed}
-					data-testid="consent-proceed"
-					class="rounded-md px-8 py-3 font-medium transition-colors {waiting
-						? 'border-border bg-surface-2 text-faint cursor-not-allowed border'
-						: 'bg-coral-700 hover:bg-coral-800 border border-transparent text-white'}"
-				>
-					{proceedLabel}
-				</button>
-				<!-- Under the button on a phone, where beside it is a column of one word per line. -->
-				<div class="min-w-0 basis-full sm:flex-1 sm:basis-auto">
-					{#if hint || readyHint}
-						<p id="consent-hint" class="text-faint text-xs" data-testid="consent-hint">
-							{#if hint}<span class="text-text block">{hint}</span>{/if}
-							{#if readyHint}<span class="block" data-testid="consent-ready-hint">{readyHint}</span
-								>{/if}
-						</p>
-					{/if}
-					<!-- The chapter's way to change what the press does, next to it. -->
-					<slot name="beside-start" />
-				</div>
-			</div>
+					on:click={() => showSettings({ notices: true })}
+					data-testid="consent-open-notices"
+					class="consent-inline-link text-text hover:text-heading underline underline-offset-2"
+					>{$t('consent.agreementLink', 'notices')}</button
+				>{$t('consent.agreementAfter', '.')}
+				{#if view === 'start'}
+					<span aria-hidden="true">·</span>
+					<button
+						type="button"
+						on:click={() => showSettings()}
+						data-testid="consent-open-settings"
+						class="consent-inline-link text-text hover:text-heading underline underline-offset-2"
+						>{$t('consent.settingsLink', 'Settings')}</button
+					>
+				{/if}
+			</p>
+			<!-- The chapter's other ways in, under the button: on the first screen only. -->
+			{#if view === 'start'}
+				<slot name="beside-start" />
+			{/if}
 		</div>
 	{:else}
 		<div slot="footer" class="flex flex-col items-stretch gap-2 sm:items-end">
@@ -792,30 +906,34 @@
 		}
 	}
 
-	/* A press on the waiting button points at the tick above it. */
-	.consent-nudge {
-		animation: consent-nudge 600ms ease-in-out 1;
+	/*
+		Short form, phone: the chapter's header row takes the whole line above
+		the title, so what it puts first (escrow01: the video, with its own
+		`margin-right: auto`) sits on the left and the switches stay on the right.
+	*/
+	.consent-head-row {
+		justify-content: flex-end;
 	}
-	@keyframes consent-nudge {
-		0%,
-		100% {
-			transform: none;
+	@media (max-width: 34rem) {
+		.consent-head-row {
+			flex-basis: 100%;
 		}
-		25% {
-			transform: translateX(-4px);
-		}
-		75% {
-			transform: translateX(4px);
-		}
+	}
+
+	/*
+		The links inside the sentence under the button: a taller target than the
+		line they sit in, without making the line taller (a phone had 16px).
+	*/
+	.consent-inline-link {
+		display: inline-block;
+		padding-block: 0.4rem;
+		margin-block: -0.4rem;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
 		.consent-changed {
 			animation: none;
 			background: var(--qr-intro-changed, rgba(217, 119, 6, 0.3));
-		}
-		.consent-nudge {
-			animation: none;
 		}
 	}
 </style>
