@@ -226,14 +226,20 @@ function fakeChain() {
 function fakeDirectory() {
 	/** @type {Map<string, any>} */
 	const entries = new Map();
+	/** The wait each lookup was given. @type {Array<number | undefined>} */
+	const lookups = [];
 	return {
 		entries,
 		directory: {
 			publish: async (/** @type {string} */ did, /** @type {any} */ account) => {
 				entries.set(did, { ...account, publishedAt: 'now' });
 			},
-			lookup: async (/** @type {string} */ did) => entries.get(did) ?? null
-		}
+			lookup: async (/** @type {string} */ did, /** @type {any} */ options) => {
+				lookups.push(options?.timeoutMs);
+				return entries.get(did) ?? null;
+			}
+		},
+		lookups
 	};
 }
 
@@ -278,27 +284,39 @@ function fakePrf(did) {
 /** Alice and Bob on one fake chain, each with a service of their own. */
 function world() {
 	const { chain, state } = fakeChain();
-	const { directory, entries } = fakeDirectory();
+	const { directory, entries, lookups } = fakeDirectory();
 	/**
 	 * A session of `did`. Pass the `storage` of an earlier one for the same
 	 * browser after a reload: what was stored stays, what was in memory is gone.
 	 *
 	 * `accounts` replaces the store altogether: `createAccountStore()` is the
-	 * one the page builds, on this browser's real storage.
+	 * one the page builds, on this browser's real storage. `newPasskey` is
+	 * whether this session registered the passkey (default: yes, so a first
+	 * start creates the account); a reload or another device is `false`.
 	 *
 	 * @param {string} did
 	 * @param {{
 	 *   storage?: ReturnType<typeof memoryStorage>
 	 *   prf?: ReturnType<typeof fakePrf>
 	 *   accounts?: ReturnType<typeof createAccountStore>
+	 *   newPasskey?: boolean
+	 *   lookupTimeoutMs?: number
 	 * }} [options]
 	 */
 	const serviceFor = (
 		did,
-		{ storage = memoryStorage(), prf = fakePrf(did), accounts = createAccountStore(storage) } = {}
+		{
+			storage = memoryStorage(),
+			prf = fakePrf(did),
+			accounts = createAccountStore(storage),
+			newPasskey = true,
+			lookupTimeoutMs = 0
+		} = {}
 	) => {
 		/** @type {string[]} */
 		const prompts = [];
+		/** The account phases the account tab would have shown. @type {string[]} */
+		const phases = [];
 		const service = createZamaBudgetService({
 			identity: () => did,
 			credential: () => ({ did }),
@@ -309,12 +327,22 @@ function world() {
 				prompts.push(action);
 				return run({ onPrompt: () => {}, onSigned: () => {} });
 			},
-			lookupTimeoutMs: 0,
-			readSealingSeed: () => prf.read()
+			onAccount: (status) => void phases.push(status.phase),
+			lookupTimeoutMs,
+			readSealingSeed: () => prf.read(),
+			isNewPasskey: () => newPasskey
 		});
-		return { service, prompts, accounts, storage, prf };
+		return { service, prompts, phases, accounts, storage, prf };
 	};
-	return { chain, state, entries, alice: serviceFor(ALICE), bob: serviceFor(BOB), serviceFor };
+	return {
+		chain,
+		state,
+		entries,
+		lookups,
+		alice: serviceFor(ALICE),
+		bob: serviceFor(BOB),
+		serviceFor
+	};
 }
 
 /** Everything a browser keeps for its accounts, as text. */
@@ -976,7 +1004,7 @@ describe('the account record and the storage choice', () => {
 		// the profile it published, and nothing new is created -- but the read
 		// key went with the tab, so reading needs a renewal.
 		forgetSession();
-		const again = w.serviceFor(BOB, { accounts: createAccountStore() });
+		const again = w.serviceFor(BOB, { accounts: createAccountStore(), newPasskey: false });
 		expect(again.accounts.load(BOB, CHAIN_ID)).toBeNull();
 		await again.service.prepareAccount();
 		expect(w.state.created).toHaveLength(1);
@@ -1000,5 +1028,52 @@ describe('the account record and the storage choice', () => {
 		const again = w.serviceFor(BOB, { accounts: createAccountStore() });
 		expect(again.accounts.load(BOB, CHAIN_ID)?.address).toBe(w.state.created[0]);
 		expect((await again.service.readKeyStatus()).state).toBe('locked');
+	});
+});
+
+describe('an account that may exist but has not arrived', () => {
+	it('asks instead of creating a second account, and finds the first one when searched again', async () => {
+		const w = world();
+		await w.alice.service.prepareAccount();
+		await w.bob.service.prepareAccount();
+		const first = w.state.created[1];
+		expect(w.state.created).toHaveLength(2);
+
+		// Bob comes back on a device that kept nothing, and his profile is slow
+		// to replicate: the lookup answers nothing, exactly as for no account.
+		const published = w.entries.get(BOB);
+		w.entries.delete(BOB);
+		const back = w.serviceFor(BOB, { newPasskey: false, lookupTimeoutMs: 20_000 });
+		expect(await codeOf(back.service.prepareAccount())).toBe('account-not-found');
+		expect(back.phases.at(-1)).toBe('not-found');
+		expect(w.state.created).toHaveLength(2);
+		// A lock in this state says why, and creates nothing either.
+		expect(
+			await codeOf(
+				back.service.lock({ todoRef: TODO_REF, beneficiaryDid: ALICE, amount: 5n, deadline: null })
+			)
+		).toBe('account-not-found');
+		expect(w.state.created).toHaveLength(2);
+
+		// The profile arrives; searching again waits the full lookup time.
+		w.entries.set(BOB, published);
+		await back.service.prepareAccount({ intent: 'search' });
+		expect(w.lookups.at(-1)).toBe(20_000);
+		expect(back.phases.at(-1)).toBe('ready');
+		expect(back.accounts.load(BOB, CHAIN_ID)?.address).toBe(first);
+		expect(w.state.created).toHaveLength(2);
+	});
+
+	it('creates a new account only when asked to', async () => {
+		const w = world();
+		const elsewhere = w.serviceFor(BOB, { newPasskey: false });
+		expect(await codeOf(elsewhere.service.prepareAccount())).toBe('account-not-found');
+		expect(w.lookups.at(-1)).toBe(3_000);
+		expect(w.state.created).toHaveLength(0);
+
+		await elsewhere.service.prepareAccount({ intent: 'create' });
+		expect(w.state.created).toHaveLength(1);
+		expect(elsewhere.phases.at(-1)).toBe('ready');
+		expect(w.entries.get(BOB)?.address).toBe(w.state.created[0]);
 	});
 });

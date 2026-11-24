@@ -1148,6 +1148,31 @@
 					<p class="mt-1 text-xs text-faint" data-testid="account-etherscan-hint">
 						{$_('sections.account.etherscanHint')}
 					</p>
+				{:else if $accountStatusStore.phase === 'not-found'}
+					<!-- An earlier passkey whose published profile did not arrive in
+					     time: an account may exist, so the app asks rather than
+					     creating a second one (budget-service-zama.js, ensureAccount). -->
+					<p class="mt-1 text-sm text-text" data-testid="chain-account-not-found">
+						{$_('sections.account.accountNotFound')}
+					</p>
+					{#if $technicalView}
+						<p class="mt-2 text-xs text-faint">{$_('sections.account.accountNotFoundTechnical')}</p>
+					{/if}
+					<div class="mt-3 flex flex-wrap gap-2">
+						<button
+							type="button"
+							on:click={() => void prepareBudgetAccount({ intent: 'search' })}
+							class="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-text hover:text-heading"
+							data-testid="chain-account-search">{$_('sections.account.accountSearch')}</button
+						>
+						<button
+							type="button"
+							on:click={() => void prepareBudgetAccount({ intent: 'create' })}
+							class="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-text hover:text-heading"
+							data-testid="chain-account-create">{$_('sections.account.accountCreate')}</button
+						>
+					</div>
+					<p class="mt-2 text-xs text-faint">{$_('sections.account.accountCreateHint')}</p>
 				{:else if $accountStatusStore.phase === 'failed'}
 					<p class="mt-1 text-sm text-danger-700 dark:text-danger" role="alert">
 						{$_('sections.account.accountFailed', {

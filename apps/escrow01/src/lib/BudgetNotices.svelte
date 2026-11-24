@@ -143,7 +143,9 @@
 						? $_('budget.notice.insufficient')
 						: notice.code === 'beneficiary-without-account'
 							? $_('budget.notice.noAccount')
-							: $_('budget.notice.lockFailed')}
+							: notice.code === 'account-not-found'
+								? $_('budget.notice.ownAccountNotFound')
+								: $_('budget.notice.lockFailed')}
 				dismissible
 				on:dismiss={dismissBudgetNotice}
 			>
