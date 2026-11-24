@@ -141,6 +141,9 @@ async function getPeerId(page) {
  * pubsub discovery. The address may still contain /p2p-circuit because the
  * relay provides signaling; /webrtc identifies the upgraded transport.
  *
+ * Its counterpart, where the upgrade never happens and the relay carries
+ * everything, is `replication-without-webrtc.spec.js`.
+ *
  * @param {import('@playwright/test').Page} page
  * @param {string} remotePeerId
  */
@@ -150,15 +153,24 @@ async function expectWebRTCConnection(page, remotePeerId) {
 			() =>
 				page.evaluate(
 					(peerId) =>
-						window.__simpleTodoE2E
-							?.getConnections?.()
-							.some(
-								(connection) =>
-									connection.remotePeer === peerId && connection.remoteAddr?.includes('/webrtc')
-							) ?? false,
+						window.__simpleTodoE2E?.getConnections?.().some(
+							(/** @type {any} */ connection) =>
+								connection.remotePeer === peerId &&
+								connection.remoteAddr?.includes('/webrtc') &&
+								// **`limited === false` is the half that matters**, as in
+								// main's copy of this spec. The upgraded connection reads
+								// `/p2p-circuit/webrtc/p2p/…`: the circuit is still in the
+								// address because that is where the two agreed on a
+								// moment, so the address alone cannot say whether the
+								// relay is still carrying it or merely introduced it.
+								connection.limited === false
+						) ?? false,
 					remotePeerId
 				),
-			{ timeout: collaborationTimeout }
+			{
+				timeout: collaborationTimeout,
+				message: 'no unlimited WebRTC connection between Alice and Bob'
+			}
 		)
 		.toBe(true);
 

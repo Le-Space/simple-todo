@@ -33,6 +33,8 @@
 			"e2e/link-preview.spec.js",
 			"e2e/passkey-steps.spec.js",
 			"e2e/list-peer-led.spec.js",
+			"e2e/default-database-collaboration.spec.js",
+			"e2e/replication-without-webrtc.spec.js",
 			"e2e/demo-video.spec.js"
 		],
 		"check": true
