@@ -66,7 +66,9 @@ the escrow half of [de2do](https://github.com/NiKrause/de2do).
 ### Try it
 
 1. The app: `pnpm install` at the repository root, then `pnpm dev` in `apps/escrow01`. Press
-   **Create a passkey and start**; create a private list in the **Lists** tab, and add a todo delegated to another DID with a budget. Tick it as the
+   **Create a passkey and start**. The start points to a private list of your own, "My todos", which your
+   first todo makes: add one delegated to another DID with a budget. A link with three words opens that
+   shared list instead, where the form says that delegation needs a private list. Tick it as the
    delegate, release it as the owner, and open the auditor view from the **Account** tab. With the fake,
    amounts are readable only in the browser tab that locked them.
 2. On Sepolia: put the settings from [Configuration](docs/passkey-account.md#configuration) into
