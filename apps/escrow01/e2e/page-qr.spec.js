@@ -35,7 +35,8 @@ test.describe('Page QR and list link', () => {
 			await passConsent(owner);
 			await expect(owner.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 			await openSection(owner, 'listen');
-			await owner.getByTestId('new-list-name').fill(`linked-${Date.now().toString(36)}`);
+			const listName = `linked ${Date.now().toString(36)}`;
+			await owner.getByTestId('new-list-name').fill(listName);
 			await owner.getByTestId('new-list-create').click();
 			await expect(owner.getByTestId('new-list-created')).toBeVisible({ timeout });
 			const address = (await owner.getByTestId('new-list-created-address').textContent())?.trim();
@@ -52,6 +53,9 @@ test.describe('Page QR and list link', () => {
 				timeout
 			});
 			expect(readListLink(guest.url()).address).toBe(address);
+			// By the name the owner gave it: the database name carries a suffix that
+			// makes it unique, and the guest's heading used to show it.
+			await expect(guest.getByTestId('active-list-name')).toHaveText(listName, { timeout });
 		} finally {
 			await ownerContext.close();
 			await guestContext.close();

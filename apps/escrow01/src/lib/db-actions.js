@@ -10,6 +10,7 @@ import {
 } from './delegation.js';
 import { confirmDelegatedWrite } from './delegated-write-auth.js';
 import { rememberList, listRegistryStore, openListRegistry } from './list-registry.js';
+import { listNameFromDatabase, privateListDatabaseName } from './list-name.js';
 import { relayHttpStatusStore } from '@simple-todo/net/relay-status.js';
 import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import { recall, remember } from '@simple-todo/todo/browser-memory.js';
@@ -230,7 +231,8 @@ export async function loadTodoDatabase(address, { unlessSwitchedSince } = {}) {
 
 		// Prefer what the registry already knows: a list you created is yours even
 		// when you reach it through the switcher, and its friendly name is not the
-		// suffixed database name.
+		// suffixed database name. A guest knows only the database name, so the
+		// suffix the owner's page added comes off (list-name.js).
 		const openedAddressForMeta = getDatabaseAddress(loadedTodoDB) || normalizedAddress;
 		const known = get(listRegistryStore).find((entry) => entry.address === openedAddressForMeta);
 		// The registry is not the only witness, and not always a present one: after
@@ -244,7 +246,7 @@ export async function loadTodoDatabase(address, { unlessSwitchedSince } = {}) {
 		}
 		setActiveTodoDatabase(loadedTodoDB, {
 			kind: owned ? 'private' : 'guest',
-			name: known?.name || loadedTodoDB?.name || ''
+			name: known?.name || listNameFromDatabase(loadedTodoDB?.name)
 		});
 		setupDatabaseListeners(loadedTodoDB);
 		await loadTodos();
@@ -254,8 +256,8 @@ export async function loadTodoDatabase(address, { unlessSwitchedSince } = {}) {
 			await rememberList(orbitdb, {
 				address: openedAddress,
 				// The name the registry already has is the one a person gave the list;
-				// the database's own name carries the random suffix.
-				name: known?.name || (loadedTodoDB?.name ?? ''),
+				// otherwise the database's own name, without its random suffix.
+				name: known?.name || listNameFromDatabase(loadedTodoDB?.name),
 				role: owned ? 'owner' : 'guest'
 			});
 		} catch (error) {
@@ -295,8 +297,7 @@ export async function createPrivateTodoList(name = 'private-todos', { unlessSwit
 	const orbitdb = get(orbitdbStore);
 	if (!orbitdb) throw new Error(translate('errors.orbitdbNotReady'));
 
-	const suffix = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-	const dbName = `${name.trim() || 'private-todos'}-${suffix}`;
+	const dbName = privateListDatabaseName(name);
 	const privateDB = await orbitdb.open(dbName, {
 		type: 'keyvalue',
 		create: true,
