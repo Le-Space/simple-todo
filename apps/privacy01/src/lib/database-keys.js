@@ -1,23 +1,31 @@
-// Where a database key lives on this device.
+// Where a list's keys are kept on this device.
 //
-// Phase 1 of #277 and deliberately the simplest thing that can be true: one
-// random key per database, kept in local storage, never leaving this browser.
-// That is enough for a single device to seal its own list and read it back
-// after a reload, and it is not enough for two devices to share one — they
-// would each invent a key and neither could read the other.
+// Phase 1 of #277 kept one random key per database in local storage, never
+// leaving this browser. Phase 2 handed copies to other readers. #120 changed
+// two things about what is kept here:
 //
-// Sharing is Phase 2, where the key is wrapped to the other device's public
-// key and handed over with the QR code that already travels between them. This
-// module is the seam that will change: callers ask for the key of a database,
-// not for local storage.
+// - **A list has a key per epoch,** not one key. Revoking somebody starts a new
+//   one (./keyring.js), so this keeps all of them, oldest to newest.
+// - **This is a cache, not the only copy.** The owner gets a wrapped copy of
+//   every key, like any reader (./shared-keys.js), so a second device with the
+//   same passkey — or this one after its storage was cleared — finds the keys
+//   again. What is kept here only spares the next visit the lookup.
+//
+// The format is `{"v":1,"keys":[{"epoch":0,"key":"<base64>"}, …]}`. A bare
+// base64 string, which is what phase 1 wrote, reads as a single key in epoch 0.
+//
+// Still in the clear, as before: local storage is no better protected than
+// anything else in this browser, and the README says so.
 
 import { canKeepForThisMode, forget, recall, remember } from '@simple-todo/todo/browser-memory.js';
+import { epochKey } from './keyring.js';
 
 const STORAGE_PREFIX = 'privacy01.dbKey.';
+const KEY_BYTES = 32;
 
-/** @param {string} databaseKey how this database is identified locally */
-function storageKeyFor(databaseKey) {
-	return `${STORAGE_PREFIX}${databaseKey}`;
+/** @param {string} address how this database is identified locally */
+function storageKeyFor(address) {
+	return `${STORAGE_PREFIX}${address}`;
 }
 
 /** @param {Uint8Array} bytes */
@@ -36,74 +44,77 @@ function fromBase64(value) {
 }
 
 /**
- * The key for a database, generating and remembering one on first use.
+ * What is stored for a list, parsed but not yet checked against anything.
  *
- * Returns null when there is no storage to remember it in. A key that only
- * lives for this page load is worse than none: it would seal entries nothing
- * can ever open again, including this device after a reload.
+ * Throws when something is stored and cannot be read. Treating that as "no
+ * key" would let a caller invent a fresh one and seal new entries under a key
+ * that cannot open the old ones — silently, and only noticed once something is
+ * unreadable.
  *
- * @param {string} databaseKey
- * @param {{ newKey?: () => Uint8Array }} [deps]
- * @returns {Uint8Array | null}
+ * @param {string} address
+ * @returns {{ epoch: number, key: Uint8Array }[] | null}
  */
-export function keyForDatabase(databaseKey, deps = {}) {
-	const create = deps.newKey ?? (() => crypto.getRandomValues(new Uint8Array(32)));
-
+function readStored(address) {
 	let stored = null;
 	try {
-		stored = recall(storageKeyFor(databaseKey));
-	} catch {
-		return null;
-	}
-
-	if (stored) {
-		try {
-			const bytes = fromBase64(stored);
-			if (bytes.length === 32) return bytes;
-		} catch {
-			// Unreadable rather than absent. Replacing it would seal new entries
-			// under a key that cannot open the old ones, so say so instead.
-			throw new Error(`The stored key for ${databaseKey} is not readable.`);
-		}
-		throw new Error(`The stored key for ${databaseKey} has the wrong length.`);
-	}
-
-	const fresh = create();
-	try {
-		remember(storageKeyFor(databaseKey), toBase64(fresh));
-	} catch {
-		return null;
-	}
-	return fresh;
-}
-
-/**
- * The key this device already has for a database, or null.
- *
- * Read-only on purpose, and the difference from `keyForDatabase` matters: it
- * is what distinguishes a list this browser sealed from somebody else's list
- * reached by address. Generating one on the way past would seal a guest's list
- * under a key its owner does not have.
- *
- * @param {string} databaseKey
- * @returns {Uint8Array | null}
- */
-export function storedDatabaseKey(databaseKey) {
-	let stored = null;
-	try {
-		stored = recall(storageKeyFor(databaseKey));
+		stored = recall(storageKeyFor(address));
 	} catch {
 		return null;
 	}
 	if (!stored) return null;
 
+	/** @type {{ epoch: number, key: Uint8Array }[]} */
+	let entries;
 	try {
-		const bytes = fromBase64(stored);
-		if (bytes.length === 32) return bytes;
+		entries = stored.startsWith('{')
+			? JSON.parse(stored).keys.map((/** @type {any} */ entry) => ({
+					epoch: entry.epoch,
+					key: fromBase64(entry.key)
+				}))
+			: [{ epoch: 0, key: fromBase64(stored) }];
 	} catch {
-		throw new Error(`The stored key for ${databaseKey} is not readable.`);
+		throw new Error(`The stored keys for ${address} are not readable.`);
 	}
-	throw new Error(`The stored key for ${databaseKey} has the wrong length.`);
+
+	if (
+		entries.length === 0 ||
+		entries.some(
+			({ epoch, key }) => key.length !== KEY_BYTES || !Number.isSafeInteger(epoch) || epoch < 0
+		)
+	) {
+		throw new Error(`The stored keys for ${address} are not valid.`);
+	}
+	return entries;
+}
+
+/**
+ * Every key this device holds for a list, or null.
+ *
+ * Read-only on purpose. It is what distinguishes a list this browser can read
+ * from somebody else's list reached by address; generating a key on the way
+ * past would seal a guest's list under a key its owner does not have.
+ *
+ * @param {string} address
+ * @returns {Promise<import('./keyring.js').EpochKey[] | null>}
+ */
+export async function storedKeys(address) {
+	const entries = readStored(address);
+	if (!entries) return null;
+	return Promise.all(entries.map(({ key, epoch }) => epochKey(key, epoch)));
+}
+
+/**
+ * The key new entries of this list are sealed under, or null.
+ *
+ * Synchronous for the places that only ask "can this browser read it?".
+ *
+ * @param {string} address
+ * @returns {Uint8Array | null}
+ */
+export function storedDatabaseKey(address) {
+	const entries = readStored(address);
+	if (!entries) return null;
+	return entries.reduce((newest, entry) => (entry.epoch >= newest.epoch ? entry : newest)).key;
 }
 
 /**
@@ -126,28 +137,26 @@ export function canRememberKeys() {
 }
 
 /**
- * Write down a key that was generated before its database had an address.
+ * Write down the keys of a list, all of them.
  *
- * A list is created under a name and reopened by address, so the address is
- * the only identifier both paths share — see `encrypted-open.js`.
- *
- * @param {string} databaseKey
- * @param {Uint8Array} key
- * @returns {boolean} whether it was written down
+ * @param {string} address
+ * @param {{ all: () => import('./keyring.js').EpochKey[] }} keyring
+ * @returns {boolean} whether they were written down
  */
-export function rememberDatabaseKey(databaseKey, key) {
+export function rememberKeys(address, keyring) {
+	const keys = keyring.all().map(({ epoch, key }) => ({ epoch, key: toBase64(key) }));
 	try {
-		remember(storageKeyFor(databaseKey), toBase64(key));
+		remember(storageKeyFor(address), JSON.stringify({ v: 1, keys }));
 		return true;
 	} catch {
 		return false;
 	}
 }
 
-/** @param {string} databaseKey */
-export function forgetDatabaseKey(databaseKey) {
+/** @param {string} address */
+export function forgetDatabaseKey(address) {
 	try {
-		forget(storageKeyFor(databaseKey));
+		forget(storageKeyFor(address));
 	} catch {
 		// Nothing to forget without storage.
 	}
