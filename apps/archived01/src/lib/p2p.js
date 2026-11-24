@@ -34,6 +34,7 @@ import {
 import { initializeDatabase, todoDBAddressStore, todosStore } from './db-actions.js';
 import {
 	getWebRTCEnabled,
+	initializeWebRTCSetting,
 	setWebRTCEnabled,
 	webrtcEnabledStore
 } from '@simple-todo/net/webrtc-settings.js';
@@ -251,6 +252,20 @@ export async function initializeP2P(
 	try {
 		// Set initialization state
 		setInitializationProgress(0);
+
+		// Read the stored WebRTC choice before the transports are decided, as
+		// main, escrow01, delegation01 and invoice01 do: this chapter never called
+		// `initializeWebRTCSetting`, so `simpleTodo.webrtcEnabled` was never read
+		// and a spec that switched WebRTC off would have run with it on. None does
+		// yet. Nothing user-facing changes; no screen offers the switch.
+		//
+		// With the peer-to-peer network switched off, the offline config below has
+		// no transports at all, so the choice only matters when it is on.
+		//
+		// It is read through the storage facade, so in memory mode only a value
+		// set in this tab counts. A spec that seeds it on the device starts in
+		// persistent mode.
+		initializeWebRTCSetting();
 
 		// Create libp2p configuration and node. With the peer-to-peer network
 		// switched off on the consent screen, the node has no transports, no
@@ -554,7 +569,14 @@ function getReadOnlyDiagnostics() {
 		getConnections: () =>
 			libp2p?.getConnections?.().map((/** @type {any} */ connection) => ({
 				remotePeer: connection.remotePeer?.toString() ?? null,
-				remoteAddr: connection.remoteAddr?.toString() ?? null
+				remoteAddr: connection.remoteAddr?.toString() ?? null,
+				// Relayed or direct is the connection's limits, not its address
+				// (AGENTS.md); `/noise` + `/yamux` is relayed, `native` + `/webrtc`
+				// is not.
+				limited: connection.limits != null,
+				direction: connection.direction ?? null,
+				encryption: connection.encryption ?? null,
+				multiplexer: connection.multiplexer ?? null
 			})) ?? [],
 		// Read-only gossipsub introspection for the remote-replication E2E: live
 		// head propagation runs over pubsub on the database topic, and a run has
