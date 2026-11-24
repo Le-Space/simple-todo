@@ -313,7 +313,9 @@ sequenceDiagram
    Browser kennt; sonst sucht es 3 Sekunden lang ein Konto, das dieselbe DID bereits veröffentlicht
    hat (ein zweites Gerät mit demselben synchronisierten Passkey), und prüft es auf der Chain; erst
    dann richtet es ein neues ein. Von sich aus tut es das nur für einen Passkey, den diese Seite
-   registriert hat (`wasRegisteredHere` in [`passkey-identity.js`](../src/lib/passkey-identity.js)).
+   registriert hat (`wasRegisteredHere` in
+   [`registered-passkeys.js`](../src/lib/registered-passkeys.js), nach `credentialId`, damit auch ein
+   nach einem abgebrochenen Schritt wiedergeholter Passkey zählt).
    Bei jedem anderen sieht ein Profil, das nur langsam repliziert, genauso aus wie keines, und ein
    neues Konto wäre ein zweites für dieselbe DID, veröffentlicht über das erste. Deshalb fragt der
    Konto-Tab (Phase `not-found`, Fehler `account-not-found`): „Erneut suchen“ wartet bis zu 20
