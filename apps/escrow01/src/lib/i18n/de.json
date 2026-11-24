@@ -456,6 +456,15 @@
 			"grantFailed": "Die Schreibrechte ließen sich nicht erteilen: {reason}",
 			"revokeFailed": "Die Schreibrechte ließen sich nicht entziehen: {reason}"
 		},
+		"peers": {
+			"direct": "{count, plural, one {Direkt P2P mit # Browser} other {Direkt P2P mit # Browsern}}",
+			"relay": "{count, plural, one {Über den Relay mit # Browser} other {Über den Relay mit # Browsern}}",
+			"alone": "Kein anderer Browser in dieser Liste",
+			"alsoRelayed": "{count} weitere über den Relay",
+			"directSentence": "Dieser Browser tauscht die Einträge dieser Liste direkt mit dem anderen Browser aus, über WebRTC. Der Relay hat die beiden nur bekannt gemacht.",
+			"relaySentence": "Der andere Browser ist nur über den Relay erreichbar. Neue Einträge kommen trotzdem sofort an, ältere nur, wenn der Relay die Liste hält.",
+			"aloneSentence": "Öffnet jemand anderes diese Liste, erscheint der Browser hier."
+		},
 		"active": {
 			"shared": "Geteilte Liste",
 			"private": "Private Liste",

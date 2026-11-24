@@ -456,6 +456,15 @@
 			"grantFailed": "Grant failed: {reason}",
 			"revokeFailed": "Revoke failed: {reason}"
 		},
+		"peers": {
+			"direct": "{count, plural, one {Direct P2P with # browser} other {Direct P2P with # browsers}}",
+			"relay": "{count, plural, one {Via the relay with # browser} other {Via the relay with # browsers}}",
+			"alone": "No other browser in this list",
+			"alsoRelayed": "{count} more via the relay",
+			"directSentence": "This browser exchanges this list's entries directly with the other browser, over WebRTC. The relay only introduced them.",
+			"relaySentence": "The other browser can only be reached through the relay. New entries still arrive at once; older ones only if the relay holds the list.",
+			"aloneSentence": "When someone else opens this list, their browser appears here."
+		},
 		"active": {
 			"shared": "Shared list",
 			"private": "Private list",
