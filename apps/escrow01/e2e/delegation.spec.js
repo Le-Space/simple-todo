@@ -178,37 +178,44 @@ test.describe('Per-todo delegation', () => {
 		}
 	});
 	// The three above put Alice and Bob in front of each other. These put the
-	// relay between them — and all three are `fixme`, because what they assert
-	// is wanted and does not happen yet, and because the *reason* is not
-	// established.
+	// relay between them, and all three are still `fixme`.
 	//
-	// What is measured: with the writer's context closed outright and the
-	// reader demonstrably reconnected, neither a delegation nor a revocation
-	// reaches the reader.
+	// **Until 2026-11-24 they measured the wrong thing.** The chapter never read
+	// `simpleTodo.webrtcEnabled`, and in memory mode it would not have read the
+	// device anyway, so `webrtc: false` changed nothing: Alice and Bob had a
+	// real WebRTC connection, `setOffline` left it standing, and "offline"
+	// removed the relay and kept the direct path. Every earlier conclusion drawn
+	// from these tests rests on that. Now `newIdentity` starts them in
+	// persistent mode and asks the app whether WebRTC is off, and
+	// `expectNoDirectPath` requires every connection between the two to be a
+	// limited one, a circuit through the relay.
 	//
-	// What is NOT established is why, and four instruments produced plausible
-	// wrong answers on the way here, so the bar is high:
+	// Measured with that in place, locally, in delegation01, invoice01 and
+	// escrow01, two runs each:
 	//
-	//   · a reload — this chapter keeps nothing across one (Helia is in memory),
-	//     so it measured that gap instead of the relay
-	//   · the peer count in the panel — counts something other than
+	//   · the revocation arrives from the relay: 6 of 6
+	//   · the delegation arrives from the relay: 4 of 6. Both reds came in runs
+	//     where Bob's first open by address timed out and was retried; all four
+	//     greens opened at once. Why is not established. Alice leaving within
+	//     the second of her write does not tell them apart: she does that in
+	//     every run
+	//   · a delegate's completion while the owner is away: red, 4 of 4, on the
+	//     last assertion, as the README says (see that test)
+	//
+	// Instruments that gave plausible wrong answers on the way here:
+	//
+	//   · a reload: in memory mode this chapter keeps nothing across one, so it
+	//     measures that gap instead of the relay
+	//   · the peer count in the panel: it counts something other than
 	//     `getConnections()` and stayed at 1 long after the last had gone
-	//   · `setOffline` — cuts the WebSocket to the relay within ten seconds and
-	//     leaves an established `/webrtc/p2p/…` to the other browser standing
-	//     indefinitely, which is the wrong way round for this question
-	//   · `entryCount` from `/pinning/databases` — reported 0 for every list
+	//   · `entryCount` from `/pinning/databases`: it reported 0 for every list
 	//     including one the relay had demonstrably received, because the relay
 	//     falls back to `db.all()` there. `/pinning/has-entry` is the endpoint
 	//     the app itself trusts
 	//
-	// The relay does receive entries: `default-database-collaboration.spec.js`
-	// requires an exact relay-side replication proof and passes. So "the relay
-	// has nothing" is ruled out, and the open question is narrower — whether a
-	// private list ever asks for that proof the way the shared list does.
-	// at no point after the write is made are both online,
-	// so anything that arrives came out of the relay and not off the other
-	// browser. That is the case the README makes a claim about, and a claim
-	// nothing measured until now.
+	// At no point after the write are both online, so anything that arrives
+	// came out of the relay and not off the other browser. That is the case the
+	// README makes a claim about.
 	test.fixme(
 		'a delegation made while the delegate is offline arrives from the relay',
 		async ({ browser }) => {
@@ -225,6 +232,7 @@ test.describe('Per-todo delegation', () => {
 				const address = await getActiveDatabaseAddress(alice.page);
 				await openListByAddress(bob.page, address);
 				await expectTodo(bob.page, todo);
+				await expectNoDirectPath(alice, bob);
 				await goOffline(bob.page);
 
 				step('Alice delegates to a Bob who cannot hear it, then goes offline herself');
@@ -270,6 +278,7 @@ test.describe('Per-todo delegation', () => {
 				const address = await getActiveDatabaseAddress(alice.page);
 				await openListByAddress(bob.page, address);
 				await expect(rowFor(bob.page, todo)).toHaveAttribute('data-role', 'delegate', { timeout });
+				await expectNoDirectPath(alice, bob);
 
 				step('Bob drops off; Alice revokes and goes offline too');
 				await goOffline(bob.page);
@@ -301,11 +310,10 @@ test.describe('Per-todo delegation', () => {
 		}
 	);
 
-	// This one cannot even be staged: with the direct connection surviving
-	// `setOffline`, "the owner is offline" is not a state this harness can
-	// produce once the two have met. The run that exposed it failed on the
-	// *setup* assertion — Alice's todo was already ticked while she was
-	// supposedly offline.
+	// While the switch went unread, this one could not even be staged: the
+	// direct connection survived `setOffline`, and Alice's todo was already
+	// ticked while she was supposedly offline. With WebRTC off it gets as far as
+	// the last assertion and fails there, which is the README's claim.
 	test.fixme(
 		"a delegate's completion made while the owner is offline arrives from the relay",
 		async ({ browser }) => {
@@ -321,7 +329,11 @@ test.describe('Per-todo delegation', () => {
 				await addTodoOk(alice.page, todo, { delegateDid: bob.did });
 				const address = await getActiveDatabaseAddress(alice.page);
 				await openListByAddress(bob.page, address);
+				// Opening by address leaves Bob on the lists tab; the row's role reads
+				// there, but his checkbox below has to be on screen to be clicked.
+				await expectTodo(bob.page, todo);
 				await expect(rowFor(bob.page, todo)).toHaveAttribute('data-role', 'delegate', { timeout });
+				await expectNoDirectPath(alice, bob);
 				await goOffline(alice.page);
 
 				step('Bob completes it with nobody but the relay listening');
@@ -371,12 +383,17 @@ async function newIdentity(browser, label, { webrtc = true } = {}) {
 	// go through the stack it emulates. So "offline" without this switch
 	// removes the relay and keeps the direct path, which is the wrong way round
 	// for the question being asked.
+	//
+	// Seeded on the device, so the app has to start in the mode that reads the
+	// device: in memory mode a setting lives in the tab, and the seeded value is
+	// never seen (#9). Hence `persistent` below, as main's
+	// `replication-without-webrtc.spec.js` does.
 	if (!webrtc) {
 		await context.addInitScript(() => {
 			try {
 				localStorage.setItem('simpleTodo.webrtcEnabled', 'false');
 			} catch {
-				// Storage blocked; the test will fail on the peer count instead.
+				// Storage blocked; `expectWebRTCOff` below says so.
 			}
 		});
 	}
@@ -390,10 +407,77 @@ async function newIdentity(browser, label, { webrtc = true } = {}) {
 	});
 	page.on('pageerror', (error) => console.log(`[${label}:pageerror] ${error.message}`));
 	await addVirtualAuthenticator(page);
-	await openReadyAppWithNewPasskey(page, { label });
+	await openReadyAppWithNewPasskey(page, { label, persistent: webrtc ? undefined : true });
+	/** @type {string | null} */
+	let peerId = null;
+	if (!webrtc) {
+		await expectWebRTCOff(page, label);
+		peerId = await page.evaluate(() => window.__simpleTodoE2E.getPeerId());
+	}
 	const did = await getOwnDid(page);
 	step(`${label} is ${did.slice(0, 20)}…`);
-	return { page, did, close: () => context.close() };
+	return { page, did, peerId, close: () => context.close() };
+}
+
+/**
+ * The app read the switch.
+ *
+ * Asked of the app rather than inferred from the init script. Until the
+ * chapter called `initializeWebRTCSetting`, the value was written and never
+ * read; and in memory mode it is read from the tab, where the init script
+ * never put it. Either way the tests below ran with WebRTC on and measured the
+ * direct path under the relay's name.
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {string} label
+ */
+async function expectWebRTCOff(page, label) {
+	// The E2E hook, not the public diagnostics: only the hook carries the
+	// setting. It is installed when P2P start has finished, which is after the
+	// todo input already takes text, so it is waited for.
+	await page.waitForFunction(() => window.__simpleTodoE2E != null, null, { timeout });
+	const enabled = await page.evaluate(() => window.__simpleTodoE2E.getWebRTCEnabled());
+	expect(enabled, `${label} has WebRTC on: the switch was not read`).toBe(false);
+}
+
+/**
+ * Nothing between the two browsers goes around the relay.
+ *
+ * A connection between them may exist: a circuit through the relay. It has to
+ * be a limited one. An unlimited connection is direct, and whatever crosses it
+ * proves nothing about the relay. Decided by `limited`, never by the address: a
+ * hole-punched connection still reads `/p2p-circuit/webrtc/…` (AGENTS.md).
+ *
+ * @param {{ page: import('@playwright/test').Page, peerId: string | null }} a
+ * @param {{ page: import('@playwright/test').Page, peerId: string | null }} b
+ */
+async function expectNoDirectPath(a, b) {
+	for (const [from, to] of [
+		[a, b],
+		[b, a]
+	]) {
+		expect(to.peerId, 'peer id unknown, so the check would pass on nothing').toBeTruthy();
+		const connections = await from.page.evaluate(
+			(id) =>
+				(window.__simpleTodoE2E?.getConnections?.() ?? []).filter(
+					(/** @type {any} */ connection) => connection.remotePeer === id
+				),
+			to.peerId
+		);
+		step(
+			`connections ${from.peerId?.slice(-6)} → ${to.peerId?.slice(-6)}: ${JSON.stringify(connections)}`
+		);
+		// A hook that does not report `limited` would let every connection pass.
+		for (const connection of connections) {
+			expect(typeof connection.limited, 'getConnections() does not report `limited`').toBe(
+				'boolean'
+			);
+		}
+		expect(
+			connections.filter((/** @type {any} */ connection) => connection.limited === false),
+			'a direct connection to the other browser exists, so this is not the relay-only case'
+		).toEqual([]);
+	}
 }
 
 /** @param {import('@playwright/test').Page} page */
@@ -416,11 +500,11 @@ async function addVirtualAuthenticator(page) {
 
 /**
  * @param {import('@playwright/test').Page} page
- * @param {{ label: string }} identity
+ * @param {{ label: string, persistent?: boolean }} identity
  */
-async function openReadyAppWithNewPasskey(page, { label }) {
+async function openReadyAppWithNewPasskey(page, { label, persistent }) {
 	await page.goto(testUrl);
-	await passConsent(page, { identity: 'create', label });
+	await passConsent(page, { identity: 'create', label, persistent });
 	await expect(todoInput(page)).toBeEnabled({ timeout });
 }
 
@@ -608,11 +692,14 @@ function toDatetimeLocal(date) {
 /**
  * Take this browser off the network and give libp2p time to notice.
  *
- * Deliberately not asserting that every connection has gone. Measured:
- * `setOffline` drops the WebSocket to the relay after a few seconds and leaves
- * an established `/webrtc/p2p/…` to the other browser standing indefinitely —
- * WebRTC does not travel through the stack Playwright emulates. Waiting for
- * zero therefore never returns.
+ * Deliberately not asserting that every connection has gone. Measured with
+ * WebRTC on: `setOffline` drops the WebSocket to the relay after a few seconds
+ * and leaves an established `/webrtc/p2p/…` to the other browser standing
+ * indefinitely, because WebRTC does not travel through the stack Playwright
+ * emulates, so waiting for zero never returned. The tests that call this now
+ * switch WebRTC off and check that nothing direct exists
+ * (`expectNoDirectPath`). Whether the count then reaches zero has not been
+ * measured, so it is still not waited for.
  *
  * The tests below do not need it to. They prove the direct path delivered
  * nothing by *checking* that it delivered nothing, and then close the other
