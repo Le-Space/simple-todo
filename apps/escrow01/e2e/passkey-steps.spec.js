@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { passConsent, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import { isConsentOpen, passConsent, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import {
 	addVirtualAuthenticator,
 	recordCeremonies,
@@ -64,7 +64,9 @@ test('"Cancel" stops before the prompt, and the passkey just made is the one to 
 	page
 }) => {
 	test.setTimeout(timeout * 3);
-	await passConsent(page, { identity: 'create', label: 'Stopper' });
+	// In memory mode, so the passkey just made is nowhere in this browser and
+	// going on with it means finding it on the authenticator: three prompts.
+	await passConsent(page, { persistent: false, identity: 'create', label: 'Stopper' });
 	await expect(steps(page).locator('[part=count]')).toHaveText('Passkey prompt 2 of 3', {
 		timeout
 	});
@@ -75,12 +77,14 @@ test('"Cancel" stops before the prompt, and the passkey just made is the one to 
 	await expect(page.getByTestId('consent-error')).toContainText(
 		'Stopped before the next passkey prompt'
 	);
-	await expect(page.getByTestId('identity-mode-existing')).toBeChecked();
+	await expect(page.getByTestId('consent-proceed')).toHaveText(
+		'Sign in with your passkey and start'
+	);
 	expect((await takeCeremonies(page)).map((ceremony) => ceremony.kind)).toEqual(['create']);
 
 	// And it goes on with that passkey: found on the authenticator (nothing is
-	// kept in memory mode), then the identity signature.
-	await page.getByTestId('consent-accept').check();
+	// kept in memory mode), then the identity signature. One press: there is no
+	// tick to set again.
 	await page.getByTestId('consent-proceed').click();
 	for (const [count, heading] of [
 		['Passkey prompt 2 of 3', 'Once more, the same passkey'],
@@ -91,4 +95,29 @@ test('"Cancel" stops before the prompt, and the passkey just made is the one to 
 		await steps(page).getByRole('button', { name: 'Continue' }).click();
 	}
 	await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
+});
+
+test('Escape in the step dialog means "Cancel", and leaves the start dialog open', async ({
+	page
+}) => {
+	// The step dialog takes Escape as "Cancel". The start dialog comes back with
+	// what happened, and the same key must not take that one away too: it would
+	// close it, and a close is what starts the app.
+	test.setTimeout(timeout * 2);
+	await passConsent(page, { persistent: false, identity: 'create', label: 'Escaper' });
+	await expect(steps(page).locator('[part=count]')).toHaveText('Passkey prompt 2 of 3', {
+		timeout
+	});
+	await page.keyboard.press('Escape');
+
+	await waitForConsent(page);
+	await expect(page.getByTestId('consent-error')).toContainText(
+		'Stopped before the next passkey prompt'
+	);
+	await page.waitForTimeout(500);
+	expect(await isConsentOpen(page)).toBe(true);
+	expect(await page.evaluate(() => document.querySelector('passkey-step-dialog')?.isOpen)).toBe(
+		false
+	);
+	await expect(page.getByPlaceholder('What needs to be done?')).toBeDisabled();
 });

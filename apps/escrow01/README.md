@@ -44,23 +44,29 @@ the escrow half of [de2do](https://github.com/NiKrause/de2do).
   Account tab says "Demo without a chain". The tests run against it.
 - **OrbitDB stores no amounts.** A todo's `budget` field holds status, token, escrow, `todoRef`,
   transaction hashes and the last error. The chain is the source of truth for what is locked.
-- **The start dialog says what this is for.** Its title names the use case — confidential escrow
-  payments with a passkey — and its first screen holds the promise, "One passkey for everything" with
-  **Pay** set apart, four sentences about the data, and the acceptance tick directly above **Start**.
-  The full statement ("All notices": amounts encrypted, todos and lists not) and the settings
-  ("Advanced": storage, share code, identity) are folded, with their defaults unchanged except one: a
-  first start creates a passkey, because only a passkey session can lock a budget. Choosing to go
-  without one says so beside the button. Back on a device that keeps things, the passkey link is
-  there and a return is one tap ("Welcome back"); in memory mode nothing is kept, not even that link,
-  so the dialog returns, with "Already have a passkey for this demo?" beside **Start**.
+- **The start dialog says what this is for, and has one button.** Its title names the use case —
+  confidential escrow payments with a passkey — and its first screen holds the promise, **Sign in ·
+  Sign · Pay** as one row with **Pay** set apart, three sentences about the data (amounts encrypted;
+  todos and lists not; safest in a browser without extensions), and one button that says what it
+  does: **Create a passkey and start**. Its press is the consent; the line under it says so. The other
+  ways in are links under it: "Already have a passkey? Sign in with it" and "Look around without a
+  passkey – no budget then". "Notices and settings" is a second screen in the same dialog: **Keep in
+  this browser** (ticked; untick it on a shared computer), **Join a shared list** (the share-code
+  field appears on request), the technical view, and all notices. Kept, a return with a passkey is
+  one tap ("Welcome back"), and without one the app opens straight away; unticked, nothing is kept,
+  not even the decision, so the dialog returns.
+- **A demo video, once there is one.** A teaser left in the dialog's top row and a "Video" link in
+  the header open one player over the page; it plays a file of this site, with a plain link to
+  YouTube beside it. Both stay hidden until [`src/lib/demo-video.js`](src/lib/demo-video.js) has an
+  entry for the language on screen.
 - **The page opens on the todos.** Lists, account and network are tabs, at the foot of a phone's
   screen and under the header elsewhere. The URL fragment names the tab, so `#listen`, `#konto`,
   `#netzwerk` and the auditor view's `#pruefstelle` link straight to one.
 
 ### Try it
 
-1. The app: `pnpm install` at the repository root, then `pnpm dev` in `apps/escrow01`. Tick the notices
-   and press **Start**, which creates a passkey; create a private list in the **Lists** tab, and add a todo delegated to another DID with a budget. Tick it as the
+1. The app: `pnpm install` at the repository root, then `pnpm dev` in `apps/escrow01`. Press
+   **Create a passkey and start**; create a private list in the **Lists** tab, and add a todo delegated to another DID with a budget. Tick it as the
    delegate, release it as the owner, and open the auditor view from the **Account** tab. With the fake,
    amounts are readable only in the browser tab that locked them.
 2. On Sepolia: put the settings from [Configuration](docs/passkey-account.md#configuration) into
@@ -245,8 +251,9 @@ OrbitDB identity: entries were attributable to *a* peer, but not to *you*.
 This chapter replaces that with an opt-in **passkey-backed identity**:
 
 - **Onboarding choice** before the P2P stack starts: *create a passkey*
-  (one name, and it is only a label), *use an existing passkey* (recovery),
-  or *continue without one* (exactly the previous chapter's behaviour).
+  (the start button; its name is only a label, asked for in the technical
+  view), *sign in with a passkey you have* (recovery), or *look around without
+  one* (exactly the previous chapter's behaviour), as links under the button.
 - **WebAuthn DID provider** from
   [`@le-space/orbitdb-identity-provider-webauthn-did`](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did):
   the DID is the passkey's own P-256 key, and OrbitDB signs entries with a
@@ -334,8 +341,8 @@ This branch extends the basic `main` tutorial with a three-word Spanish shared-l
 
 1. **Open Two Browser Windows** - You need at least two browser instances, a mobile device, or ask another distant person to open the app
 2. **Load the Same URL** - All app users should load the same app URL
-3. **Choose the Shared List** - Under **Advanced** in the start dialog, copy the three-word share code from the first browser and paste it into the second
-4. **Accept and Start** - Tick the acceptance above the button and press **Start**
+3. **Choose the Shared List** - Copy the three-word share code from the first browser's **Lists** tab; in the second, open **Settings** under the start button, tick **Join a shared list** and paste it
+4. **Start** - Press the start button: its press is the consent
 5. **Wait for Connection** - The app will automatically discover and connect peers
 6. **Add Todos** - Create todos in one browser and watch them appear in the other
 

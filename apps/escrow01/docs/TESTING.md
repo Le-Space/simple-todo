@@ -32,7 +32,7 @@ Run the mnemonic-specific isolation and two-browser replication scenario:
 pnpm exec playwright test e2e/shared-list-mnemonic.spec.js --project=chromium
 ```
 
-This test copies Alice's visible three-word Spanish share code into Bob's startup form, proves both derive the same OrbitDB address, verifies bidirectional replication, and confirms a third browser using another mnemonic remains isolated.
+This test copies Alice's three-word Spanish share code from her **Lists** tab into Bob's start dialog (**Settings** → **Join a shared list**), proves both derive the same OrbitDB address, verifies bidirectional replication, and confirms a third browser using another mnemonic remains isolated.
 
 Run only consent-screen tests:
 
