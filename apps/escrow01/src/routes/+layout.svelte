@@ -1,9 +1,24 @@
 <script>
 	import '../app.css';
-	import { _ } from '$lib/i18n/index.js';
+	import { afterNavigate, replaceState } from '$app/navigation';
+	import { page } from '$app/state';
+	import { _, addressWithoutLocale } from '$lib/i18n/index.js';
 	// import favicon from '$lib/assets/favicon.svg';
 
 	let { children } = $props();
+
+	// `?lang=` has done its work once the language is set; take it out of the
+	// address, through the router, which owns the history entry. Not in
+	// `onMount`: the router counts as started only after the first navigation's
+	// callbacks have run, and `replaceState` before that is refused (in a
+	// development build, loudly; in production it was quietly overwritten).
+	afterNavigate(({ type }) => {
+		if (type !== 'enter') return;
+		queueMicrotask(() => {
+			const plain = addressWithoutLocale();
+			if (plain) replaceState(plain, page.state);
+		});
+	});
 </script>
 
 <svelte:head>

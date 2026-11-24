@@ -5,6 +5,7 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { fileURLToPath } from 'url';
 import { readFileSync } from 'fs';
 import { chapterCommit } from '@simple-todo/todo/node/chapter-commit.js';
+import { englishLinkPreview } from './english-link-preview.js';
 
 // update version in package.json and title
 const file = fileURLToPath(new URL('package.json', import.meta.url));
@@ -60,6 +61,8 @@ export default defineConfig({
 		}
 	},
 	plugins: [
+		// /en/: the same link preview in English (english-link-preview.js).
+		englishLinkPreview(),
 		tailwindcss(),
 			sveltekit(),
 			nodePolyfills(
