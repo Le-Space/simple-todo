@@ -357,9 +357,8 @@ const HOME_LIST_KEY = 'simpleTodo.homeList';
  * one's own: the one this identity started in before, or the newest list it
  * owns, or a new one.
  *
- * The shared list is not closed for this. It was opened first and stays the
- * place where two browsers with the same words meet; starting somewhere else
- * *instead* of it is what invoice01 measured as four times slower (PR #49).
+ * The shared list is not closed for this: it was opened first, as before, and
+ * stays open for whoever arrives with the same three words.
  *
  * Runs in the background after the start, so anything opened meanwhile -- a
  * list by address, another shared list -- wins: the home list is then made or

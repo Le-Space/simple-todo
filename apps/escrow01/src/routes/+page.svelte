@@ -499,9 +499,8 @@
 	 * escrow01: which list the start ends in.
 	 *
 	 * The shared list named by the three words is open by now -- `initializeP2P`
-	 * opens it, and it stays open as the place where two browsers with the same
-	 * words meet. Starting somewhere *instead* of it is what invoice01 measured
-	 * as four times slower (PR #49). What changes is the list on screen:
+	 * opens it, as before, and it stays open for whoever arrives with the same
+	 * words. What changes is the list on screen:
 	 *
 	 * - words from a link, or typed under "Advanced": that shared list;
 	 * - an address from a link: that list;
