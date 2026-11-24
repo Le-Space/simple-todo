@@ -711,7 +711,10 @@ stateDiagram-v2
   Unix-Sekunden. `sealed` ist der `SealedZamaSessionKey` der Wallet: AES-GCM, ein zufälliger IV mit
   12 Bytes, die Adresse als Associated Data gebunden. `toStored` in
   [`account-store.js`](../src/lib/chain/account-store.js) schreibt nur die eigenen Felder des
-  Datensatzes, ein Schlüssel im Klartext kann also nicht hineinrutschen.
+  Datensatzes, ein Schlüssel im Klartext kann also nicht hineinrutschen. Mit „Nur im
+  Arbeitsspeicher“ geht der Datensatz über `browser-memory.js` stattdessen in den Speicher dieses
+  Tabs und ist beim Neuladen weg: das Konto findet sich über sein veröffentlichtes Profil wieder,
+  der Leseschlüssel muss erneuert werden.
 - **Wann der Passkey gefragt wird.** Lesevorgänge von selbst — das Guthaben beim Start, ein
   Budget-Chip — fragen nie: Ein versiegelter Schlüssel lässt sie mit `read-access-locked` enden.
   „Beträge anzeigen“ (`unlockReadKey`) und ein Sperren öffnen ihn (`openReadKey`), weil jemand
@@ -853,7 +856,7 @@ delegierte Person hat noch kein Konto für Budgets“, bevor der Passkey gefragt
 | Daten                                                        | Ort                                                 | Wer es sehen kann                                                        |
 | ------------------------------------------------------------ | --------------------------------------------------- | ------------------------------------------------------------------------ |
 | privater Schlüssel des Passkeys                              | Authenticator                                       | niemand                                                                  |
-| Adresse, Leseschlüssel (versiegelt), Ablauf, Einrichtungs-Tx | `localStorage` des Browsers                         | wer an dieses Browserprofil kommt; den Leseschlüssel nur mit dem Passkey |
+| Adresse, Leseschlüssel (versiegelt), Ablauf, Einrichtungs-Tx | `localStorage` (behalten) oder Speicher des Tabs    | wer an dieses Browserprofil kommt; den Leseschlüssel nur mit dem Passkey |
 | der geöffnete Leseschlüssel, der Siegelschlüssel             | Arbeitsspeicher dieses Tabs, für den Besuch         | die Seite, solange sie läuft                                             |
 | Adresse je DID                                               | OrbitDB-Kontoverzeichnis                            | jeder, der die Datenbank öffnet                                          |
 | Budget-Status, `todoRef`, Transaktions-Hashes, kein Betrag   | OrbitDB-Liste der Aufgabe                           | wer die Liste lesen kann                                                 |
