@@ -38,6 +38,11 @@ CHAPTERS = {
     'escrow01': ('escrow01 · Sepolia-Testnetz',
                  'Budget gesperrt, Betrag verschlüsselt, Freigabe per Passkey.',
                  'Vertrauliche Treuhand', 80, 'Zama FHE · ERC-7984 · EIP-7702'),
+    # The same card in English, for escrow01's /en/ page: a link preview shows
+    # what the page's own tags name, and LinkedIn has no setting for a language.
+    'escrow01-en': ('escrow01 · Sepolia testnet',
+                    'Budget locked, amount encrypted, released by passkey.',
+                    'Confidential escrow', 80, 'Zama FHE · ERC-7984 · EIP-7702'),
     'invoice01': ('invoice01', 'Invoices from your own todos, on your own device.'),
     'qr01': ('qr01', 'Hand a list over with a code. No internet.'),
 }

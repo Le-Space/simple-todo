@@ -29,7 +29,8 @@
 			"e2e/footer.spec.js",
 			"e2e/page-qr.spec.js",
 			"e2e/consent-network.spec.js",
-			"e2e/phone-layout.spec.js"
+			"e2e/phone-layout.spec.js",
+			"e2e/link-preview.spec.js"
 		],
 		"check": true
 	}
