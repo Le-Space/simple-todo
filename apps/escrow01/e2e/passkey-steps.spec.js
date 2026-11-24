@@ -64,7 +64,10 @@ test('"Cancel" stops before the prompt, and the passkey just made is the one to 
 	page
 }) => {
 	test.setTimeout(timeout * 3);
-	await passConsent(page, { identity: 'create', label: 'Stopper' });
+	// In memory, as the steps below describe: escrow01 now starts at "keep it in
+	// this browser", where the passkey just made is remembered and going on with
+	// it needs a single prompt instead of finding it on the authenticator again.
+	await passConsent(page, { identity: 'create', label: 'Stopper', persistent: false });
 	await expect(steps(page).locator('[part=count]')).toHaveText('Passkey prompt 2 of 3', {
 		timeout
 	});
