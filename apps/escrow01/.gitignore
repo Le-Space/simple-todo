@@ -36,3 +36,9 @@ pnpm-workspace.yaml
 # Vitest browser-mode writes these when an assertion fails. Two of them were
 # committed with #315: evidence of a failing run, not something to keep.
 **/__screenshots__/
+
+# Demo films (e2e-video/): linked kit, recordings, spoken lines, films
+e2e-video/node_modules
+e2e-video/results
+e2e-video/voice
+e2e-video/out

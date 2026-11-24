@@ -33,7 +33,7 @@
 			class="mr-auto inline-flex min-h-8 items-center gap-2 rounded-md py-0.5 pr-1 text-xs font-semibold whitespace-nowrap text-heading hover:underline"
 		>
 			<span class="relative h-[27px] w-12 shrink-0 overflow-hidden rounded bg-surface-2">
-				<img src={video.poster} alt="" class="h-full w-full object-cover" />
+				<img src={video.thumb || video.poster} alt="" class="h-full w-full object-cover" />
 				<span
 					class="absolute inset-0 m-auto h-0 w-0 border-y-[6px] border-l-[10px] border-y-transparent border-l-white drop-shadow"
 					aria-hidden="true"

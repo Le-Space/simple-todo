@@ -35,6 +35,7 @@ async function withVideos(page, { de = false } = {}) {
 			const entry = (/** @type {string} */ language) => ({
 				src: `${files}/escrow01-${language}.mp4`,
 				poster: `${files}/escrow01-${language}.png`,
+				thumb: `${files}/escrow01-${language}-thumb.png`,
 				captions: `${files}/escrow01-${language}.vtt`,
 				youtubeId: 'dQw4w9WgXcQ',
 				duration: '1:30'
@@ -105,9 +106,10 @@ test.describe('Demo video', () => {
 		).toBeLessThan(8);
 		expect(teaserBox?.x ?? 0).toBeLessThan(switchBox?.x ?? 0);
 
-		// Before the click: the poster, and nothing else of the video.
-		await expect.poll(() => fetched).toContain('escrow01-en.png');
-		expect(fetched.filter((name) => !name.endsWith('.png'))).toEqual([]);
+		// Before the click: the teaser's own small picture, and nothing else of
+		// the video -- not even the player's poster.
+		await expect.poll(() => fetched).toContain('escrow01-en-thumb.png');
+		expect(fetched.filter((name) => name !== 'escrow01-en-thumb.png')).toEqual([]);
 
 		await teaser.click();
 		await expect.poll(() => playerOpen(page)).toBe(true);

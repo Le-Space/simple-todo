@@ -83,3 +83,24 @@ export function listPeerState({ connections = [], subscribers = [], selfId = nul
 	const state = direct > 0 ? 'direct' : relayed > 0 ? 'relay' : 'alone';
 	return { state, direct, relayed, peers };
 }
+
+/**
+ * What the header's dot shows (escrow01): the network state, except that the
+ * open list decides between green and amber once the app is connected.
+ *
+ * - Another browser on the list, reached directly: `direct`.
+ * - Another browser on the list, but only through the relay: `relayOnly`, in
+ *   amber. Entries still arrive, and older ones only if the relay holds the list.
+ * - Nobody else on the list: the network state as it is. Being alone is not a
+ *   fault, so it stays green.
+ *
+ * @param {import('./network-status.js').NetworkState} network
+ * @param {ListPeerState} list
+ * @returns {import('./network-status.js').NetworkState | 'relayOnly'}
+ */
+export function shownNetworkState(network, list) {
+	if (network !== 'relay' && network !== 'direct') return network;
+	if (list === 'direct') return 'direct';
+	if (list === 'relay') return 'relayOnly';
+	return network;
+}

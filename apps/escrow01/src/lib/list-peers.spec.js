@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { connectionPath, hasDirectBrowserConnection, listPeerState } from './list-peers.js';
+import {
+	connectionPath,
+	hasDirectBrowserConnection,
+	listPeerState,
+	shownNetworkState
+} from './list-peers.js';
 
 const RELAY = '12D3KooWRelay';
 const ALICE = '12D3KooWAlice';
@@ -135,5 +140,30 @@ describe('listPeerState', () => {
 
 	it('is alone without a node or a list', () => {
 		expect(listPeerState({}).state).toBe('alone');
+	});
+});
+
+describe('shownNetworkState', () => {
+	it('turns amber when the other browser on the list is reached through the relay only', () => {
+		expect(shownNetworkState('relay', 'relay')).toBe('relayOnly');
+		// A direct browser on another list does not make this one direct.
+		expect(shownNetworkState('direct', 'relay')).toBe('relayOnly');
+	});
+
+	it('is direct when a browser on this list is reached directly', () => {
+		expect(shownNetworkState('relay', 'direct')).toBe('direct');
+		expect(shownNetworkState('direct', 'direct')).toBe('direct');
+	});
+
+	it('stays as it is when nobody else is on the list: alone is not a fault', () => {
+		expect(shownNetworkState('relay', 'alone')).toBe('relay');
+		expect(shownNetworkState('direct', 'alone')).toBe('direct');
+	});
+
+	it('leaves starting, connecting and failed alone', () => {
+		for (const network of /** @type {const} */ (['starting', 'connecting', 'failed'])) {
+			expect(shownNetworkState(network, 'relay')).toBe(network);
+			expect(shownNetworkState(network, 'direct')).toBe(network);
+		}
 	});
 });

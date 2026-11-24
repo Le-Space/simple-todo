@@ -6,81 +6,22 @@
 	// every `a` outside any layer, which beats every Tailwind utility.
 	import { onDestroy } from 'svelte';
 	import { _ } from '$lib/i18n/index.js';
-	import { libp2pStore } from './p2p-stores.js';
-	import { todoDBStore } from './db-actions.js';
-	import { listPeerState } from './list-peers.js';
+	import { listPeerStateStore } from './list-peer-state.js';
 
-	/** Recompute this often even without an event: cheap, and events can be missed. */
-	const REFRESH_MS = 3000;
 	/** How long the LED pulses after another browser has connected directly. */
 	const FLASH_MS = 4000;
 
-	/** @type {ReturnType<typeof listPeerState>} */
-	let peers = listPeerState({});
+	$: peers = $listPeerStateStore;
+
 	let flashing = false;
 	/** @type {ReturnType<typeof setTimeout> | undefined} */
 	let flashTimer;
+	/** @type {string} */
+	let lastState = 'alone';
 
-	/** @type {Array<() => void>} */
-	let unlisten = [];
-	/** @type {ReturnType<typeof setInterval> | undefined} */
-	let refreshTimer;
-
-	$: watch($libp2pStore, $todoDBStore);
-
-	/**
-	 * @param {any} node
-	 * @param {any} db
-	 */
-	function watch(node, db) {
-		stop();
-		const update = () => recompute(node, db);
-		/**
-		 * @param {any} target
-		 * @param {string} event
-		 */
-		const on = (target, event) => {
-			if (typeof target?.addEventListener === 'function') {
-				target.addEventListener(event, update);
-				unlisten.push(() => target.removeEventListener(event, update));
-			} else if (typeof target?.on === 'function') {
-				target.on(event, update);
-				unlisten.push(() => target.off?.(event, update));
-			}
-		};
-		on(node, 'connection:open');
-		on(node, 'connection:close');
-		on(node?.services?.pubsub, 'subscription-change');
-		on(db?.events, 'join');
-		on(db?.events, 'leave');
-		refreshTimer = setInterval(update, REFRESH_MS);
-		update();
-	}
-
-	/**
-	 * @param {any} node
-	 * @param {any} db
-	 */
-	function recompute(node, db) {
-		const before = peers.state;
-		if (!node || !db) {
-			peers = listPeerState({});
-		} else {
-			const topic = db.address?.toString?.() ?? '';
-			/** @type {unknown[]} */
-			let subscribers = [];
-			try {
-				subscribers = Array.from(node.services?.pubsub?.getSubscribers?.(topic) ?? []);
-			} catch {
-				// Not subscribed yet: nobody to list.
-			}
-			peers = listPeerState({
-				connections: node.getConnections?.() ?? [],
-				subscribers: [...subscribers, ...Array.from(db.peers ?? [])],
-				selfId: node.peerId?.toString?.() ?? null
-			});
-		}
-		if (peers.state === 'direct' && before !== 'direct') flash();
+	$: if (peers.state !== lastState) {
+		if (peers.state === 'direct') flash();
+		lastState = peers.state;
 	}
 
 	function flash() {
@@ -89,16 +30,7 @@
 		flashTimer = setTimeout(() => (flashing = false), FLASH_MS);
 	}
 
-	function stop() {
-		for (const off of unlisten) off();
-		unlisten = [];
-		clearInterval(refreshTimer);
-	}
-
-	onDestroy(() => {
-		stop();
-		clearTimeout(flashTimer);
-	});
+	onDestroy(() => clearTimeout(flashTimer));
 
 	$: count = peers.state === 'relay' ? peers.relayed : peers.direct;
 	$: label = $_(`lists.peers.${peers.state}`, { values: { count } });

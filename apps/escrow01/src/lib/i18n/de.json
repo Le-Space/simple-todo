@@ -59,6 +59,7 @@
 			"connecting": "Verbindet …",
 			"relay": "Verbunden",
 			"direct": "Direkt verbunden",
+			"relayOnly": "Nur über den Relay",
 			"failed": "Startfehler",
 			"details": "Details im Tab Netzwerk."
 		},
@@ -490,6 +491,7 @@
 			"connecting": "Bereit. Verbindung zu einem Relay wird aufgebaut …",
 			"relay": "Bereit und mit einem Relay verbunden",
 			"direct": "Bereit und direkt mit einem anderen Browser verbunden",
+			"relayOnly": "Bereit, aber der andere Browser in dieser Liste ist nur über den Relay erreichbar",
 			"failed": "Die App konnte nicht starten."
 		},
 		"status": {

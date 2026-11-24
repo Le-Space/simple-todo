@@ -1,0 +1,16 @@
+{
+	"lang": "en",
+	"parts": [
+		{ "card": "intro" },
+		{
+			"card": "scene",
+			"n": 1,
+			"eyebrow": "Testnet demo · Ethereum Sepolia",
+			"title": "A task, a budget, one passkey",
+			"sub": "Amounts encrypted with Zama’s FHE. No accounts, no passwords.",
+			"say": "Alice hands a task to Bob and locks its budget in escrow. A demo on Ethereum’s Sepolia testnet: no real money."
+		},
+		{ "scene": "escrow01.en" },
+		{ "card": "outro" }
+	]
+}
