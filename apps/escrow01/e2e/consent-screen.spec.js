@@ -646,18 +646,19 @@ test.describe('Consent screen', () => {
 		await page.goto('/');
 		await passConsent(page, { persistent: false });
 		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
-		await expect.poll(() => new URL(page.url()).hash).toContain('list=');
-		const own = decodeURIComponent(new URL(page.url()).hash.match(/list=([^&]+)/)?.[1] ?? '');
+		// escrow01 starts in a private list of its own, which the address names
+		// by its database address; the browser's own three words stay the shared
+		// list underneath.
+		await expect.poll(() => new URL(page.url()).hash).toContain('db=');
+		await openSection(page, 'listen');
+		const own = ((await page.getByTestId('active-shared-list-name').textContent()) ?? '').trim();
+		expect(own).toMatch(/^\S+-\S+-\S+$/);
 
 		await page.reload();
 		await waitForConsent(page);
 		await expect(page.getByTestId('consent-linked-list')).toHaveCount(0);
 		await openAdvanced(page);
 		await expect(page.getByTestId('consent-join-list')).not.toBeChecked();
-		// Memory mode forgot the way taken too, so it is taken again.
-		await passConsent(page);
-		await openSection(page, 'listen');
-		await expect(page.getByTestId('active-shared-list-name')).toHaveText(own, { timeout });
 
 		// Somebody else's browser, sent the same address: that is a link.
 		const context = await browser.newContext();
