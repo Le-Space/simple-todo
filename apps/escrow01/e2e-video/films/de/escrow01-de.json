@@ -1,0 +1,16 @@
+{
+	"lang": "de",
+	"parts": [
+		{ "card": "intro" },
+		{
+			"card": "scene",
+			"n": 1,
+			"eyebrow": "Testnetz-Demo · Ethereum Sepolia",
+			"title": "Eine Aufgabe, ein Budget, ein Passkey",
+			"sub": "Beträge verschlüsselt mit Zamas FHE. Keine Konten, keine Passwörter.",
+			"say": "Alice gibt Bob eine Aufgabe und hinterlegt das Budget treuhänderisch. Eine Demo im Sepolia-Testnetz von Ethereum, ohne echtes Geld."
+		},
+		{ "scene": "escrow01.de" },
+		{ "card": "outro" }
+	]
+}
