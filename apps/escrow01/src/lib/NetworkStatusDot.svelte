@@ -1,11 +1,16 @@
 <script>
 	// The network's state in the header, on every tab (escrow01): a dot and a
 	// word, and a link to the network tab, where the sentence behind the word and
-	// the details are. The state comes from the status panel in that tab.
+	// the details are. The state comes from the status panel in that tab; once
+	// connected, the open list decides between green and amber
+	// (`shownNetworkState`): amber when the other browser on it can only be
+	// reached through the relay.
 	import { _ } from '$lib/i18n/index.js';
 	import { networkStateStore } from './network-status.js';
+	import { listPeerStateStore } from './list-peer-state.js';
+	import { shownNetworkState } from './list-peers.js';
 
-	$: state = $networkStateStore;
+	$: state = shownNetworkState($networkStateStore, $listPeerStateStore.state);
 	$: sentence = $_(`network.simple.${state}`).replace(/\.$/, '');
 	$: busy = state === 'starting' || state === 'connecting';
 </script>
@@ -20,7 +25,7 @@
 	<span
 		class="h-2 w-2 shrink-0 rounded-full {state === 'failed'
 			? 'bg-danger-500'
-			: busy
+			: busy || state === 'relayOnly'
 				? 'bg-data-400'
 				: 'bg-identity-500'}"
 		class:animate-pulse={busy}

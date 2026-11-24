@@ -109,6 +109,11 @@ test.describe('The LED under the list name', () => {
 				await expect(led(page)).toBeVisible();
 				// Green text (identity-800), not the link cyan app.css gives every <a>.
 				await expect(led(page)).toHaveCSS('color', 'rgb(21, 94, 66)');
+				// The header's dot agrees.
+				await expect(page.getByTestId('network-status-dot')).toHaveAttribute(
+					'data-state',
+					'direct'
+				);
 			}
 		} finally {
 			await bob?.context.close();
@@ -150,6 +155,10 @@ test.describe('The LED under the list name', () => {
 				await expect(led(page)).toContainText('Via the relay with 1 browser');
 				// Amber text (data-800), not the link cyan.
 				await expect(led(page)).toHaveCSS('color', 'rgb(111, 78, 19)');
+				// The header's dot turns amber too, and says why.
+				const dot = page.getByTestId('network-status-dot');
+				await expect(dot).toHaveAttribute('data-state', 'relayOnly');
+				await expect(dot).toContainText('Via the relay only');
 			}
 
 			// Checked against libp2p: no unlimited connection to the other browser,
