@@ -37,6 +37,19 @@ import {
 const CREDENTIAL_STORAGE_KEY = 'simpleTodo.webauthnCredential';
 
 /**
+ * The type of key OrbitDB signs with, derived from the passkey's PRF output.
+ *
+ * One constant for both places that derive it — `p2p.js` when the identity is
+ * built, and the restore below — because they used to disagree. The identity
+ * was built with Ed25519 while the restore asked for the provider's default,
+ * secp256k1, so a restored device signed under a different key than the
+ * device the passkey was made on: the same DID, a different identity document,
+ * and — since #120 derives the encryption key pair from the signing key — a
+ * different pair, which cannot open the owner's own key copies.
+ */
+export const SIGNING_KEY_TYPE = 'Ed25519';
+
+/**
  * The credential, written down so a later visit finds the same identity --
  * and only when the reader asked for things to be kept.
  *
@@ -131,7 +144,10 @@ export async function recoverPasskeyCredential({ onTouch } = {}) {
 	// here.
 	let restored;
 	try {
-		restored = await restoreIdentityFromAuthenticator({ onTouch });
+		restored = await restoreIdentityFromAuthenticator({
+			onTouch,
+			signingKeyType: SIGNING_KEY_TYPE
+		});
 	} catch (error) {
 		console.warn('the authenticator could not answer for an identity:', error);
 		return null;
