@@ -23,7 +23,7 @@
 	--border: #d4dcea;
 	--heading: #141b2e; /* Ink */
 	--text: #41506b;
-	--faint: #6b7891;
+	--faint: #5f6c85; /* AA on every light surface: 4.67:1 on --bg, 5.29:1 on --surface */
 	--coral: #e8503f; /* light Coral */
 	--cyan: #0e86c4; /* light Cyan */
 	--identity: #1fa971;
@@ -40,7 +40,7 @@
 	--border: #232b3d; /* Horizon */
 	--heading: #edf1f8; /* Starlight */
 	--text: #a8b3c7; /* Stardust */
-	--faint: #5c677a;
+	--faint: #838ea3; /* AA on every dark surface: 4.81:1 on --surface-2, 5.85:1 on --bg */
 	--coral: #ff6b5b; /* Signal Coral */
 	--cyan: #58c7f3; /* Sync Cyan */
 	--identity: #3edc97;
