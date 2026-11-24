@@ -251,6 +251,7 @@
 		},
 		"auditor": {
 			"title": "Auditor view",
+			"titleShort": "Auditor",
 			"escrow": "Escrow",
 			"role": "Auditor",
 			"banner": "You see these amounts because the escrow lists your address as its auditor. They are decrypted on your device. Nothing is in plain text on the chain.",

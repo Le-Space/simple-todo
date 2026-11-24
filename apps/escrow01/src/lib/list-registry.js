@@ -2,6 +2,7 @@ import { accessControllerKeepingLogsInMemory } from '@simple-todo/todo/keep-logs
 import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import { writable, get } from 'svelte/store';
 import { OrbitDBAccessController } from '@orbitdb/core';
+import { listNameFromDatabase } from './list-name.js';
 
 /**
  * The list registry (acl01, issue #114).
@@ -147,7 +148,13 @@ async function refreshRegistry() {
 	const records = await registryDB.all();
 	const entries = records
 		.map((/** @type {any} */ record) => (record && 'value' in record ? record.value : record))
-		.filter((/** @type {any} */ entry) => entry && typeof entry.address === 'string');
+		.filter((/** @type {any} */ entry) => entry && typeof entry.address === 'string')
+		// Lists opened before list-name.js were recorded under their database
+		// name, suffix and all; shown without it, as the owner shows them.
+		.map((/** @type {ListEntry} */ entry) => ({
+			...entry,
+			name: listNameFromDatabase(entry.name)
+		}));
 	entries.sort(
 		(/** @type {ListEntry} */ a, /** @type {ListEntry} */ b) =>
 			(b.createdAt ?? 0) - (a.createdAt ?? 0)

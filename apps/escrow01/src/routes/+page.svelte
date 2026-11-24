@@ -953,35 +953,56 @@
 		A grid, so a phone gets two short rows instead of three wrapped ones: the
 		title and the switches on the first, the state on the second. From `sm` on,
 		all three share one row.
+
+		In that row the title is sized first and the state takes what is left,
+		wrapping onto a second line inside its column when it has to. The other way
+		round, the state's badges took the row and cut the title down to "A…" in
+		the auditor view and to "Confidential esc…" beside "Release confirmed" --
+		at every desktop width, since the page is never wider than 56rem. The
+		state's column keeps at least its widest badge, so nothing in it overlaps.
 	-->
 	<header
-		class="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 sm:mb-6 sm:grid-cols-[minmax(0,1fr)_auto_auto]"
+		class="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 sm:mb-6 sm:grid-cols-[minmax(0,max-content)_minmax(min-content,1fr)_auto]"
 	>
 		<div class="col-start-1 row-start-1 flex min-w-0 items-center gap-3">
 			<LocalFirstLink size={44} />
-			<div class="min-w-0">
+			<!-- `flex-1`: as wide as the title's column, so the line under the title
+			     wraps there, not at the width of a short title. -->
+			<div class="min-w-0 flex-1">
 				{#if auditorOpen}
-					<h1 class="truncate text-xl font-bold text-heading sm:text-3xl">
-						{$_('budget.auditor.title')}
+					<!-- Short below `md`, as the app's own name is: beside the switches on a
+					     phone, "Auditor view" lost its last letters. -->
+					<h1
+						class="truncate text-xl font-bold text-heading md:text-3xl"
+						aria-label={$_('budget.auditor.title')}
+					>
+						<span class="md:hidden" aria-hidden="true">{$_('budget.auditor.titleShort')}</span>
+						<span class="hidden md:inline" aria-hidden="true">{$_('budget.auditor.title')}</span>
 					</h1>
-					<p class="mt-1 text-sm text-faint">
+					<!-- Wraps to the title's width rather than widening the title's column. -->
+					<p class="mt-1 text-sm text-faint [contain:inline-size]">
 						{$_('budget.auditor.escrow')}
 						<code class="font-mono text-xs" title={budgetInfo.escrow}
 							>{shortId(budgetInfo.escrow)}</code
 						>
 					</p>
 				{:else}
-					<!-- The full name everywhere but on a phone, where the switches beside it
-					     leave room for one word; the heading's name stays the full one. -->
+					<!-- The full name from `md` on; below it the switches and the state beside
+					     it leave room for one word (at 700px "Confidential esc…"). The
+					     heading's accessible name stays the full one. -->
 					<h1
-						class="truncate text-xl font-bold text-heading sm:text-3xl"
+						class="truncate text-xl font-bold text-heading md:text-3xl"
 						aria-label={$_('header.title')}
 					>
-						<span class="sm:hidden" aria-hidden="true">{$_('header.titleShort')}</span>
-						<span class="hidden sm:inline" aria-hidden="true">{$_('header.title')}</span>
+						<span class="md:hidden" aria-hidden="true">{$_('header.titleShort')}</span>
+						<span class="hidden md:inline" aria-hidden="true">{$_('header.title')}</span>
 					</h1>
 					<!-- On a phone the list's name is the better use of the line. -->
-					<p class="mt-0.5 hidden text-sm text-faint sm:block" data-testid="app-tagline">
+					<!-- Wraps to the title's width rather than widening the title's column. -->
+					<p
+						class="mt-0.5 hidden text-sm text-faint [contain:inline-size] sm:block"
+						data-testid="app-tagline"
+					>
 						{$_('header.tagline')}
 					</p>
 				{/if}

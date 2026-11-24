@@ -251,6 +251,7 @@
 		},
 		"auditor": {
 			"title": "Prüfansicht",
+			"titleShort": "Prüfung",
 			"escrow": "Treuhand",
 			"role": "Prüfstelle",
 			"banner": "Sie sehen diese Beträge, weil die Treuhand Ihre Adresse als Prüfstelle eingetragen hat. Entschlüsselt wird auf Ihrem Gerät. Im Klartext steht nichts auf der Chain.",
