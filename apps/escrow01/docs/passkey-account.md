@@ -305,7 +305,8 @@ sequenceDiagram
    knows; otherwise it looks for 3 seconds for an account the same DID already published (a second
    device with the same synced passkey) and checks it on chain; only then does it set up a new one.
    On its own it does that only for a passkey this page registered (`wasRegisteredHere` in
-   [`passkey-identity.js`](../src/lib/passkey-identity.js)). For any other passkey a profile that is
+   [`registered-passkeys.js`](../src/lib/registered-passkeys.js), by `credentialId`, so a passkey
+   recovered after a cancelled step still counts). For any other passkey a profile that is
    slow to replicate looks exactly like none, and creating would give the DID a second account
    published over the first. So the account tab asks instead (phase `not-found`, error
    `account-not-found`): "Search again" waits up to 20 seconds, "Create a new account" sets one up.
