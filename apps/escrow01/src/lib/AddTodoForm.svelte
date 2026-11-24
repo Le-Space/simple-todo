@@ -25,6 +25,13 @@
 	export let budgetDecimals = 6;
 	/** Whether the budget service really encrypts. The fake does not, and says so. */
 	export let budgetConfidential = false;
+	/**
+	 * escrow01: on a list without delegation -- the shared three-word list --
+	 * say where delegation and budgets are, with the button that gets there.
+	 * Without it, the form simply lacks them and nothing explains why.
+	 */
+	export let offerPrivateList = false;
+	export let privateListBusy = false;
 
 	let inputText = '';
 	let showDelegation = false;
@@ -114,6 +121,24 @@
 				</button>
 			{/if}
 		</div>
+
+		{#if offerPrivateList && !delegationEnabled}
+			<div
+				class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm text-faint"
+				data-testid="add-todo-private-list-hint"
+			>
+				<p class="min-w-0 flex-1 basis-64">{$_('todo.form.privateListHint')}</p>
+				<button
+					type="button"
+					on:click={() => dispatch('createPrivateList')}
+					disabled={disabled || privateListBusy}
+					data-testid="add-todo-private-list-create"
+					class="shrink-0 rounded-md border border-cyan-700 px-3 py-1.5 text-sm font-medium text-cyan-800 transition-colors hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-cyan dark:text-cyan dark:hover:bg-cyan/10"
+				>
+					{privateListBusy ? $_('todo.form.privateListBusy') : $_('todo.form.privateListCreate')}
+				</button>
+			</div>
+		{/if}
 
 		{#if delegationEnabled}
 			<label class="flex items-center gap-2 text-sm text-faint">

@@ -46,10 +46,11 @@ test.describe('the page in tabs', () => {
 			expect(await shownSections(page)).toEqual([`section-${section}`]);
 			await expect(page.locator('[aria-current="page"]')).toHaveCount(1);
 			// The section leads the fragment; the open list follows it, so a tab
-			// switch never drops the list from the link and the page QR.
+			// switch never drops the list from the link and the page QR. escrow01
+			// starts in a private list, which the link names by its address.
 			await expect
 				.poll(() => new URL(page.url()).hash)
-				.toMatch(new RegExp(`^#${section}&list=[^&]+$`));
+				.toMatch(new RegExp(`^#${section}&db=[^&]+$`));
 		}
 
 		// The switch to another list is where the todos are.

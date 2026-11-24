@@ -48,7 +48,9 @@
 		updateTodoText,
 		delegateTodo,
 		revokeTodoDelegation,
-		loadTodoDatabase
+		loadTodoDatabase,
+		openHomeList,
+		createPrivateTodoList
 	} from '$lib/db-actions.js';
 	import { supportsDelegation } from '$lib/delegated-access.js';
 	import DelegatedAuthBadge from '$lib/DelegatedAuthBadge.svelte';
@@ -71,7 +73,10 @@
 	import OwnMultiaddrs from '$lib/OwnMultiaddrs.svelte';
 	import SharedListSelector from '$lib/SharedListSelector.svelte';
 	import StorageModeSelector from '@simple-todo/ui/StorageModeSelector.svelte';
-	import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
+	import {
+		getPersistentStorageEnabled,
+		setPersistentStorageEnabled
+	} from '@simple-todo/todo/storage-mode.js';
 	import { honourStorageChoice } from '@simple-todo/todo/browser-memory.js';
 
 	// This chapter offers the choice, so what the app writes follows it. Said
@@ -165,9 +170,24 @@
 		persisted that overwrite. A reload silently moved everyone back to
 		in-memory, which is exactly the failure the storage choice exists to fix.
 	*/
-	/** @type {'memory' | 'indexeddb'} */
+	/*
+		escrow01 starts at "keep it in this browser", and it can be unticked.
+		The start opens a list of one's own; kept only in memory, a new tab would
+		not find it again and a person without a passkey would get a new identity
+		and a new list on every reload.
+
+		A choice made earlier still wins. "In memory only" is stored as *nothing*
+		(see `storage-mode.js`), so it cannot be told apart from never having
+		been asked -- except where this browser also carries a remembered
+		consent, the one case where the dialog does not come back to ask. There
+		the earlier answer stands. Same rule as invoice01.
+	*/
 	/** @type {'memory' | 'indexeddb'} As `StorageModeSelector` declares it. */
-	let storageMode = getPersistentStorageEnabled() ? 'indexeddb' : 'memory';
+	let storageMode = getPersistentStorageEnabled()
+		? 'indexeddb'
+		: recall(CONSENT_KEY) === 'true'
+			? 'memory'
+			: 'indexeddb';
 	/** @type {string | null} */
 	let myPeerId = null;
 	let selectedMnemonic = '';
@@ -310,10 +330,26 @@
 		// The dialog shows this now, so a stale one would accuse the attempt that
 		// is only just starting.
 		error = null;
+		const canonicalMnemonic = normalizeSpanishMnemonic(selectedMnemonic);
+		// escrow01: words somebody *chose* mean that shared list -- a link brought
+		// them, the dialog was opened to open a shared list, or other words were
+		// typed under "Advanced". Asked before the words are remembered below,
+		// which would make every choice look like this browser's own.
+		const wordsChosen =
+			linkedWords !== null || consentOpensAdvanced || canonicalMnemonic !== storedMnemonic();
+		// Held from before the start, not from when the home list begins to open:
+		// in between, the form would be enabled on the shared list for a moment,
+		// and a todo written then would vanish with the switch.
+		homeListOpening = !wordsChosen && !addressFromLink;
+		// Now, not when the dialog appeared: the storage choice is only a choice
+		// once somebody proceeds with it. The selector writes it only when it is
+		// clicked, so a preselected "keep it" stayed in memory without this.
+		// After `storedMnemonic()` above, which has to read where the words were
+		// kept *before* the choice moves them.
+		setPersistentStorageEnabled(storageMode === 'indexeddb');
 		// Both describe how the dialog was opened this time, not the next time.
 		consentOpensAdvanced = false;
 		linkedWords = null;
-		const canonicalMnemonic = normalizeSpanishMnemonic(selectedMnemonic);
 		selectedMnemonic = canonicalMnemonic;
 		try {
 			remember(SPANISH_MNEMONIC_STORAGE_KEY, canonicalMnemonic);
@@ -359,7 +395,7 @@
 				await startP2P({ todoDbName: canonicalMnemonic, passkeyCredential });
 			}
 			activeMnemonic = canonicalMnemonic;
-			void listLink.openLinked();
+			void openStartList(wordsChosen);
 			warnIfIdentityCannotTravel(passkeyCredential);
 		} catch (err) {
 			const reason = err instanceof Error ? err.message : String(err);
@@ -373,6 +409,7 @@
 				showModal = true;
 				error = message;
 			}
+			homeListOpening = false;
 			console.error('P2P initialization failed:', err);
 		}
 	}
@@ -428,13 +465,81 @@
 			if (!welcomeBack && recall(CONSENT_KEY) === 'true') {
 				showModal = false;
 				activeMnemonic = normalizeSpanishMnemonic(selectedMnemonic);
+				homeListOpening = linkedWords === null && !addressFromLink;
 				await startP2P({ todoDbName: activeMnemonic, passkeyCredential: null });
-				void listLink.openLinked();
+				void openStartList(linkedWords !== null);
 			}
 		} catch {
-			// ignore storage errors
+			// ignore storage errors -- but do not leave the form locked for a home
+			// list that is now never going to open
+			homeListOpening = false;
 		}
 	});
+
+	/** This browser's own three words, as last kept -- or null. */
+	function storedMnemonic() {
+		try {
+			const saved = recall(SPANISH_MNEMONIC_STORAGE_KEY);
+			return saved && isValidSpanishMnemonic(saved) ? normalizeSpanishMnemonic(saved) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	/**
+	 * An address the page was opened with is followed once, on the first start.
+	 * A later restart -- another identity, another storage choice -- goes back
+	 * to one's own list instead of to a link that has already been followed.
+	 */
+	let addressFromLink = listLink.initial.address;
+	let homeListOpening = false;
+	let privateListBusy = false;
+
+	/**
+	 * escrow01: which list the start ends in.
+	 *
+	 * The shared list named by the three words is open by now -- `initializeP2P`
+	 * opens it, and it stays open as the place where two browsers with the same
+	 * words meet. Starting somewhere *instead* of it is what invoice01 measured
+	 * as four times slower (PR #49). What changes is the list on screen:
+	 *
+	 * - words from a link, or typed under "Advanced": that shared list;
+	 * - an address from a link: that list;
+	 * - otherwise one's own private list, because delegation and budgets --
+	 *   what this chapter is about -- exist only there.
+	 *
+	 * @param {boolean} wordsChosen
+	 */
+	async function openStartList(wordsChosen) {
+		if (wordsChosen || addressFromLink) {
+			homeListOpening = false;
+			addressFromLink = null;
+			await listLink.openLinked();
+			return;
+		}
+		homeListOpening = true;
+		try {
+			await openHomeList($_('lists.home.name'));
+		} catch (err) {
+			const reason = err instanceof Error ? err.message : String(err);
+			showToast($_('lists.home.openFailed', { values: { reason } }), 'error', 6000);
+		} finally {
+			homeListOpening = false;
+		}
+	}
+
+	/** From the hint on a shared list: a private list, opened right away. */
+	async function handleCreatePrivateList() {
+		privateListBusy = true;
+		try {
+			await createPrivateTodoList($_('lists.home.name'));
+		} catch (err) {
+			const reason = err instanceof Error ? err.message : String(err);
+			showToast($_('lists.home.openFailed', { values: { reason } }), 'error', 6000);
+		} finally {
+			privateListBusy = false;
+		}
+	}
 
 	function loadOrGenerateMnemonic() {
 		try {
@@ -867,12 +972,15 @@
 
 		<AddTodoForm
 			on:add={handleAddTodo}
-			disabled={!$initializationStore.isInitialized}
+			disabled={!$initializationStore.isInitialized || homeListOpening}
 			{delegationEnabled}
 			{budgetEnabled}
 			budgetToken={budgetInfo.token.symbol}
 			budgetDecimals={budgetInfo.token.decimals}
 			budgetConfidential={budgetInfo.confidential}
+			offerPrivateList={$initializationStore.isInitialized && !homeListOpening}
+			{privateListBusy}
+			on:createPrivateList={handleCreatePrivateList}
 		/>
 
 		<BudgetNotices active={budgetsInList || showBalance} />

@@ -118,7 +118,10 @@
 			"delegateDidPlaceholder": "did:key:… of the person who may complete it",
 			"expiry": "Delegation expires at",
 			"optional": "(optional)",
-			"delegateHint": "The delegate does not get write access to the list. They may only complete or rename this one todo, and you can revoke that at any time."
+			"delegateHint": "The delegate does not get write access to the list. They may only complete or rename this one todo, and you can revoke that at any time.",
+			"privateListHint": "Delegating a todo and locking a budget for it work in a private list. Everyone can write to this shared list.",
+			"privateListCreate": "Create a private list",
+			"privateListBusy": "Creating…"
 		},
 		"item": {
 			"toggle": "Toggle completion",
@@ -270,7 +273,7 @@
 		"warningHeading": "Early days",
 		"warningBody": "This is a working demonstration rather than a finished product. It does what it says, and the format may still change - so keep anything you would be sorry to lose somewhere else as well.",
 		"accept": "I have read the notices and accept them",
-		"proceed": "Open shared list",
+		"proceed": "Start",
 		"proceedDisabled": "Enter a valid share code under “Advanced” to start.",
 		"proceedNeedsAccept": "Confirm the notice first",
 		"remember": "Don't show this again on this device",
@@ -409,6 +412,10 @@
 		"useNew": "Create a new passkey instead"
 	},
 	"lists": {
+		"home": {
+			"name": "My todos",
+			"openFailed": "Your own list could not be opened, so you are in the shared one: {reason}"
+		},
 		"create": {
 			"heading": "Create a private list",
 			"hint": "Only your identity can write to it. Share its address and grant other DIDs below.",

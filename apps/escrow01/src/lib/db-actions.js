@@ -12,6 +12,7 @@ import { confirmDelegatedWrite } from './delegated-write-auth.js';
 import { rememberList, listRegistryStore, openListRegistry } from './list-registry.js';
 import { relayHttpStatusStore } from '@simple-todo/net/relay-status.js';
 import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
+import { recall, remember } from '@simple-todo/todo/browser-memory.js';
 import { translate } from './i18n/index.js';
 
 /**
@@ -152,10 +153,18 @@ function getDatabaseAddress(todoDB) {
 }
 
 /**
+ * Counts every change of the open list. Opening a list takes a while, and
+ * something that started opening one in the background -- the home list at
+ * start -- must not take over from a list somebody opened in the meantime.
+ */
+let activeListVersion = 0;
+
+/**
  * @param {TodoDatabase | null} todoDB
  * @param {{ kind: 'shared' | 'private' | 'guest', name?: string }} [meta]
  */
 function setActiveTodoDatabase(todoDB, meta) {
+	activeListVersion += 1;
 	const address = getDatabaseAddress(todoDB);
 	todoDBStore.set(todoDB);
 	todoDBAddressStore.set(address);
@@ -189,9 +198,11 @@ export async function initializeDatabase(orbitdb, todoDB) {
  * Open an OrbitDB todo database by address and make it the active todo list.
  *
  * @param {string} address
- * @returns {Promise<{ address: string, count: number }>}
+ * @param {{ unlessSwitchedSince?: number }} [options] open it, but leave the
+ *   open list alone if it changed after this version (see `activeListVersion`)
+ * @returns {Promise<{ address: string, count: number, superseded?: boolean }>}
  */
-export async function loadTodoDatabase(address) {
+export async function loadTodoDatabase(address, { unlessSwitchedSince } = {}) {
 	const orbitdb = get(orbitdbStore);
 	const normalizedAddress = address.trim();
 
@@ -219,8 +230,17 @@ export async function loadTodoDatabase(address) {
 		// suffixed database name.
 		const openedAddressForMeta = getDatabaseAddress(loadedTodoDB) || normalizedAddress;
 		const known = get(listRegistryStore).find((entry) => entry.address === openedAddressForMeta);
+		// The registry is not the only witness, and not always a present one: after
+		// a reload in memory mode it is still empty when the list from the link
+		// opens. Asked of the controller instead, a list you own is yours whether
+		// or not the registry has caught up -- and it is not written back to the
+		// registry as somebody else's.
+		const owned = known?.role === 'owner' || (await ownsList(loadedTodoDB, orbitdb.identity?.id));
+		if (unlessSwitchedSince !== undefined && activeListVersion !== unlessSwitchedSince) {
+			return { address: openedAddressForMeta, count: 0, superseded: true };
+		}
 		setActiveTodoDatabase(loadedTodoDB, {
-			kind: known?.role === 'owner' ? 'private' : 'guest',
+			kind: owned ? 'private' : 'guest',
 			name: known?.name || loadedTodoDB?.name || ''
 		});
 		setupDatabaseListeners(loadedTodoDB);
@@ -230,8 +250,10 @@ export async function loadTodoDatabase(address) {
 		try {
 			await rememberList(orbitdb, {
 				address: openedAddress,
-				name: loadedTodoDB?.name ?? '',
-				role: 'guest'
+				// The name the registry already has is the one a person gave the list;
+				// the database's own name carries the random suffix.
+				name: known?.name || (loadedTodoDB?.name ?? ''),
+				role: owned ? 'owner' : 'guest'
 			});
 		} catch (error) {
 			console.warn('Could not record the opened list in the registry:', error);
@@ -261,9 +283,12 @@ export async function loadTodoDatabase(address) {
  * to may complete or rename that todo without being in the write set.
  *
  * @param {string} [name] optional human name; a unique suffix is always added
- * @returns {Promise<{ address: string, name: string }>}
+ * @param {{ unlessSwitchedSince?: number }} [options] as for `loadTodoDatabase`:
+ *   the list is made and recorded either way, but opened only if nothing else
+ *   was opened since
+ * @returns {Promise<{ address: string, name: string, superseded?: boolean }>}
  */
-export async function createPrivateTodoList(name = 'private-todos') {
+export async function createPrivateTodoList(name = 'private-todos', { unlessSwitchedSince } = {}) {
 	const orbitdb = get(orbitdbStore);
 	if (!orbitdb) throw new Error(translate('errors.orbitdbNotReady'));
 
@@ -278,9 +303,12 @@ export async function createPrivateTodoList(name = 'private-todos') {
 	});
 
 	const listName = name.trim() || 'private-todos';
-	setActiveTodoDatabase(privateDB, { kind: 'private', name: listName });
-	setupDatabaseListeners(privateDB);
-	await loadTodos();
+	const superseded = unlessSwitchedSince !== undefined && activeListVersion !== unlessSwitchedSince;
+	if (!superseded) {
+		setActiveTodoDatabase(privateDB, { kind: 'private', name: listName });
+		setupDatabaseListeners(privateDB);
+		await loadTodos();
+	}
 	const address = getDatabaseAddress(privateDB) || '';
 	// Record it, so the list survives a reload and shows up in the switcher.
 	// Best effort: a failing registry must not lose the list the user just made.
@@ -292,7 +320,95 @@ export async function createPrivateTodoList(name = 'private-todos') {
 	// The caller needs both: the address is what gets shared, the name is what
 	// the user recognises it by. Returning only the address is what left the
 	// created list invisible (issue #114).
-	return { address, name: listName };
+	return superseded ? { address, name: listName, superseded } : { address, name: listName };
+}
+
+/**
+ * Whether this identity administers the list -- asked of the list's own
+ * controller, so it holds before the registry has loaded.
+ *
+ * `capabilities().admin` includes the write set recorded in the controller's
+ * manifest. `access.write` is no use here: a controller opened by address
+ * fills it with the *opener's* id.
+ *
+ * @param {any} db
+ * @param {string | undefined} identityId
+ */
+async function ownsList(db, identityId) {
+	if (!identityId || typeof db?.access?.capabilities !== 'function') return false;
+	try {
+		const capabilities = await db.access.capabilities();
+		const admins = capabilities?.admin;
+		return Boolean(admins && [...admins].includes(identityId));
+	} catch {
+		return false;
+	}
+}
+
+const HOME_LIST_KEY = 'simpleTodo.homeList';
+
+/**
+ * escrow01: the list someone starts in when no link brings one.
+ *
+ * Delegation and budgets exist only on a list with the delegation controller,
+ * and the shared three-word list cannot have one -- everybody may write there.
+ * So a first visit opened the one list where this chapter's feature is not,
+ * and nothing said where it was. The start now lands in a private list of
+ * one's own: the one this identity started in before, or the newest list it
+ * owns, or a new one.
+ *
+ * The shared list is not closed for this. It was opened first and stays the
+ * place where two browsers with the same words meet; starting somewhere else
+ * *instead* of it is what invoice01 measured as four times slower (PR #49).
+ *
+ * Runs in the background after the start, so anything opened meanwhile -- a
+ * list by address, another shared list -- wins: the home list is then made or
+ * found, but not put on screen.
+ *
+ * @param {string} name for a list created here
+ * @returns {Promise<{ address: string, name: string, created: boolean, superseded?: boolean }>}
+ */
+export async function openHomeList(name) {
+	const orbitdb = get(orbitdbStore);
+	if (!orbitdb) throw new Error(translate('errors.orbitdbNotReady'));
+	const unlessSwitchedSince = activeListVersion;
+	// Per identity: a second passkey on this device has lists of its own, and an
+	// anonymous identity cannot write to the list an earlier one made.
+	const key = `${HOME_LIST_KEY}.${orbitdb.identity?.id ?? ''}`;
+
+	// The registry first, so a list opened below is recognised as one's own.
+	try {
+		await openListRegistry(orbitdb);
+	} catch (error) {
+		console.warn('List registry unavailable:', error);
+	}
+
+	const remembered = recall(key);
+	if (remembered) {
+		try {
+			const { address, superseded } = await loadTodoDatabase(remembered, { unlessSwitchedSince });
+			return { address, name: get(activeListStore).name, created: false, superseded };
+		} catch (error) {
+			console.warn('The list this identity started in could not be opened:', error);
+		}
+	}
+
+	const owned = get(listRegistryStore).find((entry) => entry.role === 'owner');
+	if (owned) {
+		try {
+			const { address, superseded } = await loadTodoDatabase(owned.address, {
+				unlessSwitchedSince
+			});
+			remember(key, address);
+			return { address, name: owned.name, created: false, superseded };
+		} catch (error) {
+			console.warn('The newest own list could not be opened:', error);
+		}
+	}
+
+	const created = await createPrivateTodoList(name, { unlessSwitchedSince });
+	remember(key, created.address);
+	return { ...created, created: true };
 }
 
 // Load all todos from the database
