@@ -420,6 +420,7 @@
 	"lists": {
 		"home": {
 			"name": "My todos",
+			"pending": "Made with your first todo",
 			"openFailed": "Your own list could not be opened, so you are in the shared one: {reason}"
 		},
 		"create": {

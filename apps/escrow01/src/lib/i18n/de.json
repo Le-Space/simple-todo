@@ -420,6 +420,7 @@
 	"lists": {
 		"home": {
 			"name": "Meine Aufgaben",
+			"pending": "Entsteht mit Ihrer ersten Aufgabe",
 			"openFailed": "Ihre eigene Liste ließ sich nicht öffnen, Sie sind in der geteilten: {reason}"
 		},
 		"create": {

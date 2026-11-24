@@ -119,12 +119,10 @@ test.describe('list registry (#114)', () => {
 		const address = await currentAddress(page);
 		await expect(page.getByTestId('list-switcher')).toContainText(name);
 
-		const forget = page.locator(`[data-testid="list-switcher-forget"][data-address="${address}"]`);
-		await forget.click();
-		// Gone from the switcher -- which stays, because the list escrow01 starts
-		// in is an entry of its own.
-		await expect(forget).toHaveCount(0, { timeout });
-		await expect(page.getByTestId('list-switcher')).not.toContainText(name);
+		await page.locator(`[data-testid="list-switcher-forget"][data-address="${address}"]`).click();
+		// It was the only entry, so the whole switcher goes away rather than
+		// rendering an empty box.
+		await expect(page.getByTestId('list-switcher')).toBeHidden({ timeout });
 
 		// The database is untouched: opening it by address works and re-registers it.
 		await page.getByTestId('open-db-address-input').fill(address);

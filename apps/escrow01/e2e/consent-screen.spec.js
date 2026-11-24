@@ -543,14 +543,19 @@ test.describe('Consent screen', () => {
 
 			// The simple view: whether the app is ready, and which list is open.
 			await expect(page.getByTestId('p2p-status-nav')).toHaveAttribute('data-view', 'simple');
-			// escrow01 starts in a list of one's own, named in the reader's language.
+			// escrow01 starts towards a list of one's own, named in the reader's
+			// language; it is made with the first todo, so the lists tab still shows
+			// the shared list open underneath.
 			await expect(page.getByTestId('active-list-heading')).toContainText('Private Liste');
 			await expect(page.getByTestId('active-list-name')).toHaveText('Meine Aufgaben');
+			await expect(page.getByTestId('active-list-pending')).toHaveText(
+				'Entsteht mit Ihrer ersten Aufgabe'
+			);
 			await expect(page.getByTestId('p2p-status-step')).toHaveCount(0);
 			await expect(page.getByTestId('network-details')).toHaveCount(0);
 
 			await openSection(page, 'listen');
-			await expect(page.getByTestId('active-list-kind')).toHaveText('Private Liste');
+			await expect(page.getByTestId('active-list-kind')).toHaveText('Geteilte Liste');
 			await page.getByTestId('new-list-name').fill('Prüfbericht');
 			await page.getByTestId('new-list-create').click();
 			await expect(page.getByTestId('permissions-panel')).toBeVisible({ timeout });
@@ -646,19 +651,18 @@ test.describe('Consent screen', () => {
 		await page.goto('/');
 		await passConsent(page, { persistent: false });
 		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
-		// escrow01 starts in a private list of its own, which the address names
-		// by its database address; the browser's own three words stay the shared
-		// list underneath.
-		await expect.poll(() => new URL(page.url()).hash).toContain('db=');
-		await openSection(page, 'listen');
-		const own = ((await page.getByTestId('active-shared-list-name').textContent()) ?? '').trim();
-		expect(own).toMatch(/^\S+-\S+-\S+$/);
+		await expect.poll(() => new URL(page.url()).hash).toContain('list=');
+		const own = decodeURIComponent(new URL(page.url()).hash.match(/list=([^&]+)/)?.[1] ?? '');
 
 		await page.reload();
 		await waitForConsent(page);
 		await expect(page.getByTestId('consent-linked-list')).toHaveCount(0);
 		await openAdvanced(page);
 		await expect(page.getByTestId('consent-join-list')).not.toBeChecked();
+		// Memory mode forgot the way taken too, so it is taken again.
+		await passConsent(page);
+		await openSection(page, 'listen');
+		await expect(page.getByTestId('active-shared-list-name')).toHaveText(own, { timeout });
 
 		// Somebody else's browser, sent the same address: that is a link.
 		const context = await browser.newContext();

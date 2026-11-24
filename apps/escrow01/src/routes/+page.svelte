@@ -55,7 +55,8 @@
 		revokeTodoDelegation,
 		loadTodoDatabase,
 		openHomeList,
-		createPrivateTodoList
+		createPrivateTodoList,
+		homeListPendingStore
 	} from '$lib/db-actions.js';
 	import { supportsDelegation } from '$lib/delegated-access.js';
 	import DelegatedAuthBadge from '$lib/DelegatedAuthBadge.svelte';
@@ -715,6 +716,17 @@
 	 */
 	const handleAddTodo = async (event) => {
 		const { text, delegateDid, delegationExpiresAt, budgetAmount } = event.detail;
+		// escrow01: the first todo makes the list of one's own the start pointed
+		// to, and goes into it.
+		if ($homeListPendingStore) {
+			try {
+				await openHomeList($_('lists.home.name'), { create: true });
+			} catch (err) {
+				const reason = err instanceof Error ? err.message : String(err);
+				showToast($_('lists.home.openFailed', { values: { reason } }), 'error', 6000);
+				return;
+			}
+		}
 		// escrow01: with a budget, the todo is written "being locked" and the lock
 		// follows; how it went shows on the row and in the notices, not here.
 		const result =
@@ -818,7 +830,8 @@
 
 	// A budget is paid to the delegate, so it exists only where delegation does,
 	// and only for a session the service can sign for.
-	$: budgetEnabled = delegationEnabled && (!budgetInfo.requiresPasskey || Boolean($ownDidStore));
+	$: budgetEnabled =
+		formDelegationEnabled && (!budgetInfo.requiresPasskey || Boolean($ownDidStore));
 	$: budgetsInList = $todosStore.some((todo) => todo.budget && todo.budget.status !== 'none');
 	// The starting funds are a sentence about *this* account, so it stops being
 	// true the moment the account holds anything -- a recipient's balance comes
@@ -896,6 +909,9 @@
 	// delegation01: the shared mnemonic list (IPFS controller) cannot take
 	// delegations; private lists and lists opened by address can.
 	$: delegationEnabled = supportsDelegation($todoDBStore);
+	// The form offers delegation and a budget for the list the first todo will
+	// make, too; the rows below belong to the list that is open.
+	$: formDelegationEnabled = delegationEnabled || $homeListPendingStore;
 
 	/**
 	 * @param {{ detail: { status: 'stable' | 'dropped', detail: string, remotePeer: string | null, remoteAddr: string } }} event
@@ -1107,13 +1123,16 @@
 		data-testid="section-aufgaben"
 	>
 		{#if $initializationStore.isInitialized}
-			<ActiveListHeading mnemonic={activeMnemonic} />
+			<ActiveListHeading
+				mnemonic={activeMnemonic}
+				pendingName={$homeListPendingStore ? $_('lists.home.name') : null}
+			/>
 		{/if}
 
 		<AddTodoForm
 			on:add={handleAddTodo}
 			disabled={!$initializationStore.isInitialized || homeListOpening}
-			{delegationEnabled}
+			delegationEnabled={formDelegationEnabled}
 			{budgetEnabled}
 			budgetToken={budgetInfo.token.symbol}
 			budgetDecimals={budgetInfo.token.decimals}
@@ -1126,7 +1145,7 @@
 		<BudgetNotices active={budgetsInList || showBalance} />
 
 		<TodoList
-			todos={$todosStore}
+			todos={$homeListPendingStore ? [] : $todosStore}
 			currentIdentityId={$ownIdentityIdStore}
 			{delegationEnabled}
 			on:delete={handleDelete}
