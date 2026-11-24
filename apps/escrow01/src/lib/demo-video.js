@@ -9,10 +9,11 @@ import { writable } from 'svelte/store';
  * other one: a German reader gets no English video they did not ask for.
  *
  * The file plays from this site (`<video preload="none">`, so before a click
- * only the poster is fetched), and YouTube is a plain link beside it: nothing
- * is embedded, so no request goes to Google unless somebody follows that link.
- * Keep the file small (720p, about 10 MB at most): it ships with the build,
- * and the build is what goes to IPFS and Aleph.
+ * only the teaser's picture is fetched), and YouTube is a plain link beside
+ * it: nothing is embedded, so no request goes to Google unless somebody
+ * follows that link.
+ * The file is 1080p H.264, at most 15 MB per language (decided 24.11.): it
+ * ships with the build, and the build is what goes to IPFS and Aleph.
  *
  * Paths are relative to the page, as everything in this static build is:
  * `video/escrow01-de.mp4` is served from `static/video/escrow01-de.mp4`.
@@ -20,14 +21,17 @@ import { writable } from 'svelte/store';
  * @typedef {{
  *   src: string,
  *   poster: string,
+ *   thumb?: string | null,
  *   captions: string,
  *   youtubeId?: string | null,
  *   duration: string
  * }} DemoVideo
- * `duration` is what the teaser shows, as `m:ss`. `captions` is a WebVTT file
- * in the entry's language, and not optional: an entry without one is treated
- * as no entry, because a video with speech and no captions shuts out whoever
- * watches without sound.
+ * `duration` is what the teaser shows, as `m:ss`. `thumb` is the teaser's
+ * own small picture (48×27 on screen, so 96×54 for sharp displays, and no
+ * small text in it); without one the teaser shrinks the player's `poster`.
+ * `captions` is a WebVTT file in the entry's language, and not optional: an
+ * entry without one is treated as no entry, because a video with speech and
+ * no captions shuts out whoever watches without sound.
  *
  * @type {Record<'de' | 'en', DemoVideo | null>}
  */
