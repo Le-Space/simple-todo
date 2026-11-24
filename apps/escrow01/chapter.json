@@ -31,7 +31,8 @@
 			"e2e/consent-network.spec.js",
 			"e2e/phone-layout.spec.js",
 			"e2e/link-preview.spec.js",
-			"e2e/passkey-steps.spec.js"
+			"e2e/passkey-steps.spec.js",
+			"e2e/list-peer-led.spec.js"
 		],
 		"check": true
 	}

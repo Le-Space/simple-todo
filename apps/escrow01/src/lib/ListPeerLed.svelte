@@ -2,7 +2,8 @@
 	// Under the open list's name (escrow01), in the simple view as well: whether
 	// another browser on this list is connected directly (WebRTC), only through
 	// the relay, or not there at all. A link to the network tab, where each
-	// peer's transport is listed.
+	// peer's transport is listed. The text colours carry `!`: app.css colours
+	// every `a` outside any layer, which beats every Tailwind utility.
 	import { onDestroy } from 'svelte';
 	import { _ } from '$lib/i18n/index.js';
 	import { libp2pStore } from './p2p-stores.js';
@@ -117,10 +118,10 @@
 	data-relayed={peers.relayed}
 	class="mt-1.5 inline-flex max-w-full items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium no-underline outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {peers.state ===
 	'direct'
-		? 'border-identity-600/50 bg-identity-500/10 text-identity-800 dark:text-identity-500'
+		? 'border-identity-600/50 bg-identity-500/10 text-identity-800! dark:text-identity-500!'
 		: peers.state === 'relay'
-			? 'border-data-600/50 bg-data-400/10 text-data-800 dark:text-data-400'
-			: 'border-border bg-surface text-faint'}"
+			? 'border-data-600/50 bg-data-400/10 text-data-800! dark:text-data-400!'
+			: 'border-border bg-surface text-faint!'}"
 >
 	<span class="relative flex h-3 w-3 shrink-0" aria-hidden="true">
 		{#if flashing}
