@@ -15,6 +15,7 @@ import { finishLock, prepareLock, releaseBudgetOf } from './budget-flow.js';
 import { createBudgetService } from './budget-service.js';
 import { confirmDelegatedWrite, withPasskeyPrompt } from './delegated-write-auth.js';
 import { passkeyCredentialStore } from './p2p-stores.js';
+import { wasRegisteredHere } from './passkey-identity.js';
 import { translate } from './i18n/index.js';
 import {
 	addTodo,
@@ -65,10 +66,12 @@ function unreadable(error) {
 /**
  * The session's account on the chain, for the account tab: none until a
  * passkey session starts, then being created (one sponsored user operation,
- * no prompt), ready or failed. Stays `none` with the fake.
+ * no prompt), not found (an earlier passkey whose profile did not arrive in
+ * time: the reader searches again or creates one), ready or failed. Stays
+ * `none` with the fake.
  */
 export const accountStatusStore = writable(
-	/** @type {{ phase: 'none' | 'creating' | 'ready' | 'failed', address: string | null, error: string | null }} */ ({
+	/** @type {{ phase: 'none' | 'creating' | 'not-found' | 'ready' | 'failed', address: string | null, error: string | null }} */ ({
 		phase: 'none',
 		address: null,
 		error: null
@@ -90,7 +93,9 @@ export const budgetService = createBudgetService({
 		// On Sepolia the passkey signs the user operation itself; the badge shows
 		// that prompt instead of a separate confirmation.
 		prompt: (action, run) => withPasskeyPrompt(action, run),
-		onAccount: (status) => accountStatusStore.set(status)
+		onAccount: (status) => accountStatusStore.set(status),
+		// Only a passkey registered on this page has no account anywhere yet.
+		isNewPasskey: () => wasRegisteredHere(get(passkeyCredentialStore))
 	}
 });
 
@@ -99,12 +104,15 @@ export const budgetInfo = budgetService.info;
 /**
  * Create or find this passkey session's account in the background (Sepolia
  * only). Safe to call on every start: an account this browser knows is only
- * published again.
+ * published again. `search` and `create` are the account tab's two answers
+ * when none was found.
+ *
+ * @param {{ intent?: 'start' | 'search' | 'create' }} [options]
  */
-export async function prepareBudgetAccount() {
+export async function prepareBudgetAccount(options) {
 	if (!budgetService.prepareAccount) return;
 	try {
-		await budgetService.prepareAccount();
+		await budgetService.prepareAccount(options);
 		void refreshReadKey();
 		void refreshBalance();
 	} catch (error) {

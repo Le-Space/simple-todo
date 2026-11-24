@@ -47,7 +47,10 @@ import { privateKeyToAccount } from 'viem/accounts';
 const UINT64_MAX = (1n << 64n) - 1n;
 
 /**
- * @typedef {'none' | 'creating' | 'ready' | 'failed'} AccountPhase
+ * @typedef {'none' | 'creating' | 'not-found' | 'ready' | 'failed'} AccountPhase
+ *   `not-found`: the published profile did not answer in time, and the passkey
+ *   was not registered in this session, so an account may exist; the reader
+ *   decides whether to search again or create one.
  * @typedef {{ phase: AccountPhase, address: string | null, error: string | null }} AccountStatus
  * @typedef {{
  *   address: `0x${string}`
@@ -69,11 +72,13 @@ const UINT64_MAX = (1n << 64n) - 1n;
  *   onAccount?: (status: AccountStatus) => void
  *   lookupTimeoutMs?: number
  *   readSealingSeed?: () => Promise<Uint8Array | null>
+ *   isNewPasskey?: () => boolean
  * }} options
  *   `prompt` wraps a passkey-signed operation so the UI can show the prompt;
  *   `onAccount` hears the account's phase for the account tab;
  *   `readSealingSeed` asks the passkey for its PRF output (one touch), null
- *   when it has none.
+ *   when it has none; `isNewPasskey` says whether this session registered the
+ *   passkey, the one case in which no account can exist yet.
  */
 export function createZamaBudgetService({
 	identity,
@@ -84,7 +89,8 @@ export function createZamaBudgetService({
 	prompt = (_action, run) => run({ onPrompt: () => {}, onSigned: () => {} }),
 	onAccount = () => {},
 	lookupTimeoutMs = 20_000,
-	readSealingSeed
+	readSealingSeed,
+	isNewPasskey = () => false
 }) {
 	/** @type {import('./budget-service.js').BudgetServiceInfo} */
 	const info = {
@@ -161,9 +167,19 @@ export function createZamaBudgetService({
 	 * This session's account: remembered, found in its own published profile,
 	 * or created. Creation needs no prompt.
 	 *
+	 * Created on its own only for a passkey this session registered: nothing can
+	 * have published an account for it yet. Any other passkey may have one, on
+	 * this device before a reload in memory mode or on another device, and a
+	 * profile that is merely slow to replicate looks exactly like none. Creating
+	 * then would give the DID a second account and publish it over the first,
+	 * whose budgets and balance the app would stop showing. So that case throws
+	 * `account-not-found`, and the reader searches again (`search`, which waits
+	 * the full lookup time) or asks for a new account (`create`).
+	 *
+	 * @param {{ intent?: 'start' | 'search' | 'create' }} [options]
 	 * @returns {Promise<import('./chain/account-store.js').ChainAccountRecord>}
 	 */
-	async function ensureAccount() {
+	async function ensureAccount({ intent = 'start' } = {}) {
 		const did = me();
 		const known = load(did);
 		if (known) {
@@ -175,7 +191,10 @@ export function createZamaBudgetService({
 			running = (async () => {
 				onAccount({ phase: 'creating', address: null, error: null });
 				// Another device with the same passkey may have created it already.
-				const published = await directory.lookup(did, { chainId: CHAIN_ID, timeoutMs: 3_000 });
+				const published = await directory.lookup(did, {
+					chainId: CHAIN_ID,
+					timeoutMs: intent === 'search' ? lookupTimeoutMs : 3_000
+				});
 				if (published && (await chain.isPasskeyAccount({ address: published.address, did }))) {
 					/** @type {import('./chain/account-store.js').ChainAccountRecord} */
 					const record = {
@@ -188,6 +207,12 @@ export function createZamaBudgetService({
 					};
 					accounts.save(did, record);
 					return record;
+				}
+				if (intent !== 'create' && !isNewPasskey()) {
+					throw new BudgetError(
+						'account-not-found',
+						'No account was found for this passkey; it may exist and not have arrived yet.'
+					);
 				}
 				const readKey = createZamaSessionKey();
 				const readUntil = (await chain.blockTimestamp()) + READ_KEY_TTL_SECONDS;
@@ -227,6 +252,10 @@ export function createZamaBudgetService({
 				.catch((error) => console.warn('Publishing the account failed:', error));
 			return record;
 		} catch (error) {
+			if (error instanceof BudgetError && error.code === 'account-not-found') {
+				onAccount({ phase: 'not-found', address: null, error: null });
+				throw error;
+			}
 			const message = error instanceof Error ? error.message : String(error);
 			reportFailure(did, message);
 			throw error instanceof BudgetError ? error : new BudgetError('unavailable', message);
@@ -474,7 +503,7 @@ export function createZamaBudgetService({
 		}
 	}
 
-	/** @type {import('./budget-service.js').BudgetService & { prepareAccount: () => Promise<void> }} */
+	/** @type {import('./budget-service.js').BudgetService & { prepareAccount: (options?: { intent?: 'start' | 'search' | 'create' }) => Promise<void> }} */
 	const service = {
 		info,
 
@@ -712,9 +741,15 @@ export function createZamaBudgetService({
 			return statusOf(did, record);
 		},
 
-		/** Create or find the account in the background, for a passkey session. */
-		async prepareAccount() {
-			await ensureAccount();
+		/**
+		 * Find the account in the background, for a passkey session, or create
+		 * it for a passkey registered in this session. `search` waits the full
+		 * lookup time; `create` makes a new one when none is found.
+		 *
+		 * @param {{ intent?: 'start' | 'search' | 'create' }} [options]
+		 */
+		async prepareAccount(options) {
+			await ensureAccount(options);
 		}
 	};
 

@@ -71,8 +71,27 @@ export async function createPasskeyCredential({ userId, displayName }) {
 		userId,
 		displayName
 	});
+	registeredHere.add(credential);
 	rememberCredential(credential);
 	return credential;
+}
+
+/**
+ * The credentials this page registered, as objects: a reload empties it, and a
+ * stored or restored credential is never in it.
+ *
+ * @type {WeakSet<object>}
+ */
+const registeredHere = new WeakSet();
+
+/**
+ * Whether this page registered `credential` just now. Only then can it be sure
+ * that no budget account exists for it anywhere (budget-service-zama.js).
+ *
+ * @param {any} credential
+ */
+export function wasRegisteredHere(credential) {
+	return Boolean(credential) && typeof credential === 'object' && registeredHere.has(credential);
 }
 
 /**

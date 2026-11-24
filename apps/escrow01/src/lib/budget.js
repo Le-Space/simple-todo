@@ -49,6 +49,9 @@ export const BUDGET_ERROR_CODES = /** @type {const} */ ([
 	'invalid-beneficiary',
 	// escrow01 on Sepolia: the delegate's DID has published no account yet.
 	'beneficiary-without-account',
+	// escrow01 on Sepolia: no account found for this session's own passkey, which
+	// may have one that has not arrived yet; the reader decides (account tab).
+	'account-not-found',
 	'invalid-deadline',
 	'unavailable',
 	'unknown'
