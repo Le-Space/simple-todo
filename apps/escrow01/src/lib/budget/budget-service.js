@@ -96,7 +96,7 @@ import {
 	TOKEN_DECIMALS,
 	TOKEN_SYMBOL,
 	readChainEndpoints
-} from './chain/config.js';
+} from '../chain/config.js';
 
 /**
  * @param {unknown} value
@@ -147,7 +147,7 @@ export function createBudgetService({ kind, identity, confirm, fake = {}, zama }
  * anything, so the page can say "Sepolia" before viem, Zama's SDK and the
  * wallet code arrive.
  *
- * @param {ZamaOptions & { identity: () => string | null | undefined, endpoints: import('./chain/config.js').ChainEndpoints }} options
+ * @param {ZamaOptions & { identity: () => string | null | undefined, endpoints: import('../chain/config.js').ChainEndpoints }} options
  * @returns {BudgetService & { prepareAccount: (options?: { intent?: 'start' | 'search' | 'create' }) => Promise<void> }}
  */
 function createLazyZamaService({
@@ -166,8 +166,8 @@ function createLazyZamaService({
 			const [{ createZamaBudgetService }, { createSepoliaChain }, { createAccountDirectory }] =
 				await Promise.all([
 					import('./budget-service-zama.js'),
-					import('./chain/sepolia-chain.js'),
-					import('./chain/account-directory.js')
+					import('../chain/sepolia-chain.js'),
+					import('../chain/account-directory.js')
 				]);
 			return createZamaBudgetService({
 				identity,

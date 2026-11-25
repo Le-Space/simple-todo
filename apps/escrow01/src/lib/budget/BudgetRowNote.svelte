@@ -3,9 +3,9 @@
 	// sentence always, and in the technical view the step behind it — reading a
 	// locked amount, the release, the encrypted zero of an underfunded lock.
 	import { _ } from '$lib/i18n/index.js';
-	import BudgetIcon from './BudgetIcon.svelte';
-	import TechnicalExplanation from './TechnicalExplanation.svelte';
-	import { budgetNote } from './explanations/index.js';
+	import BudgetIcon from '../BudgetIcon.svelte';
+	import TechnicalExplanation from '../TechnicalExplanation.svelte';
+	import { budgetNote } from '../explanations/index.js';
 	import { budgetInfo, budgetNoticeStore } from './budget-store.js';
 
 	/** @type {import('./budget.js').Budget} */

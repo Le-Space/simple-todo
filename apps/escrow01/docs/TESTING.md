@@ -48,7 +48,7 @@ instead of starting one.
 
 What this chapter adds is tested on three levels:
 
-- **Unit tests** (`pnpm run test:unit`): the budget rules (`src/lib/budget.spec.js`),
+- **Unit tests** (`pnpm run test:unit`): the budget rules (`src/lib/budget/budget.spec.js`),
   locking and releasing step by step (`budget-flow.spec.js`), the in-memory
   fake (`budget-service-fake.spec.js`), the Sepolia service against a stand-in
   chain, including which passkey prompt comes when (`budget-service-zama.spec.js`),

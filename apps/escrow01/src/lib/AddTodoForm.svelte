@@ -3,7 +3,7 @@
 	import { _, locale } from '$lib/i18n/index.js';
 	import BudgetIcon from './BudgetIcon.svelte';
 	import TechnicalExplanation from './TechnicalExplanation.svelte';
-	import { numberSeparators, parseAmount } from './budget.js';
+	import { numberSeparators, parseAmount } from './budget/budget.js';
 
 	/** @type {string | null} */
 	export let placeholder = null;

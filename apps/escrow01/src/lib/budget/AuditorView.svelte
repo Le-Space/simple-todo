@@ -3,9 +3,9 @@
 	// and amount, read through the escrow's access list, and none of the todos.
 	import { onMount } from 'svelte';
 	import { _, locale } from '$lib/i18n/index.js';
-	import BudgetIcon from './BudgetIcon.svelte';
+	import BudgetIcon from '../BudgetIcon.svelte';
 	import ErrorAlert from '$lib/ErrorAlert.svelte';
-	import TechnicalExplanation from './TechnicalExplanation.svelte';
+	import TechnicalExplanation from '../TechnicalExplanation.svelte';
 	import { budgetErrorCode, formatAmount } from './budget.js';
 	import {
 		accountStatusStore,

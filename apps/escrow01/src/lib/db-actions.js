@@ -26,7 +26,7 @@ import { translate } from './i18n/index.js';
  *   createdBy: string
  *   createdByIdentity?: string | null
  *   delegation?: import('./delegation.js').Delegation | null
- *   budget?: import('./budget.js').Budget | null
+ *   budget?: import('./budget/budget.js').Budget | null
  *   updatedBy?: string
  *   assignee: string | null
  *   createdAt: string
@@ -596,7 +596,7 @@ export function createTodoKey() {
  * @param {string} text
  * @param {string | null} [assignee=null]
  * @param {DelegationRequest | null} [delegation=null] delegation01: hand this todo to a DID on creation
- * @param {{ key?: string, budget?: import('./budget.js').Budget | null }} [extra]
+ * @param {{ key?: string, budget?: import('./budget/budget.js').Budget | null }} [extra]
  *   escrow01: the key from `createTodoKey()` and the budget the todo starts
  *   with, so a todo whose budget is being locked is written once, already
  *   saying so
@@ -935,7 +935,7 @@ export async function delegateTodo(todoKey, request) {
  * where a later revocation cannot take it back.
  *
  * @param {string} todoKey
- * @param {import('./budget.js').Budget} budget
+ * @param {import('./budget/budget.js').Budget} budget
  * @param {{ acceptCompletion?: boolean }} [options]
  */
 export async function setTodoBudget(todoKey, budget, { acceptCompletion = false } = {}) {

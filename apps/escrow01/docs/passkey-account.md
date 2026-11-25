@@ -302,7 +302,7 @@ sequenceDiagram
 
 1. **When.** [`+page.svelte`](../src/routes/+page.svelte) calls `prepareBudgetAccount` once per DID as
    soon as the passkey session and OrbitDB run. `ensureAccount` in
-   [`budget-service-zama.js`](../src/lib/budget-service-zama.js) first takes an account this browser
+   [`budget-service-zama.js`](../src/lib/budget/budget-service-zama.js) first takes an account this browser
    knows; otherwise it looks for 3 seconds for an account the same DID already published (a second
    device with the same synced passkey) and checks it on chain; only then does it set up a new one.
    On its own it does that only for a passkey this page registered (`wasRegisteredHere` in
@@ -334,7 +334,7 @@ sequenceDiagram
    read key. The app then asks for a new one, with one passkey step. A passkey created on this page
    gets its account at once; one that was restored first looks for its published account, and when
    none has arrived after three seconds the Account tab asks "Search again" or "Create a new account"
-   (`account-not-found` in [`budget-service-zama.js`](../src/lib/budget-service-zama.js), #123).
+   (`account-not-found` in [`budget-service-zama.js`](../src/lib/budget/budget-service-zama.js), #123).
 
 On 2026-09-17 Openfort bundled the setup of both accounts into one transaction
 ([`0xe66c…a165`](https://sepolia.etherscan.io/tx/0xe66c286f10f4715cc4eebfc0b3cc42700a402ec2718a84638e7707aaedd9a165)):
@@ -450,17 +450,17 @@ amounts", once per visit.
 
 ### Prompts: technical
 
-| When                                        | Prompts       | What each one is                                                                                                              | Where                                                                                                                            |
-| ------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| First start, new passkey                    | 3             | `create` with `prf(eval)`; `get` for the PRF output the OrbitDB signing key is derived from; `get` for the identity signature | `passkeyPromptsFor` in [`+page.svelte`](../src/routes/+page.svelte), [`e2e/passkey-steps.spec.js`](../e2e/passkey-steps.spec.js) |
-| … on Sepolia, once the account exists       | +1            | `get` for the PRF output that derives the key sealing the new read key (`budget-read-seal`)                                   | `sealQuietly` in [`budget-service-zama.js`](../src/lib/budget-service-zama.js)                                                   |
-| Return, "Keep in this browser"              | 1             | the identity signature; the signing key comes from the IndexedDB keystore                                                     | `passkeyPromptsFor('existing')` with a stored credential                                                                         |
-| Return with nothing kept, or another device | 3             | two to restore the DID and the signing key from the authenticator, one to sign                                                | `restoreIdentityFromAuthenticator` (provider)                                                                                    |
-| Account setup                               | 0             | a setup key signs the first user operation, Openfort pays                                                                     | [Setting up the account](#setting-up-the-account)                                                                                |
-| Lock, release                               | 1 each        | the user operation's signature (`budget-lock`, `budget-release`)                                                              | [Signing with the passkey](#signing-with-the-passkey)                                                                            |
-| "Show amounts"                              | 1 per session | the PRF output that opens the sealed read key (`budget-read-unlock`); none in the session that sealed it                      | `unlockReadKey`                                                                                                                  |
-| Read-key renewal, every 24 h                | 1             | the user operation's signature (`budget-read-key`)                                                                            | `renewReadKey`                                                                                                                   |
-| A delegate completes or renames             | 1             | `confirmDelegatedWrite`                                                                                                       | [`delegated-write-auth.js`](../src/lib/delegated-write-auth.js)                                                                  |
+| When                                        | Prompts       | What each one is                                                                                                              | Where                                                                                                                                   |
+| ------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| First start, new passkey                    | 3             | `create` with `prf(eval)`; `get` for the PRF output the OrbitDB signing key is derived from; `get` for the identity signature | `passkeyPromptsFor` in [`start/identity.js`](../src/lib/start/identity.js), [`e2e/passkey-steps.spec.js`](../e2e/passkey-steps.spec.js) |
+| … on Sepolia, once the account exists       | +1            | `get` for the PRF output that derives the key sealing the new read key (`budget-read-seal`)                                   | `sealQuietly` in [`budget-service-zama.js`](../src/lib/budget/budget-service-zama.js)                                                   |
+| Return, "Keep in this browser"              | 1             | the identity signature; the signing key comes from the IndexedDB keystore                                                     | `passkeyPromptsFor('existing')` with a stored credential                                                                                |
+| Return with nothing kept, or another device | 3             | two to restore the DID and the signing key from the authenticator, one to sign                                                | `restoreIdentityFromAuthenticator` (provider)                                                                                           |
+| Account setup                               | 0             | a setup key signs the first user operation, Openfort pays                                                                     | [Setting up the account](#setting-up-the-account)                                                                                       |
+| Lock, release                               | 1 each        | the user operation's signature (`budget-lock`, `budget-release`)                                                              | [Signing with the passkey](#signing-with-the-passkey)                                                                                   |
+| "Show amounts"                              | 1 per session | the PRF output that opens the sealed read key (`budget-read-unlock`); none in the session that sealed it                      | `unlockReadKey`                                                                                                                         |
+| Read-key renewal, every 24 h                | 1             | the user operation's signature (`budget-read-key`)                                                                            | `renewReadKey`                                                                                                                          |
+| A delegate completes or renames             | 1             | `confirmDelegatedWrite`                                                                                                       | [`delegated-write-auth.js`](../src/lib/delegated-write-auth.js)                                                                         |
 
 Between the first start's prompts a short dialog says which one comes and what it is for ("Passkey
 prompt 2 of 3", #121). It counts the three of the start only: the Sepolia seal comes after the start,
@@ -771,7 +771,7 @@ stateDiagram-v2
   operation, for each contract where its delegation still runs
   (`revokeDelegationForUserDecryption`, through the wallet's
   `getRevokeDelegationForUserDecryptionCalls`; `revokePrevious` in
-  [`budget-service-zama.js`](../src/lib/budget-service-zama.js)). It first reads
+  [`budget-service-zama.js`](../src/lib/budget/budget-service-zama.js)). It first reads
   `getUserDecryptionDelegationExpirationDate` for both contracts. A delegation that has run out is
   left alone: revoking it changes nothing and adds a public `RevokedDelegationForUserDecryption`
   event. One the ACL does not have is never named: the ACL reverts with `NotDelegatedYet`, and with
@@ -1007,7 +1007,7 @@ EntryPoint and paymaster; the lock alone cost 682,630 gas in the smoke test of 2
 
 Repository, `apps/escrow01`:
 
-- [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js): `ensureAccount`, `accountOf`,
+- [`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js): `ensureAccount`, `accountOf`,
   `lock`, `release`, `decryptAmount`, `balance`, `renewReadKey`.
 - [`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js): `settle`, `readEscrow`,
   `isPasskeyAccount`, `createAccount`, `sendWithPasskey`, `encryptAmount`, `decrypt`, `calls`.
@@ -1018,10 +1018,10 @@ Repository, `apps/escrow01`:
   [`src/lib/chain/account-store.js`](../src/lib/chain/account-store.js),
   [`src/lib/chain/did-key.js`](../src/lib/chain/did-key.js).
 - Read key: [`src/lib/chain/config.js`](../src/lib/chain/config.js) (`READ_KEY_TTL_SECONDS` 35),
-  [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) (`readKeyState`, `ensureAccount`,
-  `renewReadKey`), [`src/lib/BudgetNotices.svelte`](../src/lib/BudgetNotices.svelte) (notice "Read
+  [`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js) (`readKeyState`, `ensureAccount`,
+  `renewReadKey`), [`src/lib/budget/BudgetNotices.svelte`](../src/lib/budget/BudgetNotices.svelte) (notice "Read
   access expired.", `expired`).
-- Tests: [`src/lib/budget-service-zama.spec.js`](../src/lib/budget-service-zama.spec.js),
+- Tests: [`src/lib/budget/budget-service-zama.spec.js`](../src/lib/budget/budget-service-zama.spec.js),
   [`src/lib/chain/did-key.spec.js`](../src/lib/chain/did-key.spec.js).
 
 `@le-space/passkey-wallet` 0.1.0 (the code of commit `cde6878`): `README.md` (design, root key, gas

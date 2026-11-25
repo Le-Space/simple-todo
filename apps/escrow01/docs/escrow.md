@@ -15,7 +15,7 @@ State on 2026-09-16: the contract is deployed on Sepolia at
 (block 11716748) and its source is verified on Etherscan, Sourcify and Blockscout. The app's budget
 screens lock and release on it since 2026-09-17 when built with `VITE_BUDGET_SERVICE=zama`, from a
 passkey account ([passkey-account.md](passkey-account.md)); without that setting they run against an
-in-memory fake ([`src/lib/budget-service-fake.js`](../src/lib/budget-service-fake.js)).
+in-memory fake ([`src/lib/budget/budget-service-fake.js`](../src/lib/budget/budget-service-fake.js)).
 
 Every section has a simple explanation and a technical one.
 
@@ -179,8 +179,8 @@ Escrows are keyed by creator and `todoRef` together. Somebody who copies a `todo
 transaction and locks under it first creates their own escrow and does not block the creator's
 (test "keeps a creator's todoRef out of reach of someone who locks under it first"). Each `todoRef`
 is used once per creator. That includes an underfunded lock: it is mined and occupies its reference,
-so a retry in the app starts with a new `todoRef` ([`prepareLock`](../src/lib/budget-flow.js) creates
-one, and [`startLock`](../src/lib/budget.js) refuses the old one once its lock reached the chain).
+so a retry in the app starts with a new `todoRef` ([`prepareLock`](../src/lib/budget/budget-flow.js) creates
+one, and [`startLock`](../src/lib/budget/budget.js) refuses the old one once its lock reached the chain).
 
 ## Why only ERC-7984 confidential tokens
 
@@ -275,8 +275,8 @@ decrypted to 0 on Sepolia; in the Hardhat mock it does.
 In the app, the budget service interface specifies that `lock` throws `insufficient-balance` with
 `details.lockTx` when the transfer went through as an encrypted 0. The fake does so, and the Sepolia
 service does it by reading the escrow at the receipt's block after every lock, waiting two blocks and
-decrypting the stored amount ([`budget-service-zama.js`](../src/lib/budget-service-zama.js)). The todo's
-budget then goes to `failed` and keeps the mined `lockTx` ([`lockFailed`](../src/lib/budget.js)).
+decrypting the stored amount ([`budget-service-zama.js`](../src/lib/budget/budget-service-zama.js)). The todo's
+budget then goes to `failed` and keeps the mined `lockTx` ([`lockFailed`](../src/lib/budget/budget.js)).
 
 ## What the app stores in OrbitDB
 
@@ -288,7 +288,7 @@ them.
 
 ### OrbitDB: technical
 
-A todo carries a `budget` field ([`src/lib/budget.js`](../src/lib/budget.js)):
+A todo carries a `budget` field ([`src/lib/budget/budget.js`](../src/lib/budget/budget.js)):
 
 <!-- prettier-ignore -->
 ```js
@@ -297,9 +297,9 @@ A todo carries a `budget` field ([`src/lib/budget.js`](../src/lib/budget.js)):
 
 `status` is one of `none`, `locking`, `funded`, `releasing`, `released`, `failed`. The app lets only
 the todo's owner write it ([`setTodoBudget`](../src/lib/db-actions.js)), and each step of a lock or release
-is written before the next one starts ([`src/lib/budget-flow.js`](../src/lib/budget-flow.js)). A
+is written before the next one starts ([`src/lib/budget/budget-flow.js`](../src/lib/budget/budget-flow.js)). A
 typed amount stays in memory (`pendingAmounts` in
-[`src/lib/budget-store.js`](../src/lib/budget-store.js)) until the escrow holds it; afterwards the
+[`src/lib/budget/budget-store.js`](../src/lib/budget/budget-store.js)) until the escrow holds it; afterwards the
 displayed amount is the result of `decryptAmount`. The list itself is not encrypted: anyone with its
 address can read todo text, delegate DID and `budget`.
 
@@ -353,12 +353,12 @@ Repository (`apps/escrow01`, line numbers as of 2026-09-23):
 - [`contracts/scripts/smoke-sepolia.ts`](../contracts/scripts/smoke-sepolia.ts): `todoRef` 406-410,
   lock 573-601.
 - [`contracts/README.md`](../contracts/README.md): "Who can decrypt" and "What stays public".
-- [`src/lib/budget.js`](../src/lib/budget.js): `Budget`, `isWellFormedBudget`, `startLock`,
+- [`src/lib/budget/budget.js`](../src/lib/budget/budget.js): `Budget`, `isWellFormedBudget`, `startLock`,
   `lockFailed`.
-- [`src/lib/budget-service.js`](../src/lib/budget-service.js) (the interface),
-  [`src/lib/budget-service-fake.js`](../src/lib/budget-service-fake.js) (header, `lock`),
-  [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) (`createTodoRef`, `lock`),
-  [`src/lib/budget-flow.js`](../src/lib/budget-flow.js), [`src/lib/budget-store.js`](../src/lib/budget-store.js)
+- [`src/lib/budget/budget-service.js`](../src/lib/budget/budget-service.js) (the interface),
+  [`src/lib/budget/budget-service-fake.js`](../src/lib/budget/budget-service-fake.js) (header, `lock`),
+  [`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js) (`createTodoRef`, `lock`),
+  [`src/lib/budget/budget-flow.js`](../src/lib/budget/budget-flow.js), [`src/lib/budget/budget-store.js`](../src/lib/budget/budget-store.js)
   (header, the service it picks), [`src/lib/db-actions.js`](../src/lib/db-actions.js) (`setTodoBudget`).
 
 Libraries (`contracts/node_modules`):

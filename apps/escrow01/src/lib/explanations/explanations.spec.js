@@ -224,7 +224,7 @@ describe('the note under a todo’s budget', () => {
 	});
 
 	it('has a sentence in both languages for every note it can pick', () => {
-		/** @type {Array<import('../budget.js').BudgetStatus>} */
+		/** @type {Array<import('../budget/budget.js').BudgetStatus>} */
 		const statuses = ['none', 'locking', 'funded', 'releasing', 'released', 'failed'];
 		const messages = new Set();
 		for (const status of statuses) {

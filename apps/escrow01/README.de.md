@@ -67,14 +67,14 @@ pnpm dev
 
 ## Wo die Treuhand im Code liegt
 
-| Schritt                                                            | Dateien                                                                                                                                      |
-| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Die Treuhand auf der Chain                                         | [`contracts/src/ConfidentialTodoEscrow.sol`](contracts/src/ConfidentialTodoEscrow.sol)                                                       |
-| Die Zustände eines Budgets, als reine Funktionen                   | [`src/lib/budget.js`](src/lib/budget.js)                                                                                                     |
-| Eine Schnittstelle für jede Budget-Operation, und ihre zwei Seiten | [`budget-service.js`](src/lib/budget-service.js), [`-fake.js`](src/lib/budget-service-fake.js), [`-zama.js`](src/lib/budget-service-zama.js) |
-| Sperren und Freigeben, Schritt für Schritt                         | [`budget-flow.js`](src/lib/budget-flow.js), [`budget-store.js`](src/lib/budget-store.js)                                                     |
-| Sepolia, Calibur, Zamas SDK                                        | [`src/lib/chain/`](src/lib/chain)                                                                                                            |
-| Der Start: ein Passkey, eine eigene private Liste                  | [`src/routes/+page.svelte`](src/routes/+page.svelte), `openHomeList` in [`db-actions.js`](src/lib/db-actions.js)                             |
+| Schritt                                                            | Dateien                                                                                                                                                           |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Die Treuhand auf der Chain                                         | [`contracts/src/ConfidentialTodoEscrow.sol`](contracts/src/ConfidentialTodoEscrow.sol)                                                                            |
+| Die Zustände eines Budgets, als reine Funktionen                   | [`src/lib/budget/budget.js`](src/lib/budget/budget.js)                                                                                                            |
+| Eine Schnittstelle für jede Budget-Operation, und ihre zwei Seiten | [`budget-service.js`](src/lib/budget/budget-service.js), [`-fake.js`](src/lib/budget/budget-service-fake.js), [`-zama.js`](src/lib/budget/budget-service-zama.js) |
+| Sperren und Freigeben, Schritt für Schritt                         | [`budget-flow.js`](src/lib/budget/budget-flow.js), [`budget-store.js`](src/lib/budget/budget-store.js)                                                            |
+| Sepolia, Calibur, Zamas SDK                                        | [`src/lib/chain/`](src/lib/chain)                                                                                                                                 |
+| Der Start: ein Passkey, eine eigene private Liste                  | [`src/routes/+page.svelte`](src/routes/+page.svelte), [`src/lib/start/`](src/lib/start), [`home-list.js`](src/lib/home-list.js)                                   |
 
 In welcher Reihenfolge man sie liest, zeigt der [Rundgang durch den Code](docs/code-tour.de.md); er
 verfolgt auch eine Sperre vom Formular bis zur Chain.

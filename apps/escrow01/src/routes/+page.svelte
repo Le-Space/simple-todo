@@ -16,10 +16,10 @@
 	import DemoVideoPlayer from '$lib/DemoVideoPlayer.svelte';
 	import PasskeyWelcomeBack from '$lib/PasskeyWelcomeBack.svelte';
 	import LanguageSwitcher from '@simple-todo/ui/LanguageSwitcher.svelte';
-	import AuditorView from '$lib/AuditorView.svelte';
-	import BudgetNotices from '$lib/BudgetNotices.svelte';
+	import AuditorView from '$lib/budget/AuditorView.svelte';
+	import BudgetNotices from '$lib/budget/BudgetNotices.svelte';
 	import { technicalView } from '$lib/technical-view.js';
-	import { formatAmount } from '$lib/budget.js';
+	import { formatAmount } from '$lib/budget/budget.js';
 	import {
 		addTodoWithBudget,
 		budgetInfo,
@@ -29,7 +29,7 @@
 		prepareBudgetAccount,
 		releaseTodoBudget,
 		watchPayouts
-	} from '$lib/budget-store.js';
+	} from '$lib/budget/budget-store.js';
 	import { shortId } from '@simple-todo/todo/utils.js';
 	import { createPasskeyCredential, recoverPasskeyCredential } from '$lib/passkey-identity.js';
 	import {

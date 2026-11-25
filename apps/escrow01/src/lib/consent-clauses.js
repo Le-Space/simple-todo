@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import { _ } from '$lib/i18n/index.js';
-import { budgetInfo } from '$lib/budget-store.js';
+import { budgetInfo } from '$lib/budget/budget-store.js';
 import { todosEncrypted } from '$lib/todo-encryption.js';
 
 /**

@@ -1,5 +1,5 @@
 /**
- * The "pinned" mark on a todo: proof that the relay holds this exact
+ * The relay replication mark on a todo ("pinned"): proof that the relay holds this exact
  * entry, asked of the relay over HTTP (`POST /pinning/sync`, then its last
  * record's hash compared with the entry's).
  *

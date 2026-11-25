@@ -16,7 +16,7 @@ Stand am 2026-09-16: Der Vertrag ist auf Sepolia unter
 verifiziert. Mit `VITE_BUDGET_SERVICE=zama` sperrt die App seit dem 2026-09-17 auf diesem Vertrag und
 gibt dort frei, aus einem Passkey-Konto ([passkey-account.de.md](passkey-account.de.md)); ohne diese
 Einstellung laufen die Budget-Ansichten gegen eine Attrappe im Arbeitsspeicher
-([`src/lib/budget-service-fake.js`](../src/lib/budget-service-fake.js)).
+([`src/lib/budget/budget-service-fake.js`](../src/lib/budget/budget-service-fake.js)).
 
 Jeder Abschnitt hat eine einfache Erklärung und eine technische.
 
@@ -192,8 +192,8 @@ Treuhand-Vorgang an und blockiert nicht den des Erstellers
 (Test "keeps a creator's todoRef out of reach of someone who locks under it first"). Jeder `todoRef`
 wird pro Ersteller einmal verwendet. Das schließt eine ungedeckte Sperre ein; sie wird in einen Block
 aufgenommen und belegt ihre Referenz, daher beginnt ein erneuter Versuch in der App mit einem neuen
-`todoRef` ([`prepareLock`](../src/lib/budget-flow.js) erzeugt ihn, und
-[`startLock`](../src/lib/budget.js) weist den alten zurück, sobald seine Sperre auf der Chain war).
+`todoRef` ([`prepareLock`](../src/lib/budget/budget-flow.js) erzeugt ihn, und
+[`startLock`](../src/lib/budget/budget.js) weist den alten zurück, sobald seine Sperre auf der Chain war).
 
 ## Warum nur vertrauliche ERC-7984-Token
 
@@ -296,8 +296,8 @@ In der App legt die Schnittstelle des Budget-Service fest, dass `lock` `insuffic
 `details.lockTx` wirft, wenn die Überweisung als verschlüsselte 0 durchging. Die Attrappe tut das,
 und der Sepolia-Dienst liest dafür nach jeder Sperre den Vorgang am Block der Quittung, wartet zwei
 Blöcke und entschlüsselt den gespeicherten Betrag
-([`budget-service-zama.js`](../src/lib/budget-service-zama.js)). Das Budget der Aufgabe wechselt dann
-zu `failed` und behält die in einen Block aufgenommene `lockTx` ([`lockFailed`](../src/lib/budget.js)).
+([`budget-service-zama.js`](../src/lib/budget/budget-service-zama.js)). Das Budget der Aufgabe wechselt dann
+zu `failed` und behält die in einen Block aufgenommene `lockTx` ([`lockFailed`](../src/lib/budget/budget.js)).
 
 ## Was die App in OrbitDB speichert
 
@@ -309,7 +309,7 @@ von jemandem, der sie lesen darf.
 
 ### OrbitDB: technisch
 
-Eine Aufgabe trägt ein Feld `budget` ([`src/lib/budget.js`](../src/lib/budget.js)):
+Eine Aufgabe trägt ein Feld `budget` ([`src/lib/budget/budget.js`](../src/lib/budget/budget.js)):
 
 <!-- prettier-ignore -->
 ```js
@@ -319,8 +319,8 @@ Eine Aufgabe trägt ein Feld `budget` ([`src/lib/budget.js`](../src/lib/budget.j
 `status` ist einer der Werte `none`, `locking`, `funded`, `releasing`, `released`, `failed`. Die App
 lässt es nur vom Eigentümer der Aufgabe schreiben ([`setTodoBudget`](../src/lib/db-actions.js)), und
 jeder Schritt einer Sperre oder Freigabe wird geschrieben, bevor der nächste beginnt
-([`src/lib/budget-flow.js`](../src/lib/budget-flow.js)). Ein eingegebener Betrag bleibt im
-Arbeitsspeicher (`pendingAmounts` in [`src/lib/budget-store.js`](../src/lib/budget-store.js)), bis die
+([`src/lib/budget/budget-flow.js`](../src/lib/budget/budget-flow.js)). Ein eingegebener Betrag bleibt im
+Arbeitsspeicher (`pendingAmounts` in [`src/lib/budget/budget-store.js`](../src/lib/budget/budget-store.js)), bis die
 Treuhand ihn hält; danach ist der angezeigte Betrag das Ergebnis von `decryptAmount`. Die Liste selbst
 ist nicht verschlüsselt: Wer ihre Adresse hat, kann Aufgabentext, DID des Delegierten und `budget`
 lesen.
@@ -377,12 +377,12 @@ Repository (`apps/escrow01`, Zeilennummern vom 2026-09-23):
 - [`contracts/scripts/smoke-sepolia.ts`](../contracts/scripts/smoke-sepolia.ts): `todoRef` 406-410,
   Sperre 573-601.
 - [`contracts/README.md`](../contracts/README.md): "Who can decrypt" und "What stays public".
-- [`src/lib/budget.js`](../src/lib/budget.js): `Budget`, `isWellFormedBudget`, `startLock`,
+- [`src/lib/budget/budget.js`](../src/lib/budget/budget.js): `Budget`, `isWellFormedBudget`, `startLock`,
   `lockFailed`.
-- [`src/lib/budget-service.js`](../src/lib/budget-service.js) (die Schnittstelle),
-  [`src/lib/budget-service-fake.js`](../src/lib/budget-service-fake.js) (Kopf, `lock`),
-  [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) (`createTodoRef`, `lock`),
-  [`src/lib/budget-flow.js`](../src/lib/budget-flow.js), [`src/lib/budget-store.js`](../src/lib/budget-store.js)
+- [`src/lib/budget/budget-service.js`](../src/lib/budget/budget-service.js) (die Schnittstelle),
+  [`src/lib/budget/budget-service-fake.js`](../src/lib/budget/budget-service-fake.js) (Kopf, `lock`),
+  [`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js) (`createTodoRef`, `lock`),
+  [`src/lib/budget/budget-flow.js`](../src/lib/budget/budget-flow.js), [`src/lib/budget/budget-store.js`](../src/lib/budget/budget-store.js)
   (Kopf, gewählter Dienst), [`src/lib/db-actions.js`](../src/lib/db-actions.js) (`setTodoBudget`).
 
 Bibliotheken (`contracts/node_modules`):

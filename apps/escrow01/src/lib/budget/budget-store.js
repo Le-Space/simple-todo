@@ -13,10 +13,10 @@ import { derived, get, readable, writable } from 'svelte/store';
 import { budgetErrorCode, canReleaseBudget, isWellFormedBudget, paidOutSince } from './budget.js';
 import { finishLock, prepareLock, releaseBudgetOf } from './budget-flow.js';
 import { createBudgetService } from './budget-service.js';
-import { confirmDelegatedWrite, withPasskeyPrompt } from './delegated-write-auth.js';
-import { passkeyCredentialStore } from './p2p-stores.js';
-import { wasRegisteredHere } from './registered-passkeys.js';
-import { translate } from './i18n/index.js';
+import { confirmDelegatedWrite, withPasskeyPrompt } from '../delegated-write-auth.js';
+import { passkeyCredentialStore } from '../p2p-stores.js';
+import { wasRegisteredHere } from '../registered-passkeys.js';
+import { translate } from '../i18n/index.js';
 import {
 	addTodo,
 	createTodoKey,
@@ -24,10 +24,10 @@ import {
 	ownIdentityIdStore,
 	setTodoBudget,
 	todosStore
-} from './db-actions.js';
+} from '../db-actions.js';
 
 /** @typedef {import('./budget.js').Budget} Budget */
-/** @typedef {import('./db-actions.js').TodoItem} TodoItem */
+/** @typedef {import('../db-actions.js').TodoItem} TodoItem */
 /**
  * @typedef {{ state: 'idle' | 'decrypting' | 'ready' | 'hidden' | 'expired' | 'locked', units: bigint | null }} AmountState
  *   `hidden`: this session cannot read it — not a party to the escrow, or an

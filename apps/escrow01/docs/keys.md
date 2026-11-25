@@ -82,7 +82,7 @@ flowchart LR
    Calibur keeps that address as a root key it cannot revoke — the limit is written down in
    [passkey-account.md](passkey-account.md#limits-technical).
 4. **The read key.** secp256k1 from the wallet's `createZamaSessionKey()`, created in
-   [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) at setup and in
+   [`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js) at setup and in
    `renewReadKey`, stored sealed as `session: { address, sealed }` in
    [`src/lib/chain/account-store.js`](../src/lib/chain/account-store.js) under
    `simpleTodo.chainAccount.v1.<DID>`, with a sealing key HKDF derives from the passkey's PRF output
@@ -343,7 +343,7 @@ Code:
 
 - [`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js), `descriptorFor`: the credential
   descriptor handed to the wallet
-- [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js), `createZamaSessionKey()`: the read key at
+- [`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js), `createZamaSessionKey()`: the read key at
   setup and at renewal
 - [`src/lib/chain/read-key-seal.js`](../src/lib/chain/read-key-seal.js): the sealing key from the
   passkey's PRF output

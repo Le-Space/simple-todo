@@ -9,11 +9,11 @@
 		balanceStore,
 		budgetInfo,
 		prepareBudgetAccount
-	} from '$lib/budget-store.js';
+	} from '$lib/budget/budget-store.js';
 	import { etherscanAddress } from '$lib/chain/config.js';
 	import { technicalView } from '$lib/technical-view.js';
 	import DidBadge from '$lib/DidBadge.svelte';
-	import BalanceCard from '$lib/BalanceCard.svelte';
+	import BalanceCard from '$lib/budget/BalanceCard.svelte';
 	import TechnicalExplanation from '$lib/TechnicalExplanation.svelte';
 
 	/** Whether the balance card is shown; the page decides, since its notices use it too. */

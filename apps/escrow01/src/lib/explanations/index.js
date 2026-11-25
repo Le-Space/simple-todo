@@ -320,7 +320,7 @@ export const shortHash = (/** @type {string} */ hash) => `${hash.slice(0, 10)}â€
  * sentence, for a failure the notices already explain in their own words.
  *
  * @param {{
- *   status: import('../budget.js').BudgetStatus
+ *   status: import('../budget/budget.js').BudgetStatus
  *   lastError?: string | null
  *   perspective: 'owner' | 'beneficiary' | 'other'
  *   completed?: boolean

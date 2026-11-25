@@ -92,11 +92,11 @@ package, and a good follow-up exercise.
 
 ### From `privacy01`, switched off
 
-This chapter was copied from `privacy01`, so it also carries the per-entry
-sealing machinery from that chapter (`src/lib/db-encryption.js`,
-`entry-encryption.js`, `database-keys.js`, with their unit tests). Nothing
-imports it; lists here are as unencrypted as on `acl01`. In `escrow01` only
-budget amounts are encrypted, on the chain.
+This chapter was copied from `privacy01`, and with it came that chapter's
+per-entry sealing (`db-encryption.js`, `entry-encryption.js`,
+`database-keys.js`). Nothing here imported it, so it has been removed;
+`privacy01` and `invoice01` keep it. Lists here are as unencrypted as on
+`acl01`. In `escrow01` only budget amounts are encrypted, on the chain.
 
 The same goes for the signing key. `privacy01` later moved its passkey
 identity to a key that lives in memory only; that change came after this

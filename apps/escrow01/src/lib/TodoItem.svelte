@@ -23,9 +23,9 @@
 	import { formatPeerId } from '@simple-todo/todo/utils.js';
 	import { describeMoment } from '@simple-todo/todo/moment.js';
 	import { delegationStatus, isDelegationActiveFor } from './delegation.js';
-	import { budgetHoldsTodo, canReleaseBudget } from './budget.js';
-	import BudgetChip from './BudgetChip.svelte';
-	import BudgetRowNote from './BudgetRowNote.svelte';
+	import { budgetHoldsTodo, canReleaseBudget } from './budget/budget.js';
+	import BudgetChip from './budget/BudgetChip.svelte';
+	import BudgetRowNote from './budget/BudgetRowNote.svelte';
 
 	export const id = undefined;
 	export let text = '';
@@ -51,7 +51,7 @@
 	export let delegationEnabled = false;
 	// escrow01
 	/** The todo's budget metadata, already checked for shape; never an amount. */
-	/** @type {import('./budget.js').Budget | null} */
+	/** @type {import('./budget/budget.js').Budget | null} */
 	export let budget = null;
 
 	let showReplicationTooltip = false;

@@ -451,13 +451,14 @@ Not answers, but questions this chapter cannot settle:
 
 Repository (`apps/escrow01`, by name rather than line number, since the lines move):
 
-- [`src/lib/budget-service-fake.js`](../src/lib/budget-service-fake.js): starting balance
+- [`src/lib/budget/budget-service-fake.js`](../src/lib/budget/budget-service-fake.js): starting balance
   (`createFakeLedger`), lock (`lock`), auditor list (`listEscrowsForAuditor`), levers `expireReadKey`
   and `seedExamples`.
-- [`src/lib/budget-store.js`](../src/lib/budget-store.js) (`simpleTodoBudgetDemo` in the console),
+- [`src/lib/budget/budget-store.js`](../src/lib/budget/budget-store.js) (`simpleTodoBudgetDemo` in the console),
   [`src/routes/+page.svelte`](../src/routes/+page.svelte) (`#pruefstelle` through `AUDITOR_SECTION`;
   the start dialog, `<ConsentModal>`: the short form with `summary` since 2026-11-17, one button and a
-  settings screen since 2026-11-24; the auditor card in the "Konto" tab),
+  settings screen since 2026-11-24), [`src/lib/sections/AccountSection.svelte`](../src/lib/sections/AccountSection.svelte)
+  (the auditor card in the "Konto" tab),
   [`src/lib/sections.js`](../src/lib/sections.js) (tabs and the URL fragment),
   [`src/lib/AddTodoForm.svelte`](../src/lib/AddTodoForm.svelte) (the note below the budget field,
   `budget.form.hint`), [`src/lib/OnePasskeyIntro.svelte`](../src/lib/OnePasskeyIntro.svelte)
@@ -468,7 +469,7 @@ Repository (`apps/escrow01`, by name rather than line number, since the lines mo
   `budget.demoNotice`, `budget.form.hint`, `budget.chip.hidden`, `budget.notice.*`, `budget.auditor.*`,
   `budget.toast.receivedHidden`, `budget.toast.received`, `sections.account.auditorOpen`,
   `sections.account.chainAccount`, `sections.account.accountCreating`.
-- [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) and
+- [`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js) and
   [`src/lib/chain/`](../src/lib/chain) (Sepolia mode), with the sources in
   [passkey-account.md](passkey-account.md#sources); the app run of 2026-09-17 in
   [Measured on 2026-09-17](passkey-account.md#measured-on-2026-09-17).

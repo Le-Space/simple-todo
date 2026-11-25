@@ -1,7 +1,7 @@
 <script>
 	// The page header, moved out of +page.svelte as it was.
 	import { _ } from '$lib/i18n/index.js';
-	import { budgetInfo } from '$lib/budget-store.js';
+	import { budgetInfo } from '$lib/budget/budget-store.js';
 	import { shortId } from '@simple-todo/todo/utils.js';
 	import LocalFirstLink from '@simple-todo/ui/LocalFirstLink.svelte';
 	import LanguageSwitcher from '@simple-todo/ui/LanguageSwitcher.svelte';

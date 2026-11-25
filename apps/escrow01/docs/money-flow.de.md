@@ -91,7 +91,7 @@ sequenceDiagram
 ```
 
 Die Erstausstattung hängt an einer einzigen Bedingung. `lock` in
-[`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) fragt vorher
+[`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js) fragt vorher
 `confidentialBalanceOf` ab; ist das Handle `bytes32(0)`, hat das Konto noch nie vertrauliches Geld
 gesehen, und die drei Aufrufe `mint`, `approve` und `wrap` werden der UserOperation vorangestellt
 ([`chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js), `calls.funding`). Der Betrag steht als
@@ -210,12 +210,12 @@ Test-cUSDT, im selben Vorgang geprägt.“ Das ist die einzige Stelle in der Obe
 Erstausstattung vorkommt. Beim Anlegen einer Aufgabe mit Budget und beim Sperren steht nichts davon.
 
 Der zweite Satz verschwindet, sobald das Guthaben über null liegt (`showFundingHint` in
-[`+page.svelte`](../src/routes/+page.svelte)). Bob, dessen Guthaben aus der Auszahlung stammt, liest
+[`AccountSection.svelte`](../src/lib/sections/AccountSection.svelte)). Bob, dessen Guthaben aus der Auszahlung stammt, liest
 also nichts mehr von einer Prägung, sobald die Auszahlung angekommen ist.
 
 ## Quellen
 
-- [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js): Erstausstattung, Sperre,
+- [`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js): Erstausstattung, Sperre,
   Freigabe, Leseschlüssel
 - [`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js): die Aufrufe `funding`,
   `lock`, `release`
