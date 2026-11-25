@@ -54,10 +54,10 @@
 		delegateTodo,
 		revokeTodoDelegation,
 		loadTodoDatabase,
-		openHomeList,
 		createPrivateTodoList,
 		homeListPendingStore
 	} from '$lib/db-actions.js';
+	import { openHomeList } from '$lib/home-list.js';
 	import { supportsDelegation } from '$lib/delegated-access.js';
 	import DelegatedAuthBadge from '$lib/DelegatedAuthBadge.svelte';
 	import { formatVersions } from '@simple-todo/todo/build-info.js';
