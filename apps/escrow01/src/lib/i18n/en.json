@@ -258,6 +258,7 @@
 			"escrow": "Escrow",
 			"role": "Auditor",
 			"banner": "You see these amounts because the escrow lists your address as its auditor. They are decrypted on your device. Nothing is in plain text on the chain.",
+			"bannerOther": "This is what the chain shows about every escrow: who locked something for whom, and when. The amounts open only for the auditor named in the contract, so here they stay hidden.",
 			"heading": "Escrow transactions",
 			"reference": "Reference",
 			"from": "From",

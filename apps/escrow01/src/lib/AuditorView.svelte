@@ -8,6 +8,7 @@
 	import TechnicalExplanation from './TechnicalExplanation.svelte';
 	import { budgetErrorCode, formatAmount } from './budget.js';
 	import {
+		accountStatusStore,
 		budgetInfo,
 		budgetService,
 		readKeyStore,
@@ -59,6 +60,12 @@
 		}
 	}
 
+	// Only the auditor named in the escrow gets amounts here; everyone else sees
+	// parties and times. The fake answers anyone, and says so in its own notice.
+	$: viewerIsAuditor =
+		!budgetInfo.confidential ||
+		($accountStatusStore.address ?? '').toLowerCase() === budgetInfo.auditor.toLowerCase();
+
 	// Read access renewed elsewhere on the page counts here too.
 	$: readKeyValid = $readKeyStore?.state === 'valid';
 	$: if (readKeyValid) reloadIfExpired();
@@ -78,10 +85,11 @@
 <div
 	class="mb-6 flex items-start gap-2.5 rounded border border-cyan-400 bg-cyan-100 px-4 py-3 text-sm text-cyan-800 dark:border-cyan/40 dark:bg-cyan/10 dark:text-cyan"
 	data-testid="auditor-banner"
+	data-viewer={viewerIsAuditor ? 'auditor' : 'other'}
 >
 	<BudgetIcon name="shield" className="mt-0.5" />
 	<span>
-		{$_('budget.auditor.banner')}
+		{$_(viewerIsAuditor ? 'budget.auditor.banner' : 'budget.auditor.bannerOther')}
 		{#if !budgetInfo.confidential}
 			<span class="mt-1 block">{$_('budget.demoNotice')}</span>
 		{/if}

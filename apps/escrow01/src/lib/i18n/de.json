@@ -258,6 +258,7 @@
 			"escrow": "Treuhand",
 			"role": "Prüfstelle",
 			"banner": "Sie sehen diese Beträge, weil die Treuhand Ihre Adresse als Prüfstelle eingetragen hat. Entschlüsselt wird auf Ihrem Gerät. Im Klartext steht nichts auf der Chain.",
+			"bannerOther": "So sieht die Chain jede Treuhand: wer für wen etwas gesperrt hat, und wann. Die Beträge öffnen sich nur für die im Vertrag eingetragene Prüfstelle, hier bleiben sie verborgen.",
 			"heading": "Treuhand-Vorgänge",
 			"reference": "Referenz",
 			"from": "Von",

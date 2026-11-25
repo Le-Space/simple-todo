@@ -47,11 +47,20 @@ export const PUBLIC_RPC_URLS = [
 export const ETHERSCAN = 'https://sepolia.etherscan.io';
 
 /**
+ * The block explorer the auditor view lists the escrow's locks from: an
+ * Etherscan-compatible API without a key, open to any page (CORS). The public
+ * RPCs answer only small block ranges, and the escrow is months old.
+ * `VITE_SEPOLIA_EXPLORER_API` points elsewhere, `off` goes to the RPC directly.
+ */
+export const DEFAULT_EXPLORER_API = 'https://eth-sepolia.blockscout.com/api';
+
+/**
  * @typedef {{
  *   bundlerUrl: string
  *   authorization: string
  *   policyId: string | null
  *   rpcUrls: string[]
+ *   explorerApi: string | null
  * }} ChainEndpoints
  */
 
@@ -91,13 +100,15 @@ export function readChainEndpoints(env) {
 	}
 
 	const rpcOverride = env.VITE_SEPOLIA_RPC_URL?.trim();
+	const explorer = env.VITE_SEPOLIA_EXPLORER_API?.trim();
 	return {
 		ok: true,
 		endpoints: {
 			bundlerUrl,
 			authorization: `Bearer ${token}`,
 			policyId: env.VITE_OPENFORT_POLICY_ID?.trim() || null,
-			rpcUrls: rpcOverride ? [rpcOverride, ...PUBLIC_RPC_URLS] : [...PUBLIC_RPC_URLS]
+			rpcUrls: rpcOverride ? [rpcOverride, ...PUBLIC_RPC_URLS] : [...PUBLIC_RPC_URLS],
+			explorerApi: explorer === 'off' ? null : explorer || DEFAULT_EXPLORER_API
 		}
 	};
 }
