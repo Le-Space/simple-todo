@@ -37,6 +37,9 @@
 		"onlyBuiltDependencies": [
 			"esbuild",
 			"node-datachannel"
-		]
+		],
+		"patchedDependencies": {
+			"@orbitdb/core@4.0.0": "patches/@orbitdb__core@4.0.0.patch"
+		}
 	}
 }
