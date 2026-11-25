@@ -45,7 +45,7 @@ const EN = {
 	bob: 'Bob does the same in his own browser.',
 	account:
 		'Behind each passkey is an account on Sepolia: Uniswap’s Calibur smart account, through EIP-7702. Openfort pays the gas.',
-	home: 'Alice starts in a private list of her own. It is sealed: only she can read it and write to it.',
+	home: 'Alice starts in a private list of her own, made with her first task. It is sealed: only she can read it and write to it.',
 	newList: 'Alice creates a private list. It is sealed: only she can read it and write to it.',
 	todo: 'She adds a task and delegates it to Bob.',
 	budget:
@@ -82,7 +82,7 @@ const DE = {
 	bob: 'Bob macht dasselbe in seinem eigenen Browser.',
 	account:
 		'Hinter jedem Passkey steht ein Konto auf Sepolia: Calibur von Uniswap, über EIP-7702. Die Gebühren zahlt Openfort.',
-	home: 'Alice startet in ihrer eigenen privaten Liste. Sie ist versiegelt: Lesen und schreiben kann darin nur sie.',
+	home: 'Alice startet in einer eigenen privaten Liste, die mit ihrer ersten Aufgabe entsteht. Sie ist versiegelt: Lesen und schreiben kann darin nur sie.',
 	newList:
 		'Alice legt eine private Liste an. Sie ist versiegelt: Lesen und schreiben kann darin nur sie.',
 	todo: 'Sie legt eine Aufgabe an und delegiert sie an Bob.',
@@ -224,14 +224,18 @@ test('escrow01: a task, a budget, one passkey', async ({ browser }, testInfo) =>
 		await expect(todoInput(page)).toBeEnabled({ timeout: 90_000 });
 	}
 
-	/** @param {import('@playwright/test').Page} page */
-	async function accountReady(page) {
-		await stage.click(page, tab(page, 'konto'));
-		if (SEPOLIA)
-			await stage.cutWhile(() =>
-				expect(page.getByTestId('chain-account-address')).toBeVisible({ timeout: CHAIN })
-			);
-		else await expect(page.getByTestId('account-chain')).toBeVisible();
+	/**
+	 * Both Account tabs, and the wait until both accounts are set up: one cut,
+	 * with nothing said during it -- a line spoken inside a cut is cut with it.
+	 */
+	async function accountsReady() {
+		await stage.click(alice, tab(alice, 'konto'));
+		await stage.click(bob, tab(bob, 'konto'));
+		const ready = (/** @type {import('@playwright/test').Page} */ page) =>
+			SEPOLIA
+				? expect(page.getByTestId('chain-account-address')).toBeVisible({ timeout: CHAIN })
+				: expect(page.getByTestId('account-chain')).toBeVisible();
+		await stage.cutWhile(() => Promise.all([ready(alice), ready(bob)]));
 	}
 
 	try {
@@ -256,9 +260,8 @@ test('escrow01: a task, a budget, one passkey', async ({ browser }, testInfo) =>
 			await confirmSteps(bob);
 		});
 		await stage.focus('alice', 'bob');
-		await stage.sayWhile(LINES.account, () =>
-			Promise.all([accountReady(alice), accountReady(bob)])
-		);
+		await accountsReady();
+		await stage.say(LINES.account);
 		const bobDid = await bob.getByTestId('own-did-value').getAttribute('data-did');
 		if (!bobDid) throw new Error('Bob’s DID badge has no data-did');
 
