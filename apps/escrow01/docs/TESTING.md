@@ -65,14 +65,16 @@ What this chapter adds is tested on three levels:
 
 ## Specs CI leaves out
 
-| Spec                                  | Why it is not in `ci.specs`                                                                                     |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `shared-list-mnemonic.spec.js`        | written for a start in the shared three-word list; since the private start (#140) it has not been measured here |
-| `passkey-identity.spec.js`            | inherited from `passkey01`, where CI runs it; not measured in this chapter yet                                  |
-| `manual-multiaddr-connection.spec.js` | inherited from `main`, where CI runs it; not measured in this chapter yet                                       |
-| `relay-button-provisioning.spec.js`   | deploys a real relay through the Relay Button, with an Aleph account                                            |
-| `relay-button-drag.spec.js`           | the Relay Button's own behaviour, covered in its repository                                                     |
-| `remote-main-local.spec.js`           | drives a deployed site (`e2e/remote/`), not the local build                                                     |
+`manual-multiaddr-connection.spec.js`, inherited from `main`, joined `ci.specs` after it passed on
+`main` and on the refactor branch (2026-11-25).
+
+| Spec                                | Why it is not in `ci.specs`                                                                                                                                                                                                                                        |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `shared-list-mnemonic.spec.js`      | red on `main` as well (2026-11-25, one run each on main and on the refactor): Bob, who joins with Alice's words, never sees her todo (spec line 84). Cause not established                                                                                         |
+| `passkey-identity.spec.js`          | inherited from `passkey01`; red on `main` as well (same runs): after Alice's reload with her passkey her DID survives, but her todo from the shared list is not on screen (spec line 69). Possibly because a start now ends in a private list (#140); not verified |
+| `relay-button-provisioning.spec.js` | deploys a real relay through the Relay Button, with an Aleph account                                                                                                                                                                                               |
+| `relay-button-drag.spec.js`         | the Relay Button's own behaviour, covered in its repository                                                                                                                                                                                                        |
+| `remote-main-local.spec.js`         | drives a deployed site (`e2e/remote/`), not the local build                                                                                                                                                                                                        |
 
 The mnemonic spec copies Alice's three-word Spanish share code from her
 **Lists** tab into Bob's start dialog (**Settings** → **Join a shared list**),
