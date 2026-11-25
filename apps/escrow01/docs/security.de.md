@@ -337,7 +337,8 @@ Kontovertrags sind von Bedeutung: Der gewöhnliche Schlüssel, der das Konto ers
 immer ein allmächtiger Generalschlüssel, und die Chain prüft nicht, ob die Person tatsächlich mit
 Fingerabdruck oder Gesicht bestätigt hat. Zum Lesen von Beträgen braucht der Browser außerdem einen
 zusätzlichen, temporären Schlüssel, weil Zamas aktuelle Version keine Signaturen solcher Konten
-annehmen kann; die App hält ihn bis zu 24 Stunden unverschlüsselt. Ein Konto, dessen Passkey verloren
+annehmen kann; die App hält ihn bis zu 24 Stunden und speichert ihn nur versiegelt, unter einem
+Schlüssel, den der Passkey ableitet. Ein Konto, dessen Passkey verloren
 ist, kann niemand wiederherstellen, und der Schlüssel, der das Gas bezahlt, ist in der Seite lesbar.
 
 ### Passkey-Wallet: technisch
@@ -371,16 +372,19 @@ ist, kann niemand wiederherstellen, und der Schlüssel, der das Gas bezahlt, ist
   kein Entschlüsselungs-Permit signieren. Der Workaround der App ist ein secp256k1-Sitzungsschlüssel,
   der Leseschlüssel, den das Konto mit `ACL.delegateForUserDecryption(sessionKey, contract, expiry)`
   autorisiert, einmal pro Vertrag (Token und Treuhand), für 24 Stunden: im Stapel der Einrichtung und
-  bei jeder Erneuerung mit einem neuen Schlüssel. Der Schlüssel liegt versiegelt in `localStorage` des
-  Browsers (AES-GCM unter einem Schlüssel, den HKDF aus dem PRF-Wert des Passkeys ableitet) und wird
-  einmal pro Besuch im Speicher geöffnet; eine Seite, die währenddessen kompromittiert ist, kann ihn
+  bei jeder Erneuerung mit einem neuen Schlüssel. Der Schlüssel liegt versiegelt (AES-GCM unter einem
+  Schlüssel, den HKDF aus dem PRF-Wert des Passkeys ableitet), mit „In diesem Browser behalten“ in
+  `localStorage` des Browsers und ohne es im Arbeitsspeicher des Tabs, und wird einmal pro Besuch im
+  Speicher geöffnet; eine Seite, die währenddessen kompromittiert ist, kann ihn
   benutzen ([Der Leseschlüssel](passkey-account.de.md#leseschlüssel-technisch)). Das Event `DelegatedForUserDecryption` macht die Verknüpfung zwischen Konto und
   Sitzungsschlüssel öffentlich, und der Sitzungsschlüssel kann bis zum Ablauf oder zu einem Widerruf
   alles lesen, was das Konto in diesen Verträgen lesen darf.
 - **v0.14** ergänzt für seine neue, vereinheitlichte Anfrage eine ERC-1271-Verifikation im
   KMS-Connector (`ecrecover` bei einer 65 Byte langen Signatur, andernfalls ein gasbegrenzter Aufruf
-  von `isValidSignature`). Ob eine Calibur-Passkey-Signatur in ERC-7739-Form diese Prüfung besteht,
-  wurde nicht verifiziert.
+  von `isValidSignature`). Auf einem Sepolia-Fork hat am 2026-10-12 die eigene ERC-1271-Vorprüfung von
+  `@fhevm/sdk` 0.14.3 ein solches Permit angenommen, vom Passkey-Konto in ERC-7739-Form signiert
+  ([keys.de.md](keys.de.md#vorab-geprüft-ohne-zama-am-2026-10-12)). Ob Zamas KMS es annimmt, bleibt
+  offen, bis v0.14 auf Sepolia läuft.
 - **Sponsoring.** Der publishable Openfort-Schlüssel ist Teil der Seite. Die Openfort-Regel dahinter,
   `ply_1b76dd29-2f48-4835-ad5f-4cd8aa2db3d8`, nimmt `sponsorEvmTransaction` auf Chain 11155111 an, ohne
   Einschränkung auf Verträge oder Funktionen. Wer den Schlüssel aus der Seite liest, kann beliebige
@@ -389,8 +393,9 @@ ist, kann niemand wiederherstellen, und der Schlüssel, der das Gas bezahlt, ist
   die App ab (`readChainEndpoints`).
 - **Keine Wiederherstellung ohne den Passkey.** Außer dem verworfenen Root-Key ist der Passkey der
   einzige Schlüssel des Kontos. Ein synchronisierter Passkey erreicht weitere Geräte und gibt dort
-  seit Provider 0.8.0 Identität und Konto in zwei Berührungen zurück, ohne gespeicherte Daten; ein
-  verlorener nimmt das Konto mit.
+  seit Provider 0.8.0 Identität und Konto in drei Berührungen zurück, ohne gespeicherte Daten
+  ([wie oft der Passkey fragt](passkey-account.de.md#wie-oft-der-passkey-fragt)); ein verlorener
+  nimmt das Konto mit.
 - **Calibur v1.1.0.** Uniswap hat am 2026-07-02 v1.1.0 unter einer neuen Adresse veröffentlicht und
   führt seitdem nur diese Version. Unter anderem dürfen dort nur Admin-Schlüssel den EntryPoint
   aufrufen. Die App nutzt v1.0.0, in der ihr einziger Schlüssel außer dem Root-Key ein Admin ist

@@ -1,485 +1,112 @@
-# Simple Todo - A Local-First Peer-to-Peer PWA Tutorial
+# escrow01 · Confidential budgets for delegated todos
 
 [![Deploy](https://github.com/Le-Space/simple-todo/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/Le-Space/simple-todo/actions/workflows/deploy.yml?query=branch%3Amain)
 [![CI](https://github.com/Le-Space/simple-todo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Le-Space/simple-todo/actions/workflows/ci.yml?query=branch%3Amain)
 
-A basic decentralized, local-first, peer-to-peer todo application built with **libp2p**, **IPFS**, and **OrbitDB**. This app demonstrates how modern Web3 technologies can create truly decentralized applications that work entirely in the browser.
-
-> 📚 **This repository is a tutorial.** Its branches — `main`, `collab01`, `passkey01`, `acl01`, `privacy01`, `delegation01`, `escrow01` — are chapters that build the app up step by step, so they are kept separate rather than merged into one another. This is the `escrow01` chapter (a confidential escrow for a delegated todo's budget, built on `delegation01`).
-
-## 🚀 Live Demo
-
-- **This chapter (escrow01)**: not deployed; run it locally, see [Try it](#try-it)
-- **Previous chapter (delegation01)**: https://delegation01.le-space.de
-- **acl01**: https://acl01.le-space.de
-- **Main app**: https://simple-todo.le-space.de
-
-The custom-domain links track the current deployment of each branch.
-
-## This Chapter: Confidential Escrow (`escrow01`)
-
-Built on `delegation01`. A delegated todo can carry a budget: the owner locks an amount of a
-confidential token for the delegate, releases it when the todo is done, or takes it back after a
-deadline. The amount is encrypted with Zama's FHEVM, so the chain shows who locked money for whom and
-when, but not how much. The owner, the delegate and one auditor fixed in the contract can decrypt it;
-the exceptions and the trust in Zama's key holders are in [docs/security.md](docs/security.md). This is
-the escrow half of [de2do](https://github.com/NiKrause/de2do).
-
-- **The contract is live.** [`ConfidentialTodoEscrow`](contracts/src/ConfidentialTodoEscrow.sol) accepts
-  one ERC-7984 confidential token (Zama's cUSDTMock on Sepolia) and keeps each escrow under its creator
-  and a `todoRef`, meant to be a salted hash. It is deployed on Sepolia at
-  [`0x6Ee3Fa9d3aEdaAD189F5DeA9d859605c9D743429`](https://sepolia.etherscan.io/address/0x6Ee3Fa9d3aEdaAD189F5DeA9d859605c9D743429#code)
-  and verified on Etherscan, Sourcify and Blockscout. A smoke test locked, decrypted and released a
-  real amount there on 2026-09-16.
-- **One passkey pays, on Sepolia.** Adding a delegated todo can lock a budget, the owner releases it
-  once the delegate is done, the delegate is told about the payout, and an auditor view lists the
-  escrows. Built with `VITE_BUDGET_SERVICE=zama` and an Openfort key, each passkey gets an account in
-  the background that follows Calibur, a non-upgradeable wallet smart contract by Uniswap Labs, through
-  EIP-7702; a lock or a release is one user operation the passkey signs,
-  with gas sponsored by Openfort, and amounts are encrypted and decrypted in the browser. A run on
-  2026-09-17 did all of it between two browsers ([docs/passkey-account.md](docs/passkey-account.md)).
-  Amounts are read through a read key the account delegates decryption to; the browser keeps it only
-  sealed, under a key the passkey derives, and "Show amounts" opens it once per visit.
-- **Without that configuration, a fake.** It encrypts nothing and forgets its escrows on reload; the
-  Account tab says "Demo without a chain". The tests run against it.
-- **OrbitDB stores no amounts.** A todo's `budget` field holds status, token, escrow, `todoRef`,
-  transaction hashes and the last error. The chain is the source of truth for what is locked.
-- **The start dialog says what this is for, and has one button.** Its title names the use case —
-  confidential escrow payments with a passkey — and its first screen holds the promise, **Sign in ·
-  Sign · Pay** as one row with **Pay** set apart, three sentences about the data (amounts encrypted;
-  todos and lists not; safest in a browser without extensions), and one button that says what it
-  does: **Create a passkey and start**. Its press is the consent; the line under it says so. The other
-  ways in are links under it: "Already have a passkey? Sign in with it" and "Look around without a
-  passkey – no budget then". "Notices and settings" is a second screen in the same dialog: **Keep in
-  this browser** (ticked; untick it on a shared computer), **Join a shared list** (the share-code
-  field appears on request), the technical view, and all notices. Kept, a return with a passkey is
-  one tap ("Welcome back"), and without one the app opens straight away; unticked, nothing is kept,
-  not even the decision, so the dialog returns.
-- **A demo video, once there is one.** A teaser left in the dialog's top row and a "Video" link in
-  the header open one player over the page; it plays a file of this site, with a plain link to
-  YouTube beside it. Both stay hidden until [`src/lib/demo-video.js`](src/lib/demo-video.js) has an
-  entry for the language on screen.
-- **The page opens on the todos.** Lists, account and network are tabs, at the foot of a phone's
-  screen and under the header elsewhere. The URL fragment names the tab, so `#listen`, `#konto`,
-  `#netzwerk` and the auditor view's `#pruefstelle` link straight to one.
-
-### Try it
-
-1. The app: `pnpm install` at the repository root, then `pnpm dev` in `apps/escrow01`. Press
-   **Create a passkey and start**. The start points to a private list of your own, "My todos", which your
-   first todo makes: add one delegated to another DID with a budget. A link with three words opens that
-   shared list instead, where the form says that delegation needs a private list. Tick it as the
-   delegate, release it as the owner, and open the auditor view from the **Account** tab. With the fake,
-   amounts are readable only in the browser tab that locked them.
-2. On Sepolia: put the settings from [Configuration](docs/passkey-account.md#configuration) into
-   `.env.local` and start again. The **Account** tab shows each person's account once it is set up;
-   the delegate needs one before a budget can be locked for them.
-3. The contract: `cd contracts && npm ci && npm test` runs 16 tests in FHEVM mock mode.
-   `npm run smoke:sepolia:dry` checks the Sepolia deployment through Zama's relayer and needs only an
-   RPC URL ([runbook](contracts/README.md#sepolia-runbook)).
-
-### Read more
-
-- [docs/escrow.md](docs/escrow.md): roles, lifecycle, `todoRef`, what is public and what is encrypted
-- [docs/passkey-account.md](docs/passkey-account.md): the passkey's account (Calibur), gas sponsoring,
-  and where amounts are encrypted and decrypted, with sequence diagrams
-- [docs/zama-confidential-transactions.md](docs/zama-confidential-transactions.md): Zama's protocol as
-  used here, from handles to threshold decryption
-- [docs/money-flow.md](docs/money-flow.md): where the test money comes from, whose token contracts
-  these are, and what of a lock and a release is public, with one sequence diagram end to end
-- [docs/keys.md](docs/keys.md): the four keys behind one passkey, why the read key exists, what
-  Zama v0.14 changes about it, and how we proceed, with sources
-- [docs/smoke-test.md](docs/smoke-test.md): the Sepolia run of 2026-09-16, step by step
-- [docs/security.md](docs/security.md): threat model, leaks, trust assumptions, open issues
-- [docs/demo.de.md](docs/demo.de.md) ([English](docs/demo.md)): the bank demo
-- [contracts/README.md](contracts/README.md): toolchain, deployment, verification, smoke test
-
-German versions of the docs sit next to them as `*.de.md`.
-
-## 🤝 Per-Todo Delegation (from `delegation01`)
-
-Built on `acl01`. A private list is still owner-only — but the owner can now
-hand **one todo** to another DID. That delegate may complete or rename
-exactly that todo, and nothing else, until the owner revokes it or the
-delegation expires. This is the delegation half of
-[de2do](https://github.com/NiKrause/de2do) (the escrow half, where the todo
-is backed by funds in a smart contract, is a later chapter), ported onto the
-`acl01` foundation: sharing is still by address, permissions still live in
-the panel, and the mnemonic list stays public.
-
-- **A delegation is a field on the todo.** The owner writes
-  `delegation: { delegateDid, grantedAt, expiresAt, revokedAt }` into the
-  todo's own entry — on creation, or later from the row's **Delegate**
-  button. Only the owner can, because only the write set may rewrite that
-  entry. **Revoke** sets `revokedAt` the same way.
-- **A delegate never rewrites the todo.** Their change goes in as a separate
-  *delegation action*, keyed `delegation-action/<todoKey>/<delegateDid>/…`,
-  signed by the delegate: either `set-completed` or `patch-fields`
-  (`text`/`description`). Readers fold these into the todo they name
-  (`src/lib/delegation.js`).
-- **The access controller admits exactly those.** Private lists now open on
-  [`@le-space/orbitdb-access-controller-delegated-todo`](https://www.npmjs.com/package/@le-space/orbitdb-access-controller-delegated-todo),
-  the same package de2do and `orbitdb-relay` use. It wraps the `acl01`
-  controller — the write set, grant/revoke and the permissions panel are
-  unchanged — and additionally lets an entry through when it is a
-  well-formed delegation action whose *signer* is the DID in its key.
-  Anything else from a non-writer is refused, as before.
-- **Revoke and expiry are decided on read, not in the controller.** The
-  controller checks the action's shape and signature; it does not look the
-  todo up. Whether the todo *currently* delegates to that signer is decided
-  by the reader: an action is ignored unless the todo's delegation names its
-  signer, is not revoked, and has not expired. So revoking also takes back
-  what the delegate already did, and a revoked delegate's later actions are
-  accepted into the log but change nothing. This is a client-side rule — a
-  peer running different code could keep applying them. Say so in your own
-  app; de2do makes the same trade.
-- **The owner's later write wins.** An action older than the todo's own
-  `updatedAt` is dropped, so an owner can re-open a todo a delegate
-  completed. (de2do re-applied every action forever; this is the one place
-  the port departs from it.)
-- **Every delegated write asks for the passkey again.** Ordinary writes
-  never do: the identity's signing key sits in the keystore, unencrypted
-  (see *Passkey Identities* below). A delegate changing someone else's todo
-  is the one thing this identity may do on a list it does not own, and it
-  should not happen by accident. The header badge shows the prompt happen
-  (`src/lib/delegated-write-auth.js`).
-
-### The controller's type is not part of the address
-
-The delegated controller reports `type: 'todo-delegation'`, but the address
-it writes into the list's manifest is its wrapped base controller's,
-`/orbitdb/<hash>`. OrbitDB picks the controller for a list opened **by
-address** from that prefix — so a guest who opens a shared list by address,
-which is how every list in this tutorial is shared, would get the plain
-`orbitdb` controller, and a delegate's write would be refused on their own
-machine before it was ever signed.
-
-de2do sidesteps this by opening every list **by name** with the controller
-passed explicitly, which works because its names are derivable
-(`<ownerDid>_projects`). Here, lists are shared by address, so this chapter
-takes the other route: the delegated controller is registered **as the
-`orbitdb` type** (`src/lib/delegated-access.js`). Every `/orbitdb/…`
-controller this build opens then checks the delegation rules, and the
-manifest stays one that other builds and the relay can still open.
-
-### ⚠️ What the relay makes of a delegate's entries
-
-`orbitdb-relay` registers `todo-delegation` — but for the reason above it
-never sees that type in a manifest, so it opens these lists with its built-in
-`orbitdb` controller and **rejects delegation actions when it replicates**.
-Alice and Bob exchange them directly (that is what the E2E test proves); the
-relay pins the owner's entries only. If Alice is offline while Bob
-completes, and they only ever meet through the relay, Bob's completion waits
-until they are online together. A relay that accepts these entries needs a
-controller whose *address* carries its type — a change to the controller
-package, and a good follow-up exercise.
-
-### From `privacy01`, switched off
-
-This branch is cut from `privacy01`, so it also carries the per-entry
-sealing machinery from that chapter (`src/lib/db-encryption.js`,
-`entry-encryption.js`, `database-keys.js`, with their unit tests). Nothing
-imports it; lists here are as unencrypted as on `acl01`.
-
-The same goes for the signing key. `privacy01` later moved its passkey
-identity to a key that lives in memory only; that change came after this
-branch was cut, so the identity here is still `acl01`'s — its key sits in
-IndexedDB, unencrypted.
-
-### Alice ↔ Bob ↔ Mallory walkthrough
-
-1. Alice creates a private list, adds a todo and ticks **Delegate this todo
-   to another DID**, pasting Bob's DID (optionally with an expiry). She
-   copies the list's `/orbitdb/…` address.
-2. Bob and Mallory open that address. Both see the todo; both are refused
-   when they try to add one. Bob's row is marked *delegate* and its checkbox
-   is enabled; Mallory's is not.
-3. Bob ticks the todo. His passkey asks for confirmation, the header badge
-   shows *Delegated write signed*, and Alice's row shows *completed* with
-   *Last changed by delegate*. Bob may also **Rename** it. Anything else on
-   the list is still Alice's alone.
-4. Alice clicks **Revoke**. Bob's completion disappears on both sides — the
-   action still sits in the log, but no reader applies it — and his checkbox
-   is disabled again. From the row she can **Re-delegate**, with or without
-   an expiry.
-
-## 🔑 Per-DID Write Permissions (from `acl01`)
-
-Built on `passkey01`. Passkey identities become *meaningful*: you can grant
-specific DIDs write access to a list of yours.
-
-- **Public list stays public.** The mnemonic shared list from `collab01`
-  keeps `write: ['*']` — open collaboration is unchanged.
-- **Private lists are owner-only.** "Create private list" opens a new
-  database on OrbitDB's mutable `OrbitDBAccessController` with
-  `write: [your identity]`. Only you can write until you grant others.
-- **Grant / revoke at runtime.** The permissions panel lists the write DIDs
-  and lets the list admin add or remove them. The access controller is a
-  replicated OrbitDB store, so grants propagate to peers **without changing
-  the list's address**.
-- **Sharing is by address.** A private list is shared via its full
-  `/orbitdb/…` address (the "Open a shared list by address" form). Readers
-  can replicate immediately; writing needs a grant.
-- **Denied writes fail loudly.** A write from an unauthorized identity is
-  rejected inside OrbitDB's `canAppend` gate *before* anything is appended,
-  so nothing ever looks saved — the UI shows a clear "no write permission,
-  ask the owner to add your DID" message instead of crashing.
-
-### Alice ↔ Bob walkthrough
-
-1. Alice creates a private list `alice-todos` and adds a todo. She copies its
-   `/orbitdb/…` address.
-2. Bob opens that address, sees Alice's todo (read/replication works), but
-   his own write is **denied** with a visible error.
-3. Alice pastes Bob's DID into the permissions panel and grants write.
-4. Bob writes again → success; both see both todos. The reverse (Bob owner,
-   Alice guest) works identically.
-
-### ⚠️ Relay / access-controller version compatibility
-
-The chosen access-controller type must be known to the relay/pinner that
-replicates the list. `orbitdb-relay` registers `orbitdb`,
-`orbitdb-deferred` and `todo-delegation`; `acl01` used the built-in
-`orbitdb` type, so no extra relay configuration was needed. `delegation01`
-switches to
-[`@le-space/orbitdb-access-controller-delegated-todo`](https://www.npmjs.com/package/@le-space/orbitdb-access-controller-delegated-todo)
-— see the chapter section above for what that does and does not change
-about replication through the relay.
-
-## 🔐 Passkey Identities (from `passkey01`)
-
-The previous chapter (`collab01`) gave every browser a random throwaway
-OrbitDB identity: entries were attributable to *a* peer, but not to *you*.
-This chapter replaces that with an opt-in **passkey-backed identity**:
-
-- **Onboarding choice** before the P2P stack starts: *create a passkey*
-  (the start button; its name is only a label, asked for in the technical
-  view), *sign in with a passkey you have* (recovery), or *look around without
-  one* (exactly the previous chapter's behaviour), as links under the button.
-- **WebAuthn DID provider** from
-  [`@le-space/orbitdb-identity-provider-webauthn-did`](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did):
-  the DID is the passkey's own P-256 key, and OrbitDB signs entries with a
-  **secp256k1 key derived from the passkey** (PRF → HKDF-SHA256; without PRF
-  the keystore generates one instead). That key is **not encrypted**: it
-  sits in OrbitDB's keystore in this browser's IndexedDB, where anyone who
-  can read the browser's storage can read it. Creating a passkey costs three
-  WebAuthn prompts (register, PRF, identity proof); after a reload a kept
-  credential costs one (the identity proof), and a device that kept nothing
-  costs three: two to restore, one to sign. Signing entries never asks. (The stricter *varsig* variant — a passkey prompt for
-  every single write — exists in the same package and is a good follow-up
-  exercise, but is not used here.)
-- **Create-or-recover flow** (`src/lib/passkey-identity.js`): the credential
-  is written to `localStorage` only when the reader chose to keep things.
-  Recovery uses that copy when it exists, and otherwise asks the authenticator
-  itself: `restoreIdentityFromAuthenticator` (provider 0.8.0) derives the DID
-  from two signatures and the signing key from the PRF output, so a device
-  that has never seen this passkey — or a new one holding the same security
-  key — comes back to the same identity and the same budget account, with
-  nothing stored. There is no `largeBlob` layer any more; it never wrote
-  anything ([provider #48](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did/issues/48)).
-  This flow currently lives here — upstreaming it into the provider package
-  is an open TODO.
-- **Visible identity**: your DID appears in the header (in `escrow01`, in
-  the Account tab; shortened, with a copy button), and every todo shows its author resolved from
-  `entry.identity` — the field OrbitDB signs itself, so it cannot be faked
-  by writing a different name into the todo payload.
-- **Access control is unchanged** (`write: ['*']`): this chapter is only
-  about *who you are*, not yet about *who may write*. That is the next
-  chapter (`acl01`).
-
-### The name you type is a label, not your identity
-
-The onboarding form asks for one name, and nothing depends on it. A passkey
-carries two human-readable fields (`user.name` and `displayName`) that exist
-only so the browser's passkey picker has something to show. What identifies
-the credential is the **user handle**, 64 random bytes the identity provider
-generates — and your DID comes from the credential's public key, not from
-either of them. Two people on the same device may type the same name and
-still get two separate identities.
-
-That is worth stating because it was not always true. While the handle was
-derived from the typed name, an authenticator — which keeps one credential
-per (origin, handle) — silently **replaced** the earlier passkey when a
-second person used the same name, taking the DID and everything signed under
-it with it
-([provider #45](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did/issues/45)).
-The WebAuthn spec says the handle must not contain personal data such as a
-username or e-mail address, and should be random, for exactly this reason.
-
-### ⚠️ Passkeys are bound to the origin (rpId)
-
-A WebAuthn credential is scoped to the domain that created it. A passkey
-registered on `http://localhost:5173` does **not** exist on
-`https://simple-todo.le-space.de`, and a passkey created on one IPFS
-gateway (`dweb.link`) is invisible on another (`ipfs.aleph.im`) — even for
-the identical app build. For a local-first app distributed through many
-gateways this is a real constraint: your DID is only portable across
-devices via passkey sync (iCloud Keychain, Google Password Manager, …), not
-across origins. Pin one canonical domain if stable identities matter.
-
-**Android without Google Play Services** (GrapheneOS): the PRF extension the
-identity is derived from needs a credential provider that implements CTAP2
-itself — which one does, how to set it up, and what the chapter does without
-PRF is in [docs/grapheneos.md](../../docs/grapheneos.md).
-
-## 🎯 What is this?
-
-This is a **browser-only** local-first peer-to-peer todo application that operates without any traditional server infrastructure. It connects directly to other browsers and mobile devices through peer-to-peer connections, creating a truly decentralized experience. So far, a LibP2P signaling node is necessary to connect the peers, and in this version it also stores the todos since this browser version works with MemoryStorage only instead of local IPFSStorage (e.g. LevelBlockstore).
-
-### Main Branch Scope
-
-This branch extends the basic `main` tutorial with a three-word Spanish shared-list mnemonic, for example `luna-camino-verde`. The normalized mnemonic is the OrbitDB database name: two browsers enter the same words to open and replicate the same list without exchanging a full OrbitDB address. The mnemonic is only a convenient public share code—not a password, recovery phrase, encryption key, or access-control mechanism. Anyone who knows or guesses it can discover and edit the public writable list.
-
-> **Collaboration examples:** [`collab01`](https://github.com/Le-Space/simple-todo/tree/main/apps/collab01) demonstrates mnemonic-based shared lists.
-
-### Key Features
-
-- ✅ **No Server Required** - PWA runs in browser, desktop or mobile.
-- ✅ **Local Data** - Data is stored in your browser's level storage and replicated via OrbitDB and IPFS
-- ✅ **Peer-to-Peer Communication** - Browsers connect directly via WebRTC (with help of libp2p signaling nodes)
-- ✅ **Real-time Synchronization** - Changes appear instantly across all peers
-
-## 🎯 How to Test
-
-1. **Open Two Browser Windows** - You need at least two browser instances, a mobile device, or ask another distant person to open the app
-2. **Load the Same URL** - All app users should load the same app URL
-3. **Choose the Shared List** - Copy the three-word share code from the first browser's **Lists** tab; in the second, open **Settings** under the start button, tick **Join a shared list** and paste it
-4. **Start** - Press the start button: its press is the consent
-5. **Wait for Connection** - The app will automatically discover and connect peers
-6. **Add Todos** - Create todos in one browser and watch them appear in the other
-
-### Try the delegation01 chapter (per-todo delegation)
-
-You need three passkeys — three browsers, or three profiles of one:
-
-1. In browser A (Alice), pick **Create a passkey** during onboarding, click
-   **Create private list** (Lists tab), type a todo, tick **Delegate this todo to
-   another DID** and paste browser B's **Passkey DID** (its Account tab).
-   Add it, then copy the `/orbitdb/…` address.
-2. In browsers B (Bob) and C (Mallory), each with its own passkey, paste the
-   address into **Open a shared list by address** (Lists tab). Both see the todo and
-   both are refused when adding one. Only B's checkbox is enabled.
-3. In B, tick the todo: the passkey prompt appears, the header shows
-   *Delegated write signed*, and A's row updates. Click **Rename** on the
-   row in B and watch the new name arrive in A and C.
-4. In A, click **Revoke** on the row. The tick disappears in A and B, and
-   B's checkbox is disabled. **Re-delegate** from the row to hand it back,
-   this time with an expiry a minute ahead, and watch it turn *expired*.
-
-`pnpm exec playwright test e2e/delegation.spec.js` runs this with three
-virtual authenticators.
-
-### Try the acl01 chapter (per-DID write permissions)
-
-The mnemonic list above stays public. To exercise access control, create a
-**private list** and share it by address:
-
-1. In browser A (owner), pick **Create a passkey** during onboarding, then
-   click **Create private list** (Lists tab). Add a todo and copy the shown
-   `/orbitdb/…` address.
-2. In browser B (guest), create a *different* passkey, paste the address into
-   **Open a shared list by address** (Lists tab), and open it. You see the owner's todo,
-   but adding one is **denied** with a visible error.
-3. In browser A, copy browser B's **Passkey DID** (its Account tab) into the
-   **Write permissions** panel (Lists tab) and click **Add DID**.
-4. In browser B, add the todo again → it succeeds and both browsers converge.
-   Owner and guest roles are symmetric — try it the other way around too.
-
-See the full [Alice ↔ Bob walkthrough](#alice--bob-walkthrough) above for the
-same flow described step by step.
-
-## 📚 Documentation
-
-For comprehensive guides on how this app works, implementation details, and reusable components:
-
-**[📖 Tutorial](./docs/TUTORIAL.md)**
-
-The tutorial covers:
-
-- Step-by-Step implementation guide
-- Architecture overview
-- Testing procedures
-- Troubleshooting guide
-- Security considerations
-
-**[🔧 Reusable Components](./docs/)**
-
-- **[StorachaIntegration](./docs/StorachaIntegration.md)** - Complete Storacha/Web3.Storage integration component for backing up OrbitDB databases to decentralized storage
-
-## 🛠️ Quick Start
+A todo app that runs in the browser, with no server holding the data. The owner of a todo hands it to
+someone else and locks a budget for it; once it is done, the owner releases the money. The amount is
+encrypted with Zama's FHEVM: the chain shows who locked money for whom and when, never how much. One
+passkey signs in, signs the list's entries and pays. [Deutsch](README.de.md)
+
+This is the `escrow01` chapter of the [Simple-Todo tutorial](../../README.md). It builds on
+[`delegation01`](../delegation01) and adds the escrow: a smart contract, an account per passkey and a
+confidential token, on the Sepolia test network.
+
+## Try it
+
+**Live:** [escrow01.le-space.de](https://escrow01.le-space.de/) (German) ·
+[escrow01.le-space.de/en/](https://escrow01.le-space.de/en/) (English). Sepolia testnet: no real
+money moves.
+
+1. Press **Create a passkey and start**. You start in a private list of your own, "My todos", which
+   your first todo creates.
+2. Add a todo, tick **Delegate this todo to another DID**, paste the other person's **Passkey DID**
+   (their **Account** tab) and enter a budget.
+3. Send them the list's link: the address bar carries it, and so does the QR code in the header.
+   They tick the todo as done, and you release the budget. The **Account** tab opens the auditor
+   view.
+
+A presenter's script with the questions experts ask is in [docs/demo.md](docs/demo.md)
+([Deutsch](docs/demo.de.md)).
+
+## What is real, and what is a demo
+
+| Part            | Today                                                                                                                                                                                                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Amounts         | encrypted in the browser and on chain; the owner, the delegate and one auditor can decrypt them                                                                                                                                                                    |
+| Todos and lists | **not** encrypted: anyone with a list's address can read it, the relay included. A private list only limits who may _write_                                                                                                                                        |
+| The contract    | [`ConfidentialTodoEscrow`](contracts/src/ConfidentialTodoEscrow.sol) on Sepolia at [`0x6Ee3…3429`](https://sepolia.etherscan.io/address/0x6Ee3Fa9d3aEdaAD189F5DeA9d859605c9D743429#code), verified on Etherscan, Sourcify and Blockscout                           |
+| The money       | Zama's test token cUSDTMock; an account's first lock mints it 1,000.00. Openfort pays the gas                                                                                                                                                                      |
+| The auditor     | one address fixed in the contract, which can read every amount. Fine for a demo, not for a product ([security](docs/security.md))                                                                                                                                  |
+| The passkey     | the DID, the list signing key and the account all hang on it. A first start asks 3 times, plus once on Sepolia to seal the key that reads amounts; a return asks once ([how often](docs/passkey-account.md#how-often-the-passkey-asks), [four keys](docs/keys.md)) |
+| Without Sepolia | a build without the Sepolia settings uses an in-memory fake: nothing is encrypted or sent, an amount can be read only in the tab that locked it, and the **Account** tab says \"Demo without a chain\". The tests run against it                                   |
+
+It is a demo on a test network, built to teach and to show. It is not ready for production use; what
+is missing is listed under the open issues in [docs/security.md](docs/security.md).
+
+## Run it
 
 ```bash
-# Clone repository
 git clone https://github.com/Le-Space/simple-todo.git
 cd simple-todo
-
-# install dependencies, then start this chapter's development server
 pnpm install
 cd apps/escrow01
 pnpm dev
 ```
 
-## 🛰️ Local Relay
+- **Sepolia:** put the settings from [Configuration](docs/passkey-account.md#configuration) into
+  `.env.local` and start again. A delegate needs an account before a budget can be locked for them;
+  it is set up on its own after their first start.
+- **A relay for `pnpm dev`:** [docs/TESTING.md](docs/TESTING.md#a-relay-for-pnpm-dev).
+- **Tests:** `pnpm run test:unit`; the browser specs CI runs are listed in `chapter.json` →
+  `ci.specs` ([docs/TESTING.md](docs/TESTING.md)).
+- **The contract:** `cd contracts && npm ci && npm test` runs 16 tests in FHEVM mock mode;
+  `npm run smoke:sepolia:dry` checks the Sepolia deployment and needs only an RPC URL
+  ([runbook](contracts/README.md#sepolia-runbook)).
 
-In development the app reads `VITE_RELAY_BOOTSTRAP_ADDR_DEV` from `.env`. If that variable is not set, it falls back to a hardcoded localhost relay address, so the safest local workflow is:
+## Where the escrow lives in the code
 
-1. Start an `orbitdb-relay` process.
-2. Copy its WebSocket multiaddr into `.env`.
-3. Start or restart the Vite dev server.
+| Step                                                        | Files                                                                                                                                        |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| The escrow on chain                                         | [`contracts/src/ConfidentialTodoEscrow.sol`](contracts/src/ConfidentialTodoEscrow.sol)                                                       |
+| A budget's states, as pure functions                        | [`src/lib/budget.js`](src/lib/budget.js)                                                                                                     |
+| One interface for every budget operation, and its two sides | [`budget-service.js`](src/lib/budget-service.js), [`-fake.js`](src/lib/budget-service-fake.js), [`-zama.js`](src/lib/budget-service-zama.js) |
+| Lock and release, step by step                              | [`budget-flow.js`](src/lib/budget-flow.js), [`budget-store.js`](src/lib/budget-store.js)                                                     |
+| Sepolia, Calibur, Zama's SDK                                | [`src/lib/chain/`](src/lib/chain)                                                                                                            |
+| The start: one passkey, a private list of one's own         | [`src/routes/+page.svelte`](src/routes/+page.svelte), `openHomeList` in [`db-actions.js`](src/lib/db-actions.js)                             |
 
-Install and run the published npm package:
+Read them in the order of the [code tour](docs/code-tour.md), which also follows one lock from the
+form to the chain.
 
-```bash
-npm install -g orbitdb-relay
+## What it builds on
 
-ENABLE_GENERAL_LOGS=1 \
-RELAY_LISTEN_IPV4=127.0.0.1 \
-RELAY_DISABLE_IPV6=true \
-RELAY_DISABLE_QUIC=true \
-RELAY_DISABLE_WEBRTC=true \
-DATASTORE_PATH=/tmp/simple-todo-orbitdb-relay \
-orbitdb-relay --test
-```
+Per-todo delegation from `delegation01`, per-DID write permissions from `acl01`, passkey identities
+from `passkey01` and shared lists by three words from `collab01`: each with its walkthrough in
+[docs/foundations.md](docs/foundations.md). Underneath: libp2p, Helia, OrbitDB and Svelte, all in the
+browser.
 
-The relay exposes helper routes on `http://127.0.0.1:9090`. In another terminal, fetch the browser-dialable WebSocket address:
+## Read more
 
-```bash
-curl -s http://127.0.0.1:9090/multiaddrs | node -e "let d=''; process.stdin.on('data', c => d += c); process.stdin.on('end', () => { const j = JSON.parse(d); console.log(j.best.websocket || j.byTransport.websocket[0]); });"
-```
+- [docs/code-tour.md](docs/code-tour.md): the code in reading order, and one lock end to end
+- [docs/escrow.md](docs/escrow.md): roles, lifecycle, `todoRef`, what is public and what is encrypted
+- [docs/passkey-account.md](docs/passkey-account.md): the passkey's account (Calibur), gas sponsoring,
+  where amounts are encrypted and decrypted, and how often the passkey asks, with sequence diagrams
+- [docs/keys.md](docs/keys.md): the four keys behind one passkey, why the read key exists, what Zama
+  v0.14 changes about it, and how we proceed
+- [docs/zama-confidential-transactions.md](docs/zama-confidential-transactions.md): Zama's protocol as
+  used here, from handles to threshold decryption
+- [docs/money-flow.md](docs/money-flow.md): where the test money comes from, whose token contracts
+  these are, and what of a lock and a release is public
+- [docs/smoke-test.md](docs/smoke-test.md): the Sepolia run of 2026-09-16, step by step
+- [docs/security.md](docs/security.md): threat model, leaks, trust assumptions, open issues
+- [docs/demo.md](docs/demo.md): the presenter's script
+- [docs/foundations.md](docs/foundations.md): what the chapter inherits from the chapters before it
+- [docs/TESTING.md](docs/TESTING.md): unit, browser and contract tests, and a relay for development
+- [contracts/README.md](contracts/README.md): toolchain, deployment, verification, smoke test
+- [e2e-video/README.md](e2e-video/README.md): how the demo film is recorded
 
-Use exactly one printed `/ws` address. Do not paste the raw TCP address on port `9091`, and do not include quotes, commas, or multiple addresses in one value.
+Every page in `docs/` has a German version next to it as `*.de.md`, except `TESTING.md`.
 
-Put the printed address in `.env`. If you copied `.env.example`, replace the existing `VITE_RELAY_BOOTSTRAP_ADDR_DEV` value:
-
-```bash
-VITE_RELAY_BOOTSTRAP_ADDR_DEV=/ip4/127.0.0.1/tcp/9092/ws/p2p/<relay-peer-id>
-```
-
-Then start the app:
-
-```bash
-pnpm dev
-```
-
-If you change `.env` while Vite is already running, restart `pnpm dev` so the new relay address is loaded.
-
-## 🔧 Technologies Used
-
-- **libp2p** - Peer-to-peer networking stack
-- **IPFS** - Distributed file system (via Helia)
-- **OrbitDB** - Decentralized database
-- **Svelte** - Frontend framework
-- **WebRTC** - Direct browser-to-browser communication
-
-## ⚠️ Important Notes
-
-- This is a **demo application** for educational purposes
-- Data is stored in a **global unencrypted database** visible to all users
-- **No privacy protection** - all data is publicly visible
-- **Not suitable for production use** without additional security measures
-
-## 📄 License
+## License
 
 This project is open source and available under the [LICENSE](./LICENSE) file.
-
----

@@ -2,7 +2,8 @@
 
 Script for the presentation to a bank's experts. It shows a delegated todo with a budget whose amount
 stays confidential. Every scene has a simple sentence for everyone and a point for experts. State:
-2026-09-17. The German version, [demo.de.md](demo.de.md), is the one used in the meeting. Technical
+2026-09-17, brought up to date on 2026-11-25 for the one-button start dialog (#132), the word before
+each passkey prompt (#121), the P2P light (#131) and the private start (#140). The German version, [demo.de.md](demo.de.md), is the one used in the meeting. Technical
 details are in [escrow.md](escrow.md), [passkey-account.md](passkey-account.md),
 [zama-confidential-transactions.md](zama-confidential-transactions.md), [smoke-test.md](smoke-test.md)
 and [security.md](security.md).
@@ -30,7 +31,10 @@ Statements that would not be true today:
 - "A lost passkey can be recovered from." No: the account has no key the app knows besides the
   passkey, and the discarded setup key technically remains a master key
   ([Limits](passkey-account.md#limits-technical)). A passkey that still exists is another matter:
-  on a second device it gives back the same identity and the same account in two touches.
+  on a second device it gives back the same identity and the same account in three touches
+  ([how often the passkey asks](passkey-account.md#how-often-the-passkey-asks)). If the account has
+  not arrived there after three seconds, the "Konto" tab asks "Erneut suchen" ("Search again") or
+  "Neues Konto anlegen" ("Create a new account"): search again, a new account would be empty.
 - "The read key cannot be misused." Not quite: it is stored sealed and opens only with the passkey,
   but once a visit has opened it, a compromised page could use it for up to 24 hours.
 
@@ -62,8 +66,9 @@ All commands in the `contracts/` directory.
    Check <https://github.com/zama-ai/fhevm/releases> for a switch of Sepolia to v0.14 or a new v0.13
    release.
 6. **App.** Start `pnpm dev` in `apps/escrow01`. Create a passkey in both browser profiles, set the
-   language to DE and check that the profiles connect through the relay (relay set-up: README, section
-   "Local Relay"). Play all scenes through once.
+   language to DE and check that the profiles connect through the relay (relay set-up:
+   [TESTING.md](TESTING.md#a-relay-for-pnpm-dev)); the P2P light under the list name turns green once
+   they are connected directly. Play all scenes through once.
 7. **Sepolia mode.** `.env.local` with the settings from
    [Configuration](passkey-account.md#configuration). After the passkeys are created, both profiles'
    "Konto" tabs must show "Konto auf Sepolia" ("Account on Sepolia") with an address within about 20
@@ -71,7 +76,8 @@ All commands in the `contracts/` directory.
    ([why](passkey-account.md#read-key-simple));
    whoever rehearses the day before renews it once per profile at the meeting with "Mit Passkey
    verlängern", or creates the passkeys only that morning. Passkeys only work at the address they were
-   created at (README, "Passkeys are bound to the origin"). Check in the Openfort dashboard that the
+   created at ([foundations.md](foundations.md#-passkey-identities-from-passkey01), "Passkeys are
+   bound to the origin"). Check in the Openfort dashboard that the
    sponsorship `escrow01 Sepolia` is active. Use the built app for the presentation (`pnpm build`, then
    `pnpm preview`): under `pnpm dev` the SDK encrypts on the page's thread, and the page freezes for
    about 10 seconds while locking. The preview runs at another address than `pnpm dev`, so with its own
@@ -85,12 +91,18 @@ All commands in the `contracts/` directory.
   the todo and locks the budget), on the right "Bob" (the delegate). Each profile has its own passkey.
 - The app opens on the open list's todos. Lists, account and network are tabs: under the header on
   the laptop, at the bottom of the screen on a phone. The header keeps the flags, "Technisch"
-  ("Technical") and a dot with the connection state that leads to the "Netzwerk" ("Network") tab.
+  ("Technical"), the page's QR code and a dot with the connection state that leads to the "Netzwerk"
+  ("Network") tab; a "Video" link joins them once a demo video is registered. Under the list name a
+  light shows the other browser: white "Kein anderer Browser in dieser Liste" ("No other browser in
+  this list"), green "Direkt P2P mit 1 Browser" ("Direct P2P with 1 browser"), yellow "Über den Relay
+  mit 1 Browser" ("Via the relay with 1 browser").
 - In Alice's profile, also the Etherscan tabs, and with the fake the developer console for its levers
   (scenes 7 and 9).
 - With the fake, do not reload either profile: it keeps its escrows only in the tab's memory. After a
   reload the budget is still on the todo, but the amount can no longer be read. In Sepolia mode a
-  reload does no harm: account and read key live in the browser, the escrows on the chain.
+  reload does no harm as long as "In diesem Browser behalten" ("Keep in this browser") stayed ticked,
+  as it is by default: account and sealed read key live in the browser, the escrows on the chain.
+  Unticked, a reload asks for the passkey three times again and the read key has to be renewed.
 - In Sepolia mode, announce beforehand: a lock takes about a minute (encrypt, have the proof checked,
   passkey, confirmation on chain, read the amount back), a release about 25 seconds.
 - Limits of the fake worth announcing before a demo with it: Bob's profile cannot read amounts (it shows "•••"
@@ -109,10 +121,16 @@ Passkey" ("Confidential escrow payments with a passkey") and shows "Anmelden · 
 Bezahlen" ("Sign in · Sign · Pay") with "Bezahlen" set apart; below, it says in Sepolia mode that
 amounts are encrypted and that no real money moves on the test network, and with the fake that
 amounts stay in memory in this preview. Alice presses "Passkey anlegen und starten" ("Create a
-passkey and start"); its press is the consent, and that is when she creates her passkey. In Sepolia mode the "Konto" tab first says "Wird eingerichtet. Openfort zahlt die Gebühr, eine
-Passkey-Bestätigung ist dafür nicht nötig." ("Being set up. Openfort pays the fee, no passkey
-confirmation needed.") and after about 20 seconds shows "Konto auf Sepolia" with the address and "Auf
-Etherscan ansehen" ("View on Etherscan").
+passkey and start"); its press is the consent, and that is when she creates her passkey. The passkey
+asks three times; before the second and the third a short dialog says which one comes and what it is
+for ("Passkey-Abfrage 2 von 3", "Passkey prompt 2 of 3") and waits for "Weiter" ("Continue"). She
+lands in her own private list, "Meine Aufgaben" ("My todos"). In Sepolia mode the "Konto" tab first
+says "Wird eingerichtet. Openfort zahlt die Gebühr, eine Passkey-Bestätigung ist dafür nicht nötig."
+("Being set up. Openfort pays the fee, no passkey confirmation needed.") and after about 20 seconds
+shows "Konto auf Sepolia" with the address and "Auf Etherscan ansehen" ("View on Etherscan"). Right
+then the passkey asks a fourth time, without a dialog before it: it seals the key that will read
+amounts ([how often the passkey asks](passkey-account.md#how-often-the-passkey-asks)). Announce it,
+or it looks like a contradiction of the sentence just shown.
 
 **Simple.** "Alice signs in with Touch ID. No password, no seed phrase."
 
@@ -126,13 +144,14 @@ and the app publishes the address under the DID
 
 ### Scene 2 · Todo with a budget
 
-**Show.** Alice creates a private list ("Prüfbericht Q3") in the "Listen" ("Lists") tab and goes
-back to "Aufgaben" ("Todos"). She types the todo "Datenschutz-Audit der Kontoeröffnung" into the line,
+**Show.** Alice is already in her own private list, "Meine Aufgaben"; delegation and budgets exist
+only in a private list. (A list with a name of its own, say "Prüfbericht Q3", comes from "Private
+Liste anlegen" ("Create a private list") in the "Listen" ("Lists") tab.) She types the todo "Datenschutz-Audit der Kontoeröffnung" into the line,
 unfolds the other fields with "An eine andere DID delegieren" ("Delegate this todo to another DID")
 and delegates it to Bob's DID (copied in Bob's profile, "Konto" tab). She optionally sets a deadline
 and enters a budget of 500,00 cUSDT. Below the budget field is the note about encryption, and with the
 fake under it the notice that the demo runs without a chain. Once the todo is added, the form folds up
-again and the todo is below it. In Sepolia mode Bob's account must be set up already (an address in his
+again and the todo is below it; this first todo is what creates the list. In Sepolia mode Bob's account must be set up already (an address in his
 "Konto" tab); otherwise the app reports that the delegate has no account for budgets yet.
 
 **Simple.** "Alice gives Bob a task and sets 500 confidential dollars aside for it."
@@ -430,19 +449,20 @@ Not answers, but questions this chapter cannot settle:
 
 ## Sources
 
-Repository (`apps/escrow01`, line numbers as of 2026-10-02):
+Repository (`apps/escrow01`, by name rather than line number, since the lines move):
 
-- [`src/lib/budget-service-fake.js`](../src/lib/budget-service-fake.js): starting balance 64-70, lock
-  175-236, auditor list 287-307, levers `expireReadKey` and `seedExamples` 324-355.
-- [`src/lib/budget-store.js`](../src/lib/budget-store.js) 433-446 (`simpleTodoBudgetDemo` in the
-  console), [`src/routes/+page.svelte`](../src/routes/+page.svelte) 388-396 (`#pruefstelle`), 521-538
-  (start dialog; the short form with `summary` since 2026-11-17, one button and a settings screen
-  since 2026-11-24) and 790-802 (auditor card in the
-  "Konto" tab),
-  [`src/lib/sections.js`](../src/lib/sections.js) 23-41 (tabs and the URL fragment),
-  [`src/lib/AddTodoForm.svelte`](../src/lib/AddTodoForm.svelte) 218-223 (note below the budget field), [`src/lib/OnePasskeyIntro.svelte`](../src/lib/OnePasskeyIntro.svelte) ("Anmelden ·
-  Unterschreiben · Bezahlen") and [`src/lib/consent-clauses.js`](../src/lib/consent-clauses.js) (the summary
-  and all notices; what "Was gespeichert wird" said lives there since 2026-11-17).
+- [`src/lib/budget-service-fake.js`](../src/lib/budget-service-fake.js): starting balance
+  (`createFakeLedger`), lock (`lock`), auditor list (`listEscrowsForAuditor`), levers `expireReadKey`
+  and `seedExamples`.
+- [`src/lib/budget-store.js`](../src/lib/budget-store.js) (`simpleTodoBudgetDemo` in the console),
+  [`src/routes/+page.svelte`](../src/routes/+page.svelte) (`#pruefstelle` through `AUDITOR_SECTION`;
+  the start dialog, `<ConsentModal>`: the short form with `summary` since 2026-11-17, one button and a
+  settings screen since 2026-11-24; the auditor card in the "Konto" tab),
+  [`src/lib/sections.js`](../src/lib/sections.js) (tabs and the URL fragment),
+  [`src/lib/AddTodoForm.svelte`](../src/lib/AddTodoForm.svelte) (the note below the budget field,
+  `budget.form.hint`), [`src/lib/OnePasskeyIntro.svelte`](../src/lib/OnePasskeyIntro.svelte)
+  ("Anmelden · Unterschreiben · Bezahlen") and [`src/lib/consent-clauses.js`](../src/lib/consent-clauses.js)
+  (the summary and all notices; what "Was gespeichert wird" said lives there since 2026-11-17).
 - [`src/lib/i18n/de.json`](../src/lib/i18n/de.json) and [`src/lib/i18n/en.json`](../src/lib/i18n/en.json):
   keys `consent.summary.amountsDemo`, `consent.summary.amounts`, `budget.network.demo`,
   `budget.demoNotice`, `budget.form.hint`, `budget.chip.hidden`, `budget.notice.*`, `budget.auditor.*`,

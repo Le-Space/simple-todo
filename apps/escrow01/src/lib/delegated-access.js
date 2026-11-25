@@ -24,7 +24,7 @@
  * here or reached by address — then checks the delegation rules, and the
  * manifest stays one that other builds and the relay can still open. What
  * the relay does with a delegate's entries is a separate matter, covered in
- * the README.
+ * docs/foundations.md.
  */
 import { accessControllerKeepingLogsInMemory } from '@simple-todo/todo/keep-logs-in-memory.js';
 import { useAccessController } from '@orbitdb/core';

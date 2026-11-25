@@ -200,7 +200,7 @@ test.describe('Per-todo delegation', () => {
 	//     the second of her write does not tell them apart: she does that in
 	//     every run
 	//   · a delegate's completion while the owner is away: red, 4 of 4, on the
-	//     last assertion, as the README says (see that test)
+	//     last assertion, as docs/foundations.md says (see that test)
 	//
 	// Instruments that gave plausible wrong answers on the way here:
 	//
@@ -214,8 +214,8 @@ test.describe('Per-todo delegation', () => {
 	//     the app itself trusts
 	//
 	// At no point after the write are both online, so anything that arrives
-	// came out of the relay and not off the other browser. That is the case the
-	// README makes a claim about.
+	// came out of the relay and not off the other browser. That is the case
+	// docs/foundations.md makes a claim about.
 	test.fixme(
 		'a delegation made while the delegate is offline arrives from the relay',
 		async ({ browser }) => {
@@ -254,7 +254,7 @@ test.describe('Per-todo delegation', () => {
 				await comeBackOnline(bob.page);
 
 				// The delegation is the owner's own entry, so a relay that pins her
-				// writes has it — this is the half the README says works.
+				// writes has it — this is the half docs/foundations.md says works.
 				await expect(rowFor(bob.page, todo)).toHaveAttribute('data-role', 'delegate', { timeout });
 			} finally {
 				await Promise.allSettled([alice.close(), bob.close()]); // idempotent
@@ -313,7 +313,7 @@ test.describe('Per-todo delegation', () => {
 	// While the switch went unread, this one could not even be staged: the
 	// direct connection survived `setOffline`, and Alice's todo was already
 	// ticked while she was supposedly offline. With WebRTC off it gets as far as
-	// the last assertion and fails there, which is the README's claim.
+	// the last assertion and fails there, which is docs/foundations.md's claim.
 	test.fixme(
 		"a delegate's completion made while the owner is offline arrives from the relay",
 		async ({ browser }) => {
@@ -348,11 +348,11 @@ test.describe('Per-todo delegation', () => {
 				step('Alice returns and must find it done');
 				await comeBackOnline(alice.page);
 
-				// This is the half the README says does not work: the relay opens the
+				// This is the half docs/foundations.md says does not work: the relay opens the
 				// list with its built-in `orbitdb` controller, which knows nothing of
 				// delegation, and refuses a delegate's entry. Asserted as the
 				// behaviour we want rather than the behaviour we have — if it passes,
-				// the README is wrong and should be corrected.
+				// docs/foundations.md is wrong and should be corrected.
 				await expect(checkbox(alice.page, todo)).toBeChecked({ timeout });
 			} finally {
 				await Promise.allSettled([alice.close(), bob.close()]); // idempotent

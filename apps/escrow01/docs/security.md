@@ -309,7 +309,8 @@ One passkey on the device controls the account that holds the money. Two propert
 account contract matter: the ordinary key that created the account stays an all-powerful master key
 forever, and the chain does not check that the person actually confirmed with a fingerprint or face.
 Reading amounts also needs an extra, temporary key in the browser, because Zama's current version
-cannot accept signatures from such accounts; the app keeps it unencrypted for up to 24 hours. Nobody
+cannot accept signatures from such accounts; the app keeps it for up to 24 hours, stored only
+sealed under a key the passkey derives. Nobody
 can restore an account whose passkey is lost, and the key that pays for gas is readable in the page.
 
 ### Passkey wallet: technical
@@ -339,14 +340,17 @@ can restore an account whose passkey is lost, and the key that pays for gas is r
   permit. The app's workaround is a secp256k1 session key, the read key, that the account authorizes
   with `ACL.delegateForUserDecryption(sessionKey, contract, expiry)`, once per contract (token and
   escrow), for 24 hours: in the setup batch, and with a new key on every renewal. The key is stored
-  sealed in the browser's `localStorage` (AES-GCM under a key HKDF derives from the passkey's PRF
-  output) and opened in memory once per visit; a page compromised while it is open can use it
+  sealed (AES-GCM under a key HKDF derives from the passkey's PRF output), in the browser's
+  `localStorage` with "Keep in this browser" and in the tab's memory without it, and opened in memory
+  once per visit; a page compromised while it is open can use it
   ([The read key](passkey-account.md#read-key-technical)). The `DelegatedForUserDecryption` event makes the link between
   account and session key public, and the session key can read everything the account may read in
   those contracts until the expiry or a revocation.
 - **v0.14** adds ERC-1271 verification in the KMS connector for its new unified request (`ecrecover`
-  for a 65-byte signature, otherwise a gas-capped `isValidSignature` call). Whether a Calibur passkey
-  signature in ERC-7739 form passes that check was not verified.
+  for a 65-byte signature, otherwise a gas-capped `isValidSignature` call). On a Sepolia fork on
+  2026-10-12, `@fhevm/sdk` 0.14.3's own ERC-1271 precheck accepted such a permit signed by the passkey
+  account in ERC-7739 form ([keys.md](keys.md#checked-ahead-of-zama-on-2026-10-12)). Whether Zama's
+  KMS accepts it stays open until v0.14 runs on Sepolia.
 - **Sponsorship.** The publishable Openfort key is part of the page. The Openfort rule behind it,
   `ply_1b76dd29-2f48-4835-ad5f-4cd8aa2db3d8`, accepts `sponsorEvmTransaction` on chain 11155111 with no
   restriction to contracts or functions. Anyone who reads the key out of the page can have arbitrary
@@ -354,8 +358,9 @@ can restore an account whose passkey is lost, and the key that pays for gas is r
   account. The app refuses a secret `sk_` key in its configuration (`readChainEndpoints`).
 - **No recovery for a lost passkey.** Besides the discarded root key the passkey is the account's
   only key. A synced passkey reaches further devices and, since provider 0.8.0, gives back the
-  identity and the account there in two touches with nothing stored; a lost one takes the account
-  with it.
+  identity and the account there in three touches with nothing stored
+  ([how often the passkey asks](passkey-account.md#how-often-the-passkey-asks)); a lost one takes the
+  account with it.
 - **Calibur v1.1.0.** Uniswap released v1.1.0 on 2026-07-02 at a new address and lists only that
   version since. Among other hardening it allows only admin keys to call the EntryPoint. The app uses
   v1.0.0, where its only non-root key is an admin

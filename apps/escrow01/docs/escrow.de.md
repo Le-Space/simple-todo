@@ -377,13 +377,13 @@ Repository (`apps/escrow01`, Zeilennummern vom 2026-09-23):
 - [`contracts/scripts/smoke-sepolia.ts`](../contracts/scripts/smoke-sepolia.ts): `todoRef` 406-410,
   Sperre 573-601.
 - [`contracts/README.md`](../contracts/README.md): "Who can decrypt" und "What stays public".
-- [`src/lib/budget.js`](../src/lib/budget.js): `Budget` 54-67, `isWellFormedBudget` 109-132,
-  `startLock` 145-172, `lockFailed` 184-198.
-- [`src/lib/budget-service.js`](../src/lib/budget-service.js) 1-85,
-  [`src/lib/budget-service-fake.js`](../src/lib/budget-service-fake.js) 1-18 und 171-236,
+- [`src/lib/budget.js`](../src/lib/budget.js): `Budget`, `isWellFormedBudget`, `startLock`,
+  `lockFailed`.
+- [`src/lib/budget-service.js`](../src/lib/budget-service.js) (die Schnittstelle),
+  [`src/lib/budget-service-fake.js`](../src/lib/budget-service-fake.js) (Kopf, `lock`),
   [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) (`createTodoRef`, `lock`),
   [`src/lib/budget-flow.js`](../src/lib/budget-flow.js), [`src/lib/budget-store.js`](../src/lib/budget-store.js)
-  1-10 und 97-115, [`src/lib/db-actions.js`](../src/lib/db-actions.js) 944-958.
+  (Kopf, gewählter Dienst), [`src/lib/db-actions.js`](../src/lib/db-actions.js) (`setTodoBudget`).
 
 Bibliotheken (`contracts/node_modules`):
 

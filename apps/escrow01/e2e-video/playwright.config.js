@@ -1,5 +1,5 @@
 // The demo film (e2e-video/): Alice and Bob on one stage, recorded as video
-// at the frame's own size. Not part of `pnpm test:e2e`; run `pnpm video`.
+// at the frame's own size. Not part of `pnpm test:e2e`; run `pnpm video:cards` and `pnpm video:film`.
 //
 // Where it is shot:
 //   - by default the live chapter, https://escrow01.le-space.de/, which runs

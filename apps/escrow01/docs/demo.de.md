@@ -2,7 +2,9 @@
 
 Ablauf für die Vorführung vor Fachleuten einer Bank. Gezeigt wird eine delegierte Aufgabe mit einem
 Budget, dessen Betrag vertraulich bleibt. Jede Szene hat einen einfachen Satz für alle und einen
-Punkt für Fachleute. Stand: 2026-09-17. Für den Termin gilt diese deutsche Fassung; eine englische
+Punkt für Fachleute. Stand: 2026-09-17, am 2026-11-25 nachgezogen für den Startdialog mit einem
+Knopf (#132), das Wort vor jeder Passkey-Abfrage (#121), das P2P-Licht (#131) und den privaten
+Start (#140). Für den Termin gilt diese deutsche Fassung; eine englische
 steht in [demo.md](demo.md). Die technischen Einzelheiten stehen in
 [escrow.de.md](escrow.de.md), [passkey-account.de.md](passkey-account.de.md),
 [zama-confidential-transactions.de.md](zama-confidential-transactions.de.md),
@@ -32,7 +34,9 @@ Aussagen, die heute nicht stimmen würden:
   Schlüssel, den die App kennt, und der verworfene Einrichtungsschlüssel bleibt technisch ein
   Generalschlüssel ([Grenzen](passkey-account.de.md#grenzen-technisch)). Ein Passkey, den es noch
   gibt, ist etwas anderes: Auf einem zweiten Gerät gibt er dieselbe Identität und dasselbe Konto in
-  zwei Berührungen zurück.
+  drei Berührungen zurück ([wie oft der Passkey fragt](passkey-account.de.md#wie-oft-der-passkey-fragt)).
+  Ist das Konto dort nach drei Sekunden nicht angekommen, fragt der Tab „Konto“ „Erneut suchen“ oder
+  „Neues Konto anlegen“: erneut suchen, ein neues Konto wäre leer.
 - „Der Leseschlüssel lässt sich nicht missbrauchen.“ Nicht ganz: Er liegt versiegelt und öffnet sich
   nur mit dem Passkey, aber hat ein Besuch ihn geöffnet, könnte eine kompromittierte Seite ihn bis zu
   24 Stunden lang benutzen.
@@ -67,7 +71,8 @@ Alle Befehle im Verzeichnis `contracts/`.
    oder ein neues v0.13-Release erschienen ist.
 6. **App.** In `apps/escrow01` `pnpm dev` starten. In beiden Browserprofilen einen Passkey
    anlegen, die Sprache auf DE stellen und prüfen, dass sich die Profile über das Relay verbinden
-   (Relay-Einrichtung: README, Abschnitt „Local Relay“). Die Szenen einmal komplett durchspielen.
+   (Relay-Einrichtung: [TESTING.md](TESTING.md#a-relay-for-pnpm-dev)); das P2P-Licht unter dem
+   Listennamen wird grün, sobald sie direkt verbunden sind. Die Szenen einmal komplett durchspielen.
 7. **Sepolia-Modus.** `.env.local` mit den Einstellungen aus
    [Konfiguration](passkey-account.de.md#konfiguration). Nach dem Anlegen der Passkeys muss in beiden
    Profilen im Tab „Konto“ nach etwa 20 Sekunden „Konto auf Sepolia“ mit Adresse stehen. Eine Sperre
@@ -75,7 +80,8 @@ Alle Befehle im Verzeichnis `contracts/`.
    ([warum](passkey-account.de.md#leseschlüssel-einfach)); wer am
    Vortag probt, verlängert ihn am Termin einmal je Profil mit „Mit Passkey verlängern“ oder legt die
    Passkeys erst am Morgen an. Passkeys gelten nur für die Adresse, unter der sie angelegt wurden
-   (README, „Passkeys are bound to the origin“). Im Openfort-Dashboard prüfen, dass das Sponsoring
+   ([foundations.de.md](foundations.de.md#-passkey-identitäten-aus-passkey01), „Passkeys sind an den
+   Ursprung gebunden“). Im Openfort-Dashboard prüfen, dass das Sponsoring
    `escrow01 Sepolia` aktiv ist. Für die Vorführung die gebaute App nehmen (`pnpm build`, dann
    `pnpm preview`): Unter `pnpm dev` verschlüsselt das SDK auf dem Thread der Seite, und sie steht beim
    Sperren rund 10 Sekunden still. Die Vorschau läuft unter einer anderen Adresse als `pnpm dev`, also
@@ -89,13 +95,18 @@ Alle Befehle im Verzeichnis `contracts/`.
   und sperrt das Budget), rechts „Bob“ (Delegierter). Jedes Profil hat seinen eigenen Passkey.
 - Die App öffnet mit den Aufgaben der offenen Liste. Listen, Konto und Netzwerk sind Tabs: am Laptop
   unter der Kopfzeile, auf dem Handy am unteren Rand. In der Kopfzeile bleiben die Flaggen,
-  „Technisch“ und ein Punkt mit dem Verbindungsstatus, der zum Tab „Netzwerk“ führt.
+  „Technisch“, der QR-Code der Seite und ein Punkt mit dem Verbindungsstatus, der zum Tab „Netzwerk“
+  führt; ein Link „Video“ kommt dazu, sobald ein Demo-Video eingetragen ist. Unter dem Listennamen
+  zeigt ein Licht den anderen Browser: weiß „Kein anderer Browser in dieser Liste“, grün „Direkt P2P
+  mit 1 Browser“, gelb „Über den Relay mit 1 Browser“.
 - Im Profil „Alice“ zusätzlich die Etherscan-Tabs, mit der Attrappe auch die Entwicklerkonsole für
   ihre Hebel (Szene 7 und 9).
 - Mit der Attrappe keines der Profile neu laden: Sie hält ihre Treuhand-Vorgänge nur im
   Arbeitsspeicher des Tabs. Nach einem Neuladen steht das Budget noch an der Aufgabe, der Betrag ist
-  aber nicht mehr lesbar. Im Sepolia-Modus schadet ein Neuladen nicht: Konto und Leseschlüssel liegen
-  im Browser, die Vorgänge auf der Chain.
+  aber nicht mehr lesbar. Im Sepolia-Modus schadet ein Neuladen nicht, solange „In diesem Browser
+  behalten“ angehakt blieb, wie es voreingestellt ist: Konto und versiegelter Leseschlüssel liegen im
+  Browser, die Vorgänge auf der Chain. Ohne den Haken fragt ein Neuladen wieder dreimal nach dem
+  Passkey, und der Leseschlüssel muss verlängert werden.
 - Im Sepolia-Modus vorab ansagen: Eine Sperre dauert rund eine Minute (verschlüsseln, Beweis prüfen
   lassen, Passkey, Bestätigung auf der Chain, Betrag zurücklesen), eine Freigabe rund 25 Sekunden.
 - Grenzen der Attrappe, die man vor einer Vorführung mit ihr ansagen sollte: Bobs Profil kann Beträge
@@ -114,9 +125,15 @@ Beispielwerte.
 Passkey“ und zeigt „Anmelden · Unterschreiben · Bezahlen“ mit „Bezahlen“ hervorgehoben; darunter
 steht im Sepolia-Modus „Beträge sind verschlüsselt. Testnetz: Es fließt kein echtes Geld.“, bei der
 Attrappe, dass Beträge in dieser Vorschau nur im Arbeitsspeicher liegen. Alice drückt „Passkey anlegen
-und starten“; der Druck ist die Zustimmung, und dabei legt sie ihren Passkey an. Im Sepolia-Modus steht im Tab „Konto“ zuerst „Wird eingerichtet.
-Openfort zahlt die Gebühr, eine Passkey-Bestätigung ist dafür nicht nötig.“ und nach etwa 20 Sekunden
-„Konto auf Sepolia“ mit Adresse und „Auf Etherscan ansehen“.
+und starten“; der Druck ist die Zustimmung, und dabei legt sie ihren Passkey an. Der Passkey fragt
+dreimal; vor der zweiten und der dritten Abfrage sagt ein kurzer Dialog, welche kommt und wofür sie
+ist („Passkey-Abfrage 2 von 3“), und wartet auf „Weiter“. Sie landet in ihrer eigenen privaten
+Liste, „Meine Aufgaben“. Im Sepolia-Modus steht im Tab „Konto“ zuerst „Wird eingerichtet. Openfort
+zahlt die Gebühr, eine Passkey-Bestätigung ist dafür nicht nötig.“ und nach etwa 20 Sekunden „Konto
+auf Sepolia“ mit Adresse und „Auf Etherscan ansehen“. Genau dann fragt der Passkey ein viertes Mal,
+ohne Dialog davor: Er versiegelt den Schlüssel, der später Beträge liest
+([wie oft der Passkey fragt](passkey-account.de.md#wie-oft-der-passkey-fragt)). Vorher ansagen, sonst
+wirkt es wie ein Widerspruch zum Satz, der gerade zu sehen war.
 
 **Einfach.** „Alice meldet sich mit Touch ID an. Kein Passwort, keine Seed-Phrase.“
 
@@ -130,13 +147,14 @@ Einschränkungen des Kontos stehen in [security.de.md](security.de.md#passkey-wa
 
 ### Szene 2 · Aufgabe mit Budget
 
-**Zeigen.** Alice legt im Tab „Listen“ eine private Liste an („Prüfbericht Q3“) und wechselt zurück
-zu „Aufgaben“. Sie schreibt die Aufgabe „Datenschutz-Audit der Kontoeröffnung“ in die Zeile, klappt
+**Zeigen.** Alice ist schon in ihrer eigenen privaten Liste, „Meine Aufgaben“; Delegation und Budget
+gibt es nur in einer privaten Liste. (Eine Liste mit eigenem Namen, etwa „Prüfbericht Q3“, entsteht
+über „Private Liste anlegen“ im Tab „Listen“.) Sie schreibt die Aufgabe „Datenschutz-Audit der Kontoeröffnung“ in die Zeile, klappt
 mit „An eine andere DID delegieren“ die weiteren Felder auf und delegiert die Aufgabe an Bobs DID (in
 Bobs Profil im Tab „Konto“ kopiert). Sie setzt optional eine Frist und trägt als Budget 500,00 cUSDT
 ein. Unter dem Budget-Feld steht der Hinweis zur Verschlüsselung, mit der Attrappe darunter, dass die
 Vorführung ohne Chain läuft. Nach dem Anlegen klappt das Formular wieder zu, und die Aufgabe steht
-darunter. Im Sepolia-Modus muss Bobs Konto schon eingerichtet sein (Adresse in seinem Tab „Konto“);
+darunter; erst diese erste Aufgabe legt die Liste an. Im Sepolia-Modus muss Bobs Konto schon eingerichtet sein (Adresse in seinem Tab „Konto“);
 sonst meldet die App, dass die delegierte Person noch kein Konto für Budgets hat.
 
 **Einfach.** „Alice gibt Bob eine Aufgabe und legt 500 vertrauliche Dollar dafür zurück.“
@@ -449,19 +467,21 @@ Keine Antworten, sondern Fragen, die dieses Kapitel nicht klären kann:
 
 ## Quellen
 
-Repository (`apps/escrow01`, Zeilennummern vom 2026-10-02):
+Repository (`apps/escrow01`, nach Namen statt Zeilennummern, weil die Zeilen wandern):
 
-- [`src/lib/budget-service-fake.js`](../src/lib/budget-service-fake.js): Startguthaben 64-70, Sperre
-  175-236, Prüfansicht 287-307, Hebel `expireReadKey` und `seedExamples` 324-355.
-- [`src/lib/budget-store.js`](../src/lib/budget-store.js) 433-446 (`simpleTodoBudgetDemo` in der
-  Konsole), [`src/routes/+page.svelte`](../src/routes/+page.svelte) 388-396 (`#pruefstelle`), 521-538
-  (Einwilligungsdialog; seit dem 2026-11-17 Kurzform mit `summary`) und 790-802 (Prüfstelle im Tab
-  „Konto“),
-  [`src/lib/sections.js`](../src/lib/sections.js) 23-41 (Tabs und Adress-Fragment),
-  [`src/lib/AddTodoForm.svelte`](../src/lib/AddTodoForm.svelte) 218-223 (Hinweis unter dem Budget-Feld),
-  [`src/lib/OnePasskeyIntro.svelte`](../src/lib/OnePasskeyIntro.svelte) („Anmelden · Unterschreiben · Bezahlen“) und
-  [`src/lib/consent-clauses.js`](../src/lib/consent-clauses.js) (Kurzfassung und alle Hinweise; was
-  früher unter „Was gespeichert wird“ stand, steht seit dem 2026-11-17 dort).
+- [`src/lib/budget-service-fake.js`](../src/lib/budget-service-fake.js): Startguthaben
+  (`createFakeLedger`), Sperre (`lock`), Prüfansicht (`listEscrowsForAuditor`), Hebel `expireReadKey`
+  und `seedExamples`.
+- [`src/lib/budget-store.js`](../src/lib/budget-store.js) (`simpleTodoBudgetDemo` in der Konsole),
+  [`src/routes/+page.svelte`](../src/routes/+page.svelte) (`#pruefstelle` über `AUDITOR_SECTION`;
+  der Startdialog, `<ConsentModal>`: seit dem 2026-11-17 Kurzform mit `summary`, seit dem 2026-11-24
+  ein Knopf und eine Einstellungsseite; die Prüfstelle im Tab „Konto“),
+  [`src/lib/sections.js`](../src/lib/sections.js) (Tabs und Adress-Fragment),
+  [`src/lib/AddTodoForm.svelte`](../src/lib/AddTodoForm.svelte) (Hinweis unter dem Budget-Feld,
+  `budget.form.hint`), [`src/lib/OnePasskeyIntro.svelte`](../src/lib/OnePasskeyIntro.svelte)
+  („Anmelden · Unterschreiben · Bezahlen“) und [`src/lib/consent-clauses.js`](../src/lib/consent-clauses.js)
+  (Kurzfassung und alle Hinweise; was früher unter „Was gespeichert wird“ stand, steht seit dem
+  2026-11-17 dort).
 - [`src/lib/i18n/de.json`](../src/lib/i18n/de.json) und [`src/lib/i18n/en.json`](../src/lib/i18n/en.json):
   Schlüssel `consent.summary.amountsDemo`, `consent.summary.amounts`,
   `budget.network.demo`, `budget.demoNotice`, `budget.form.hint`, `budget.chip.hidden`,

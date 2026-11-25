@@ -29,7 +29,7 @@
 //
 // The passkey is bound to the page origin (rpId). A credential created on
 // localhost cannot be used on escrow01.le-space.de or an IPFS gateway —
-// see the chapter README.
+// see docs/foundations.md.
 import { getPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
 import { withRestoredSigningKey } from '@simple-todo/todo/restored-signing-key.js';
 import { markRegisteredHere } from './registered-passkeys.js';

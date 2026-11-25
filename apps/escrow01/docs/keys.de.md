@@ -4,7 +4,8 @@ Dieses Kapitel sagt, der Passkey sei die Wallet. Das stimmt, und es verdeckt etw
 hinsieht, findet vier verschiedene Schlüssel. Einer liegt im Authenticator. Einer wird aus ihm
 abgeleitet. Einer entsteht und verschwindet in derselben Minute. Und einer ist weder abgeleitet noch
 in Hardware — ein gewöhnlicher Zufallsschlüssel, den dieser Browser im `localStorage` aufbewahrt,
-versiegelt unter einem Schlüssel, den der Passkey ableitet.
+versiegelt unter einem Schlüssel, den der Passkey ableitet (mit „nur im Arbeitsspeicher“ im
+Speicher dieses Tabs, beim Neuladen weg).
 
 Die Frage, aus der diese Seite entstanden ist, war, ob das Konto mit dem eigenen P-256-Schlüssel des
 Passkeys signiert oder mit einem Schlüssel, der jedes Mal frisch aus der PRF-Antwort des Passkeys
@@ -45,8 +46,8 @@ anderen leben in diesem Browser, und darum geht es auf dieser Seite. Der Lesesch
 2026-10-02 versiegelt ([#56](https://github.com/Le-Space/simple-todo/pull/56)): Ein kopiertes
 Browserprofil enthält nichts, womit sich lesen ließe; hat ein Besuch ihn aber geöffnet, könnte eine
 kompromittierte Seite bis zu 24 Stunden lang Beträge lesen, und sonst nichts. Der Signierschlüssel
-der Liste steht im Klartext auf der Platte, wenn man auf dem ersten Bildschirm Daten behalten
-wollte; wer ihn kopiert, kann im Namen dieser Identität Aufgaben schreiben und nichts bewegen.
+der Liste steht im Klartext auf der Platte, wenn „In diesem Browser behalten“ angehakt ist, was der
+Startdialog vorauswählt; wer ihn kopiert, kann im Namen dieser Identität Aufgaben schreiben und nichts bewegen.
 
 ### Schlüssel: technisch
 
@@ -57,7 +58,7 @@ flowchart LR
   end
   subgraph browser["Dieser Browser"]
     sign["Signierschlüssel der Liste<br/>secp256k1, HKDF aus PRF<br/>Keystore: Speicher oder IndexedDB"]
-    read["Leseschlüssel<br/>secp256k1, zufällig<br/>versiegelt in localStorage, 24 h"]
+    read["Leseschlüssel<br/>secp256k1, zufällig<br/>versiegelt, 24 h"]
   end
   setup["Einrichtungsschlüssel<br/>secp256k1, zufällig<br/>weggeworfen"]
   cred -->|"Assertion pro User Operation"| chain["Sepolia: sperren, freigeben, verlängern"]
@@ -79,7 +80,7 @@ flowchart LR
    Keystore stattdessen einen. Wo er liegt, folgt der Speicherwahl: im Arbeitsspeicher geht er mit
    dem Tab; wollte man Daten behalten, liegt er unverschlüsselt in OrbitDBs Keystore in IndexedDB,
    und spätere Sitzungen signieren, ohne den Passkey zu fragen
-   ([`src/lib/p2p.js`](../src/lib/p2p.js) 362-385). Er signiert Datenbankeinträge, nie eine
+   (`createOrbitDBInstance` in [`src/lib/p2p.js`](../src/lib/p2p.js)). Er signiert Datenbankeinträge, nie eine
    Transaktion.
 3. **Der Einrichtungsschlüssel.** secp256k1 aus `generatePrivateKey()`, erzeugt in
    `createCaliburPasskeySetup` des Wallet-Pakets (`src/setup.js:200`). Seine Adresse _wird_ die
@@ -88,8 +89,8 @@ flowchart LR
    nicht widerrufen kann — die Einschränkung steht in
    [passkey-account.de.md](passkey-account.de.md#grenzen-technisch).
 4. **Der Leseschlüssel.** secp256k1 aus `createZamaSessionKey()` der Wallet, erzeugt in
-   [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) 192 (Einrichtung) und 643
-   (Verlängerung), versiegelt abgelegt als `session: { address, sealed }` in
+   [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) bei der Einrichtung und in
+   `renewReadKey`, versiegelt abgelegt als `session: { address, sealed }` in
    [`src/lib/chain/account-store.js`](../src/lib/chain/account-store.js) unter
    `simpleTodo.chainAccount.v1.<DID>`, mit einem Siegelschlüssel, den HKDF aus der PRF-Antwort des
    Passkeys ableitet ([`src/lib/chain/read-key-seal.js`](../src/lib/chain/read-key-seal.js)). Das
@@ -119,7 +120,7 @@ Konto eingerichtet wurde. Kein Schlüssel im Browser könnte sie erzeugen.
 Passkey diese 32 Bytes mit `signP256Challenge(descriptor, hexToBytes(hash))` signieren und gibt
 `encodeUserOperationSignature({ keyHash, signature: encodeWebAuthnAuth(assertion) })` zurück. Der
 Descriptor kommt aus `getP256CredentialDescriptor(credential)`
-([`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js) 121-122) und trägt
+(`descriptorFor` in [`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js)) und trägt
 `credentialId`, `rawCredentialId`, `x`, `y`, `rpId` und `userVerification: 'required'` — nur den
 öffentlichen Teil. Auf der Kette prüft Calibur die Assertion mit `WebAuthnAuth` aus webauthn-sol
 ([security.de.md](security.de.md#passkey-wallet-technisch)).
@@ -366,21 +367,21 @@ erledigt ([#56](https://github.com/Le-Space/simple-todo/pull/56)).
 
 Code:
 
-- [`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js) 121-122: der
+- [`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js), `descriptorFor`: der
   Credential-Descriptor, den die Wallet bekommt
-- [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) 192, 643: der Leseschlüssel
+- [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js), `createZamaSessionKey()`: der Leseschlüssel
   bei Einrichtung und Verlängerung
 - [`src/lib/chain/read-key-seal.js`](../src/lib/chain/read-key-seal.js): der Siegelschlüssel aus der
   PRF-Antwort des Passkeys
 - [`src/lib/chain/account-store.js`](../src/lib/chain/account-store.js): was dieser Browser behält
 - [`src/lib/chain/config.js`](../src/lib/chain/config.js): `READ_KEY_TTL_SECONDS`
-- [`src/lib/p2p.js`](../src/lib/p2p.js) 362-385: der aus PRF abgeleitete Signierschlüssel der Liste
+- [`src/lib/p2p.js`](../src/lib/p2p.js), `createOrbitDBInstance`: der aus PRF abgeleitete Signierschlüssel der Liste
   und wo er liegt
 - [`src/lib/chain/zama-client.js`](../src/lib/chain/zama-client.js): das SDK mit `MemoryStorage`
 - `@le-space/passkey-wallet` 0.1.0 (der Code aus Commit `cde6878`): `src/account.js`
   209-220 (`signUserOperation`), `src/setup.js` 200 (der Einrichtungsschlüssel), `src/zama.js`
   (`createZamaSessionKey`, `openZamaSessionKey`, `getRevokeDelegationForUserDecryptionCalls`)
-- `@le-space/orbitdb-identity-provider-webauthn-did` 0.8.0: `src/keystore/encryption.js`
+- `@le-space/orbitdb-identity-provider-webauthn-did` 0.13.0 (diese seit 0.8.0): `src/keystore/encryption.js`
   (`wrapSKWithPRF`, `unwrapSKWithPRF`), `src/keystore/derived-signing-key.js` (HKDF-SHA256,
   `ensureDerivedSigningKey`), `src/webauthn/prf-input.js` (`PRF_INPUT_INFO`),
   `src/standalone/webauthn/credential.js` (`extractPrfSeedFromCredential`)
