@@ -30,8 +30,11 @@ sie in das vertrauliche Token um und legt 500,00 davon in die Treuhand. Alice be
 später frei, bucht die Treuhand die 500,00 auf Bobs Konto. Bobs Browser entschlüsselt sie und zeigt
 sie an.
 
-Bobs Konto muss dafür schon existieren. Es entsteht still, sobald Bob den Tab „Konto“ zum ersten Mal
-öffnet, und kostet ihn nichts: Die Gebühren zahlt in diesem Kapitel durchgehend Openfort.
+Bobs Konto muss dafür schon existieren. Es entsteht still gleich nach seinem ersten Start mit einem
+Passkey, einmal pro DID, und kostet ihn nichts: Die Gebühren zahlt in diesem Kapitel durchgehend
+Openfort. Das Konto selbst braucht keine Passkey-Abfrage; den Schlüssel, der seine Beträge liest, zu
+versiegeln, kostet gleich danach eine Berührung
+([wie oft der Passkey fragt](passkey-account.de.md#wie-oft-der-passkey-fragt)).
 
 ### Weg: technisch
 
@@ -54,7 +57,7 @@ sequenceDiagram
     participant ESC as Treuhand<br/>(dieses Kapitel)
   end
 
-  Note over BB: Bobs Konto entsteht beim ersten Öffnen<br/>des Tabs „Konto“, ohne Passkey-Abfrage
+  Note over BB: Bobs Konto entsteht gleich nach seinem Start,<br/>ohne Passkey-Abfrage für das Konto selbst
   Alice->>AB: Aufgabe an Bobs DID, Budget 500,00
   rect rgba(46, 125, 50, 0.12)
     Note over AB: 🔒 500,00 im Browser verschlüsselt<br/>Handle + Beweis, gebunden an Treuhand und Alices Konto
@@ -201,14 +204,14 @@ Lauf mit Skripten statt App steht Transaktion für Transaktion in
 
 ## Was die App davon sagt
 
-Im Tab „Konto“ steht unter der Adresse ein Satz: „Ihr Passkey ist der Admin-Schlüssel dieses Kontos.
-Mit dem ersten Sperren kommen 1.000,00 Test-cUSDT darauf.“ Das ist die einzige Stelle in der
-Oberfläche, an der die Erstausstattung vorkommt. Beim Anlegen einer Aufgabe mit Budget und beim
-Sperren steht nichts davon.
+Im Tab „Konto“ steht unter der Adresse: „Ihr Passkey ist der Admin-Schlüssel dieses Kontos.“ Solange
+das Konto nichts hält, folgt ein zweiter Satz: „Guthaben bekommt es mit dem ersten Sperren: 1.000,00
+Test-cUSDT, im selben Vorgang geprägt.“ Das ist die einzige Stelle in der Oberfläche, an der die
+Erstausstattung vorkommt. Beim Anlegen einer Aufgabe mit Budget und beim Sperren steht nichts davon.
 
-Offen: Der Satz erscheint auf jedem eingerichteten Konto, auch bei Empfängern. Bob hat nie gesperrt,
-sein Guthaben stammt aus der Auszahlung, und trotzdem steht bei ihm die Prägung. Der Satz gehört nur
-auf Konten, die noch nie gesperrt haben; Empfänger brauchen einen eigenen.
+Der zweite Satz verschwindet, sobald das Guthaben über null liegt (`showFundingHint` in
+[`+page.svelte`](../src/routes/+page.svelte)). Bob, dessen Guthaben aus der Auszahlung stammt, liest
+also nichts mehr von einer Prägung, sobald die Auszahlung angekommen ist.
 
 ## Quellen
 

@@ -3,7 +3,7 @@
 This page explains how the `escrow01` app pays with a passkey on Sepolia: which account the passkey
 controls (Calibur), who pays the gas (Openfort), where an amount is encrypted and where it is
 decrypted (Zama), and how the app tells which account belongs to which DID. It describes the state on
-2026-09-17 of branch `escrow01`, built with `VITE_BUDGET_SERVICE=zama`, and backs its statements
+2026-09-17 of the `escrow01` chapter (corrected since where the code changed), built with `VITE_BUDGET_SERVICE=zama`, and backs its statements
 [at the end](#sources). What the escrow itself does is in [escrow.md](escrow.md), Zama's protocol in
 detail in [zama-confidential-transactions.md](zama-confidential-transactions.md), risks and trust in
 [security.md](security.md). German version: [passkey-account.de.md](passkey-account.de.md).
@@ -13,14 +13,14 @@ setting up the accounts to Bob's balance ([measurements](#measured-on-2026-09-17
 settings under [Configuration](#configuration) the app keeps using the in-memory fake; the tests run
 against it too.
 
-| Piece                 | Version and address                                                                                                                          |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Account contract      | Calibur v1.0.0, a smart contract by Uniswap Labs (MIT license), `0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00` (Sepolia and mainnet)           |
-| ERC-4337              | EntryPoint v0.8, `0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108`                                                                                |
-| Bundler and paymaster | Openfort, `https://api.openfort.io/rpc/11155111`; paymaster contract `0x8888fee873e7035789db91c16b5dddbad7214cda`                            |
-| Wallet code           | `@le-space/passkey-wallet` 0.1.0 from npm, built in `packages/passkey-wallet` of the provider's repository                                   |
-| Passkey key           | `@le-space/orbitdb-identity-provider-webauthn-did` 0.8.0 from npm, with `getP256CredentialDescriptor` and `restoreIdentityFromAuthenticator` |
-| Zama client           | `@zama-fhe/sdk` 3.6.0 on `@fhevm/sdk` 0.13.2                                                                                                 |
+| Piece                 | Version and address                                                                                                                                         |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Account contract      | Calibur v1.0.0, a smart contract by Uniswap Labs (MIT license), `0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00` (Sepolia and mainnet)                          |
+| ERC-4337              | EntryPoint v0.8, `0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108`                                                                                               |
+| Bundler and paymaster | Openfort, `https://api.openfort.io/rpc/11155111`; paymaster contract `0x8888fee873e7035789db91c16b5dddbad7214cda`                                           |
+| Wallet code           | `@le-space/passkey-wallet` 0.1.0 from npm, built in `packages/passkey-wallet` of the provider's repository                                                  |
+| Passkey key           | `@le-space/orbitdb-identity-provider-webauthn-did` 0.13.0 from npm, with `getP256CredentialDescriptor` and `restoreIdentityFromAuthenticator` (since 0.8.0) |
+| Zama client           | `@zama-fhe/sdk` 3.6.0 on `@fhevm/sdk` 0.13.2                                                                                                                |
 
 Every section has a simple explanation and a technical one.
 
@@ -66,7 +66,7 @@ flowchart LR
     App["App<br/>budget-service-zama.js"]
     Wallet["passkey-wallet<br/>(Calibur encodings)"]
     SDK["Zama SDK<br/>(TFHE and TKMS WASM)"]
-    Store["localStorage<br/>address, sealed read key"]
+    Store["localStorage or tab memory<br/>address, sealed read key"]
   end
   subgraph Central["Central services (companies, replaceable)"]
     Openfort["Openfort<br/>bundler + paymaster"]
@@ -128,13 +128,13 @@ Ethereum Sepolia, gray peer-to-peer. Who runs what is in
 
 The keys involved:
 
-| Key           | Kind                    | Where it lives                                                                                             | What it may do                                                   | For how long                                                  |
-| ------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------- |
-| Passkey       | P-256                   | in the authenticator (device or syncing password manager)                                                  | admin of the account: every payment, adding and revoking keys    | until it is revoked in the account                            |
-| Setup key     | secp256k1               | in memory only, during setup                                                                               | the account's root key, forever ([Limits](#limits-technical))    | the app discards it after setup                               |
-| Read key      | secp256k1               | `localStorage`, sealed under a key from the passkey's PRF output, under `simpleTodo.chainAccount.v1.<DID>` | Zama decryption of what the account may read in escrow and token | 24 hours (ACL delegation), then renewed with one passkey step |
-| Transport key | ML-KEM-512              | the page's memory                                                                                          | opens the KMS's response shares                                  | while the page is open                                        |
-| Openfort key  | publishable `pk_test_…` | in the shipped JavaScript                                                                                  | have user operations sponsored under Openfort's rule             | until it is rotated                                           |
+| Key           | Kind                    | Where it lives                                                                                                                                                            | What it may do                                                   | For how long                                                  |
+| ------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------- |
+| Passkey       | P-256                   | in the authenticator (device or syncing password manager)                                                                                                                 | admin of the account: every payment, adding and revoking keys    | until it is revoked in the account                            |
+| Setup key     | secp256k1               | in memory only, during setup                                                                                                                                              | the account's root key, forever ([Limits](#limits-technical))    | the app discards it after setup                               |
+| Read key      | secp256k1               | sealed under a key from the passkey's PRF output, under `simpleTodo.chainAccount.v1.<DID>`: in `localStorage` with "Keep in this browser", in the tab's memory without it | Zama decryption of what the account may read in escrow and token | 24 hours (ACL delegation), then renewed with one passkey step |
+| Transport key | ML-KEM-512              | the page's memory                                                                                                                                                         | opens the KMS's response shares                                  | while the page is open                                        |
+| Openfort key  | publishable `pk_test_…` | in the shipped JavaScript                                                                                                                                                 | have user operations sponsored under Openfort's rule             | until it is rotated                                           |
 
 ## Who runs what: central or decentralized
 
@@ -296,7 +296,7 @@ sequenceDiagram
   RPC-->>App: Calibur v1.0.0, registered, admin
   App->>W: discard(): drop the setup key
   App->>App: PRF from the passkey (one touch), HKDF:<br/>sealing key, seal the read key (AES-GCM)
-  App->>App: localStorage: address, sealed read key, expiry, transaction
+  App->>App: store (localStorage or tab memory):<br/>address, sealed read key, expiry, transaction
   App->>DB: put("account", address, chain ID)<br/>only the own DID may write
 ```
 
@@ -325,12 +325,16 @@ sequenceDiagram
    that answers can be a block behind; the app therefore asks again for up to 30 seconds. On
    2026-09-17 a run without this retry reported a correctly set up account as failed.
 5. **Seal, store and publish.** `discard()` drops the setup key. One passkey touch derives the sealing
-   key and seals the read key ([The read key](#read-key-technical)). The record in `localStorage` holds
-   address, sealed read key, expiry, setup transaction and time; the account directory gets the
+   key and seals the read key ([The read key](#read-key-technical)). The record holds address, sealed
+   read key, expiry, setup transaction and time, in `localStorage` with "Keep in this browser" and in
+   the tab's memory without it; the account directory gets the
    address ([Account lookup](#account-lookup-technical)). A declined touch or a passkey without PRF
    leaves the account as it is; the read key then holds for this session only.
 6. **A second device** with the same passkey finds the published account and takes it over, but has no
-   read key. The app then asks for a new one, with one passkey step.
+   read key. The app then asks for a new one, with one passkey step. A passkey created on this page
+   gets its account at once; one that was restored first looks for its published account, and when
+   none has arrived after three seconds the Account tab asks "Search again" or "Create a new account"
+   (`account-not-found` in [`budget-service-zama.js`](../src/lib/budget-service-zama.js), #123).
 
 On 2026-09-17 Openfort bundled the setup of both accounts into one transaction
 ([`0xe66c…a165`](https://sepolia.etherscan.io/tx/0xe66c286f10f4715cc4eebfc0b3cc42700a402ec2718a84638e7707aaedd9a165)):
@@ -342,10 +346,12 @@ two `DelegatedForUserDecryption` per account.
 ### Second device: simple
 
 A second device, or the same one after its browser profile was cleared, needs nothing carried over:
-the passkey alone is enough. The app asks it twice; that gives back the DID and the signing key.
-Because the account address follows from the same public key, it is the same account, with the same
-confidential balance. A third touch signs the OrbitDB identity. Nothing is set up again; the
-account's code is already on chain.
+the passkey alone is enough. The app asks it twice; that gives back the DID and the signing key. A
+third touch signs the OrbitDB identity. The account is found again under the DID it was published
+with ([Account lookup](#account-lookup-simple)), so it is the same account, with the same
+confidential balance. If it has not arrived after three seconds, the Account tab asks whether to
+search again or to create a new account; a new one would be a second account with an empty balance.
+Nothing is set up again; the account's code is already on chain.
 
 Amounts stay unreadable until "Renew with passkey": the read key sits in the old browser and does not
 travel ([The read key](#read-key-simple)).
@@ -378,7 +384,7 @@ sequenceDiagram
   App->>PK: sign the identity
   P->>PK: touch 3
   App->>App: getP256CredentialDescriptor: x, y, credentialId,<br/>rpId = this page's hostname
-  Note over App: the account address follows from the same key —<br/>the same account as on the first device
+  Note over App: the account is looked up under the DID<br/>(account directory) — the same account as on the first device
   App->>TOK: confidentialBalanceOf(account)
   TOK-->>App: handle
   Note over App,TOK: readable only with a new read key:<br/>one user operation, one more touch
@@ -386,7 +392,7 @@ sequenceDiagram
 
 `recoverPasskeyCredential()` in [`src/lib/passkey-identity.js`](../src/lib/passkey-identity.js) uses a
 stored credential when there is one, and otherwise calls `restoreIdentityFromAuthenticator()`
-(provider 0.8.0). An assertion does not carry the public key, hence the two signatures: together they
+(provider, since 0.8.0). An assertion does not carry the public key, hence the two signatures: together they
 give it back. If the PRF evaluation fails the restore stops rather than deriving a key from something
 else — that would be a different identity under the same name, and a different account.
 
@@ -429,6 +435,36 @@ does not match, the account runs nothing.
    result for a tampered one, so the precompile is active there. The wallet package's tests measured,
    on a Sepolia fork, 81,000 gas for the check with the precompile and 370,000 without;
    `toCaliburPasskeyAccount` sets `verificationGasLimit` to at least 800,000.
+
+## How often the passkey asks
+
+The other pages link here for the count, so it is kept in one place.
+
+### Prompts: simple
+
+A first start asks three times: once to create the passkey, twice to set up the identity the lists
+are signed with. On Sepolia one more touch follows about 20 seconds later, when the account is
+ready: it locks away the key that reads amounts. After that, coming back asks once, as long as
+"Keep in this browser" was ticked. Every lock and every release asks once, and so does "Show
+amounts", once per visit.
+
+### Prompts: technical
+
+| When                                        | Prompts       | What each one is                                                                                                              | Where                                                                                                                            |
+| ------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| First start, new passkey                    | 3             | `create` with `prf(eval)`; `get` for the PRF output the OrbitDB signing key is derived from; `get` for the identity signature | `passkeyPromptsFor` in [`+page.svelte`](../src/routes/+page.svelte), [`e2e/passkey-steps.spec.js`](../e2e/passkey-steps.spec.js) |
+| … on Sepolia, once the account exists       | +1            | `get` for the PRF output that derives the key sealing the new read key (`budget-read-seal`)                                   | `sealQuietly` in [`budget-service-zama.js`](../src/lib/budget-service-zama.js)                                                   |
+| Return, "Keep in this browser"              | 1             | the identity signature; the signing key comes from the IndexedDB keystore                                                     | `passkeyPromptsFor('existing')` with a stored credential                                                                         |
+| Return with nothing kept, or another device | 3             | two to restore the DID and the signing key from the authenticator, one to sign                                                | `restoreIdentityFromAuthenticator` (provider)                                                                                    |
+| Account setup                               | 0             | a setup key signs the first user operation, Openfort pays                                                                     | [Setting up the account](#setting-up-the-account)                                                                                |
+| Lock, release                               | 1 each        | the user operation's signature (`budget-lock`, `budget-release`)                                                              | [Signing with the passkey](#signing-with-the-passkey)                                                                            |
+| "Show amounts"                              | 1 per session | the PRF output that opens the sealed read key (`budget-read-unlock`); none in the session that sealed it                      | `unlockReadKey`                                                                                                                  |
+| Read-key renewal, every 24 h                | 1             | the user operation's signature (`budget-read-key`)                                                                            | `renewReadKey`                                                                                                                   |
+| A delegate completes or renames             | 1             | `confirmDelegatedWrite`                                                                                                       | [`delegated-write-auth.js`](../src/lib/delegated-write-auth.js)                                                                  |
+
+Between the first start's prompts a short dialog says which one comes and what it is for ("Passkey
+prompt 2 of 3", #121). It counts the three of the start only: the Sepolia seal comes after the start,
+on its own.
 
 ## Locking a budget: where encryption happens
 
@@ -555,7 +591,7 @@ sequenceDiagram
   box transparent Bob's device (local)
     participant App as Browser: app
     participant SDK as Browser: Zama SDK
-    participant LS as Read key<br/>(localStorage)
+    participant LS as Read key<br/>(localStorage or tab memory)
   end
   box transparent Central service (company)
     participant REL as Zama relayer
@@ -686,7 +722,7 @@ stateDiagram-v2
   ([`src/lib/chain/read-key-seal.js`](../src/lib/chain/read-key-seal.js)). The same PRF answer also
   yields the list's signing key; the HKDF info keeps the two apart. The sealing key lives in memory
   for the session, so one touch serves every seal and open after it.
-- **What is stored.** The account record in `localStorage` under `simpleTodo.chainAccount.v1.<DID>`
+- **What is stored.** The account record under `simpleTodo.chainAccount.v1.<DID>`
   holds `session: { address, sealed }` with `readKeyExpiresAt` in Unix seconds. `sealed` is the
   wallet's `SealedZamaSessionKey`: AES-GCM, a random 12-byte IV, the address bound as associated data.
   `toStored` in [`account-store.js`](../src/lib/chain/account-store.js) writes only the record's own
@@ -727,8 +763,10 @@ stateDiagram-v2
   read request.
 - **Why not the passkey.** Zama v0.13 accepts only 65-byte ECDSA permits; a Calibur account's signature
   would be an ERC-1271 proof in ERC-7739 form ([Passkey wallet](security.md#passkey-wallet-technical)).
-  v0.14 also checks permits through ERC-1271; whether a Calibur passkey signature passes there has not
-  been checked.
+  v0.14 also checks permits through ERC-1271. On a Sepolia fork on 2026-10-12 `@fhevm/sdk` 0.14.3's own
+  precheck accepted a permit the passkey account signed in ERC-7739 form
+  ([keys.md](keys.md#checked-ahead-of-zama-on-2026-10-12)); whether Zama's KMS accepts it stays open
+  until v0.14 runs on Sepolia.
 - **Revocation.** A renewal takes back the read key this browser held before, in the same user
   operation, for each contract where its delegation still runs
   (`revokeDelegationForUserDecryption`, through the wallet's
@@ -845,7 +883,8 @@ otherwise it reports that the delegate has no account for budgets yet, before th
   at once; that cannot be proven on chain.
 - Losing the passkey loses the account. The app sets up no second key and no recovery. A passkey
   that still exists is a different matter: on another device the same passkey gives back the same
-  identity and the same account, in two touches and with nothing stored.
+  identity and the same account, in three touches and with nothing stored
+  ([How often the passkey asks](#how-often-the-passkey-asks)).
 - The chain does not check whether the passkey really asked for fingerprint or PIN; only the app
   requires it.
 - The read key is stored sealed and opens only with the passkey. Once a visit has opened it, a
@@ -867,7 +906,8 @@ otherwise it reports that the delegate has no account for budgets yet, before th
   passkey still takes the account with it.
 - **User verification.** `KeyLib.verify` passes `requireUV: false`; the app requests
   `userVerification: 'required'`.
-- **Read key.** Sealed in `localStorage` (AES-GCM under a key from the passkey's PRF output), opened in
+- **Read key.** Sealed (AES-GCM under a key from the passkey's PRF output), in `localStorage` with
+  "Keep in this browser" and in the tab's memory without it, opened in
   memory for one visit, valid for up to 24 hours, publicly linked to the account. A passkey without PRF
   cannot seal: its read key lasts one visit. The sealing key stays in memory for the visit, so a page
   compromised while it runs can open and use the read key.
@@ -879,8 +919,10 @@ otherwise it reports that the delegate has no account for budgets yet, before th
   after setup and reads the escrow at the receipt's block after a lock.
 - **P-256 without the precompile** costs about 370,000 gas per signature; Sepolia has the precompile.
 - **Calibur v1.0.0** rather than v1.1.0, see [What Calibur is](#calibur-technical).
-- **Zama v0.14** also checks decryption permits through ERC-1271. Whether a Calibur passkey signature
-  passes there and could replace the read key has not been checked.
+- **Zama v0.14** also checks decryption permits through ERC-1271. `@fhevm/sdk` 0.14.3's precheck
+  accepted a passkey permit on a Sepolia fork on 2026-10-12
+  ([keys.md](keys.md#checked-ahead-of-zama-on-2026-10-12)); whether Zama's KMS accepts it, and the
+  read key can go, stays open until v0.14 runs on Sepolia.
 
 ## Configuration
 
@@ -955,8 +997,10 @@ EntryPoint and paymaster; the lock alone cost 682,630 gas in the smoke test of 2
    ([Le-Space/simple-todo#54](https://github.com/Le-Space/simple-todo/issues/54), steps 1 and 2).
 4. **Recovery for a lost passkey**: a second admin key or a hook, before real money is involved.
    Another device with the same passkey needs none of that since 0.8.0.
-5. **Publish the packages** and replace the tarballs.
-6. **Zama v0.14**: wait for it and check whether the passkey itself can permit decryptions.
+5. **Publish the packages**: done, both come from npm (see above).
+6. **Zama v0.14**: the SDK side is checked ([keys.md](keys.md#checked-ahead-of-zama-on-2026-10-12));
+   what remains is Zama rolling v0.14 out on Sepolia, which `.github/zama-watch.mjs` reports in
+   [#54](https://github.com/Le-Space/simple-todo/issues/54).
 7. **Auditor**: still a development key, see [security.md](security.md#open-issues).
 
 ## Sources
@@ -976,7 +1020,7 @@ Repository, `apps/escrow01`:
 - Read key: [`src/lib/chain/config.js`](../src/lib/chain/config.js) (`READ_KEY_TTL_SECONDS` 35),
   [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) (`readKeyState`, `ensureAccount`,
   `renewReadKey`), [`src/lib/BudgetNotices.svelte`](../src/lib/BudgetNotices.svelte) (notice "Read
-  access expired.", `expired` 39).
+  access expired.", `expired`).
 - Tests: [`src/lib/budget-service-zama.spec.js`](../src/lib/budget-service-zama.spec.js),
   [`src/lib/chain/did-key.spec.js`](../src/lib/chain/did-key.spec.js).
 

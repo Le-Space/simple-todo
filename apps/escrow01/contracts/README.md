@@ -1,8 +1,9 @@
 # ConfidentialTodoEscrow
 
 The escrow half of [de2do](https://github.com/NiKrause/de2do), with the amount kept confidential by
-Zama FHEVM ([#378](https://github.com/NiKrause/simple-todo/issues/378), part of the `escrow01`
-chapter, [#382](https://github.com/NiKrause/simple-todo/issues/382)). Alice locks a budget for a
+Zama FHEVM ([NiKrause/simple-todo#378](https://github.com/NiKrause/simple-todo/issues/378), part of
+the `escrow01` chapter, [NiKrause/simple-todo#382](https://github.com/NiKrause/simple-todo/issues/382),
+from before the repository moved to Le-Space). Alice locks a budget for a
 todo she delegated to Bob, and releases it when he is done, or takes it back after a deadline. The
 budget is an ERC-7984 confidential token, such as Zama's cUSDT, and its amount stays encrypted:
 Alice, Bob and an auditor can decrypt it, nobody else (with one token-side exception, see
@@ -152,14 +153,15 @@ together.
 
 ### Why npm
 
-Zama's template and the plugin's instructions use npm. And pnpm is a trap here: some checkouts of
-this repository carry a local, untracked `pnpm-workspace.yaml` at the root for pnpm 10's settings
-(the root `.gitignore` keeps it out of git). Where that file exists, `pnpm install` inside
-`contracts/` treats the root as the workspace and installs the app instead. npm ignores it.
+Zama's template and the plugin's instructions use npm. And pnpm is a trap here: the repository root
+is a pnpm workspace (`pnpm-workspace.yaml`: `apps/*`, `packages/*`, `tools/*`), and `contracts/` is
+not one of its packages. pnpm inside `contracts/` would have to be told to leave that workspace
+alone (`--ignore-workspace`); npm ignores the workspace file and installs `contracts/` on its own,
+from its own `package-lock.json`.
 
-The app's install is unaffected: pnpm 10 installs only the root project with or without that file,
-and pnpm 9, which CI uses without it, does the same. The root `.prettierignore` skips `contracts/`;
-the root ESLint configuration matches no file in it.
+The app's install is unaffected: the workspace never reaches into `contracts/`. The app's
+`.prettierignore` (`apps/escrow01/.prettierignore`) skips `contracts/`; the ESLint configuration
+matches no file in it.
 
 ### Why `@zama-fhe/sdk`
 
@@ -426,7 +428,11 @@ need a newer `@fhevm/solidity` and SDK:
 5. [Record the deployment](#record-the-deployment), including `DEFAULT_ESCROW` in
    `scripts/smoke-sepolia.ts`.
 6. `npm run smoke:sepolia:dry`, then `npm run smoke:sepolia`.
-7. Point the app at the new address. Escrows in the old contract stay there: their creators release
+7. Point the app at the new address. It is written in four places: `ESCROW_ADDRESS` and
+   `ESCROW_DEPLOY_BLOCK` in `src/lib/chain/config.js`, the technical explanations in
+   `src/lib/explanations/index.js` (and the address they are tested against in
+   `explanations.spec.js`), and the technical consent text in `src/lib/i18n/{en,de}.json`; the docs
+   name it as well. Escrows in the old contract stay there: their creators release
    or refund them there, and the old auditor can still decrypt every amount ever locked in it.
 
 ### Before relying on a deployment

@@ -44,3 +44,22 @@ creates two new passkey accounts. Setting them up, the lock and the release are
 user operations whose gas Openfort sponsors. A dry run
 with `DEMO_URL=local` uses the fake, which encrypts nothing, so it checks the
 steps, not the chain.
+
+## Into the app
+
+The start dialog's teaser and the "Video" link in the header stay hidden until
+[`src/lib/demo-video.js`](../src/lib/demo-video.js) has an entry for the
+language on screen. Per language that takes:
+
+- an MP4 under `static/video/` (served as `video/…`), 1080p H.264 and at most
+  15 MB: it ships with the build that goes to IPFS and Aleph. The recording is
+  made at 2160, so this file is a 1080p copy of it; YouTube gets the full size;
+- a WebVTT file with the captions, which is not optional: an entry without one
+  counts as none;
+- the player's `poster`, and the 96×54 `thumb` for the teaser (`posters.mjs`
+  writes both);
+- `youtubeId` for the plain link beside the player, and `duration` as `m:ss`.
+
+Paths are relative to the page, as everything in this static build is. The
+spec for the teaser and the player is `e2e/demo-video.spec.js`; it hands the
+page entries of its own, so it runs before there is a film.

@@ -41,9 +41,9 @@ Only the first one can move money, and it never leaves the hardware. The third o
 other two live in this browser, and that is what this page is about. The read key is stored sealed
 since 2026-10-02 ([#56](https://github.com/Le-Space/simple-todo/pull/56)): a copied browser profile
 holds nothing that reads, but once a visit has opened it, a compromised page could read amounts for
-up to 24 hours, and nothing else. The list signing key is written down in plain text if the reader
-chose to keep data on the first screen; whoever copies it can write todos as that identity, and move
-nothing.
+up to 24 hours, and nothing else. The list signing key is written down in plain text when "Keep in
+this browser" is ticked, which the start dialog preselects; whoever copies it can write todos as
+that identity, and move nothing.
 
 ### Keys: technical
 
@@ -54,7 +54,7 @@ flowchart LR
   end
   subgraph browser["This browser"]
     sign["List signing key<br/>secp256k1, HKDF from PRF<br/>keystore: memory or IndexedDB"]
-    read["Read key<br/>secp256k1, random<br/>sealed in localStorage, 24 h"]
+    read["Read key<br/>secp256k1, random<br/>sealed, 24 h"]
   end
   setup["Setup key<br/>secp256k1, random<br/>discarded"]
   cred -->|"assertion per user operation"| chain["Sepolia: lock, release, renew"]
@@ -74,7 +74,7 @@ flowchart LR
    the same key on any device; without PRF the keystore generates one instead. Where it is kept
    follows the storage choice: in memory it goes with the tab; if the reader chose to keep data, it
    sits unencrypted in OrbitDB's keystore in IndexedDB and later sessions sign without asking the
-   passkey ([`src/lib/p2p.js`](../src/lib/p2p.js) 362-385). It signs database entries, never a
+   passkey (`createOrbitDBInstance` in [`src/lib/p2p.js`](../src/lib/p2p.js)). It signs database entries, never a
    transaction.
 3. **The setup key.** secp256k1 from `generatePrivateKey()`, created in the wallet package's
    `createCaliburPasskeySetup` (`src/setup.js:200`). Its address _becomes_ the account's address; it
@@ -82,8 +82,8 @@ flowchart LR
    Calibur keeps that address as a root key it cannot revoke — the limit is written down in
    [passkey-account.md](passkey-account.md#limits-technical).
 4. **The read key.** secp256k1 from the wallet's `createZamaSessionKey()`, created in
-   [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) 192 (setup) and 643
-   (renewal), stored sealed as `session: { address, sealed }` in
+   [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) at setup and in
+   `renewReadKey`, stored sealed as `session: { address, sealed }` in
    [`src/lib/chain/account-store.js`](../src/lib/chain/account-store.js) under
    `simpleTodo.chainAccount.v1.<DID>`, with a sealing key HKDF derives from the passkey's PRF output
    ([`src/lib/chain/read-key-seal.js`](../src/lib/chain/read-key-seal.js)). The account delegates
@@ -111,7 +111,7 @@ was set up with. No key in the browser could produce it.
 passkey sign those 32 bytes with `signP256Challenge(descriptor, hexToBytes(hash))`, and returns
 `encodeUserOperationSignature({ keyHash, signature: encodeWebAuthnAuth(assertion) })`. The
 descriptor comes from `getP256CredentialDescriptor(credential)`
-([`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js) 121-122) and carries
+(`descriptorFor` in [`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js)) and carries
 `credentialId`, `rawCredentialId`, `x`, `y`, `rpId` and `userVerification: 'required'` — the public
 half only. On chain, Calibur verifies the assertion with webauthn-sol's `WebAuthnAuth`
 ([security.md](security.md#passkey-wallet-technical)).
@@ -341,21 +341,21 @@ does not yet. Item 3, sealing the read key, is done
 
 Code:
 
-- [`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js) 121-122: the credential
+- [`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js), `descriptorFor`: the credential
   descriptor handed to the wallet
-- [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) 192, 643: the read key at
+- [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js), `createZamaSessionKey()`: the read key at
   setup and at renewal
 - [`src/lib/chain/read-key-seal.js`](../src/lib/chain/read-key-seal.js): the sealing key from the
   passkey's PRF output
 - [`src/lib/chain/account-store.js`](../src/lib/chain/account-store.js): what this browser keeps
 - [`src/lib/chain/config.js`](../src/lib/chain/config.js): `READ_KEY_TTL_SECONDS`
-- [`src/lib/p2p.js`](../src/lib/p2p.js) 362-385: the PRF-derived signing key for the list and where
+- [`src/lib/p2p.js`](../src/lib/p2p.js), `createOrbitDBInstance`: the PRF-derived signing key for the list and where
   it is kept
 - [`src/lib/chain/zama-client.js`](../src/lib/chain/zama-client.js): the SDK with `MemoryStorage`
 - `@le-space/passkey-wallet` 0.1.0 (the code of commit `cde6878`): `src/account.js`
   209-220 (`signUserOperation`), `src/setup.js` 200 (the setup key), `src/zama.js`
   (`createZamaSessionKey`, `openZamaSessionKey`, `getRevokeDelegationForUserDecryptionCalls`)
-- `@le-space/orbitdb-identity-provider-webauthn-did` 0.8.0: `src/keystore/encryption.js`
+- `@le-space/orbitdb-identity-provider-webauthn-did` 0.13.0 (these since 0.8.0): `src/keystore/encryption.js`
   (`wrapSKWithPRF`, `unwrapSKWithPRF`), `src/keystore/derived-signing-key.js` (HKDF-SHA256,
   `ensureDerivedSigningKey`), `src/webauthn/prf-input.js` (`PRF_INPUT_INFO`),
   `src/standalone/webauthn/credential.js` (`extractPrfSeedFromCredential`)

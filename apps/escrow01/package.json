@@ -3,9 +3,6 @@
 	"private": true,
 	"version": "0.2.0",
 	"type": "module",
-	"exports": {
-		"./ConsentModal.svelte": "./src/lib/ConsentModal.svelte"
-	},
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -19,8 +16,6 @@
 		"test": "pnpm run test:unit && pnpm run test:e2e",
 		"test:e2e": "playwright test",
 		"check:preview-origin": "node ../../packages/e2e-kit/src/check-preview-origin.mjs",
-		"test:e2e:local-relay-src": "E2E_RELAY_CLI_PATH=/Users/nandi/orbitdb-relay/dist/cli.js E2E_RELAY_PINNING_PROOF=true playwright test e2e/collaboration.spec.js --project=chromium -g \"Relay-pinned\"",
-		"test:e2e:public-relay": "E2E_RELAY_MODE=public E2E_RELAY_PINNING_PROOF=true playwright test e2e/collaboration.spec.js --project=chromium",
 		"test:e2e:remote:main": "node ../../packages/e2e-kit/src/remote/run-main.mjs",
 		"test:consent": "playwright test e2e/consent-screen.spec.js",
 		"video:link": "e2e-video/link-kit.sh",

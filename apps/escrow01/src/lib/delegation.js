@@ -11,7 +11,7 @@
  * The controller checks the action's shape and signer. It does NOT read the
  * todo. Whether the delegation was granted, revoked or has expired is decided
  * here, on read: an action whose todo no longer delegates to its signer is
- * ignored. That split is deliberate — see the chapter README — and it means
+ * ignored. That split is deliberate — see docs/foundations.md — and it means
  * revocation is a client-side rule, not a cryptographic one.
  *
  * Nothing in this module touches OrbitDB, so it is unit-tested directly.

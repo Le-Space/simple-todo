@@ -30,8 +30,10 @@ into the confidential token and locks 500.00 of them in the escrow. Alice keeps 
 releases later, the escrow moves the 500.00 to Bob's account, and Bob's browser decrypts and shows
 them.
 
-Bob's account has to exist by then. It is created quietly the first time he opens the "Account" tab,
-and costs him nothing: throughout this chapter Openfort pays the fees.
+Bob's account has to exist by then. It is created quietly right after his first start with a
+passkey, once per DID, and costs him nothing: throughout this chapter Openfort pays the fees. The
+account itself needs no passkey prompt; sealing the key that reads his amounts takes one touch right
+after ([how often the passkey asks](passkey-account.md#how-often-the-passkey-asks)).
 
 ### Path: technical
 
@@ -54,7 +56,7 @@ sequenceDiagram
     participant ESC as Escrow<br/>(this chapter)
   end
 
-  Note over BB: Bob's account appears when he first opens<br/>the "Account" tab, with no passkey prompt
+  Note over BB: Bob's account appears right after his start,<br/>with no passkey prompt for the account itself
   Alice->>AB: todo for Bob's DID, budget 500.00
   rect rgba(46, 125, 50, 0.12)
     Note over AB: 🔒 500.00 encrypted in the browser<br/>handle + proof, bound to escrow and Alice's account
@@ -199,13 +201,14 @@ scripts rather than the app, is in [smoke-test.md](smoke-test.md), transaction b
 
 ## What the app says about it
 
-The "Account" tab carries one sentence under the address: "Your passkey is this account's admin key.
-Its first lock adds 1,000.00 test cUSDT." That is the only place in the interface where the starting
+The "Account" tab says under the address: "Your passkey is this account's admin key." While the
+account holds nothing, a second sentence follows: "It gets money with its first lock: 1,000.00 test
+cUSDT, minted in the same operation." That is the only place in the interface where the starting
 funds appear. Creating a todo with a budget, and locking it, say nothing about them.
 
-Open: the sentence shows on every account that has been set up, recipients included. Bob never
-locked, his balance comes from the payout, and the minting line sits on his page all the same. The
-sentence belongs only on accounts that have never locked; recipients need one of their own.
+The second sentence goes once the balance is above zero (`showFundingHint` in
+[`+page.svelte`](../src/routes/+page.svelte)), so Bob, whose balance comes from the payout, no longer
+reads about minting once the payout has arrived.
 
 ## Sources
 
