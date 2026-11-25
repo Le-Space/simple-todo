@@ -3,8 +3,8 @@
 	// service. Shown once a budget has been paid out to this session.
 	import { onMount } from 'svelte';
 	import { _, locale } from '$lib/i18n/index.js';
-	import BudgetIcon from './BudgetIcon.svelte';
-	import TechnicalExplanation from './TechnicalExplanation.svelte';
+	import BudgetIcon from '../BudgetIcon.svelte';
+	import TechnicalExplanation from '../TechnicalExplanation.svelte';
 	import { formatAmount } from './budget.js';
 	import { balanceStore, budgetInfo, refreshBalance } from './budget-store.js';
 

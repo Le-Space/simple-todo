@@ -89,7 +89,7 @@ flowchart LR
    nicht widerrufen kann — die Einschränkung steht in
    [passkey-account.de.md](passkey-account.de.md#grenzen-technisch).
 4. **Der Leseschlüssel.** secp256k1 aus `createZamaSessionKey()` der Wallet, erzeugt in
-   [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) bei der Einrichtung und in
+   [`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js) bei der Einrichtung und in
    `renewReadKey`, versiegelt abgelegt als `session: { address, sealed }` in
    [`src/lib/chain/account-store.js`](../src/lib/chain/account-store.js) unter
    `simpleTodo.chainAccount.v1.<DID>`, mit einem Siegelschlüssel, den HKDF aus der PRF-Antwort des
@@ -369,7 +369,7 @@ Code:
 
 - [`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js), `descriptorFor`: der
   Credential-Descriptor, den die Wallet bekommt
-- [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js), `createZamaSessionKey()`: der Leseschlüssel
+- [`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js), `createZamaSessionKey()`: der Leseschlüssel
   bei Einrichtung und Verlängerung
 - [`src/lib/chain/read-key-seal.js`](../src/lib/chain/read-key-seal.js): der Siegelschlüssel aus der
   PRF-Antwort des Passkeys

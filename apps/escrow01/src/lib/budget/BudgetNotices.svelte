@@ -6,10 +6,10 @@
 	// screen carry the step behind them.
 	import { onDestroy, onMount } from 'svelte';
 	import { _ } from '$lib/i18n/index.js';
-	import BudgetIcon from './BudgetIcon.svelte';
+	import BudgetIcon from '../BudgetIcon.svelte';
 	import ErrorAlert from '$lib/ErrorAlert.svelte';
-	import TechnicalExplanation from './TechnicalExplanation.svelte';
-	import { delegatedWriteAuthStore } from './delegated-write-auth.js';
+	import TechnicalExplanation from '../TechnicalExplanation.svelte';
+	import { delegatedWriteAuthStore } from '../delegated-write-auth.js';
 	import {
 		budgetInfo,
 		budgetNoticeRetryable,

@@ -2,10 +2,10 @@
 	import { createEventDispatcher } from 'svelte';
 	import { _ } from '$lib/i18n/index.js';
 	import TodoItem from './TodoItem.svelte';
-	import { todoReplicationStatusStore } from './db-actions.js';
-	import { isWellFormedBudget } from './budget.js';
+	import { todoReplicationStatusStore } from './relay-proof.js';
+	import { isWellFormedBudget } from './budget/budget.js';
 
-	/** @typedef {{ id: string, text: string, completed: boolean, assignee: string | null, createdBy: string, author?: string, key: string, createdByIdentity?: string | null, delegation?: import('./delegation.js').Delegation | null, updatedBy?: string, budget?: import('./budget.js').Budget | null }} TodoItemData */
+	/** @typedef {{ id: string, text: string, completed: boolean, assignee: string | null, createdBy: string, author?: string, key: string, createdByIdentity?: string | null, delegation?: import('./delegation.js').Delegation | null, updatedBy?: string, budget?: import('./budget/budget.js').Budget | null }} TodoItemData */
 
 	/** @type {TodoItemData[]} */
 	export let todos = [];

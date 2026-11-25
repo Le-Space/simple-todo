@@ -37,7 +37,8 @@
 			"e2e/replication-without-webrtc.spec.js",
 			"e2e/demo-video.spec.js",
 			"e2e/header-title.spec.js",
-			"e2e/private-start.spec.js"
+			"e2e/private-start.spec.js",
+			"e2e/manual-multiaddr-connection.spec.js"
 		],
 		"check": true
 	}

@@ -11,9 +11,12 @@ import {
 import { confirmDelegatedWrite } from './delegated-write-auth.js';
 import { rememberList, listRegistryStore, openListRegistry } from './list-registry.js';
 import { listNameFromDatabase, privateListDatabaseName } from './list-name.js';
-import { relayHttpStatusStore } from '@simple-todo/net/relay-status.js';
+import {
+	scheduleRelayReplicationProof,
+	todoReplicationStatusStore,
+	verifyRelayReplication
+} from './relay-proof.js';
 import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
-import { recall, remember } from '@simple-todo/todo/browser-memory.js';
 import { translate } from './i18n/index.js';
 
 /**
@@ -23,7 +26,7 @@ import { translate } from './i18n/index.js';
  *   createdBy: string
  *   createdByIdentity?: string | null
  *   delegation?: import('./delegation.js').Delegation | null
- *   budget?: import('./budget.js').Budget | null
+ *   budget?: import('./budget/budget.js').Budget | null
  *   updatedBy?: string
  *   assignee: string | null
  *   createdAt: string
@@ -117,16 +120,11 @@ export const activeListStore = writable(
 
 // Store for todos
 export const todosStore = writable(/** @type {TodoItem[]} */ ([]));
-/** @typedef {'unknown' | 'pending' | 'pinned' | 'unavailable'} TodoReplicationStatus */
-export const todoReplicationStatusStore = writable(
-	/** @type {Record<string, TodoReplicationStatus>} */ ({})
-);
 
 // Derived store that updates when todos change
 export const todosCountStore = derived(todosStore, ($todos) => $todos.length);
 
 const observedDatabases = new WeakSet();
-const relayProofsInFlight = new Set();
 /** @type {Promise<void> | null} */
 let pendingTodosLoad = null;
 let todosReloadRequested = false;
@@ -135,7 +133,6 @@ let todoEntriesReceivedDuringLoad = [];
 // This is a collaborative demo database with an append-only history. Reading an
 // unlimited history can monopolize IndexedDB/IPFS long enough to delay live sync.
 const INITIAL_TODO_LIMIT = 250;
-const RELAY_PROOF_ATTEMPTS = 3;
 /**
  * @param {TodoDatabase | null | undefined} todoDB
  * @returns {string}
@@ -349,90 +346,20 @@ async function ownsList(db, identityId) {
 	}
 }
 
-const HOME_LIST_KEY = 'simpleTodo.homeList';
-
 /**
  * True while the start has found no list of this identity's own and the first
- * todo is to make one ({@link openHomeList} with `create`). The list on screen
+ * todo is to make one (`openHomeList` in home-list.js, with `create`). The list on screen
  * is then still the shared one underneath; the page shows the list to come.
  */
 export const homeListPendingStore = writable(false);
 
 /**
- * escrow01: the list someone starts in when no link brings one.
- *
- * Delegation and budgets exist only on a list with the delegation controller,
- * and the shared three-word list cannot have one -- everybody may write there.
- * So a first visit opened the one list where this chapter's feature is not,
- * and nothing said where it was. The start now lands in a private list of
- * one's own: the one this identity started in before, or the newest list it
- * owns, or a new one.
- *
- * The shared list is not closed for this: it was opened first, as before, and
- * stays open for whoever arrives with the same three words.
- *
- * Runs in the background after the start, so anything opened meanwhile -- a
- * list by address, another shared list -- wins: the home list is then made or
- * found, but not put on screen.
- *
- * @param {string} name for a list created here
- * @param {{ create?: boolean }} [options] `create`: make the list if there is
- *   none yet. Without it, an identity with no list of its own is left with
- *   {@link homeListPendingStore} set, and the first todo makes the list.
- * @returns {Promise<{ address: string, name: string, created: boolean, superseded?: boolean, pending?: boolean }>}
+ * The open list's version, for something that starts opening a list in the
+ * background and must not take over from one opened in the meantime
+ * (`unlessSwitchedSince`, as `openHomeList` in home-list.js uses it).
  */
-export async function openHomeList(name, { create = false } = {}) {
-	const orbitdb = get(orbitdbStore);
-	if (!orbitdb) throw new Error(translate('errors.orbitdbNotReady'));
-	const unlessSwitchedSince = activeListVersion;
-	// Per identity: a second passkey on this device has lists of its own, and an
-	// anonymous identity cannot write to the list an earlier one made.
-	const key = `${HOME_LIST_KEY}.${orbitdb.identity?.id ?? ''}`;
-
-	// The registry first, so a list opened below is recognised as one's own.
-	try {
-		await openListRegistry(orbitdb);
-	} catch (error) {
-		console.warn('List registry unavailable:', error);
-	}
-
-	const remembered = recall(key);
-	if (remembered) {
-		try {
-			const { address, superseded } = await loadTodoDatabase(remembered, { unlessSwitchedSince });
-			return { address, name: get(activeListStore).name, created: false, superseded };
-		} catch (error) {
-			console.warn('The list this identity started in could not be opened:', error);
-		}
-	}
-
-	const owned = get(listRegistryStore).find((entry) => entry.role === 'owner');
-	if (owned) {
-		try {
-			const { address, superseded } = await loadTodoDatabase(owned.address, {
-				unlessSwitchedSince
-			});
-			remember(key, address);
-			return { address, name: owned.name, created: false, superseded };
-		} catch (error) {
-			console.warn('The newest own list could not be opened:', error);
-		}
-	}
-
-	if (!create) {
-		// None yet. It is made with the first todo (`create: true`), not now: a
-		// database made at start costs every visitor who only looks one empty
-		// list, and the relay one manifest to chase for every such visitor --
-		// measured, that load is what kept it from holding the lists people did
-		// write to. Until then the start shows where the first todo will go.
-		if (activeListVersion === unlessSwitchedSince) homeListPendingStore.set(true);
-		return { address: '', name, created: false, pending: true };
-	}
-
-	const created = await createPrivateTodoList(name, { unlessSwitchedSince });
-	remember(key, created.address);
-	homeListPendingStore.set(false);
-	return { ...created, created: true };
+export function currentListVersion() {
+	return activeListVersion;
 }
 
 // Load all todos from the database
@@ -617,7 +544,12 @@ function setupDatabaseListeners(todoDB) {
 
 		const { op, key } = entry?.payload ?? {};
 		if (op === 'PUT' && key && entry?.hash) {
-			scheduleRelayReplicationProof(key, String(entry.hash), getDatabaseAddress(todoDB));
+			scheduleRelayReplicationProof(
+				key,
+				String(entry.hash),
+				getDatabaseAddress(todoDB),
+				resubscribeIfOpen
+			);
 		}
 	});
 }
@@ -664,7 +596,7 @@ export function createTodoKey() {
  * @param {string} text
  * @param {string | null} [assignee=null]
  * @param {DelegationRequest | null} [delegation=null] delegation01: hand this todo to a DID on creation
- * @param {{ key?: string, budget?: import('./budget.js').Budget | null }} [extra]
+ * @param {{ key?: string, budget?: import('./budget/budget.js').Budget | null }} [extra]
  *   escrow01: the key from `createTodoKey()` and the budget the todo starts
  *   with, so a todo whose budget is being locked is written once, already
  *   saying so
@@ -713,7 +645,7 @@ export async function addTodo(text, assignee = null, delegation = null, extra = 
 		if (extra.budget) todo.budget = extra.budget;
 
 		const entryHash = String(await todoDB.put(todoId, todo));
-		scheduleRelayReplicationProof(todoId, entryHash, getDatabaseAddress(todoDB));
+		scheduleRelayReplicationProof(todoId, entryHash, getDatabaseAddress(todoDB), resubscribeIfOpen);
 		console.log('✅ Todo added:', todoId);
 		return { ok: true, key: todoId };
 	} catch (error) {
@@ -730,121 +662,18 @@ export async function addTodo(text, assignee = null, delegation = null, extra = 
 	}
 }
 
-/** @param {string} todoKey @param {string} entryHash @param {string} dbAddress */
-function scheduleRelayReplicationProof(todoKey, entryHash, dbAddress) {
-	if (relayProofsInFlight.has(todoKey)) return;
-	if (get(todoReplicationStatusStore)[todoKey] === 'pinned') return;
-
-	relayProofsInFlight.add(todoKey);
-	todoReplicationStatusStore.update((statuses) => ({ ...statuses, [todoKey]: 'pending' }));
-	void verifyRelayReplication(todoKey, entryHash, dbAddress).finally(() => {
-		relayProofsInFlight.delete(todoKey);
-	});
-}
-
 /**
- * Ask the connected relay to perform a fresh database sync. A green state is only
- * assigned when the relay reports this exact OrbitDB entry as its last local record.
- * @param {string} todoKey
- * @param {string} entryHash
+ * Re-subscribing makes OrbitDB perform its native heads exchange while the
+ * relay has the database open (the relay proof asks for this between its
+ * request and the answer). Only for the list still open here.
+ *
  * @param {string} dbAddress
  */
-async function verifyRelayReplication(todoKey, entryHash, dbAddress) {
-	const { origin } = get(relayHttpStatusStore);
-	if (!origin || !entryHash || !dbAddress) {
-		console.warn('Relay replication proof skipped:', {
-			todoKey,
-			reason: !origin
-				? 'no connected relay HTTP origin'
-				: !entryHash
-					? 'missing OrbitDB entry hash'
-					: 'missing OrbitDB database address'
-		});
-		todoReplicationStatusStore.update((statuses) => ({
-			...statuses,
-			[todoKey]: 'unavailable'
-		}));
-		return;
-	}
-
-	try {
-		for (let attempt = 1; attempt <= RELAY_PROOF_ATTEMPTS; attempt++) {
-			const proof = await requestRelayReplicationProof(origin, dbAddress, todoKey, attempt);
-			const replicated = proof?.ok === true && proof?.lastRecord?.hash === entryHash;
-			if (replicated) {
-				console.info('Relay replication proof verified:', { todoKey, entryHash, attempt });
-				todoReplicationStatusStore.update((statuses) => ({
-					...statuses,
-					[todoKey]: 'pinned'
-				}));
-				return;
-			}
-
-			console.warn('Relay replication proof did not include the expected entry:', {
-				todoKey,
-				attempt,
-				expectedEntryHash: entryHash,
-				reportedEntryHash: proof?.lastRecord?.hash ?? null,
-				relayOk: proof?.ok ?? null,
-				entryCount: proof?.entryCount ?? null,
-				snapshotSource: proof?.snapshotSource ?? null
-			});
-		}
-		todoReplicationStatusStore.update((statuses) => ({
-			...statuses,
-			[todoKey]: 'unavailable'
-		}));
-	} catch (error) {
-		console.warn('Relay pinning proof unavailable for todo:', todoKey, error);
-		todoReplicationStatusStore.update((statuses) => ({
-			...statuses,
-			[todoKey]: 'unavailable'
-		}));
-	}
-}
-
-/** @param {string} origin @param {string} dbAddress @param {string} todoKey @param {number} attempt */
-async function requestRelayReplicationProof(origin, dbAddress, todoKey, attempt) {
-	const controller = new AbortController();
-	const timeout = setTimeout(() => controller.abort(), 30_000);
-	try {
-		console.info('Requesting relay replication proof:', {
-			todoKey,
-			attempt,
-			dbAddress,
-			endpoint: `${origin}/pinning/sync`
-		});
-		const responsePromise = fetch(`${origin}/pinning/sync`, {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ dbAddress }),
-			signal: controller.signal
-		});
-
-		// The relay may already be subscribed for discovery before OrbitDB installs
-		// its heads handler. Re-subscribing here makes OrbitDB perform its native
-		// heads exchange while the relay database is open.
-		await new Promise((resolve) => setTimeout(resolve, 250));
-		const todoDB = get(todoDBStore);
-		if (getDatabaseAddress(todoDB) === dbAddress && todoDB?.sync?.stop && todoDB.sync.start) {
-			await todoDB.sync.stop();
-			await todoDB.sync.start();
-		}
-
-		const response = await responsePromise;
-		const responseText = await response.text();
-		if (!response.ok) {
-			throw new Error(
-				`HTTP ${response.status}${responseText ? `: ${responseText.slice(0, 500)}` : ''}`
-			);
-		}
-		try {
-			return JSON.parse(responseText);
-		} catch {
-			throw new Error(`Relay returned invalid JSON: ${responseText.slice(0, 500)}`);
-		}
-	} finally {
-		clearTimeout(timeout);
+async function resubscribeIfOpen(dbAddress) {
+	const todoDB = get(todoDBStore);
+	if (getDatabaseAddress(todoDB) === dbAddress && todoDB?.sync?.stop && todoDB.sync.start) {
+		await todoDB.sync.stop();
+		await todoDB.sync.start();
 	}
 }
 
@@ -937,7 +766,7 @@ async function writeDelegationAction(todoDB, todoKey, todoData, delegateDid, cha
 		change
 	);
 	const entryHash = String(await todoDB.put(key, /** @type {any} */ (action)));
-	scheduleRelayReplicationProof(key, entryHash, getDatabaseAddress(todoDB));
+	scheduleRelayReplicationProof(key, entryHash, getDatabaseAddress(todoDB), resubscribeIfOpen);
 	await loadTodos();
 	console.log(`✅ Delegated ${actionName} written:`, key);
 	return { ok: true };
@@ -982,7 +811,12 @@ export async function toggleTodoComplete(todoKey) {
 			...statuses,
 			[String(todoKey)]: 'pending'
 		}));
-		void verifyRelayReplication(String(todoKey), entryHash, getDatabaseAddress(todoDB));
+		void verifyRelayReplication(
+			String(todoKey),
+			entryHash,
+			getDatabaseAddress(todoDB),
+			resubscribeIfOpen
+		);
 		console.log('✅ Todo toggled:', todoKey, updatedTodo.completed);
 		return { ok: true };
 	} catch (error) {
@@ -1022,7 +856,12 @@ export async function updateTodoText(todoKey, text) {
 
 		const updatedTodo = { ...todoData, text: nextText, updatedAt: new Date().toISOString() };
 		const entryHash = String(await todoDB.put(todoKey, updatedTodo));
-		scheduleRelayReplicationProof(todoKey, entryHash, getDatabaseAddress(todoDB));
+		scheduleRelayReplicationProof(
+			todoKey,
+			entryHash,
+			getDatabaseAddress(todoDB),
+			resubscribeIfOpen
+		);
 		return { ok: true };
 	} catch (error) {
 		console.error('❌ Error renaming todo:', error);
@@ -1067,7 +906,12 @@ export async function delegateTodo(todoKey, request) {
 			updatedAt: new Date().toISOString()
 		};
 		const entryHash = String(await todoDB.put(todoKey, updatedTodo));
-		scheduleRelayReplicationProof(todoKey, entryHash, getDatabaseAddress(todoDB));
+		scheduleRelayReplicationProof(
+			todoKey,
+			entryHash,
+			getDatabaseAddress(todoDB),
+			resubscribeIfOpen
+		);
 		await loadTodos();
 		return { ok: true };
 	} catch (error) {
@@ -1091,7 +935,7 @@ export async function delegateTodo(todoKey, request) {
  * where a later revocation cannot take it back.
  *
  * @param {string} todoKey
- * @param {import('./budget.js').Budget} budget
+ * @param {import('./budget/budget.js').Budget} budget
  * @param {{ acceptCompletion?: boolean }} [options]
  */
 export async function setTodoBudget(todoKey, budget, { acceptCompletion = false } = {}) {
@@ -1106,7 +950,7 @@ export async function setTodoBudget(todoKey, budget, { acceptCompletion = false 
 		? { ...todoData, budget, completed: true, updatedAt: new Date().toISOString() }
 		: { ...todoData, budget };
 	const entryHash = String(await todoDB.put(todoKey, updatedTodo));
-	scheduleRelayReplicationProof(todoKey, entryHash, getDatabaseAddress(todoDB));
+	scheduleRelayReplicationProof(todoKey, entryHash, getDatabaseAddress(todoDB), resubscribeIfOpen);
 	await loadTodos();
 }
 
@@ -1137,7 +981,12 @@ export async function revokeTodoDelegation(todoKey) {
 			updatedAt: now
 		};
 		const entryHash = String(await todoDB.put(todoKey, updatedTodo));
-		scheduleRelayReplicationProof(todoKey, entryHash, getDatabaseAddress(todoDB));
+		scheduleRelayReplicationProof(
+			todoKey,
+			entryHash,
+			getDatabaseAddress(todoDB),
+			resubscribeIfOpen
+		);
 		await loadTodos();
 		return { ok: true };
 	} catch (error) {
@@ -1145,70 +994,6 @@ export async function revokeTodoDelegation(todoKey) {
 		const { message } = describeWriteError(error);
 		return { ok: false, error: translate('errors.revokeFailed', { reason: message }) };
 	}
-}
-
-// Update todo assignee
-/**
- * @param {string} todoId
- * @param {string | null} assignee
- */
-export async function updateTodoAssignee(todoId, assignee) {
-	const todoDB = get(todoDBStore);
-
-	if (!todoDB) {
-		console.error('❌ Database not available');
-		return false;
-	}
-
-	try {
-		const existingTodo = await todoDB.get(todoId);
-		if (!existingTodo) {
-			console.error('❌ Todo not found:', todoId);
-			return false;
-		}
-
-		// Access the nested value property for the todo data
-		const todoData = unwrapTodoValue(existingTodo);
-
-		const updatedTodo = {
-			...todoData,
-			assignee: assignee,
-			updatedAt: new Date().toISOString()
-		};
-
-		const entryHash = String(await todoDB.put(todoId, updatedTodo));
-		todoReplicationStatusStore.update((statuses) => ({ ...statuses, [todoId]: 'pending' }));
-		void verifyRelayReplication(todoId, entryHash, getDatabaseAddress(todoDB));
-		console.log('✅ Todo assignee updated:', todoId, assignee);
-		return true;
-	} catch (error) {
-		console.error('❌ Error updating todo assignee:', error);
-		return false;
-	}
-}
-
-// Get todos by assignee
-/**
- * @param {string | null} assignee
- */
-export function getTodosByAssignee(assignee) {
-	return derived(todosStore, ($todos) => $todos.filter((todo) => todo.assignee === assignee));
-}
-
-// Get todos by completion status
-/**
- * @param {boolean} completed
- */
-export function getTodosByStatus(completed) {
-	return derived(todosStore, ($todos) => $todos.filter((todo) => todo.completed === completed));
-}
-
-// Get todos created by a specific peer
-/**
- * @param {string} creatorId
- */
-export function getTodosByCreator(creatorId) {
-	return derived(todosStore, ($todos) => $todos.filter((todo) => todo.createdBy === creatorId));
 }
 
 // Delete the current database

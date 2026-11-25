@@ -469,13 +469,14 @@ Keine Antworten, sondern Fragen, die dieses Kapitel nicht klären kann:
 
 Repository (`apps/escrow01`, nach Namen statt Zeilennummern, weil die Zeilen wandern):
 
-- [`src/lib/budget-service-fake.js`](../src/lib/budget-service-fake.js): Startguthaben
+- [`src/lib/budget/budget-service-fake.js`](../src/lib/budget/budget-service-fake.js): Startguthaben
   (`createFakeLedger`), Sperre (`lock`), Prüfansicht (`listEscrowsForAuditor`), Hebel `expireReadKey`
   und `seedExamples`.
-- [`src/lib/budget-store.js`](../src/lib/budget-store.js) (`simpleTodoBudgetDemo` in der Konsole),
+- [`src/lib/budget/budget-store.js`](../src/lib/budget/budget-store.js) (`simpleTodoBudgetDemo` in der Konsole),
   [`src/routes/+page.svelte`](../src/routes/+page.svelte) (`#pruefstelle` über `AUDITOR_SECTION`;
   der Startdialog, `<ConsentModal>`: seit dem 2026-11-17 Kurzform mit `summary`, seit dem 2026-11-24
-  ein Knopf und eine Einstellungsseite; die Prüfstelle im Tab „Konto“),
+  ein Knopf und eine Einstellungsseite), [`src/lib/sections/AccountSection.svelte`](../src/lib/sections/AccountSection.svelte)
+  (die Prüfstelle im Tab „Konto“),
   [`src/lib/sections.js`](../src/lib/sections.js) (Tabs und Adress-Fragment),
   [`src/lib/AddTodoForm.svelte`](../src/lib/AddTodoForm.svelte) (Hinweis unter dem Budget-Feld,
   `budget.form.hint`), [`src/lib/OnePasskeyIntro.svelte`](../src/lib/OnePasskeyIntro.svelte)
@@ -487,7 +488,7 @@ Repository (`apps/escrow01`, nach Namen statt Zeilennummern, weil die Zeilen wan
   `budget.network.demo`, `budget.demoNotice`, `budget.form.hint`, `budget.chip.hidden`,
   `budget.notice.*`, `budget.auditor.*`, `budget.toast.receivedHidden`, `budget.toast.received`,
   `sections.account.auditorOpen`, `sections.account.chainAccount`, `sections.account.accountCreating`.
-- [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) und
+- [`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js) und
   [`src/lib/chain/`](../src/lib/chain) (Sepolia-Modus), mit den Belegen in
   [passkey-account.de.md](passkey-account.de.md#quellen); der App-Lauf vom 2026-09-17 in
   [Gemessen am 2026-09-17](passkey-account.de.md#gemessen-am-2026-09-17).

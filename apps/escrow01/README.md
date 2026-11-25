@@ -66,14 +66,14 @@ pnpm dev
 
 ## Where the escrow lives in the code
 
-| Step                                                        | Files                                                                                                                                        |
-| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| The escrow on chain                                         | [`contracts/src/ConfidentialTodoEscrow.sol`](contracts/src/ConfidentialTodoEscrow.sol)                                                       |
-| A budget's states, as pure functions                        | [`src/lib/budget.js`](src/lib/budget.js)                                                                                                     |
-| One interface for every budget operation, and its two sides | [`budget-service.js`](src/lib/budget-service.js), [`-fake.js`](src/lib/budget-service-fake.js), [`-zama.js`](src/lib/budget-service-zama.js) |
-| Lock and release, step by step                              | [`budget-flow.js`](src/lib/budget-flow.js), [`budget-store.js`](src/lib/budget-store.js)                                                     |
-| Sepolia, Calibur, Zama's SDK                                | [`src/lib/chain/`](src/lib/chain)                                                                                                            |
-| The start: one passkey, a private list of one's own         | [`src/routes/+page.svelte`](src/routes/+page.svelte), `openHomeList` in [`db-actions.js`](src/lib/db-actions.js)                             |
+| Step                                                        | Files                                                                                                                                                             |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The escrow on chain                                         | [`contracts/src/ConfidentialTodoEscrow.sol`](contracts/src/ConfidentialTodoEscrow.sol)                                                                            |
+| A budget's states, as pure functions                        | [`src/lib/budget/budget.js`](src/lib/budget/budget.js)                                                                                                            |
+| One interface for every budget operation, and its two sides | [`budget-service.js`](src/lib/budget/budget-service.js), [`-fake.js`](src/lib/budget/budget-service-fake.js), [`-zama.js`](src/lib/budget/budget-service-zama.js) |
+| Lock and release, step by step                              | [`budget-flow.js`](src/lib/budget/budget-flow.js), [`budget-store.js`](src/lib/budget/budget-store.js)                                                            |
+| Sepolia, Calibur, Zama's SDK                                | [`src/lib/chain/`](src/lib/chain)                                                                                                                                 |
+| The start: one passkey, a private list of one's own         | [`src/routes/+page.svelte`](src/routes/+page.svelte), [`src/lib/start/`](src/lib/start), [`home-list.js`](src/lib/home-list.js)                                   |
 
 Read them in the order of the [code tour](docs/code-tour.md), which also follows one lock from the
 form to the chain.

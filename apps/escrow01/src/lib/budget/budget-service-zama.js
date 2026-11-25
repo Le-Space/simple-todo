@@ -25,7 +25,7 @@
  */
 
 import { BudgetError } from './budget.js';
-import { createAccountStore } from './chain/account-store.js';
+import { createAccountStore } from '../chain/account-store.js';
 import {
 	AUDITOR_ADDRESS,
 	CHAIN_ID,
@@ -38,9 +38,9 @@ import {
 	TOKEN_ADDRESS,
 	TOKEN_DECIMALS,
 	TOKEN_SYMBOL
-} from './chain/config.js';
-import { ZERO_HANDLE } from './chain/abis.js';
-import { deriveSealingKey, readPrfSeed } from './chain/read-key-seal.js';
+} from '../chain/config.js';
+import { ZERO_HANDLE } from '../chain/abis.js';
+import { deriveSealingKey, readPrfSeed } from '../chain/read-key-seal.js';
 import { createZamaSessionKey, openZamaSessionKey } from '@le-space/passkey-wallet';
 import { privateKeyToAccount } from 'viem/accounts';
 
@@ -55,7 +55,7 @@ const UINT64_MAX = (1n << 64n) - 1n;
  * @typedef {{
  *   address: `0x${string}`
  *   account: import('viem').LocalAccount
- *   seal?: (sealingKey: CryptoKey) => Promise<import('./chain/account-store.js').SealedReadKey>
+ *   seal?: (sealingKey: CryptoKey) => Promise<import('../chain/account-store.js').SealedReadKey>
  * }} ReadKey
  *   A read key opened in this session. `seal` is missing on a key that came
  *   from a record in plain text: it is used, not stored again.
@@ -65,8 +65,8 @@ const UINT64_MAX = (1n << 64n) - 1n;
  * @param {{
  *   identity: () => string | null | undefined
  *   credential: () => any
- *   chain: import('./chain/sepolia-chain.js').SepoliaChain
- *   directory: ReturnType<typeof import('./chain/account-directory.js').createAccountDirectory>
+ *   chain: import('../chain/sepolia-chain.js').SepoliaChain
+ *   directory: ReturnType<typeof import('../chain/account-directory.js').createAccountDirectory>
  *   accounts?: ReturnType<typeof createAccountStore>
  *   prompt?: (action: string, run: (hooks: { onPrompt: () => void, onSigned: () => void }) => Promise<any>) => Promise<any>
  *   onAccount?: (status: AccountStatus) => void
@@ -104,7 +104,7 @@ export function createZamaBudgetService({
 		auditor: AUDITOR_ADDRESS
 	};
 
-	/** One account creation per DID at a time. @type {Map<string, Promise<import('./chain/account-store.js').ChainAccountRecord>>} */
+	/** One account creation per DID at a time. @type {Map<string, Promise<import('../chain/account-store.js').ChainAccountRecord>>} */
 	const creating = new Map();
 	/** The read key opened in this session, by DID; stored only sealed. @type {Map<string, ReadKey>} */
 	const opened = new Map();
@@ -177,7 +177,7 @@ export function createZamaBudgetService({
 	 * the full lookup time) or asks for a new account (`create`).
 	 *
 	 * @param {{ intent?: 'start' | 'search' | 'create' }} [options]
-	 * @returns {Promise<import('./chain/account-store.js').ChainAccountRecord>}
+	 * @returns {Promise<import('../chain/account-store.js').ChainAccountRecord>}
 	 */
 	async function ensureAccount({ intent = 'start' } = {}) {
 		const did = me();
@@ -196,7 +196,7 @@ export function createZamaBudgetService({
 					timeoutMs: intent === 'search' ? lookupTimeoutMs : 3_000
 				});
 				if (published && (await chain.isPasskeyAccount({ address: published.address, did }))) {
-					/** @type {import('./chain/account-store.js').ChainAccountRecord} */
+					/** @type {import('../chain/account-store.js').ChainAccountRecord} */
 					const record = {
 						chainId: CHAIN_ID,
 						address: published.address,
@@ -224,7 +224,7 @@ export function createZamaBudgetService({
 				opened.set(did, readKey);
 				// Sealed after the account exists, so a declined touch costs only the
 				// next session's read access, never the account.
-				/** @type {import('./chain/account-store.js').ChainAccountRecord} */
+				/** @type {import('../chain/account-store.js').ChainAccountRecord} */
 				const record = {
 					chainId: CHAIN_ID,
 					address,
@@ -287,7 +287,7 @@ export function createZamaBudgetService({
 
 	/**
 	 * @param {string} did
-	 * @param {import('./chain/account-store.js').ChainAccountRecord} record
+	 * @param {import('../chain/account-store.js').ChainAccountRecord} record
 	 * @returns {import('./budget-service.js').ReadKeyState}
 	 */
 	function readKeyState(did, record) {
@@ -304,7 +304,7 @@ export function createZamaBudgetService({
 	 * their own.
 	 *
 	 * @param {string} did
-	 * @param {import('./chain/account-store.js').ChainAccountRecord} record
+	 * @param {import('../chain/account-store.js').ChainAccountRecord} record
 	 */
 	function requireReadKey(did, record) {
 		const state = readKeyState(did, record);
@@ -321,7 +321,7 @@ export function createZamaBudgetService({
 	 * somebody asked for.
 	 *
 	 * @param {string} did
-	 * @param {import('./chain/account-store.js').ChainAccountRecord} record
+	 * @param {import('../chain/account-store.js').ChainAccountRecord} record
 	 */
 	async function openReadKey(did, record) {
 		if (readKeyState(did, record) !== 'locked' || !record.session?.sealed) {
@@ -419,9 +419,9 @@ export function createZamaBudgetService({
 	 * the refusal reverts the whole renewal. A key another device holds is not
 	 * known here and stays: each browser takes back only its own.
 	 *
-	 * @param {import('./chain/account-store.js').ChainAccountRecord} record
+	 * @param {import('../chain/account-store.js').ChainAccountRecord} record
 	 * @param {bigint} now the latest block's time
-	 * @returns {Promise<import('./chain/sepolia-chain.js').Call[]>}
+	 * @returns {Promise<import('../chain/sepolia-chain.js').Call[]>}
 	 */
 	async function revokePrevious(record, now) {
 		const previous = record.session?.address;
@@ -448,7 +448,7 @@ export function createZamaBudgetService({
 
 	/**
 	 * @param {string} did
-	 * @param {import('./chain/account-store.js').ChainAccountRecord} record
+	 * @param {import('../chain/account-store.js').ChainAccountRecord} record
 	 * @returns {import('./budget-service.js').ReadKeyStatus}
 	 */
 	function statusOf(did, record) {
@@ -465,8 +465,8 @@ export function createZamaBudgetService({
 	 * One user operation the passkey signs.
 	 *
 	 * @param {'budget-lock' | 'budget-release' | 'budget-read-key'} action
-	 * @param {import('./chain/account-store.js').ChainAccountRecord} record
-	 * @param {import('./chain/sepolia-chain.js').Call[]} calls
+	 * @param {import('../chain/account-store.js').ChainAccountRecord} record
+	 * @param {import('../chain/sepolia-chain.js').Call[]} calls
 	 */
 	async function send(action, record, calls) {
 		try {
@@ -490,7 +490,7 @@ export function createZamaBudgetService({
 
 	/**
 	 * @param {string} did
-	 * @param {import('./chain/account-store.js').ChainAccountRecord} record
+	 * @param {import('../chain/account-store.js').ChainAccountRecord} record
 	 * @param {`0x${string}`[]} handles
 	 * @param {`0x${string}`} contractAddress
 	 */
@@ -721,7 +721,7 @@ export function createZamaBudgetService({
 			]);
 			if (!receipt.success) throw new BudgetError('unknown', 'The read key renewal reverted.');
 			opened.set(did, readKey);
-			/** @type {import('./chain/account-store.js').ChainAccountRecord} */
+			/** @type {import('../chain/account-store.js').ChainAccountRecord} */
 			const next = {
 				...record,
 				session: {

@@ -90,7 +90,7 @@ sequenceDiagram
 ```
 
 The starting funds hang on a single condition. `lock` in
-[`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) reads `confidentialBalanceOf`
+[`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js) reads `confidentialBalanceOf`
 first; if the handle is `bytes32(0)`, the account has never held confidential money, and the three
 calls `mint`, `approve` and `wrap` are prepended to the user operation
 ([`chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js), `calls.funding`). The amount is
@@ -207,12 +207,12 @@ cUSDT, minted in the same operation." That is the only place in the interface wh
 funds appear. Creating a todo with a budget, and locking it, say nothing about them.
 
 The second sentence goes once the balance is above zero (`showFundingHint` in
-[`+page.svelte`](../src/routes/+page.svelte)), so Bob, whose balance comes from the payout, no longer
+[`AccountSection.svelte`](../src/lib/sections/AccountSection.svelte)), so Bob, whose balance comes from the payout, no longer
 reads about minting once the payout has arrived.
 
 ## Sources
 
-- [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js): starting funds, lock,
+- [`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js): starting funds, lock,
   release, read key
 - [`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js): the `funding`, `lock` and
   `release` calls

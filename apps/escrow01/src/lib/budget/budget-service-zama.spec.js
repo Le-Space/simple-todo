@@ -3,8 +3,8 @@ import { budgetErrorCode } from './budget.js';
 import { createZamaBudgetService, wasCancelled } from './budget-service-zama.js';
 import { getAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { createAccountStore, parseRecord } from './chain/account-store.js';
-import { parsePublished } from './chain/account-directory.js';
+import { createAccountStore, parseRecord } from '../chain/account-store.js';
+import { parsePublished } from '../chain/account-directory.js';
 import { forgetSession, honourStorageChoice } from '@simple-todo/todo/browser-memory.js';
 import { setPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
 import {
@@ -14,7 +14,7 @@ import {
 	STARTING_FUNDS,
 	TOKEN_ADDRESS,
 	readChainEndpoints
-} from './chain/config.js';
+} from '../chain/config.js';
 
 const ALICE = 'did:key:zAlice';
 const BOB = 'did:key:zBob';
@@ -580,7 +580,7 @@ describe('the Sepolia budget service', () => {
 			deadline: null
 		});
 
-		const record = /** @type {import('./chain/account-store.js').ChainAccountRecord} */ (
+		const record = /** @type {import('../chain/account-store.js').ChainAccountRecord} */ (
 			w.bob.accounts.load(BOB, CHAIN_ID)
 		);
 		w.bob.accounts.save(BOB, { ...record, readKeyExpiresAt: 1 });

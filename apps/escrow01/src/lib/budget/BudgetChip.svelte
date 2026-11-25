@@ -2,7 +2,7 @@
 	// One todo's budget in one chip (escrow01): amount and status. The amount is
 	// what the budget service decrypts, never a number stored with the todo.
 	import { _, locale } from '$lib/i18n/index.js';
-	import BudgetIcon from './BudgetIcon.svelte';
+	import BudgetIcon from '../BudgetIcon.svelte';
 	import { formatAmount } from './budget.js';
 	import { amountFor, budgetInfo } from './budget-store.js';
 

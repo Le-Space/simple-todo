@@ -3,15 +3,15 @@ import { tick } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { locale } from '$lib/i18n/index.js';
-import BudgetNotices from './BudgetNotices.svelte';
-import BudgetRowNote from './BudgetRowNote.svelte';
+import BudgetNotices from './budget/BudgetNotices.svelte';
+import BudgetRowNote from './budget/BudgetRowNote.svelte';
 import TechnicalExplanation from './TechnicalExplanation.svelte';
 import TechnicalToggle from './TechnicalToggle.svelte';
-import { dismissBudgetNotice, budgetNoticeStore } from './budget-store.js';
+import { dismissBudgetNotice, budgetNoticeStore } from './budget/budget-store.js';
 import { CATALOGUES, EVIDENCE } from './explanations/index.js';
 import { TECHNICAL_VIEW_STORAGE_KEY, technicalView } from './technical-view.js';
 
-/** @type {import('./budget.js').Budget} */
+/** @type {import('./budget/budget.js').Budget} */
 const funded = {
 	mode: 'zama-confidential',
 	status: 'funded',
@@ -23,7 +23,7 @@ const funded = {
 	lastError: null
 };
 
-/** @type {import('./budget.js').Budget} */
+/** @type {import('./budget/budget.js').Budget} */
 const underfunded = { ...funded, status: 'failed', lastError: 'insufficient-balance' };
 
 const withoutBackticks = (/** @type {string} */ text) => text.split('`').join('');

@@ -296,7 +296,7 @@ about to be replaced. It is a demonstration, not a product.
 ## Passkey wallet
 
 Integrated on 2026-09-17 behind `VITE_BUDGET_SERVICE=zama`
-([`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js),
+([`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js),
 [`src/lib/chain/`](../src/lib/chain)): Zama's token and the escrow, signed through an account on Calibur, a
 non-upgradeable smart contract by Uniswap Labs ([What Calibur is](passkey-account.md#calibur-simple)),
 that the passkey controls. How it works, step by step, is in [passkey-account.md](passkey-account.md). The
@@ -399,10 +399,10 @@ Repository (`apps/escrow01`, line numbers as of 2026-10-02):
   in particular 363-377, 379-419, 421-444.
 - [`contracts/README.md`](../contracts/README.md): "Who can decrypt", "What stays public", "`.env`",
   "Before relying on a deployment".
-- [`src/lib/budget-service.js`](../src/lib/budget-service.js) 1-18,
-  [`src/lib/budget.js`](../src/lib/budget.js) 1-16, [`src/lib/i18n/en.json`](../src/lib/i18n/en.json)
+- [`src/lib/budget/budget-service.js`](../src/lib/budget/budget-service.js) 1-18,
+  [`src/lib/budget/budget.js`](../src/lib/budget/budget.js) 1-16, [`src/lib/i18n/en.json`](../src/lib/i18n/en.json)
   (`budget.notice.insufficient`).
-- [`src/lib/budget-service-zama.js`](../src/lib/budget-service-zama.js) (`ensureAccount`, `accountOf`,
+- [`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js) (`ensureAccount`, `accountOf`,
   `renewReadKey`), [`src/lib/chain/sepolia-chain.js`](../src/lib/chain/sepolia-chain.js)
   (`createAccount`, `isPasskeyAccount`), [`src/lib/chain/config.js`](../src/lib/chain/config.js)
   (`readChainEndpoints`), [`src/lib/chain/account-store.js`](../src/lib/chain/account-store.js); the

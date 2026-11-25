@@ -85,10 +85,10 @@ _Adresse_ seinen Typ trägt — eine Änderung am Controller-Paket und eine gute
 
 ### Aus `privacy01`, abgeschaltet
 
-Dieses Kapitel wurde aus `privacy01` kopiert und trägt deshalb auch die Versiegelung einzelner
-Einträge aus jenem Kapitel mit (`src/lib/db-encryption.js`, `entry-encryption.js`,
-`database-keys.js`, mit ihren Unit-Tests). Nichts importiert sie; die Listen hier sind so
-unverschlüsselt wie in `acl01`. In `escrow01` sind nur die Budgetbeträge verschlüsselt, auf der
+Dieses Kapitel wurde aus `privacy01` kopiert, und mit ihm kam die Versiegelung einzelner Einträge
+aus jenem Kapitel (`db-encryption.js`, `entry-encryption.js`, `database-keys.js`). Nichts hier hat
+sie importiert, also ist sie entfernt; `privacy01` und `invoice01` behalten sie. Die Listen hier
+sind so unverschlüsselt wie in `acl01`. In `escrow01` sind nur die Budgetbeträge verschlüsselt, auf der
 Chain.
 
 Dasselbe gilt für den Signierschlüssel. `privacy01` hat seine Passkey-Identität später auf einen

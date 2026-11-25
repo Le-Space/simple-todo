@@ -387,20 +387,14 @@ async function createOrbitDBInstance(heliaNode) {
 	// Without PRF the keystore generates that key instead — see
 	// `warnIfIdentityCannotTravel` in +page.svelte.
 	//
-	// The key stays in OrbitDB's default keystore, unencrypted in this
+	// Where the key lives follows the storage choice. With "Keep in this
+	// browser" it sits in OrbitDB's default keystore, unencrypted in this
 	// browser's IndexedDB, and later sessions sign with it without asking for
-	// the passkey. An `encryptKeystore: true` used to sit here: the provider
-	// reads it only together with `useKeystoreDID`, so it encrypted nothing.
-	// `privacy01` keeps the key in memory instead; it did so only after this
-	// branch was cut from it.
-	// The key stays in memory: the provider derives it from the passkey's PRF
-	// output, so the same passkey yields the same identity in every session and
-	// a closed tab leaves nothing behind.
-	// The keystore follows the storage choice: a reader who keeps things keeps
-	// the signing key too, and the list registry -- whose name is derived from a
-	// signature -- still points at the same place after a reload. In memory mode
-	// the key goes with the tab, and with PRF the passkey derives the same one
-	// again anyway (#9).
+	// the passkey; the list registry -- whose name is derived from a signature
+	// -- then still points at the same place after a reload. In memory mode the
+	// key goes with the tab, and with PRF the passkey derives the same one again
+	// (#9). (An `encryptKeystore: true` used to sit here: the provider reads it
+	// only together with `useKeystoreDID`, so it encrypted nothing.)
 	// Wrapped by the provider (0.11.0): OrbitDB's identity cache refuses another
 	// session of the same passkey — entries of an earlier session arrive, and
 	// this session can no longer write (orbitdb/orbitdb#1258).
