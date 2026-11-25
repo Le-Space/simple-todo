@@ -30,6 +30,7 @@ import {
 	UNDERLYING_ADDRESS
 } from './config.js';
 import { p256KeyFromDid } from './did-key.js';
+import { findLockedEvents } from './locked-events.js';
 import { createZamaClient } from './zama-client.js';
 
 /** @typedef {`0x${string}`} Hex */
@@ -295,35 +296,16 @@ export function createSepoliaChain({ endpoints }) {
 
 		/**
 		 * Every `Locked` event, newest first, with the block time it was locked
-		 * at.
+		 * at: from the block explorer, or the RPC in windows (locked-events.js).
 		 */
 		async lockedEvents() {
-			// Typed loosely: the event comes out of the ABI array, which loses viem's
-			// per-event argument types.
-			const logs = /** @type {any[]} */ (
-				await client.getLogs({
-					address: ESCROW_ADDRESS,
-					event: escrowAbi.find((item) => item.type === 'event' && item.name === 'Locked'),
-					fromBlock: ESCROW_DEPLOY_BLOCK,
-					toBlock: 'latest'
-				})
-			);
-			/** @type {Map<bigint, bigint>} */
-			const times = new Map();
-			for (const blockNumber of new Set(logs.map((log) => log.blockNumber))) {
-				const block = await client.getBlock({ blockNumber });
-				times.set(blockNumber, block.timestamp);
-			}
-			return logs
-				.map((log) => ({
-					creator: getAddress(log.args.creator),
-					todoRef: /** @type {Hex} */ (log.args.todoRef),
-					beneficiary: getAddress(log.args.beneficiary),
-					deadline: log.args.deadline,
-					lockedAt: times.get(log.blockNumber) ?? 0n,
-					txHash: log.transactionHash
-				}))
-				.reverse();
+			return findLockedEvents({
+				apiUrl: endpoints.explorerApi ?? null,
+				client,
+				abi: escrowAbi,
+				address: ESCROW_ADDRESS,
+				fromBlock: ESCROW_DEPLOY_BLOCK
+			});
 		},
 
 		calls: {
