@@ -66,11 +66,7 @@ test('the identity comes back from the passkey alone, in three touches', async (
 	// restore's own signing key goes into the keystore, so the provider does not
 	// ask the passkey for the PRF output a second time.
 	const restore = await takeCeremonies(page);
-	expect(restore.map((c) => `${c.kind}${c.prf ? '+prf' : ''}`)).toEqual([
-		'get+prf',
-		'get',
-		'get'
-	]);
+	expect(restore.map((c) => `${c.kind}${c.prf ? '+prf' : ''}`)).toEqual(['get+prf', 'get', 'get']);
 	expect(restore.every((c) => c.ok)).toBe(true);
 
 	// And the restored identity signs: the step after the restore, which is

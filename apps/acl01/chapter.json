@@ -26,6 +26,7 @@
 			"e2e/consent-network.spec.js",
 			"e2e/phone-layout.spec.js"
 		],
+		"lint": true,
 		"check": true
 	},
 	"title": "Who may write is decided per DID",
