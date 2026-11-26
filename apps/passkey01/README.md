@@ -23,26 +23,32 @@ The previous chapter (`collab01`) gave every browser a random throwaway
 OrbitDB identity: entries were attributable to _a_ peer, but not to _you_.
 This chapter replaces that with an opt-in **passkey-backed identity**:
 
-- **Onboarding choice** before the P2P stack starts: _create a passkey_
-  (one name, and it is only a label), _use an existing passkey_ (recovery),
-  or _continue without one_ (exactly the previous chapter's behaviour).
+- **Onboarding choice** before the P2P stack starts, on the start dialog's
+  first screen: its button, _Start without a passkey_ (exactly the previous
+  chapter's behaviour), and two links under it, _Create a new passkey_ and
+  _Already have a passkey? Sign in with it_ (recovery). The button's press is
+  the consent. The passkey's name (only a label, filled in already), the three
+  words and where the todos are kept are on the second screen, _Notices and
+  settings_; kept in this browser, the decision is kept too.
 - **WebAuthn DID provider** from
   [`@le-space/orbitdb-identity-provider-webauthn-did`](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did):
   the DID is the passkey's own P-256 key, and OrbitDB signs entries with a
   **secp256k1 key derived from the passkey** (PRF → HKDF-SHA256; without PRF
   the keystore generates one instead). That key is **not encrypted**: it
   sits in OrbitDB's keystore in this browser's IndexedDB, where anyone who
-  can read the browser's storage can read it. Creating a passkey costs four
-  WebAuthn prompts (register, `largeBlob` write, PRF, identity proof); after
-  a reload the only prompt is the `largeBlob` read of the recovery below, and
-  signing never asks. (The stricter _varsig_ variant — a passkey prompt for
+  can read the browser's storage can read it. Creating a passkey costs three
+  WebAuthn prompts (register, PRF, identity proof), and before the second and
+  the third the provider's `<passkey-step-dialog>` says which one comes and
+  why ("Passkey prompt 2 of 3"); _Cancel_ there stops the start and keeps the
+  passkey already made. Recovery from the authenticator costs three as well; a
+  passkey this browser keeps asks nothing, because the signing key is in the
+  keystore and the identity's proof is kept. Signing never asks. (The stricter _varsig_ variant — a passkey prompt for
   every single write — exists in the same package and is a good follow-up
   exercise, but is not used here.)
-- **Create-or-recover flow** (`src/lib/passkey-identity.js`): identity
-  metadata is written to the authenticator's `largeBlob` when supported and
-  always to `localStorage` as fallback; recovery tries `largeBlob` first.
-  This flow currently lives here — upstreaming it into the provider package
-  is an open TODO.
+- **Create-or-recover flow** (`src/lib/passkey-identity.js`): the credential
+  is kept in `localStorage` when you keep things in this browser; without it,
+  recovery asks the authenticator, which gives the passkey and its key back in
+  two prompts. There is no `largeBlob` layer any more.
 - **Visible identity**: your DID appears in the header (shortened, with a
   copy button), and every todo shows its author resolved from
   `entry.identity` — the field OrbitDB signs itself, so it cannot be faked
@@ -53,7 +59,7 @@ This chapter replaces that with an opt-in **passkey-backed identity**:
 
 ### The name you type is a label, not your identity
 
-The onboarding form asks for one name, and nothing depends on it. A passkey
+The start dialog asks for one name, and nothing depends on it. A passkey
 carries two human-readable fields (`user.name` and `displayName`) that exist
 only so the browser's passkey picker has something to show. What identifies
 the credential is the **user handle**, 64 random bytes the identity provider
@@ -107,8 +113,8 @@ This branch extends the basic `main` tutorial with a three-word Spanish shared-l
 
 1. **Open Two Browser Windows** - You need at least two browser instances, a mobile device, or ask another distant person to open the app
 2. **Load the Same URL** - All app users should load the same app URL
-3. **Choose the Shared List** - Copy the three-word mnemonic from the first browser and paste it into the second
-4. **Accept Consent and Open** - Accept the notice and select **Open shared list**
+3. **Choose the Shared List** - Copy the three-word mnemonic from the first browser and paste it into the second, under **Settings** in the start dialog
+4. **Start** - Press the start button; its press is the consent
 5. **Wait for Connection** - The app will automatically discover and connect peers
 6. **Add Todos** - Create todos in one browser and watch them appear in the other
 

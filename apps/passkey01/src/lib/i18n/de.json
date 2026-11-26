@@ -24,7 +24,7 @@
 			"readingIsOpen": "Ein Passkey sagt, wer etwas geschrieben hat. Er macht es nicht privat - hier ist nichts verschlüsselt, und wer die drei Wörter hat, liest alles, auch der Relay, der die Liste aufbewahrt.",
 			"identityPasskey": "Ihr Passkey weist Sie gegenüber den anderen Geräten aus. Er bleibt bei Ihrem Authenticator – im Gerät, auf einem Sicherheitsschlüssel oder in einem Passwortmanager, der ihn womöglich zwischen Ihren Geräten abgleicht. Wir bekommen ihn nie zu sehen, und niemand sonst kann in Ihrem Namen schreiben.",
 			"identityAnonymous": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Schließen Sie ihn, ist sie weg, und nichts verbindet einen Besuch mit dem nächsten.",
-			"cookies": "Es werden keine Tracking-Cookies verwendet. Wenn Sie \"nicht mehr anzeigen\" ankreuzen, ist diese Entscheidung das Einzige, was auf diesem Gerät gespeichert wird.",
+			"cookies": "Es werden keine Tracking-Cookies verwendet. In diesem Browser behalten, bleibt auch Ihre Entscheidung zu starten, und dieser Dialog kommt nicht wieder; nur im Arbeitsspeicher fragt er erneut.",
 			"identityAnonymousKept": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Er behält sie, bis Sie die Website-Daten löschen; nichts verbindet sie mit Ihnen.",
 			"storageMemory": "Sie haben „nur im Arbeitsspeicher“ gewählt: Auf diesem Gerät wird nichts abgelegt, und beim Neuladen fängt dieser Browser von vorn an.",
 			"storagePersistent": "Sie haben „in diesem Browser behalten“ gewählt: Die Todos bleiben nach dem Neuladen da. Sie liegen unverschlüsselt im Speicher dieses Browsers, und wer ihn löscht, verliert sie."
@@ -95,6 +95,18 @@
 		"storageMemoryLabel": "Nur im Arbeitsspeicher",
 		"storageMemoryHint": "Die Aufgaben liegen in einer geteilten, unverschlüsselten OrbitDB-Datenbank im Arbeitsspeicher und sind beim Neuladen oder Beenden weg.",
 		"storagePersistentLabel": "IndexedDB",
-		"storagePersistentHint": "Mir ist klar, dass die Aufgaben in einer geteilten, unverschlüsselten OrbitDB-Datenbank in der IndexedDB des Browsers liegen und einen Neustart überdauern."
+		"storagePersistentHint": "Mir ist klar, dass die Aufgaben in einer geteilten, unverschlüsselten OrbitDB-Datenbank in der IndexedDB des Browsers liegen und einen Neustart überdauern.",
+		"title": "Ihre Aufgaben, unterschrieben mit Ihrem Passkey",
+		"promise": "Eine gemeinsame Liste und ein Passkey, der sagt, wer was geschrieben hat – auf jedem Gerät, auf dem Sie ihn verwenden.",
+		"summary": {
+			"lists": "Ein Passkey sagt, wer etwas geschrieben hat; privat macht er es nicht. Hier ist nichts verschlüsselt, und wer die drei Wörter hat, liest die Liste.",
+			"listsTechnical": "Ein Passkey unterschreibt, er verschlüsselt nicht: Das OrbitDB-Log der Liste ist für jeden mit den drei Wörtern lesbar, auch für den Relay.",
+			"authenticator": "Der Passkey bleibt bei Ihrem Authenticator: im Gerät, auf einem Sicherheitsschlüssel oder in einem Passwortmanager. Wir sehen ihn nie.",
+			"kept": "In diesem Browser behalten, bleiben Ihre Aufgaben nach dem Neuladen da. Sie liegen unverschlüsselt in seinem Speicher, und wer die Website-Daten löscht, verliert sie.",
+			"keptTechnical": "In diesem Browser behalten: Die OrbitDB-Logs und der Signierschlüssel liegen unverschlüsselt in IndexedDB und localStorage. Wer die Website-Daten löscht, verliert sie.",
+			"memory": "Nur im Arbeitsspeicher: Auf diesem Gerät bleibt nichts, und beim Neuladen beginnt alles von vorn."
+		},
+		"identityLabelDefault": "Passkey-Todo",
+		"identityLabelTitle": "Name des neuen Passkeys"
 	}
 }
