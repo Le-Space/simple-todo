@@ -29,6 +29,7 @@
 			"e2e/anonymous-reads-passkey.spec.js",
 			"e2e/phone-layout.spec.js"
 		],
+		"lint": true,
 		"check": true
 	},
 	"title": "Your identity is a passkey, not a random key",
