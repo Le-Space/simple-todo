@@ -1162,10 +1162,51 @@ export async function revokeTodoDelegation(todoKey) {
 async function handOverKey(todoDB, todoKey, delegateDid) {
 	const keys = activeKeys;
 	if (!keys) return null;
-	if (keys.ownerDid !== get(ownIdentityIdStore))
+	if (keys.ownerDid !== get(ownIdentityIdStore)) {
 		return translate('errors.sealedDelegateNeedsOwner');
-	const handed = await keys.delegate(todoKey, delegateDid, await writersOf(todoDB));
-	return handed === 'no-public-key' ? translate('errors.delegateHasNoKey') : null;
+	}
+	const { missing } = await keys.delegate(todoKey, delegateDid, await writersOf(todoDB));
+	// Whoever has no key in the directory yet -- a delegate who has not started
+	// the app since #127, or whose key has not reached this browser -- gets his
+	// copy later. Until then he reads nothing of it.
+	for (const did of missing) {
+		keepGranting(keys, () =>
+			did === delegateDid
+				? keys.ensureTaskGranted(todoKey, did, { timeoutMs: 20_000 })
+				: keys.ensureGranted(did, { timeoutMs: 20_000 })
+		);
+	}
+	return null;
+}
+
+/** When the owner's session tries again to hand out a copy that is missing. */
+const GRANT_AGAIN_AFTER_MS = [10_000, 30_000, 60_000, 120_000, 300_000];
+
+/**
+ * #127: try to write a missing copy again a few times while this session
+ * runs, until one attempt writes it. Best effort: the owner's next visit to
+ * the list tries as well (`giveMissingKeys`).
+ *
+ * @param {import('./sealed/list-keys.js').ListKeys} keys
+ * @param {() => Promise<string[]>} attempt the slots it wrote
+ */
+function keepGranting(keys, attempt) {
+	let tries = 0;
+	const next = () => {
+		const wait = GRANT_AGAIN_AFTER_MS[tries++];
+		if (wait === undefined) return;
+		setTimeout(async () => {
+			try {
+				if ((await attempt()).length === 0) next();
+			} catch (error) {
+				// The keys were closed (another list, a restart): nothing to do.
+				console.warn('Could not hand out a missing key yet:', error);
+			}
+		}, wait);
+	};
+	void attempt()
+		.then((written) => written.length === 0 && next())
+		.catch(() => next());
 }
 
 /**
@@ -1178,6 +1219,12 @@ async function handOverKey(todoDB, todoKey, delegateDid) {
 async function giveMissingKeys(todoDB, keys) {
 	try {
 		for (const did of await writersOf(todoDB)) await keys.ensureGranted(did);
+		for (const todo of get(todosStore)) {
+			const delegateDid = todo.delegation?.delegateDid;
+			if (delegateDid && !todo.delegation?.revokedAt) {
+				await keys.ensureTaskGranted(todo.key, delegateDid);
+			}
+		}
 	} catch (error) {
 		console.warn('Could not hand out the missing keys of a sealed list:', error);
 	}
@@ -1191,8 +1238,13 @@ async function giveMissingKeys(todoDB, keys) {
  * @returns {Promise<'granted' | 'no-public-key' | 'not-sealed'>}
  */
 export async function giveWriterKeys(did) {
-	if (!activeKeys) return 'not-sealed';
-	return keysForNewWriter(activeKeys, did);
+	const keys = activeKeys;
+	if (!keys) return 'not-sealed';
+	const granted = await keysForNewWriter(keys, did);
+	if (granted === 'no-public-key') {
+		keepGranting(keys, () => keys.ensureGranted(did, { timeoutMs: 20_000 }));
+	}
+	return granted;
 }
 
 /**

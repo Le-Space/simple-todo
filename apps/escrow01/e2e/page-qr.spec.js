@@ -53,9 +53,11 @@ test.describe('Page QR and list link', () => {
 				timeout
 			});
 			expect(readListLink(guest.url()).address).toBe(address);
-			// By the name the owner gave it: the database name carries a suffix that
-			// makes it unique, and the guest's heading used to show it.
-			await expect(guest.getByTestId('active-list-name')).toHaveText(listName, { timeout });
+			// Not by the name the owner gave it: a private list is sealed (#127), its
+			// name with it, and the guest holds no key. Nor by the random database
+			// name, which names nothing.
+			await expect(guest.getByTestId('active-list-name')).not.toHaveText(listName);
+			await expect(guest.getByTestId('active-list-name')).not.toContainText('sealed-v1-');
 		} finally {
 			await ownerContext.close();
 			await guestContext.close();

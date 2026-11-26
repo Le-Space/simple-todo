@@ -646,8 +646,7 @@
 		"revokeFailed": "Die Delegation konnte nicht zurückgenommen werden: {reason}",
 		"noSealedReader": "Diese Sitzung hat keinen Schlüssel für versiegelte Listen, deshalb lässt sich eine private Liste weder öffnen noch anlegen. Laden Sie die Seite neu und starten Sie noch einmal.",
 		"sealedNoKey": "Diese Liste ist versiegelt, und dieser Browser hat noch keinen Schlüssel dafür. Die Besitzerin gibt ihn aus; er kommt von selbst.",
-		"sealedDelegateNeedsOwner": "In einer versiegelten Liste kann nur ihre Besitzerin eine Aufgabe an jemanden geben: Nur sie hat die Schlüssel, die sie dafür ausgibt.",
-		"delegateHasNoKey": "Diese DID hat noch keinen Schlüssel für versiegelte Listen. Bitten Sie die Person, die App einmal zu starten, und geben Sie die Aufgabe dann noch einmal ab."
+		"sealedDelegateNeedsOwner": "In einer versiegelten Liste kann nur ihre Besitzerin eine Aufgabe an jemanden geben: Nur sie hat die Schlüssel, die sie dafür ausgibt."
 	},
 	"welcome": {
 		"title": "Willkommen zurück",

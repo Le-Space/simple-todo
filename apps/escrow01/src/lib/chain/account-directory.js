@@ -43,6 +43,7 @@
 
 import { IPFSAccessController } from '@orbitdb/core';
 import { getAddress, isAddress } from 'viem';
+import { createNewcomerAnswers } from '../newcomers.js';
 import {
 	LIST_KEY_AGREEMENT_INFO,
 	publicKeyFromText,
@@ -61,10 +62,6 @@ export const ACCOUNT_DIRECTORY_NAME = 'simple-todo-escrow01-account-v2';
 const ENTRY_KEY = 'account';
 const AGREEMENT_KEY_ENTRY = 'list-key-agreement';
 
-/** The owner answers a newcomer twice: at once, and again in case gossipsub had no stream to it yet. */
-const ANSWER_AGAIN_AFTER_MS = 3_000;
-/** Joins that come closer together than this get one answer. */
-const MIN_ANSWER_INTERVAL_MS = 1_000;
 /** While a lookup waits, the reader joins the directory's topic again, which the owner answers. */
 const ASK_AGAIN_AFTER_MS = [4_000, 10_000];
 
@@ -99,72 +96,11 @@ export function createAccountDirectory(getOrbitdb) {
 		return database;
 	}
 
-	/** How this session answers for a directory, by database address. @type {Map<string, () => void>} */
-	const serving = new Map();
-
-	/**
-	 * Answer every peer that joins the directory, from the browser that owns it:
-	 * its heads on the directory's topic, as `Sync.add()` publishes a new entry.
-	 * A peer that has the entry already drops it again in its log.
-	 *
-	 * Peers on the topic before this browser started answering never join in
-	 * its sight, a payer whose page was open before the owner's, say; `publish`
-	 * answers them at once with what this returns.
-	 *
-	 * @param {any} database
-	 * @returns {(() => void) | undefined}
-	 */
-	function serve(database) {
-		const topic = String(database.address);
-		const pubsub = getOrbitdb()?.ipfs?.libp2p?.services?.pubsub;
-		if (!pubsub) return undefined;
-		const known = serving.get(topic);
-		if (known) return known;
-
-		const announce = async () => {
-			for (const head of await database.log.heads()) {
-				const bytes = await database.log.storage.get(head.hash);
-				// Nobody on the topic: nobody to tell.
-				if (bytes) await pubsub.publish(topic, bytes).catch(() => {});
-			}
-		};
-		let answeredAt = 0;
-		const answer = () => {
-			if (Date.now() - answeredAt < MIN_ANSWER_INTERVAL_MS) return;
-			answeredAt = Date.now();
-			void announce().catch(() => {});
-			setTimeout(() => void announce().catch(() => {}), ANSWER_AGAIN_AFTER_MS);
-		};
-		/** @param {any} event */
-		const onSubscriptionChange = (event) => {
-			const joined = (event.detail?.subscriptions ?? []).some(
-				(/** @type {any} */ subscription) => subscription.subscribe && subscription.topic === topic
-			);
-			if (joined) answer();
-		};
-		pubsub.addEventListener('subscription-change', onSubscriptionChange);
-		database.events.once('close', () => {
-			pubsub.removeEventListener('subscription-change', onSubscriptionChange);
-			serving.delete(topic);
-		});
-		serving.set(topic, answer);
-		return answer;
-	}
-
-	/**
-	 * Join the directory's topic again, which its owner answers with the entry.
-	 * Through gossipsub alone: OrbitDB's Sync keeps listening, and only the
-	 * subscription is sent anew.
-	 *
-	 * @param {any} database
-	 */
-	function askAgain(database) {
-		const topic = String(database.address);
-		const pubsub = getOrbitdb()?.ipfs?.libp2p?.services?.pubsub;
-		if (!pubsub) return;
-		pubsub.unsubscribe(topic);
-		pubsub.subscribe(topic);
-	}
+	// The owner's browser answers every newcomer to its directory, and a reader
+	// asks again while it waits (../newcomers.js, measured in #164).
+	const newcomers = createNewcomerAnswers(() => getOrbitdb()?.ipfs?.libp2p?.services?.pubsub);
+	const serve = newcomers.serve;
+	const askAgain = newcomers.askAgain;
 
 	/**
 	 * What `read` finds, now or once an update brings it, within `timeoutMs`,
@@ -217,10 +153,7 @@ export function createAccountDirectory(getOrbitdb) {
 		const database = await open(did);
 		const answer = serve(database);
 		if (!same(await database.get(key))) await database.put(key, value());
-		const pubsub = getOrbitdb()?.ipfs?.libp2p?.services?.pubsub;
-		if (answer && (pubsub?.getSubscribers?.(String(database.address)) ?? []).length > 0) {
-			answer();
-		}
+		newcomers.answerThoseThere(database, answer);
 	}
 
 	return {

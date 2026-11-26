@@ -47,23 +47,21 @@ test.describe('Per-todo delegation', () => {
 			await expect(delegatedRow.getByTestId('todo-delegation-status')).toHaveText('active');
 
 			// 2. Bob and Mallory open the list by address. Neither is in the write set.
+			//    The list is sealed (#127): Bob reads the todo handed to him and
+			//    nothing else; Mallory reads nothing (sealed-lists.spec.js has more).
 			step('Bob and Mallory open the list by address');
 			await openListByAddress(bob.page, address);
 			await openListByAddress(mallory.page, address, 3);
+			await expectTodo(bob.page, delegated);
 			for (const page of [bob.page, mallory.page]) {
-				await expectTodo(page, delegated);
-				await expectTodo(page, kept);
+				await expect(page.getByText(kept, { exact: true })).toHaveCount(0);
 				await addTodoExpectDenied(page, `intruder-${runId}`);
 			}
+			await expect(mallory.page.getByText(delegated, { exact: true })).toHaveCount(0);
 
-			// 3. Only the delegated row is Bob's to change; nothing is Mallory's.
+			// 3. The delegated row is Bob's to change.
 			step('roles on the rows');
 			await expect(rowFor(bob.page, delegated)).toHaveAttribute('data-role', 'delegate');
-			await expect(rowFor(bob.page, kept)).toHaveAttribute('data-role', 'none');
-			await expect(checkbox(bob.page, kept)).toBeDisabled();
-			await expect(rowFor(mallory.page, delegated)).toHaveAttribute('data-role', 'none');
-			await expect(checkbox(mallory.page, delegated)).toBeDisabled();
-			await expect(checkbox(mallory.page, kept)).toBeDisabled();
 
 			// 4. Bob completes it. His passkey is asked first; the write lands on Alice's side.
 			step('Bob completes the delegated todo');
@@ -75,12 +73,12 @@ test.describe('Per-todo delegation', () => {
 				timeout
 			});
 
-			// 5. Bob renames it; Alice and Mallory see the new text.
+			// 5. Bob renames it; Alice sees the new text, Mallory does not.
 			step('Bob renames it');
 			await renameTodo(bob.page, delegated, renamed);
 			await expectDelegatedWriteSigned(bob.page, 'patch-fields');
 			await expectTodo(alice.page, renamed);
-			await expectTodo(mallory.page, renamed);
+			await expect(mallory.page.getByText(renamed, { exact: true })).toHaveCount(0);
 
 			// 6. Alice's own todo was never touched.
 			step('done; checking the untouched todo');
@@ -119,13 +117,11 @@ test.describe('Per-todo delegation', () => {
 				{ timeout }
 			);
 			await expect(checkbox(alice.page, todo)).not.toBeChecked({ timeout });
-			await expect(rowFor(bob.page, todo).getByTestId('todo-delegation-status')).toHaveText(
-				'revoked',
-				{ timeout }
-			);
-			await expect(checkbox(bob.page, todo)).not.toBeChecked({ timeout });
-			await expect(checkbox(bob.page, todo)).toBeDisabled();
-			await expect(rowFor(bob.page, todo)).toHaveAttribute('data-role', 'none');
+			// Taken back, the todo goes under the list key, which Bob never had
+			// (#127): it leaves his view, and what Alice writes from now on is not
+			// his to read.
+			await expect(bob.page.getByText(todo, { exact: true })).toHaveCount(0, { timeout });
+			await expect(bob.page.getByTestId('sealed-hidden-todos')).toBeVisible({ timeout });
 		} finally {
 			await Promise.all([alice.close(), bob.close()]);
 		}
@@ -623,7 +619,11 @@ async function addTodoExpectDenied(page, text) {
 	await openSection(page, 'aufgaben');
 	await todoInput(page).fill(text);
 	await page.getByRole('button', { name: 'Add TODO' }).click();
-	await expect(page.getByText(/no write permission|write access/i)).toBeVisible({ timeout });
+	// In a sealed list (#127) the missing key stops the write before the
+	// controller would: the message says so instead.
+	await expect(page.getByText(/no write permission|write access|no key for it yet/i)).toBeVisible({
+		timeout
+	});
 	await page.waitForTimeout(2000);
 	await expect(page.getByText(text, { exact: true })).toHaveCount(0);
 }

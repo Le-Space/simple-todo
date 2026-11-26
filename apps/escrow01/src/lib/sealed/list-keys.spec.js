@@ -252,15 +252,40 @@ describe('the task keys of a sealed list', () => {
 		await expect(openRecords([afterBob], bobsKeys.ring)).resolves.toMatchObject({ hidden: 1 });
 	});
 
-	it('are not made for a delegate who published no key, and nothing is written', async () => {
-		const { ownersKeys } = await cast();
-		const before = (await ownersKeys.store.all()).length;
+	it('are made at once for a delegate without a key yet, who gets his copy once he has one', async () => {
+		const orbitdb = await orbitdbInMemory();
+		const owner = { did: orbitdb.identity.id, agreementKey: await keyFor(1) };
+		const bob = { did: BOB, agreementKey: await keyFor(2) };
+		let published = false;
+		const ownersKeys = await createListKeys(orbitdb, {
+			listAddress: LIST,
+			own: owner,
+			lookupPublicKey: async (did) => (published && did === BOB ? bob.agreementKey.publicKey : null)
+		});
 
-		await expect(ownersKeys.delegate('todo-gate', 'did:key:zDnaeNobody', [])).resolves.toBe(
-			'no-public-key'
-		);
-		expect((await ownersKeys.store.all()).length).toBe(before);
-		expect(ownersKeys.ring.epochs(taskScope('todo-gate'))).toEqual([]);
+		await expect(ownersKeys.delegate('todo-gate', BOB, [])).resolves.toEqual({
+			epoch: 0,
+			missing: [BOB]
+		});
+		await expect(ownersKeys.ensureTaskGranted('todo-gate', BOB)).resolves.toEqual([]);
+
+		published = true;
+		await expect(ownersKeys.ensureTaskGranted('todo-gate', BOB)).resolves.toEqual([
+			`task/todo-gate/0/${BOB}`
+		]);
+		await expect(ownersKeys.ensureTaskGranted('todo-gate', BOB)).resolves.toEqual([]);
+
+		const record = {
+			key: 'todo-gate',
+			value: await sealTodo(ownersKeys.ring, 'todo-gate', handedTo(BOB))
+		};
+		const bobsKeys = await openListKeys(orbitdb, {
+			listAddress: LIST,
+			ownerDid: owner.did,
+			own: bob,
+			lookupPublicKey: async () => null
+		});
+		await expect(openRecords([record], bobsKeys.ring)).resolves.toMatchObject({ hidden: 0 });
 	});
 
 	it('leave a writer who was removed without the next list key', async () => {

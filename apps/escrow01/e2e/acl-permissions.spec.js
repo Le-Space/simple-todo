@@ -51,8 +51,11 @@ async function runGrantScenario(browser, { ownerName, guestName }) {
 			return getOwnDid(guest);
 		})();
 
-		// 3. Guest sees the owner's todo.
-		await expectTodo(guest, ownerTodo);
+		// 3. The list is sealed (#127): before the grant, the guest reads none of
+		//    it -- the owner's todo is there, and sealed to him.
+		await openSection(guest, 'aufgaben');
+		await expect(guest.getByTestId('sealed-hidden-todos')).toBeVisible({ timeout });
+		await expectNoTodo(guest, ownerTodo);
 
 		// 4. Guest write MUST fail; UI shows an error; the list stays unchanged.
 		await addTodoExpectDenied(guest, guestTodo);
@@ -62,7 +65,9 @@ async function runGrantScenario(browser, { ownerName, guestName }) {
 		// 5. Owner grants the guest's DID write access.
 		await grantWriteAccess(owner, guestDid);
 
-		// 6. Guest retries → success; both see both todos.
+		// 6. With write access come the list's keys: the guest reads the owner's
+		//    todo, retries his own → success; both see both todos.
+		await expectTodo(guest, ownerTodo);
 		await addTodoOk(guest, guestTodo);
 		for (const page of [owner, guest]) {
 			await expectTodo(page, ownerTodo);
@@ -176,7 +181,11 @@ async function addTodoExpectDenied(page, text) {
 	await openSection(page, 'aufgaben');
 	await todoInput(page).fill(text);
 	await page.getByRole('button', { name: 'Add TODO' }).click();
-	await expect(page.getByText(/no write permission|write access/i)).toBeVisible({ timeout });
+	// In a sealed list (#127) the missing key stops the write before the
+	// controller would: the message says so instead.
+	await expect(page.getByText(/no write permission|write access|no key for it yet/i)).toBeVisible({
+		timeout
+	});
 }
 
 /**

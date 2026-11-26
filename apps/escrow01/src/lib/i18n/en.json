@@ -646,8 +646,7 @@
 		"revokeFailed": "Failed to revoke delegation: {reason}",
 		"noSealedReader": "This session has no key for sealed lists, so a private list can neither be opened nor made. Reload the page and start again.",
 		"sealedNoKey": "This list is sealed, and this browser holds no key for it yet. The owner hands it out; it arrives on its own.",
-		"sealedDelegateNeedsOwner": "In a sealed list, only its owner can hand a todo to someone: only she holds the keys to hand out.",
-		"delegateHasNoKey": "This DID has no key for sealed lists yet. Ask them to start the app once, then hand the todo over again."
+		"sealedDelegateNeedsOwner": "In a sealed list, only its owner can hand a todo to someone: only she holds the keys to hand out."
 	},
 	"welcome": {
 		"title": "Welcome back",
