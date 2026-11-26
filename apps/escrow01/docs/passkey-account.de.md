@@ -898,14 +898,17 @@ Moment irgendwo offen ist oder der Relay zufällig eine Kopie hält.
   Relays: Dort wird der Austausch auf der begrenzten Verbindung abgelehnt und nicht wiederholt, auch
   nicht, wenn später eine direkte steht (siehe „A circuit carries data“ in der `AGENTS.md` des
   Repositorys). Deshalb antwortet der Browser, der veröffentlicht hat, jedem Peer, der seinem
-  Verzeichnis beitritt: zuerst mit seinem Identitätsdokument auf einem Topic, das nach der DID benannt
-  ist (`/simple-todo/escrow01/account-identity/<did>`), dann mit seinem Eintrag auf dem Topic des
-  Verzeichnisses, beides über Gossipsub, das den Circuit passiert. Das Identitätsdokument kommt mit,
-  weil OrbitDB den Eintrag daran prüft und es sonst per Bitswap holen würde, das den Circuit ebenfalls
-  nicht passiert. Alice behält ein Dokument nur, wenn es Bobs DID nennt, unter dem Hash seiner eigenen
-  Bytes; OrbitDB prüft es wie bei jedem Eintrag. Während sie wartet, tritt sie dem Identitäts-Topic
-  nach 4 und nach 10 Sekunden erneut bei, und Bob antwortet. Jeder Start veröffentlicht, auch ein
-  gemerktes Konto.
+  Verzeichnis beitritt, und jedem, der beim Start schon dort ist: Er veröffentlicht seinen Eintrag auf
+  dem Topic des Verzeichnisses über Gossipsub, das den Circuit passiert, sofort und noch einmal nach 3
+  Sekunden. OrbitDB prüft den Eintrag dann an Bobs Identitätsdokument und holt es per Bitswap, das die
+  App auch über begrenzte Verbindungen laufen lässt (`runOnLimitedConnections`, `@helia/bitswap` ab
+  4.0.17). Während Alice wartet, tritt sie dem Topic des Verzeichnisses nach 4 und nach 10 Sekunden
+  erneut bei, und Bob antwortet. Jeder Start veröffentlicht, auch ein gemerktes Konto.
+- **Gemessen am 2026-11-26** (zwei Browser auf einem Rechner, WebRTC aus, lokaler Relay): vorher kein
+  Eintrag in 60 Sekunden, außer der Relay war rechtzeitig auf Bobs Topic, was in manchen Läufen so war
+  und in anderen nicht. Bobs Antwort allein half nicht: Der Eintrag kam an und wurde abgelehnt, weil
+  sein Identitätsdokument fehlte, solange Bitswap nicht über den Circuit lief. Beides zusammen bringt
+  den Eintrag direkt aus Bobs Browser ([`account-directory.spec.js`](../e2e/account-directory.spec.js)).
 - **`-v2` seit Provider 0.14.0.** Lesende lehnen Identitätsnachweise im ersten Format ab
   (`acceptLegacyProofs: false`), und OrbitDB prüft jeden Eintrag auf dem Weg von einem Head zurück. Ein
   v1-Verzeichnis, das vor der Umstellung geschrieben wurde, öffnet sich auf einem frischen Gerät also
@@ -914,10 +917,6 @@ Moment irgendwo offen ist oder der Relay zufällig eine Kopie hält.
   das gemerkte Konto in v2. Ein Browser im Arbeitsspeicher-Modus merkt sich nichts und findet sein
   Konto nur, wenn ein anderes Gerät mit demselben Passkey es schon in v2 veröffentlicht hat; sonst
   bietet der Tab „Konto“ „Erneut suchen“ oder ein neues Konto an.
-- **Gemessen am 2026-11-26** (zwei Browser auf einem Rechner, WebRTC aus, lokaler Relay): vorher kein
-  Eintrag in 60 Sekunden, außer der Relay war rechtzeitig auf Bobs Topic, was in manchen Läufen so war
-  und in anderen nicht; nachher der Eintrag nach 0,35 Sekunden, direkt aus Bobs Browser
-  ([`account-directory.spec.js`](../e2e/account-directory.spec.js)).
 - **Die Prüfung auf der Chain** (`isPasskeyAccount` in `sepolia-chain.js`): den P-256-Schlüssel aus
   der DID lesen ([`did-key.js`](../src/lib/chain/did-key.js); `did:key` mit Multicodec `0x1200`, vom
   Identity-Provider unkomprimiert geschrieben, komprimiert ebenfalls lesbar), daraus den `keyHash`

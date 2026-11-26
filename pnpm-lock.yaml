@@ -969,8 +969,8 @@ importers:
         specifier: ^8.0.1
         version: 8.0.1
       '@helia/bitswap':
-        specifier: ^4.0.6
-        version: 4.0.6(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
+        specifier: ^4.0.20
+        version: 4.0.20(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))
       '@helia/libp2p':
         specifier: ^1.0.6
         version: 1.0.6(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))

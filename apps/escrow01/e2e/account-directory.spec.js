@@ -18,9 +18,11 @@ import { addVirtualAuthenticator } from '@simple-todo/e2e-kit/webauthn.mjs';
  * to the topic only after the test had ended.
  *
  * Bob's browser now answers every newcomer itself over gossipsub, which
- * crosses a circuit, and sends its identity document first, because OrbitDB
- * would otherwise fetch that by bitswap, which a circuit does not carry
- * either.
+ * crosses a circuit. That alone was not enough: OrbitDB checks the entry
+ * against Bob's identity document and fetches it by bitswap, which refused a
+ * limited connection until the app turned on `runOnLimitedConnections`
+ * (`@helia/bitswap` 4.0.17 and later); before, the entry arrived six times and
+ * was refused six times.
  *
  * Budgets run against the fake here, and the fake never opens the directory,
  * so the spec drives it through the E2E hook with the code the Sepolia service

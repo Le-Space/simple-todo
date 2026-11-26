@@ -858,13 +858,17 @@ open somewhere at that moment, or the relay happens to hold a copy.
   peers meet, and two browsers meet over the relay's circuit first: the exchange is refused on that
   limited connection and not tried again, not even once a direct one is up (see "A circuit carries
   data" in the repository's `AGENTS.md`). So the browser that published answers every peer that joins
-  its directory: first with its identity document on a topic named after the DID
-  (`/simple-todo/escrow01/account-identity/<did>`), then with its entry on the directory's topic, both
-  over gossipsub, which crosses the circuit. The identity document comes along because OrbitDB checks
-  the entry against it and would fetch it by bitswap, which does not cross the circuit either. Alice
-  keeps a document only if it names Bob's DID, under the hash of its own bytes; OrbitDB verifies it as
-  for any entry. While she waits she joins the identity topic again after 4 and 10 seconds, which Bob
-  answers. Every start publishes, a remembered account included.
+  its directory, and every peer already on it when it starts: it publishes its entry on the
+  directory's topic over gossipsub, which crosses the circuit, at once and again 3 seconds later.
+  OrbitDB then checks the entry against Bob's identity document and fetches that by bitswap, which the
+  app runs on limited connections too (`runOnLimitedConnections`, `@helia/bitswap` 4.0.17 and later).
+  While Alice waits she joins the directory's topic again after 4 and 10 seconds, which Bob answers.
+  Every start publishes, a remembered account included.
+- **Measured on 2026-11-26** (two browsers on one machine, WebRTC off, the local relay): before, no
+  entry in 60 seconds, unless the relay had reached Bob's topic in time, which it did in some runs and
+  not in others. Bob's answer alone did not help: the entry arrived and was refused for want of his
+  identity document while bitswap did not run on the circuit. Both together bring the entry straight
+  from Bob's browser ([`account-directory.spec.js`](../e2e/account-directory.spec.js)).
 - **`-v2` since provider 0.14.0.** Readers refuse identity proofs in the first format
   (`acceptLegacyProofs: false`), and OrbitDB checks every entry on the path back from a head, so a v1
   directory written before the switch no longer opens on a fresh reader, and rewriting the entry in it
@@ -872,10 +876,6 @@ open somewhere at that moment, or the relay happens to hold a copy.
   browser starts once on this build: it publishes the remembered account into v2. A browser in memory
   mode remembers nothing, and finds its account only if another device of the same passkey has
   published it into v2; otherwise the account tab offers "search again" or a new account.
-- **Measured on 2026-11-26** (two browsers on one machine, WebRTC off, the local relay): before, no
-  entry in 60 seconds, unless the relay had reached Bob's topic in time, which it did in some runs and
-  not in others; after, the entry in 0.35 seconds, straight from Bob's browser
-  ([`account-directory.spec.js`](../e2e/account-directory.spec.js)).
 - **The check on chain** (`isPasskeyAccount` in `sepolia-chain.js`): read the P-256 key from the DID
   ([`did-key.js`](../src/lib/chain/did-key.js); `did:key` with multicodec `0x1200`, written uncompressed
   by the identity provider, compressed ones read too), derive the `keyHash`, and require that the

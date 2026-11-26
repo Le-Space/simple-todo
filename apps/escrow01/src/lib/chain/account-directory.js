@@ -27,17 +27,12 @@
  * with WebRTC between the two for most of it. The relay may hold the
  * directory, but only when its queue gets to the topic in time, which it did
  * in some runs and not in others. So Bob's browser answers every newcomer
- * itself, over gossipsub, which does cross a circuit (`serve`), and sends
- * the identity document along: OrbitDB fetches that by bitswap, which a
- * circuit does not carry either, and without it the entry is refused
- * (`listenForIdentities`). With both, the entry arrived in 0.35 s over a
- * circuit alone.
+ * itself, over gossipsub, which does cross a circuit (`serve`). OrbitDB then
+ * fetches the signer's identity document by bitswap, which crosses the
+ * circuit too since p2p.js turns on `runOnLimitedConnections`.
  */
 
 import { IPFSAccessController } from '@orbitdb/core';
-import * as dagCbor from '@ipld/dag-cbor';
-import { CID } from 'multiformats/cid';
-import { sha256 } from 'multiformats/hashes/sha2';
 import { getAddress, isAddress } from 'viem';
 
 /**
@@ -55,23 +50,8 @@ const ENTRY_KEY = 'account';
 const ANSWER_AGAIN_AFTER_MS = 3_000;
 /** Joins that come closer together than this get one answer. */
 const MIN_ANSWER_INTERVAL_MS = 1_000;
-/** The identity first, so it is there when OrbitDB checks the entry. */
-const HEADS_AFTER_IDENTITY_MS = 300;
-/** While a lookup waits, the reader joins the identity topic again, which the owner answers. */
+/** While a lookup waits, the reader joins the directory's topic again, which the owner answers. */
 const ASK_AGAIN_AFTER_MS = [4_000, 10_000];
-/** An identity document is a few hundred bytes; anything far larger is not one. */
-const MAX_IDENTITY_BYTES = 8 * 1024;
-/** Documents taken per DID and session: a passkey has one, a few sessions at most. */
-const MAX_IDENTITIES_PER_DID = 8;
-
-/**
- * Where the owner of `did` sends its identity document. Named after the DID,
- * so a reader joins it before the directory's own topic; not under
- * `/orbitdb/`, which a relay takes for a database to sync.
- *
- * @param {string} did
- */
-export const identityTopicOf = (did) => `/simple-todo/escrow01/account-identity/${did}`;
 
 /**
  * @typedef {{ address: `0x${string}`, chainId: number, publishedAt: string }} PublishedAccount
@@ -100,121 +80,71 @@ export function createAccountDirectory(getOrbitdb) {
 		return database;
 	}
 
-	/** Directories this session answers for, by database address. @type {Set<string>} */
-	const serving = new Set();
+	/** How this session answers for a directory, by database address. @type {Map<string, () => void>} */
+	const serving = new Map();
 
 	/**
 	 * Answer every peer that joins the directory, from the browser that owns it:
-	 * the identity document on its own topic, then the heads on the directory's,
-	 * as `Sync.add()` publishes a new entry. Over gossipsub both cross a circuit.
+	 * its heads on the directory's topic, as `Sync.add()` publishes a new entry.
 	 * A peer that has the entry already drops it again in its log.
 	 *
-	 * @param {string} did
+	 * Peers on the topic before this browser started answering never join in
+	 * its sight, a payer whose page was open before the owner's, say; `publish`
+	 * answers them at once with what this returns.
+	 *
 	 * @param {any} database
+	 * @returns {(() => void) | undefined}
 	 */
-	function serve(did, database) {
+	function serve(database) {
 		const topic = String(database.address);
 		const pubsub = getOrbitdb()?.ipfs?.libp2p?.services?.pubsub;
-		if (!pubsub || serving.has(topic)) return;
-		serving.add(topic);
-		const identityTopic = identityTopicOf(did);
+		if (!pubsub) return undefined;
+		const known = serving.get(topic);
+		if (known) return known;
 
-		const answer = async () => {
-			const heads = await database.log.heads();
-			const identities = getOrbitdb()?.identities;
-			for (const head of heads) {
-				const identity = await identities?.getIdentity?.(head.identity);
-				// Nobody on the topic: nobody to tell.
-				if (identity?.bytes) await pubsub.publish(identityTopic, identity.bytes).catch(() => {});
-			}
-			await new Promise((resolve) => setTimeout(resolve, HEADS_AFTER_IDENTITY_MS));
-			for (const head of heads) {
+		const announce = async () => {
+			for (const head of await database.log.heads()) {
 				const bytes = await database.log.storage.get(head.hash);
+				// Nobody on the topic: nobody to tell.
 				if (bytes) await pubsub.publish(topic, bytes).catch(() => {});
 			}
 		};
 		let answeredAt = 0;
+		const answer = () => {
+			if (Date.now() - answeredAt < MIN_ANSWER_INTERVAL_MS) return;
+			answeredAt = Date.now();
+			void announce().catch(() => {});
+			setTimeout(() => void announce().catch(() => {}), ANSWER_AGAIN_AFTER_MS);
+		};
 		/** @param {any} event */
 		const onSubscriptionChange = (event) => {
 			const joined = (event.detail?.subscriptions ?? []).some(
-				(/** @type {any} */ subscription) =>
-					subscription.subscribe &&
-					(subscription.topic === topic || subscription.topic === identityTopic)
+				(/** @type {any} */ subscription) => subscription.subscribe && subscription.topic === topic
 			);
-			if (!joined || Date.now() - answeredAt < MIN_ANSWER_INTERVAL_MS) return;
-			answeredAt = Date.now();
-			void answer().catch(() => {});
-			setTimeout(() => void answer().catch(() => {}), ANSWER_AGAIN_AFTER_MS);
+			if (joined) answer();
 		};
 		pubsub.addEventListener('subscription-change', onSubscriptionChange);
 		database.events.once('close', () => {
 			pubsub.removeEventListener('subscription-change', onSubscriptionChange);
 			serving.delete(topic);
 		});
+		serving.set(topic, answer);
+		return answer;
 	}
 
 	/**
-	 * Identity topics listened on, per pubsub: a new identity starts a new
-	 * libp2p node, which listens afresh.
+	 * Join the directory's topic again, which its owner answers with the entry.
+	 * Through gossipsub alone: OrbitDB's Sync keeps listening, and only the
+	 * subscription is sent anew.
 	 *
-	 * @type {WeakMap<object, Set<string>>}
+	 * @param {any} database
 	 */
-	const listening = new WeakMap();
-	/** @param {any} pubsub */
-	const topicsOf = (pubsub) => {
-		let topics = listening.get(pubsub);
-		if (!topics) listening.set(pubsub, (topics = new Set()));
-		return topics;
-	};
-
-	/**
-	 * Take the owner's identity document from the owner, for a directory this
-	 * session reads (`serve` sends it).
-	 *
-	 * Stored under the hash of its own bytes, which is all a content address
-	 * promises, and only when it names `did`: whether it is a valid identity,
-	 * and whether it may write, OrbitDB still checks as for any entry.
-	 *
-	 * @param {string} did
-	 */
-	function listenForIdentities(did) {
-		const orbitdb = getOrbitdb();
-		const pubsub = orbitdb?.ipfs?.libp2p?.services?.pubsub;
-		const blockstore = orbitdb?.ipfs?.blockstore;
-		const identityTopic = identityTopicOf(did);
-		if (!pubsub || !blockstore || topicsOf(pubsub).has(identityTopic)) return;
-		topicsOf(pubsub).add(identityTopic);
-		let taken = 0;
-		/** @param {any} event */
-		const onMessage = (event) => {
-			const { topic: received, data } = event.detail ?? {};
-			if (received !== identityTopic || !(data instanceof Uint8Array)) return;
-			if (data.length > MAX_IDENTITY_BYTES || taken >= MAX_IDENTITIES_PER_DID) return;
-			void (async () => {
-				/** @type {any} */
-				const document = dagCbor.decode(data);
-				if (document?.id !== did) return;
-				const cid = CID.create(1, dagCbor.code, await sha256.digest(data));
-				if (await blockstore.has(cid)) return;
-				taken += 1;
-				await blockstore.put(cid, data);
-			})().catch(() => {});
-		};
-		pubsub.addEventListener('message', onMessage);
-		pubsub.subscribe(identityTopic);
-	}
-
-	/**
-	 * Join the identity topic again, which the owner answers with its entry.
-	 *
-	 * @param {string} did
-	 */
-	function askAgain(did) {
+	function askAgain(database) {
+		const topic = String(database.address);
 		const pubsub = getOrbitdb()?.ipfs?.libp2p?.services?.pubsub;
-		const identityTopic = identityTopicOf(did);
-		if (!pubsub || !topicsOf(pubsub).has(identityTopic)) return;
-		pubsub.unsubscribe(identityTopic);
-		pubsub.subscribe(identityTopic);
+		if (!pubsub) return;
+		pubsub.unsubscribe(topic);
+		pubsub.subscribe(topic);
 	}
 
 	return {
@@ -237,14 +167,19 @@ export function createAccountDirectory(getOrbitdb) {
 		 */
 		async publish(did, { address, chainId }) {
 			const database = await open(did);
-			serve(did, database);
+			const answer = serve(database);
 			const current = parsePublished(await database.get(ENTRY_KEY), chainId);
-			if (current && current.address === getAddress(address)) return;
-			await database.put(ENTRY_KEY, {
-				address: getAddress(address),
-				chainId,
-				publishedAt: new Date().toISOString()
-			});
+			if (!current || current.address !== getAddress(address)) {
+				await database.put(ENTRY_KEY, {
+					address: getAddress(address),
+					chainId,
+					publishedAt: new Date().toISOString()
+				});
+			}
+			const pubsub = getOrbitdb()?.ipfs?.libp2p?.services?.pubsub;
+			if (answer && (pubsub?.getSubscribers?.(String(database.address)) ?? []).length > 0) {
+				answer();
+			}
 		},
 
 		/**
@@ -256,8 +191,6 @@ export function createAccountDirectory(getOrbitdb) {
 		 * @returns {Promise<PublishedAccount | null>}
 		 */
 		async lookup(did, { chainId, timeoutMs = 20_000 }) {
-			// Before the directory's own topic, so the owner's answer finds it.
-			listenForIdentities(did);
 			const database = await open(did);
 			const read = async () => parsePublished(await database.get(ENTRY_KEY), chainId);
 			const found = await read();
@@ -281,7 +214,7 @@ export function createAccountDirectory(getOrbitdb) {
 				// The directory may have been open since before the owner was
 				// reachable, and its answer went nowhere: ask again.
 				const asks = ASK_AGAIN_AFTER_MS.filter((ms) => ms < timeoutMs).map((ms) =>
-					setTimeout(() => settled || askAgain(did), ms)
+					setTimeout(() => settled || askAgain(database), ms)
 				);
 				database.events.on('update', onUpdate);
 			});

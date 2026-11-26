@@ -157,22 +157,34 @@ async function createPersistentStores() {
  */
 function createHeliaWithLibp2p(libp2pNode, stores = {}) {
 	return withBitswap(
-		withLibp2p(
-			// Bitswap only, deliberately. `withHTTP` used to wrap this: it ships
-			// three public gateways and Helia asks them for any block bitswap does
-			// not produce. Nothing here can be there — todos are OrbitDB entries
-			// written in a browser, so the request can only fail while announcing
-			// the CID to three strangers.
-			createHeliaLight({
-				codecs: [dagCbor, dagJson, json],
-				hashers: [sha512],
-				// Omitted when the user chose in-memory: helia then falls back to
-				// MemoryBlockstore/MemoryDatastore, which is what this chapter did
-				// unconditionally until now.
-				...stores
-			}),
-			libp2pNode
-		)
+		// Typed against @libp2p/interface 3.4.0, which bitswap 4.0.20 brings,
+		// where this libp2p is 3.2.5: the same interface at runtime, a newer
+		// stream type in the declarations.
+		/** @type {any} */ (
+			withLibp2p(
+				// Bitswap only, deliberately. `withHTTP` used to wrap this: it ships
+				// three public gateways and Helia asks them for any block bitswap does
+				// not produce. Nothing here can be there — todos are OrbitDB entries
+				// written in a browser, so the request can only fail while announcing
+				// the CID to three strangers.
+				createHeliaLight({
+					codecs: [dagCbor, dagJson, json],
+					hashers: [sha512],
+					// Omitted when the user chose in-memory: helia then falls back to
+					// MemoryBlockstore/MemoryDatastore, which is what this chapter did
+					// unconditionally until now.
+					...stores
+				}),
+				libp2pNode
+			)
+		),
+		// Over the relay's circuit as well. Two browsers often have nothing else,
+		// and OrbitDB fetches by CID through bitswap what a gossipsub update does
+		// not carry: the signer's identity document, older entries of a log.
+		// Without it a delegate's account entry crossed the circuit and was refused
+		// for want of its signer (chain/account-directory.js). The option has
+		// reached the dial and the topology only since 4.0.17 (ipfs/helia#1129).
+		{ runOnLimitedConnections: true }
 	);
 }
 
