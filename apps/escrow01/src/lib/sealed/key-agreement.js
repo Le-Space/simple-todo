@@ -38,6 +38,8 @@ export const LIST_KEY_AGREEMENT_INFO = 'simple-todo/escrow01/list-key-agreement/
 
 /** Changing this makes every wrapped copy unreadable: treat it as breaking. */
 const WRAP_INFO = 'simple-todo/escrow01/key-wrap/v1';
+/** The same for every text sealed with `sealTextFor`. */
+const TEXT_INFO = 'simple-todo/escrow01/sealed-text/v1';
 
 const X25519 = { name: 'X25519' };
 const PUBLIC_KEY_BYTES = 32;
@@ -66,6 +68,16 @@ const PKCS8_PREFIX = Uint8Array.from([
  * @property {CryptoKey} privateKey X25519, not extractable
  * @property {Uint8Array} publicKey 32 bytes, what the directory publishes
  * @property {AgreementKeySource} source
+ */
+
+/**
+ * Bytes sealed for one reader: `ct` is the AES-GCM ciphertext and tag.
+ *
+ * @typedef {object} SealedForReader
+ * @property {1} v
+ * @property {string} epk base64, the sender's one-off public key
+ * @property {string} nonce base64, 12 bytes
+ * @property {string} ct base64
  */
 
 /**
@@ -145,25 +157,7 @@ export async function wrapKey(key, recipientPublicKey, { slot }) {
 	if (!(key instanceof Uint8Array) || key.length !== WRAPPED_KEY_BYTES) {
 		throw new TypeError(`Only a ${WRAPPED_KEY_BYTES}-byte key is wrapped.`);
 	}
-	assertSlot(slot);
-	const recipient = await importPublicKey(recipientPublicKey);
-	const sender = /** @type {CryptoKeyPair} */ (
-		await crypto.subtle.generateKey(X25519, true, ['deriveBits'])
-	);
-	const epk = new Uint8Array(await crypto.subtle.exportKey('raw', sender.publicKey));
-	const kek = await wrappingKey(sender.privateKey, recipient, epk, recipientPublicKey, ['encrypt']);
-
-	const nonce = crypto.getRandomValues(new Uint8Array(NONCE_BYTES));
-	const ct = await crypto.subtle.encrypt(
-		{
-			name: 'AES-GCM',
-			iv: /** @type {BufferSource} */ (nonce),
-			additionalData: /** @type {BufferSource} */ (utf8(`${WRAP_INFO}\n${slot}`))
-		},
-		kek,
-		/** @type {BufferSource} */ (key)
-	);
-	return { v: 1, epk: toBase64(epk), nonce: toBase64(nonce), ct: toBase64(new Uint8Array(ct)) };
+	return sealBytesFor(key, recipientPublicKey, WRAP_INFO, slot);
 }
 
 /**
@@ -181,27 +175,62 @@ export async function wrapKey(key, recipientPublicKey, { slot }) {
  */
 export async function unwrapKey(copy, own, { slot }) {
 	if (!isWrappedKey(copy)) throw new TypeError('Not a wrapped key.');
-	assertSlot(slot);
-	const epk = /** @type {Uint8Array} */ (base64OrNull(copy.epk));
-	const nonce = /** @type {Uint8Array} */ (base64OrNull(copy.nonce));
-	const ct = /** @type {Uint8Array} */ (base64OrNull(copy.ct));
-
-	const sender = await importPublicKey(epk);
-	const kek = await wrappingKey(own.privateKey, sender, epk, own.publicKey, ['decrypt']);
-	const key = new Uint8Array(
-		await crypto.subtle.decrypt(
-			{
-				name: 'AES-GCM',
-				iv: /** @type {BufferSource} */ (nonce),
-				additionalData: /** @type {BufferSource} */ (utf8(`${WRAP_INFO}\n${slot}`))
-			},
-			kek,
-			/** @type {BufferSource} */ (ct)
-		)
-	);
-	if (key.length !== WRAPPED_KEY_BYTES)
+	const key = await openBytesWith(copy, own, WRAP_INFO, slot);
+	if (key.length !== WRAPPED_KEY_BYTES) {
 		throw new TypeError('A wrapped key opened to the wrong size.');
+	}
 	return key;
+}
+
+/**
+ * Seal a short text for one reader — in this chapter for oneself: a list's
+ * name in one's own list registry, which the relay pins and can read.
+ *
+ * The same construction as `wrapKey`, under an info of its own, so a sealed
+ * text never opens as a key. No shared key to create first: each text stands
+ * alone, so two devices of one passkey sealing at the same moment cannot
+ * overwrite each other's key and lock the other's texts away.
+ *
+ * @param {string} text
+ * @param {Uint8Array} recipientPublicKey
+ * @param {{ slot: string }} where what the text belongs to, e.g. the list's address
+ * @returns {Promise<SealedForReader>}
+ */
+export async function sealTextFor(text, recipientPublicKey, { slot }) {
+	if (typeof text !== 'string') throw new TypeError('sealTextFor seals a string.');
+	return sealBytesFor(utf8(text), recipientPublicKey, TEXT_INFO, slot);
+}
+
+/**
+ * Open a text sealed for this reader. Throws like `unwrapKey`.
+ *
+ * @param {unknown} sealed
+ * @param {AgreementKey} own
+ * @param {{ slot: string }} where
+ * @returns {Promise<string>}
+ */
+export async function openTextSealedFor(sealed, own, { slot }) {
+	if (!isSealedForReader(sealed)) throw new TypeError('Not a sealed text.');
+	return new TextDecoder().decode(await openBytesWith(sealed, own, TEXT_INFO, slot));
+}
+
+/**
+ * @param {unknown} value
+ * @returns {value is SealedForReader}
+ */
+export function isSealedForReader(value) {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+	const candidate = /** @type {Record<string, unknown>} */ (value);
+	if (candidate.v !== 1) return false;
+	const epk = base64OrNull(candidate.epk);
+	const nonce = base64OrNull(candidate.nonce);
+	const ct = base64OrNull(candidate.ct);
+	return (
+		epk?.length === PUBLIC_KEY_BYTES &&
+		nonce?.length === NONCE_BYTES &&
+		ct !== null &&
+		ct.length >= TAG_BYTES
+	);
 }
 
 /**
@@ -244,9 +273,10 @@ export const publicKeyToText = (publicKey) => toBase64(publicKey);
  * @param {CryptoKey} publicKey
  * @param {Uint8Array} epk the sender's public key
  * @param {Uint8Array} rpk the recipient's public key
+ * @param {string} label the info that says what is sealed
  * @param {KeyUsage[]} usages
  */
-async function wrappingKey(privateKey, publicKey, epk, rpk, usages) {
+async function wrappingKey(privateKey, publicKey, epk, rpk, label, usages) {
 	// Throws for a low-order public key, whose agreement is all zeros.
 	const secret = await crypto.subtle.deriveBits(
 		{ name: 'X25519', public: publicKey },
@@ -254,17 +284,77 @@ async function wrappingKey(privateKey, publicKey, epk, rpk, usages) {
 		256
 	);
 	const material = await crypto.subtle.importKey('raw', secret, 'HKDF', false, ['deriveKey']);
-	const label = utf8(WRAP_INFO);
-	const info = new Uint8Array(label.length + epk.length + rpk.length);
-	info.set(label, 0);
-	info.set(epk, label.length);
-	info.set(rpk, label.length + epk.length);
+	const prefix = utf8(label);
+	const info = new Uint8Array(prefix.length + epk.length + rpk.length);
+	info.set(prefix, 0);
+	info.set(epk, prefix.length);
+	info.set(rpk, prefix.length + epk.length);
 	return crypto.subtle.deriveKey(
 		{ name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(0), info },
 		material,
 		{ name: 'AES-GCM', length: 256 },
 		false,
 		usages
+	);
+}
+
+/**
+ * Ephemeral X25519 to the recipient, HKDF, AES-GCM with the slot as associated
+ * data.
+ *
+ * @param {Uint8Array} bytes
+ * @param {Uint8Array} recipientPublicKey
+ * @param {string} label
+ * @param {string} slot
+ * @returns {Promise<SealedForReader>}
+ */
+async function sealBytesFor(bytes, recipientPublicKey, label, slot) {
+	assertSlot(slot);
+	const recipient = await importPublicKey(recipientPublicKey);
+	const sender = /** @type {CryptoKeyPair} */ (
+		await crypto.subtle.generateKey(X25519, true, ['deriveBits'])
+	);
+	const epk = new Uint8Array(await crypto.subtle.exportKey('raw', sender.publicKey));
+	const key = await wrappingKey(sender.privateKey, recipient, epk, recipientPublicKey, label, [
+		'encrypt'
+	]);
+	const nonce = crypto.getRandomValues(new Uint8Array(NONCE_BYTES));
+	const ct = await crypto.subtle.encrypt(
+		{
+			name: 'AES-GCM',
+			iv: /** @type {BufferSource} */ (nonce),
+			additionalData: /** @type {BufferSource} */ (utf8(`${label}\n${slot}`))
+		},
+		key,
+		/** @type {BufferSource} */ (bytes)
+	);
+	return { v: 1, epk: toBase64(epk), nonce: toBase64(nonce), ct: toBase64(new Uint8Array(ct)) };
+}
+
+/**
+ * @param {SealedForReader} sealed already checked for its shape
+ * @param {AgreementKey} own
+ * @param {string} label
+ * @param {string} slot
+ * @returns {Promise<Uint8Array>}
+ */
+async function openBytesWith(sealed, own, label, slot) {
+	assertSlot(slot);
+	const epk = /** @type {Uint8Array} */ (base64OrNull(sealed.epk));
+	const nonce = /** @type {Uint8Array} */ (base64OrNull(sealed.nonce));
+	const ct = /** @type {Uint8Array} */ (base64OrNull(sealed.ct));
+	const sender = await importPublicKey(epk);
+	const key = await wrappingKey(own.privateKey, sender, epk, own.publicKey, label, ['decrypt']);
+	return new Uint8Array(
+		await crypto.subtle.decrypt(
+			{
+				name: 'AES-GCM',
+				iv: /** @type {BufferSource} */ (nonce),
+				additionalData: /** @type {BufferSource} */ (utf8(`${label}\n${slot}`))
+			},
+			key,
+			/** @type {BufferSource} */ (ct)
+		)
 	);
 }
 
