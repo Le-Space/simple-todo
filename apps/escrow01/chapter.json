@@ -42,6 +42,7 @@
 			"e2e/shared-list-mnemonic.spec.js",
 			"e2e/passkey-identity.spec.js"
 		],
+		"lint": true,
 		"check": true
 	}
 }

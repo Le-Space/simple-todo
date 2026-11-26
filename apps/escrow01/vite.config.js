@@ -70,31 +70,31 @@ export default defineConfig({
 		// /en/: the same link preview in English (english-link-preview.js).
 		englishLinkPreview(),
 		tailwindcss(),
-			sveltekit(),
-			nodePolyfills(
-				/** @type {any} */ ({
+		sveltekit(),
+		nodePolyfills(
+			/** @type {any} */ ({
 				include: [
 					'path',
 					'util',
-				'buffer',
-				'process',
-				'events',
-				'crypto',
-				'os',
-				'stream',
-				'string_decoder',
-				'readable-stream',
-				'safe-buffer'
-			],
+					'buffer',
+					'process',
+					'events',
+					'crypto',
+					'os',
+					'stream',
+					'string_decoder',
+					'readable-stream',
+					'safe-buffer'
+				],
 				globals: {
 					Buffer: true,
 					global: true,
 					process: true
 				},
 				protocolImports: true
-				})
-			)
-		],
+			})
+		)
+	],
 	define: {
 		__APP_VERSION__: JSON.stringify(pkg.version),
 		__BUILD_DATE__: JSON.stringify(built.date),
