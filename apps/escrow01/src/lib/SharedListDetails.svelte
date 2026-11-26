@@ -1,4 +1,16 @@
 <script>
+	/**
+	 * The open list, at the top of the lists tab: which one it is, and what to
+	 * pass on so that somebody else opens the same one.
+	 *
+	 * escrow01: only what belongs to the open list can be copied here. The
+	 * browser's three-word list stays open underneath one's own list, and this
+	 * card used to offer its words whatever list was on screen -- so somebody
+	 * who handed them on sent the other person into a list their own todos
+	 * never reached. The words are copied here only while that shared list is
+	 * the open one; otherwise `ShareByThreeWords` names them, with the switch
+	 * to it.
+	 */
 	import { createEventDispatcher } from 'svelte';
 	import { _, SLOT, around } from '$lib/i18n/index.js';
 
@@ -14,18 +26,28 @@
 	 * @type {{ kind: 'shared' | 'private' | 'guest', name: string }}
 	 */
 	export let activeList = { kind: 'shared', name: '' };
+	/**
+	 * escrow01: the name of the list of one's own that the first todo will make,
+	 * while there is none yet (`homeListPendingStore`). It has nothing to pass
+	 * on until then: no address, no link, no QR code.
+	 * @type {string | null}
+	 */
+	export let pendingName = null;
 
 	const KINDS = ['shared', 'private', 'guest'];
-	$: heading = $_(`lists.active.${KINDS.includes(activeList?.kind) ? activeList.kind : 'shared'}`);
-	$: subtitle = activeList?.kind === 'shared' ? mnemonic : activeList?.name;
+	$: kind = pendingName ? 'pending' : KINDS.includes(activeList?.kind) ? activeList.kind : 'shared';
+	$: heading = $_(`lists.active.${kind === 'pending' ? 'private' : kind}`);
+	$: subtitle = kind === 'pending' ? pendingName : kind === 'shared' ? mnemonic : activeList?.name;
 	$: writingTo = around($_('lists.active.writingTo', { values: { name: SLOT } }));
+	/** What the Copy button copies: the open list's words, or its address. */
+	$: shareable = kind === 'shared' ? mnemonic : kind === 'pending' ? '' : databaseAddress;
 
 	let copied = false;
 	const dispatch = createEventDispatcher();
 
-	async function copyMnemonic() {
-		if (!mnemonic) return;
-		await navigator.clipboard.writeText(mnemonic);
+	async function copy() {
+		if (!shareable) return;
+		await navigator.clipboard.writeText(shareable);
 		copied = true;
 		setTimeout(() => (copied = false), 2000);
 	}
@@ -45,6 +67,7 @@
 	class:border-t={embedded}
 	class:pt-2={embedded}
 	data-testid="shared-list-details"
+	data-kind={kind}
 >
 	<summary
 		class="flex cursor-pointer list-none items-center gap-2 rounded px-1 py-1 text-xs font-medium text-text outline-none hover:text-heading focus-visible:ring-2 focus-visible:ring-cyan-500 [&::-webkit-details-marker]:hidden"
@@ -70,43 +93,65 @@
 		{/if}
 	</summary>
 	<div class="mt-3 border-t border-border pt-3">
-		{#if activeList?.kind !== 'shared'}
+		{#if kind === 'pending'}
+			<p class="text-xs text-text" data-testid="active-list-pending-note">
+				{$_('lists.home.pendingNote')}
+			</p>
+		{:else if kind === 'shared'}
+			<p class="text-xs text-faint">{$_('lists.active.mnemonicLabel')}</p>
+			<div class="mt-1 flex items-center gap-2 rounded-md bg-cyan-50 p-2 dark:bg-cyan/10">
+				<code
+					class="min-w-0 flex-1 font-mono text-xs break-all"
+					data-testid="active-shared-list-name">{mnemonic}</code
+				>
+				<button
+					type="button"
+					on:click={copy}
+					class="rounded border border-cyan-200 bg-surface px-2 py-1 text-xs dark:border-cyan/30"
+				>
+					{copied ? $_('lists.active.copied') : $_('lists.active.copy')}
+				</button>
+			</div>
+			{#if databaseAddress}
+				<p class="mt-2 text-xs text-faint">{$_('lists.active.addressLabel')}</p>
+				<code
+					class="mt-1 block font-mono text-[11px] break-all text-text"
+					data-testid="active-database-address">{databaseAddress}</code
+				>
+			{/if}
+			<p class="mt-2 text-xs text-data-700">
+				{$_('lists.active.anyone')}
+			</p>
+			<p class="mt-1 text-xs text-faint">
+				{$_('lists.active.replication')}
+			</p>
+			<button
+				type="button"
+				on:click={() => dispatch('change')}
+				class="mt-3 text-xs font-medium text-cyan-700 underline"
+			>
+				{$_('lists.active.openAnother')}
+			</button>
+		{:else}
 			<p class="mb-2 text-xs text-data-700" data-testid="active-list-note">
 				{writingTo.before}<strong>{activeList.name}</strong>{writingTo.after}
 			</p>
+			{#if databaseAddress}
+				<p class="text-xs text-faint">{$_('lists.active.addressLabel')}</p>
+				<div class="mt-1 flex items-center gap-2 rounded-md bg-cyan-50 p-2 dark:bg-cyan/10">
+					<code
+						class="min-w-0 flex-1 font-mono text-[11px] break-all text-text"
+						data-testid="active-database-address">{databaseAddress}</code
+					>
+					<button
+						type="button"
+						on:click={copy}
+						class="rounded border border-cyan-200 bg-surface px-2 py-1 text-xs dark:border-cyan/30"
+					>
+						{copied ? $_('lists.active.copied') : $_('lists.active.copy')}
+					</button>
+				</div>
+			{/if}
 		{/if}
-		<p class="text-xs text-faint">{$_('lists.active.mnemonicLabel')}</p>
-		<div class="mt-1 flex items-center gap-2 rounded-md bg-cyan-50 p-2 dark:bg-cyan/10">
-			<code class="min-w-0 flex-1 font-mono text-xs break-all" data-testid="active-shared-list-name"
-				>{mnemonic}</code
-			>
-			<button
-				type="button"
-				on:click={copyMnemonic}
-				class="rounded border border-cyan-200 bg-surface px-2 py-1 text-xs dark:border-cyan/30"
-			>
-				{copied ? $_('lists.active.copied') : $_('lists.active.copy')}
-			</button>
-		</div>
-		{#if databaseAddress}
-			<p class="mt-2 text-xs text-faint">{$_('lists.active.addressLabel')}</p>
-			<code
-				class="mt-1 block font-mono text-[11px] break-all text-text"
-				data-testid="active-database-address">{databaseAddress}</code
-			>
-		{/if}
-		<p class="mt-2 text-xs text-data-700">
-			{$_('lists.active.anyone')}
-		</p>
-		<p class="mt-1 text-xs text-faint">
-			{$_('lists.active.replication')}
-		</p>
-		<button
-			type="button"
-			on:click={() => dispatch('change')}
-			class="mt-3 text-xs font-medium text-cyan-700 underline"
-		>
-			{$_('lists.active.openAnother')}
-		</button>
 	</div>
 </details>

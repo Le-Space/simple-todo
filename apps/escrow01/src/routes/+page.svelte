@@ -50,7 +50,8 @@
 		revokeTodoDelegation,
 		loadTodoDatabase,
 		createPrivateTodoList,
-		homeListPendingStore
+		homeListPendingStore,
+		openSharedList
 	} from '$lib/db-actions.js';
 	import { openHomeList } from '$lib/home-list.js';
 	import { supportsDelegation } from '$lib/delegated-access.js';
@@ -81,6 +82,7 @@
 	// before anything renders.
 	honourStorageChoice();
 	import SharedListDetails from '$lib/SharedListDetails.svelte';
+	import ShareByThreeWords from '$lib/ShareByThreeWords.svelte';
 	import PermissionsPanel from '$lib/PermissionsPanel.svelte';
 	import OpenDatabaseForm from '$lib/OpenDatabaseForm.svelte';
 	import NewPrivateListButton from '$lib/NewPrivateListButton.svelte';
@@ -230,11 +232,20 @@
 		}
 	}
 
+	/*
+		escrow01: the list on screen, and only that one. While one's own list is
+		being looked for, or is still to be made by the first todo, the shared list
+		is open only underneath: its words in the address, and in the page QR that
+		shows it, sent whoever was given them into a list the first todo never
+		reached. Until then the address carries no list.
+	*/
 	$: if ($initializationStore.isInitialized && activeMnemonic) {
 		listLink.show(
-			$activeListStore.kind === 'shared'
-				? { words: activeMnemonic }
-				: { address: $activeListStore.address || $todoDBAddressStore }
+			homeListOpening || $homeListPendingStore
+				? {}
+				: $activeListStore.kind === 'shared'
+					? { words: activeMnemonic }
+					: { address: $activeListStore.address || $todoDBAddressStore }
 		);
 	}
 	$: mnemonicValid = isValidSpanishMnemonic(selectedMnemonic);
@@ -575,6 +586,38 @@
 		} finally {
 			privateListBusy = false;
 		}
+	}
+
+	let sharedListBusy = false;
+
+	/**
+	 * escrow01: "Open this list" beside the browser's three words. The shared
+	 * list has been open underneath since the start, so this puts it on screen
+	 * without a restart and without a passkey prompt -- and from then on the
+	 * words, the address bar and the page QR all name the list one is in.
+	 *
+	 * Kept like a start that joined it, so a reload comes back to it (`onMount`)
+	 * rather than to one's own list.
+	 */
+	async function handleOpenSharedList() {
+		sharedListBusy = true;
+		try {
+			await openSharedList();
+			rememberJoined(activeMnemonic);
+		} catch (err) {
+			const reason = err instanceof Error ? err.message : String(err);
+			showToast($_('lists.threeWords.openFailed', { values: { reason } }), 'error', 6000);
+		} finally {
+			sharedListBusy = false;
+		}
+	}
+
+	/** "Open another shared list": the start dialog, on its settings, with the words to change. */
+	function openAnotherSharedList() {
+		joinWords = activeMnemonic;
+		joinList = true;
+		consentOpensAdvanced = true;
+		showModal = true;
 	}
 
 	/**
@@ -976,22 +1019,38 @@
 		data-testid="section-listen"
 	>
 		{#if $initializationStore.isInitialized}
-			<!-- The open list first: its address, and who may write to it. -->
-			{#if activeMnemonic}
+			<!--
+				The open list first: what to pass on, and who may write to it. While
+				one's own list is still being looked for, nothing is offered: the
+				shared list underneath is not the one the next todo goes to.
+			-->
+			{#if activeMnemonic && homeListOpening}
+				<p
+					class="mb-6 rounded-lg border border-border bg-surface px-4 py-3 text-xs text-faint shadow-sm"
+					data-testid="active-list-opening"
+				>
+					{$_('lists.home.opening')}
+				</p>
+			{:else if activeMnemonic}
 				<SharedListDetails
 					open
 					mnemonic={activeMnemonic}
 					databaseAddress={$todoDBAddressStore}
 					activeList={$activeListStore}
-					on:change={() => {
-						joinWords = activeMnemonic;
-						joinList = true;
-						consentOpensAdvanced = true;
-						showModal = true;
-					}}
+					pendingName={$homeListPendingStore ? $_('lists.home.name') : null}
+					on:change={openAnotherSharedList}
 				/>
 			{/if}
 			<PermissionsPanel />
+			<!-- The browser's three words, when another list is on screen, with the switch to theirs. -->
+			{#if activeMnemonic && !homeListOpening && ($homeListPendingStore || $activeListStore.kind !== 'shared')}
+				<ShareByThreeWords
+					mnemonic={activeMnemonic}
+					busy={sharedListBusy}
+					on:open={handleOpenSharedList}
+					on:change={openAnotherSharedList}
+				/>
+			{/if}
 			<ListSwitcher />
 			<NewPrivateListButton />
 			<OpenDatabaseForm />

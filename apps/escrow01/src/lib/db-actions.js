@@ -174,11 +174,21 @@ function setActiveTodoDatabase(todoDB, meta) {
 
 // Initialize database and load existing todos
 /**
+ * escrow01: the three-word list the start opened. It stays open when another
+ * list goes on screen (home-list.js), so {@link openSharedList} can put it
+ * back without a restart.
+ *
+ * @type {TodoDatabase | null}
+ */
+let sharedTodoDB = null;
+
+/**
  * @param {any} orbitdb
  * @param {TodoDatabase} todoDB
  */
 export async function initializeDatabase(orbitdb, todoDB) {
 	orbitdbStore.set(orbitdb);
+	sharedTodoDB = todoDB;
 	setActiveTodoDatabase(todoDB, { kind: 'shared', name: todoDB?.name ?? '' });
 
 	// OrbitDB's non-indexed keyvalue.all() traverses the complete append-only
@@ -193,6 +203,25 @@ export async function initializeDatabase(orbitdb, todoDB) {
 	void openListRegistry(orbitdb).catch((error) => {
 		console.warn('List registry unavailable:', error);
 	});
+}
+
+/**
+ * escrow01: put this browser's three-word list on screen again.
+ *
+ * The start opens it and keeps it open, while the list on screen is one's own
+ * -- still to be made, or made already. Its three words, link and QR code
+ * belong to it alone, so the page offers them only once it is the open list,
+ * and this is how it becomes that: a switch to a database already open, with
+ * no restart and no passkey prompt.
+ *
+ * @returns {Promise<{ address: string }>}
+ */
+export async function openSharedList() {
+	if (!sharedTodoDB) throw new Error(translate('errors.orbitdbNotReady'));
+	setActiveTodoDatabase(sharedTodoDB, { kind: 'shared', name: sharedTodoDB.name ?? '' });
+	setupDatabaseListeners(sharedTodoDB);
+	await loadTodos();
+	return { address: getDatabaseAddress(sharedTodoDB) };
 }
 
 /**

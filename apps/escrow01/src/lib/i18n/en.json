@@ -425,6 +425,8 @@
 		"home": {
 			"name": "My todos",
 			"pending": "Made with your first todo",
+			"pendingNote": "This list is made with your first todo. Until then it has no address, link or QR code to pass on.",
+			"opening": "Opening your list …",
 			"openFailed": "Your own list could not be opened, so you are in the shared one: {reason}"
 		},
 		"create": {
@@ -479,7 +481,7 @@
 			"shared": "Shared list",
 			"private": "Private list",
 			"guest": "Opened list",
-			"writingTo": "You are writing to {name}. The mnemonic below still refers to the public shared list.",
+			"writingTo": "You are writing to {name}. The address below, the link in the address bar and the page QR code open this list.",
 			"mnemonicLabel": "Public mnemonic / OrbitDB database name",
 			"copy": "Copy",
 			"copied": "Copied!",
@@ -487,6 +489,12 @@
 			"anyone": "Anyone who knows this share code can open the same public database and edit it once connected.",
 			"replication": "The mnemonic selects the same database. Live replication also requires a connection to another browser peer.",
 			"openAnother": "Open another shared list"
+		},
+		"threeWords": {
+			"heading": "Share by three words",
+			"hint": "This browser’s shared list. Anyone who has its three words can read it and write to it. Open it to pass on its words, link or QR code; your todos then go there.",
+			"open": "Open this list",
+			"openFailed": "The shared list could not be opened: {reason}"
 		}
 	},
 	"network": {

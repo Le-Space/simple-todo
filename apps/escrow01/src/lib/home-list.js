@@ -33,7 +33,10 @@ const HOME_LIST_KEY = 'simpleTodo.homeList';
  * owns, or a new one.
  *
  * The shared list is not closed for this: it was opened first, as before, and
- * stays open for whoever arrives with the same three words.
+ * stays open for whoever arrives with the same three words, and for "Open this
+ * list" in the lists tab (`openSharedList` in db-actions.js). Until then the
+ * page offers neither its words nor its link: they are not where the next
+ * todo goes.
  *
  * Runs in the background after the start, so anything opened meanwhile -- a
  * list by address, another shared list -- wins: the home list is then made or

@@ -425,6 +425,8 @@
 		"home": {
 			"name": "Meine Aufgaben",
 			"pending": "Entsteht mit Ihrer ersten Aufgabe",
+			"pendingNote": "Diese Liste entsteht mit Ihrer ersten Aufgabe. Bis dahin hat sie keine Adresse, keinen Link und keinen QR-Code zum Weitergeben.",
+			"opening": "Ihre Liste wird geöffnet …",
 			"openFailed": "Ihre eigene Liste ließ sich nicht öffnen, Sie sind in der geteilten: {reason}"
 		},
 		"create": {
@@ -479,7 +481,7 @@
 			"shared": "Geteilte Liste",
 			"private": "Private Liste",
 			"guest": "Geöffnete Liste",
-			"writingTo": "Sie schreiben in die Liste {name}. Die Merkwörter unten gehören weiterhin zur öffentlichen geteilten Liste.",
+			"writingTo": "Sie schreiben in die Liste {name}. Die Adresse unten, der Link in der Adresszeile und der QR-Code der Seite öffnen diese Liste.",
 			"mnemonicLabel": "Öffentliche Merkwörter / Name der OrbitDB-Datenbank",
 			"copy": "Kopieren",
 			"copied": "Kopiert!",
@@ -487,6 +489,12 @@
 			"anyone": "Wer diese Merkwörter kennt, kann dieselbe öffentliche Datenbank öffnen und darin schreiben, sobald eine Verbindung besteht.",
 			"replication": "Die Merkwörter wählen dieselbe Datenbank aus. Damit Änderungen sofort ankommen, braucht es außerdem eine Verbindung zu einem anderen Browser.",
 			"openAnother": "Andere geteilte Liste öffnen"
+		},
+		"threeWords": {
+			"heading": "Mit drei Wörtern teilen",
+			"hint": "Die geteilte Liste dieses Browsers. Wer ihre drei Wörter hat, kann darin lesen und schreiben. Öffnen Sie sie, um ihre Wörter, ihren Link oder ihren QR-Code weiterzugeben; Ihre Aufgaben gehen dann dorthin.",
+			"open": "Diese Liste öffnen",
+			"openFailed": "Die geteilte Liste ließ sich nicht öffnen: {reason}"
 		}
 	},
 	"network": {
