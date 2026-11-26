@@ -99,6 +99,11 @@ the escrow half of [de2do](https://github.com/NiKrause/de2do).
   a return finds it again. A link with three words (`#list=`) opens that shared list instead, where
   the form says that delegation needs a private list; a link with an address (`#db=`) opens that
   list.
+- **Only the list on screen is offered to pass on.** The browser's three-word list stays open under
+  one's own, so until the first todo makes "My todos" the address bar and the page QR carry no list,
+  and the **Lists** tab copies nothing. It names the three words beside the open list, with **Open
+  this list** (`openSharedList` in [`db-actions.js`](../src/lib/db-actions.js)): no restart, no
+  passkey prompt, and from then on the words, the link and the QR code lead where one's todos go.
 - **A light says how the other browser is connected.** Under the list name: white, no other browser;
   green, a direct WebRTC connection; yellow, only through the relay. It reads `connection.limits`,
   not the address ([`list-peers.js`](../src/lib/list-peers.js)).

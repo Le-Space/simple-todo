@@ -77,14 +77,16 @@ below.
 | `relay-button-drag.spec.js`         | the Relay Button's own behaviour, covered in its repository          |
 | `remote-main-local.spec.js`         | drives a deployed site (`e2e/remote/`), not the local build          |
 
-The mnemonic spec has Alice join fresh three Spanish words in her start dialog
-(**Settings** → **Join a shared list**). It copies them from her **Lists** tab into
-Bob's start dialog, proves both derive the same OrbitDB address, verifies
-bidirectional replication, and confirms that a third browser using another
-mnemonic remains isolated. Alice has to join on purpose. A start without words
-ends in the private list her first todo makes. Her browser's own three-word list
-is open only underneath, even though the **Lists** tab shows its words in the
-meantime, so a todo never reaches the list Bob joined:
+The mnemonic spec walks step 3 of "Shared lists by three words" in
+[foundations.md](foundations.md#shared-lists-by-three-words-from-collab01). Alice
+starts without words, which ends in the private list her first todo makes. Her
+browser's own three-word list is open only underneath, so her **Lists** tab offers
+nothing to copy until she presses **Open this list**. Then it copies the words into
+Bob's start dialog (**Settings** → **Join a shared list**). The spec proves both
+derive the same OrbitDB address, verifies bidirectional replication, and confirms
+that a third browser using another mnemonic remains isolated. Before the tab held
+the words back, it offered them while the private list was still to come, and a
+todo never reached the list Bob joined:
 
 ```bash
 pnpm exec playwright test e2e/shared-list-mnemonic.spec.js --project=chromium

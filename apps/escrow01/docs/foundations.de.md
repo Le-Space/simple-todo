@@ -244,11 +244,16 @@ Drei-Wort-Liste des Browsers wird weiter im Hintergrund geöffnet, und sie ist w
 
 1. **Zwei Browserfenster öffnen** — zwei Browser, ein Mobilgerät oder eine andere Person anderswo.
 2. **In beiden dieselbe Adresse laden.**
-3. **Die geteilte Liste wählen** — den **Teilen-Code** aus drei Wörtern im Tab **Listen** des ersten
-   Browsers kopieren. Im zweiten unter dem Startknopf **Einstellungen** öffnen, **Einer geteilten
-   Liste beitreten** anhaken und die Wörter einfügen. Ein Link mit den Wörtern (`#list=…`) tut
-   dasselbe; ebenso der QR-Code der Seite, solange diese Liste offen ist.
-4. **Starten** — den Startknopf drücken: Der Druck ist die Zustimmung.
+3. **Im ersten Browser die geteilte Liste auf den Schirm holen** — starten (der Druck auf den
+   Startknopf ist die Zustimmung), den Tab **Listen** öffnen und unter **Mit drei Wörtern teilen** auf
+   **Diese Liste öffnen** drücken. Jetzt nennt die Karte darüber diese Liste, mit ihren drei Wörtern
+   und einem Knopf **Kopieren**, und die Adresszeile und der QR-Code der Seite tragen sie
+   (`#list=…`). Vorher bietet die Seite keine Wörter zum Weitergeben an: Der Start endet in „Meine
+   Aufgaben“, und die Drei-Wort-Liste ist nur darunter offen, wohin die eigenen Aufgaben nicht
+   gelangen.
+4. **Im zweiten beitreten** — den Link öffnen oder den QR-Code der Seite scannen; oder unter dem
+   Startknopf **Einstellungen** öffnen, **Einer geteilten Liste beitreten** anhaken und die Wörter
+   einfügen. Dann den Startknopf drücken.
 5. **Auf die Verbindung warten** — die App findet den anderen Peer und verbindet sich.
 6. **Aufgaben eintragen** in einem Browser und zusehen, wie sie im anderen erscheinen. Auf einer
    geteilten Liste sagt das Formular, dass Delegation eine private Liste braucht, und bietet an, eine

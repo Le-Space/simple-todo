@@ -106,6 +106,12 @@ Treuhand-Hälfte von [de2do](https://github.com/NiKrause/de2do).
   [`home-list.js`](../src/lib/home-list.js)); ein Wiederkommen findet sie wieder. Ein Link mit drei
   Wörtern (`#list=`) öffnet stattdessen diese geteilte Liste, wo das Formular sagt, dass Delegation
   eine private Liste braucht; ein Link mit einer Adresse (`#db=`) öffnet diese Liste.
+- **Zum Weitergeben gibt es nur die Liste auf dem Schirm.** Die Drei-Wort-Liste des Browsers bleibt
+  unter der eigenen offen. Bis die erste Aufgabe „Meine Aufgaben“ anlegt, tragen Adresszeile und
+  QR-Code der Seite deshalb keine Liste, und der Tab **Listen** kopiert nichts. Er nennt die drei
+  Wörter neben der offenen Liste, mit **Diese Liste öffnen** (`openSharedList` in
+  [`db-actions.js`](../src/lib/db-actions.js)): kein Neustart, keine Passkey-Abfrage, und von da an
+  führen die Wörter, der Link und der QR-Code dorthin, wo die eigenen Aufgaben landen.
 - **Ein Licht sagt, wie der andere Browser verbunden ist.** Unter dem Listennamen: weiß, kein anderer
   Browser; grün, eine direkte WebRTC-Verbindung; gelb, nur über den Relay. Es liest
   `connection.limits`, nicht die Adresse ([`list-peers.js`](../src/lib/list-peers.js)).

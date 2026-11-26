@@ -253,8 +253,8 @@ In `escrow01` that list is no longer where you start. Without a link the start e
 
 1. **Open two browser windows** — two browser instances, a mobile device, or another person far away.
 2. **Load the same URL** in both.
-3. **Choose the shared list** — copy the three-word **Share code** from the first browser's **Lists** tab. In the second, open **Settings** under the start button, tick **Join a shared list** and paste it. A link that carries the words (`#list=…`) does the same; so does the page QR code while that list is open.
-4. **Start** — press the start button: its press is the consent.
+3. **Put the shared list on screen in the first browser** — start (the start button; its press is the consent), open the **Lists** tab and press **Open this list** under **Share by three words**. Now the card above it names that list, with its three words and a **Copy** button, and the address bar and the page QR code carry it (`#list=…`). Before that the page offers no words to pass on: the start ends in "My todos", and the three-word list is open only underneath, where your todos do not go.
+4. **Join it in the second** — open the link or scan the page QR code; or open **Settings** under the start button, tick **Join a shared list** and paste the words. Then press the start button.
 5. **Wait for the connection** — the app discovers and connects the other peer.
 6. **Add todos** in one browser and watch them appear in the other. On a shared list the form says that delegation needs a private list, and offers to create one.
 
