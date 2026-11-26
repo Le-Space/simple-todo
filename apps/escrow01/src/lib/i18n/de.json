@@ -232,6 +232,8 @@
 			"ownAccountNotFound": "Für Ihren Passkey wurde noch kein Konto gefunden. Im Tab „Konto“ können Sie erneut suchen oder eines anlegen.",
 			"releaseFailedTitle": "Budget nicht freigegeben.",
 			"releaseFailed": "Der Betrag bleibt gesperrt. Versuchen Sie es erneut.",
+			"limitExceeded": "Es wurde nichts signiert und nichts gesendet: Der Blockchain-Dienst verlangte mehr Gas oder Gebühren, als diese App für einen Schritt erlaubt. Versuchen Sie es später erneut.",
+			"domainMismatch": "Es wurde nichts signiert und nichts gesendet: Der Blockchain-Dienst hat Ihr Konto anders beschrieben, als es ist, darum wurde der Passkey nicht gefragt. Versuchen Sie es später erneut.",
 			"decrypting": "Betrag wird entschlüsselt. Das dauert einige Sekunden.",
 			"expiredTitle": "Lesezugriff abgelaufen.",
 			"expired": "Bestätigen Sie mit Ihrem Passkey, um die Beträge wieder zu sehen.",

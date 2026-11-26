@@ -38,6 +38,31 @@ export const OPERATOR_TTL_SECONDS = 3600n;
 export const DEFAULT_LOCK_SECONDS = 30n * 24n * 3600n;
 export const MAX_LOCK_SECONDS = 365n * 24n * 3600n;
 
+/**
+ * The most one user operation may cost, in wei: its gas limits times
+ * `maxFeePerGas`. `@le-space/passkey-wallet` 0.3.0 requires it, and refuses
+ * anything dearer before a key signs: the bundler and the RPC choose gas and
+ * fee, and without a limit in wei a hostile one could set them to whatever
+ * drains the account (GHSA-fv6j-cmpw-5vf7). Openfort's paymaster pays here, so
+ * the limit guards the sponsorship.
+ *
+ * 0.02 ETH, four times the dearest operation escrow01 has sent. From all 52 of
+ * its user operations on Sepolia, 2026-09-17 to 2026-11-25: a first lock, which
+ * funds the account in the same operation, carried 4.13M gas at 1.21 gwei, so
+ * at most 0.0050 ETH; the fee per gas ranged from 0.001 to 1.82 gwei. For that
+ * operation the limit holds up to 4.8 gwei.
+ */
+export const MAX_USER_OPERATION_COST = 2n * 10n ** 16n;
+
+/**
+ * Gas ceilings for the account setup, above the wallet's Sepolia defaults
+ * (`getDefaultGasCeilings(11155111)`). Openfort set preVerificationGas to
+ * 317,856 on the setups of 2026-11-25, and the wallet allows 250,000 on
+ * Sepolia; in September the same calldata got 92,789. The passkey's own
+ * operations keep the defaults: the most any of them carried was 137,608.
+ */
+export const SETUP_GAS_CEILINGS = Object.freeze({ preVerificationGas: 500_000n });
+
 export const PUBLIC_RPC_URLS = [
 	'https://ethereum-sepolia-rpc.publicnode.com',
 	'https://sepolia.drpc.org',

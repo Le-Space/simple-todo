@@ -18,7 +18,7 @@ against it too.
 | Account contract      | Calibur v1.0.0, a smart contract by Uniswap Labs (MIT license), `0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00` (Sepolia and mainnet)                          |
 | ERC-4337              | EntryPoint v0.8, `0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108`                                                                                               |
 | Bundler and paymaster | Openfort, `https://api.openfort.io/rpc/11155111`; paymaster contract `0x8888fee873e7035789db91c16b5dddbad7214cda`                                           |
-| Wallet code           | `@le-space/passkey-wallet` 0.1.0 from npm, built in `packages/passkey-wallet` of the provider's repository                                                  |
+| Wallet code           | `@le-space/passkey-wallet` 0.3.0 from npm, built in `packages/passkey-wallet` of the provider's repository                                                  |
 | Passkey key           | `@le-space/orbitdb-identity-provider-webauthn-did` 0.13.0 from npm, with `getP256CredentialDescriptor` and `restoreIdentityFromAuthenticator` (since 0.8.0) |
 | Zama client           | `@zama-fhe/sdk` 3.6.0 on `@fhevm/sdk` 0.13.2                                                                                                                |
 
@@ -958,8 +958,10 @@ The `pol_…` ID from the second output goes into `VITE_OPENFORT_POLICY_ID`.
 Further requirements in the repository:
 
 - **Both passkey packages from npm.** Until 2026-10-02 the wallet was a tarball in `vendor/`, packed
-  from commit `cde6878`; it is now published as `@le-space/passkey-wallet` 0.1.0 from the provider's
+  from commit `cde6878`; it was then published as `@le-space/passkey-wallet` 0.1.0 from the provider's
   repository, with the same code and with tests. The provider went that way on 2026-09-23 with 0.8.0.
+  Since 2026-11-26 the app uses 0.3.0, a security release (GHSA-fv6j-cmpw-5vf7): it checks gas, cost
+  and nonce key before a key signs ([security.md](security.md#passkey-wallet-technical)).
 - **Vite** needs `worker: { format: 'es' }` ([`vite.config.js`](../vite.config.js)): the provider's
   keystore worker imports modules.
 
@@ -1027,7 +1029,9 @@ Repository, `apps/escrow01`:
 `@le-space/passkey-wallet` 0.1.0 (the code of commit `cde6878`): `README.md` (design, root key, gas
 measurements), `src/setup.js` (`createCaliburPasskeySetup`, `getCaliburKeyState`, `revertOnFailure`
 438), `src/calibur.js` (`toWebAuthnP256Key`, `getKeyHash`, `encodeExecuteUserOpCallData`),
-`src/account.js` (`DEFAULT_VERIFICATION_GAS_LIMIT` 79). Provider `8366ed8`:
+`src/account.js` (`DEFAULT_VERIFICATION_GAS_LIMIT` 79). `@le-space/passkey-wallet` 0.3.0:
+`src/account.js` (`PRE_VERIFICATION_GAS_CEILINGS`, `SINGLE_NONCE_KEY`, `createUserOperationGuard`),
+`src/setup.js` (the same checks for the setup). Provider `8366ed8`:
 `src/standalone/webauthn/p256-wallet.js` (`getP256CredentialDescriptor` 299-345, low `s` 375,
 `userVerification` 343 and 477).
 

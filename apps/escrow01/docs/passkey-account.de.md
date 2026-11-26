@@ -19,7 +19,7 @@ Arbeitsspeicher; auch die Tests laufen gegen sie.
 | Kontovertrag          | Calibur v1.0.0, ein Smart Contract von Uniswap Labs (MIT-Lizenz), `0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00` (Sepolia und Mainnet)                     |
 | ERC-4337              | EntryPoint v0.8, `0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108`                                                                                            |
 | Bundler und Paymaster | Openfort, `https://api.openfort.io/rpc/11155111`; Paymaster-Vertrag `0x8888fee873e7035789db91c16b5dddbad7214cda`                                         |
-| Wallet-Code           | `@le-space/passkey-wallet` 0.1.0 von npm, gebaut in `packages/passkey-wallet` im Repository des Providers                                                |
+| Wallet-Code           | `@le-space/passkey-wallet` 0.3.0 von npm, gebaut in `packages/passkey-wallet` im Repository des Providers                                                |
 | Passkey-Schlüssel     | `@le-space/orbitdb-identity-provider-webauthn-did` 0.13.0 von npm, mit `getP256CredentialDescriptor` und `restoreIdentityFromAuthenticator` (seit 0.8.0) |
 | Zama-Client           | `@zama-fhe/sdk` 3.6.0 auf `@fhevm/sdk` 0.13.2                                                                                                            |
 
@@ -1003,9 +1003,11 @@ Die `pol_…`-ID aus der zweiten Ausgabe gehört in `VITE_OPENFORT_POLICY_ID`.
 Weitere Voraussetzungen im Repository:
 
 - **Beide Passkey-Pakete von npm.** Bis zum 2026-10-02 lag das Wallet als Tarball in `vendor/`,
-  gepackt aus Commit `cde6878`; jetzt erscheint es als `@le-space/passkey-wallet` 0.1.0 aus dem
+  gepackt aus Commit `cde6878`; danach erschien es als `@le-space/passkey-wallet` 0.1.0 aus dem
   Repository des Providers, mit demselben Code und mit Tests. Der Provider ist diesen Weg am
-  2026-09-23 mit 0.8.0 gegangen.
+  2026-09-23 mit 0.8.0 gegangen. Seit dem 2026-11-26 nutzt die App 0.3.0, ein Sicherheitsrelease
+  (GHSA-fv6j-cmpw-5vf7): Es prüft Gas, Kosten und Nonce-Schlüssel, bevor ein Schlüssel signiert
+  ([security.de.md](security.de.md#passkey-wallet-technisch)).
 - **Vite** braucht `worker: { format: 'es' }` ([`vite.config.js`](../vite.config.js)): Der
   Keystore-Worker des Providers importiert Module.
 
@@ -1075,7 +1077,9 @@ Repository, `apps/escrow01`:
 `@le-space/passkey-wallet` 0.1.0 (der Code aus Commit `cde6878`): `README.md` (Aufbau, Root-Key,
 Gasmessung), `src/setup.js` (`createCaliburPasskeySetup`, `getCaliburKeyState`, `revertOnFailure`
 438), `src/calibur.js` (`toWebAuthnP256Key`, `getKeyHash`, `encodeExecuteUserOpCallData`),
-`src/account.js` (`DEFAULT_VERIFICATION_GAS_LIMIT` 79). Provider `8366ed8`:
+`src/account.js` (`DEFAULT_VERIFICATION_GAS_LIMIT` 79). `@le-space/passkey-wallet` 0.3.0:
+`src/account.js` (`PRE_VERIFICATION_GAS_CEILINGS`, `SINGLE_NONCE_KEY`, `createUserOperationGuard`),
+`src/setup.js` (dieselben Prüfungen für die Einrichtung). Provider `8366ed8`:
 `src/standalone/webauthn/p256-wallet.js` (`getP256CredentialDescriptor` 299-345, niedriges `s` 375,
 `userVerification` 343 und 477).
 

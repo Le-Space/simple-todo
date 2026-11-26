@@ -52,6 +52,11 @@ export const BUDGET_ERROR_CODES = /** @type {const} */ ([
 	// escrow01 on Sepolia: no account found for this session's own passkey, which
 	// may have one that has not arrived yet; the reader decides (account tab).
 	'account-not-found',
+	// escrow01 on Sepolia: the wallet refused, before any key signed, an
+	// operation whose gas or cost the bundler or the RPC set too high…
+	'limit-exceeded',
+	// …or a signature over an account domain the RPC misreported.
+	'account-domain-mismatch',
 	'invalid-deadline',
 	'unavailable',
 	'unknown'
