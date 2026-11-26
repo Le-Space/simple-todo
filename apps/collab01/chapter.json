@@ -24,6 +24,7 @@
 			"e2e/page-qr.spec.js",
 			"e2e/phone-layout.spec.js"
 		],
+		"lint": true,
 		"check": true
 	},
 	"title": "A shared list behind three Spanish words",
