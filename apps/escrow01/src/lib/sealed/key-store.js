@@ -108,39 +108,78 @@ export function openKeyStore(orbitdb, { listAddress, ownerDid }) {
  */
 
 /**
- * Store one copy of the list key of `epoch` for one reader. Only the owner's
- * session can: OrbitDB refuses the entry otherwise.
+ * The slot of one scope's key of `epoch` for one reader.
+ *
+ * @param {string} scopeId `'list'` or `'task/<todoKey>'` (./key-ring.js)
+ * @param {number} epoch
+ * @param {string} did
+ */
+export function slotFor(scopeId, epoch, did) {
+	if (scopeId === LIST_SCOPE) return listSlot(epoch, did);
+	if (typeof scopeId === 'string' && scopeId.startsWith('task/')) {
+		return taskSlot(scopeId.slice('task/'.length), epoch, did);
+	}
+	throw new TypeError(`Unknown key scope: ${String(scopeId)}`);
+}
+
+/**
+ * Store one copy of a key for one reader. Only the owner's session can:
+ * OrbitDB refuses the entry otherwise.
  *
  * @param {any} store from `openKeyStore`
- * @param {{ epoch: number, key: Uint8Array, recipient: Recipient }} copy
+ * @param {{ scopeId: string, epoch: number, key: Uint8Array, recipient: Recipient }} copy
  */
-export async function putListKeyCopy(store, { epoch, key, recipient }) {
-	const slot = listSlot(epoch, recipient.did);
+export async function putKeyCopy(store, { scopeId, epoch, key, recipient }) {
+	const slot = slotFor(scopeId, epoch, recipient.did);
 	await store.put(slot, await wrapKey(key, recipient.publicKey, { slot }));
 	return slot;
 }
 
 /**
- * Give a reader every list key the ring holds, so he reads what came before
- * him too. What a grant hands over cannot be taken back; a revocation starts
- * a new epoch instead.
+ * Store one copy of the list key of `epoch` for one reader.
+ *
+ * @param {any} store from `openKeyStore`
+ * @param {{ epoch: number, key: Uint8Array, recipient: Recipient }} copy
+ */
+export function putListKeyCopy(store, { epoch, key, recipient }) {
+	return putKeyCopy(store, { scopeId: LIST_SCOPE, epoch, key, recipient });
+}
+
+/**
+ * Give a reader every epoch of the given scopes the ring holds, so he reads
+ * what came before him too. What a grant hands over cannot be taken back; a
+ * revocation starts a new epoch instead.
  *
  * @param {any} store
  * @param {import('./key-ring.js').KeyRing} ring the owner's
  * @param {Recipient} recipient
+ * @param {{ scopes?: string[] }} [options] every scope the ring holds by default
  * @returns {Promise<string[]>} the slots written
  */
-export async function grantListKeys(store, ring, recipient) {
+export async function grantKeys(store, ring, recipient, { scopes = ring.scopes() } = {}) {
 	const slots = [];
-	for (const epoch of ring.epochs(LIST_SCOPE)) {
-		const key = /** @type {Uint8Array} */ (ring.raw(LIST_SCOPE, epoch));
-		try {
-			slots.push(await putListKeyCopy(store, { epoch, key, recipient }));
-		} finally {
-			key.fill(0);
+	for (const scopeId of scopes) {
+		for (const epoch of ring.epochs(scopeId)) {
+			const key = /** @type {Uint8Array} */ (ring.raw(scopeId, epoch));
+			try {
+				slots.push(await putKeyCopy(store, { scopeId, epoch, key, recipient }));
+			} finally {
+				key.fill(0);
+			}
 		}
 	}
 	return slots;
+}
+
+/**
+ * Give a reader every list key the ring holds, and no task key.
+ *
+ * @param {any} store
+ * @param {import('./key-ring.js').KeyRing} ring
+ * @param {Recipient} recipient
+ */
+export function grantListKeys(store, ring, recipient) {
+	return grantKeys(store, ring, recipient, { scopes: [LIST_SCOPE] });
 }
 
 /**

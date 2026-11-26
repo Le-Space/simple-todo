@@ -13,12 +13,13 @@ import { createMemoryIdentities } from '@simple-todo/todo/memory-identities.js';
 import { setPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
 import { wrapInstance } from '../instance-wrappers.js';
 import { agreementKeyFromPrf } from './key-agreement.js';
-import { LIST_SCOPE } from './key-ring.js';
+import { LIST_SCOPE, taskScope } from './key-ring.js';
 import { createListKeys, openListKeys } from './list-keys.js';
-import { openRecords, sealForList } from './sealed-list.js';
+import { openRecords, sealForList, sealTodo } from './sealed-list.js';
 
 const LIST = '/orbitdb/zdpuAuK3BHpS7NvMBivynypqciYCuy2UW77XYBPUYRnLjnw13';
 const BOB = 'did:key:zDnaeBobExample';
+const CAROL = 'did:key:zDnaeCarolExample';
 
 /** @type {any[]} */
 let running = [];
@@ -158,5 +159,138 @@ describe('the keys of one sealed list', () => {
 		await keys.close();
 
 		expect(keys.canSeal()).toBe(false);
+	});
+});
+
+describe('the task keys of a sealed list', () => {
+	beforeEach(() => setPersistentStorageEnabled(false));
+
+	afterEach(async () => {
+		for (const node of running.splice(0)) await node.stop?.();
+	});
+
+	/** The owner, Bob the delegate, Carol a writer, each with a key of their own. */
+	async function cast() {
+		const orbitdb = await orbitdbInMemory();
+		const owner = { did: orbitdb.identity.id, agreementKey: await keyFor(1) };
+		const bob = { did: BOB, agreementKey: await keyFor(2) };
+		const carol = { did: CAROL, agreementKey: await keyFor(3) };
+		/** @param {string} did */
+		const lookupPublicKey = async (did) =>
+			({ [BOB]: bob.agreementKey.publicKey, [CAROL]: carol.agreementKey.publicKey })[did] ?? null;
+		const ownersKeys = await createListKeys(orbitdb, {
+			listAddress: LIST,
+			own: owner,
+			lookupPublicKey
+		});
+		/** @param {{ did: string, agreementKey: any }} reader */
+		const openAs = (reader) =>
+			openListKeys(orbitdb, {
+				listAddress: LIST,
+				ownerDid: owner.did,
+				own: reader,
+				lookupPublicKey
+			});
+		return { orbitdb, owner, bob, carol, ownersKeys, openAs };
+	}
+
+	const handedTo = (/** @type {string} */ did, /** @type {string | null} */ revokedAt = null) => ({
+		text: 'Fix the gate',
+		delegation: { delegateDid: did, revokedAt }
+	});
+
+	it('let the delegate read his todo and nothing else of the list', async () => {
+		const { ownersKeys, bob, openAs } = await cast();
+		await expect(ownersKeys.delegate('todo-gate', BOB, [])).resolves.toEqual({
+			epoch: 0,
+			missing: []
+		});
+		const records = [
+			{ key: 'todo-gate', value: await sealTodo(ownersKeys.ring, 'todo-gate', handedTo(BOB)) },
+			{
+				key: 'todo-rent',
+				value: await sealTodo(ownersKeys.ring, 'todo-rent', { text: 'Pay rent' })
+			}
+		];
+
+		const bobsKeys = await openAs(bob);
+		expect(bobsKeys.canSeal()).toBe(false);
+		await expect(openRecords(records, bobsKeys.ring)).resolves.toMatchObject({
+			records: [{ key: 'todo-gate', value: { text: 'Fix the gate' } }],
+			hidden: 1
+		});
+	});
+
+	it('go to the writers too, who read every todo', async () => {
+		const { ownersKeys, carol, openAs } = await cast();
+		await expect(ownersKeys.grant(CAROL)).resolves.toBe('granted');
+		await ownersKeys.delegate('todo-gate', BOB, [CAROL]);
+		const records = [
+			{ key: 'todo-gate', value: await sealTodo(ownersKeys.ring, 'todo-gate', handedTo(BOB)) },
+			{
+				key: 'todo-rent',
+				value: await sealTodo(ownersKeys.ring, 'todo-rent', { text: 'Pay rent' })
+			}
+		];
+
+		const carolsKeys = await openAs(carol);
+		await expect(openRecords(records, carolsKeys.ring)).resolves.toMatchObject({ hidden: 0 });
+	});
+
+	it('start a new epoch with every delegation, which an earlier delegate does not get', async () => {
+		const { ownersKeys, bob, openAs } = await cast();
+		await ownersKeys.delegate('todo-gate', BOB, []);
+		const second = await ownersKeys.delegate('todo-gate', CAROL, []);
+		expect(second).toEqual({ epoch: 1, missing: [] });
+
+		const afterBob = {
+			key: 'todo-gate',
+			value: await sealTodo(ownersKeys.ring, 'todo-gate', handedTo(CAROL))
+		};
+		const bobsKeys = await openAs(bob);
+		expect(bobsKeys.ring.epochs(taskScope('todo-gate'))).toEqual([0]);
+		await expect(openRecords([afterBob], bobsKeys.ring)).resolves.toMatchObject({ hidden: 1 });
+	});
+
+	it('are not made for a delegate who published no key, and nothing is written', async () => {
+		const { ownersKeys } = await cast();
+		const before = (await ownersKeys.store.all()).length;
+
+		await expect(ownersKeys.delegate('todo-gate', 'did:key:zDnaeNobody', [])).resolves.toBe(
+			'no-public-key'
+		);
+		expect((await ownersKeys.store.all()).length).toBe(before);
+		expect(ownersKeys.ring.epochs(taskScope('todo-gate'))).toEqual([]);
+	});
+
+	it('leave a writer who was removed without the next list key', async () => {
+		const { ownersKeys, carol, openAs } = await cast();
+		await ownersKeys.grant(CAROL);
+		await expect(ownersKeys.rotate(LIST_SCOPE, [])).resolves.toEqual({ epoch: 1, missing: [] });
+		const later = {
+			key: 'todo-new',
+			value: await sealForList(ownersKeys.ring, 'todo-new', { text: 'After Carol' })
+		};
+
+		const carolsKeys = await openAs(carol);
+		expect(carolsKeys.ring.epochs(LIST_SCOPE)).toEqual([0]);
+		await expect(openRecords([later], carolsKeys.ring)).resolves.toMatchObject({ hidden: 1 });
+	});
+
+	it('give a writer only the copies he is missing', async () => {
+		const { ownersKeys } = await cast();
+		await ownersKeys.grant(CAROL);
+		await ownersKeys.delegate('todo-gate', BOB, []);
+
+		await expect(ownersKeys.ensureGranted(CAROL)).resolves.toEqual([`task/todo-gate/0/${CAROL}`]);
+		await expect(ownersKeys.ensureGranted(CAROL)).resolves.toEqual([]);
+	});
+
+	it('are made and rotated by the owner only', async () => {
+		const { bob, openAs } = await cast();
+		const bobsKeys = await openAs(bob);
+
+		await expect(bobsKeys.delegate('todo-gate', CAROL, [])).rejects.toThrow(/owner/);
+		await expect(bobsKeys.rotate(LIST_SCOPE, [])).rejects.toThrow(/owner/);
 	});
 });

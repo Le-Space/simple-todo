@@ -74,6 +74,7 @@ export async function importEpochKey(raw) {
  * @property {(scopeId: string) => { epoch: number, key: Promise<CryptoKey> } | null} current
  *   the highest epoch, the one new entries are sealed under
  * @property {(scopeId: string) => number[]} epochs ascending
+ * @property {() => string[]} scopes every scope the ring holds a key for
  * @property {import('./envelope.js').KeyLookup} keyFor
  *   for `openValue`: the key an envelope names
  * @property {() => void} clear
@@ -129,6 +130,8 @@ export function createKeyRing() {
 		},
 
 		epochs: (scopeId) => [...(scopes.get(scopeId)?.keys() ?? [])].sort((a, b) => a - b),
+
+		scopes: () => [...scopes.keys()].filter((scopeId) => (scopes.get(scopeId)?.size ?? 0) > 0),
 
 		keyFor: ({ scope, epoch, entryKey }) =>
 			cryptoKey(scope === 'list' ? LIST_SCOPE : taskScope(entryKey), epoch),

@@ -16,9 +16,34 @@
  * - `meta/…` — the list's own entries, not todos. `meta/name` holds the
  *   list's readable name, sealed like a todo, because a sealed list's database
  *   name is random.
+ *
+ * Which key a todo is sealed under follows its delegation: a todo handed to
+ * someone is sealed under its own task key, which the delegate holds; every
+ * other todo under the list key, which he does not. A delegate's rename
+ * (`patch.text` of his action) is sealed under the same task key.
  */
-import { isEnvelope, openValue, sealValue } from './envelope.js';
-import { LIST_SCOPE } from './key-ring.js';
+import { isEnvelope, openText, openValue, sealText, sealValue } from './envelope.js';
+import { LIST_SCOPE, taskScope } from './key-ring.js';
+
+/**
+ * A sealed list's database name: this prefix and random characters. The
+ * prefix is how every peer tells a sealed list from one made before #127,
+ * before it has read a single entry — a writer must never write a todo in the
+ * clear into a list that is sealed, just because its key has not arrived yet.
+ */
+export const SEALED_LIST_NAME_PREFIX = 'sealed-v1-';
+
+/** A fresh database name for a sealed list. */
+export function sealedListName() {
+	const bytes = crypto.getRandomValues(new Uint8Array(16));
+	return (
+		SEALED_LIST_NAME_PREFIX + Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+	);
+}
+
+/** @param {unknown} name a database's name */
+export const isSealedListName = (name) =>
+	typeof name === 'string' && name.startsWith(SEALED_LIST_NAME_PREFIX);
 
 /** The sealed entry that holds a sealed list's readable name. */
 export const META_NAME_KEY = 'meta/name';
@@ -51,6 +76,91 @@ export async function sealForList(ring, entryKey, value) {
 		epoch: current.epoch,
 		entryKey
 	});
+}
+
+/**
+ * Seal a todo under the key its delegation calls for: its task key while it
+ * is handed to someone and not taken back, the list key otherwise.
+ *
+ * @param {import('./key-ring.js').KeyRing} ring
+ * @param {string} todoKey
+ * @param {HandedOver} todo
+ * @returns {Promise<import('./envelope.js').Envelope>}
+ */
+export async function sealTodo(ring, todoKey, todo) {
+	if (!isHandedOver(todo)) return sealForList(ring, todoKey, todo);
+	const current = ring.current(taskScope(todoKey));
+	if (!current) throw new NoTaskKeyError(todoKey);
+	return sealValue(todo, {
+		key: await current.key,
+		scope: 'task',
+		epoch: current.epoch,
+		entryKey: todoKey
+	});
+}
+
+/**
+ * A delegate's new text for his todo, sealed under its task key, as the string
+ * the delegated controller expects in `patch.text`.
+ *
+ * @param {import('./key-ring.js').KeyRing} ring
+ * @param {string} todoKey the todo's key, not the action's
+ * @param {string} text
+ */
+export async function sealActionText(ring, todoKey, text) {
+	const current = ring.current(taskScope(todoKey));
+	if (!current) throw new NoTaskKeyError(todoKey);
+	return sealText(text, {
+		key: await current.key,
+		scope: 'task',
+		epoch: current.epoch,
+		entryKey: todoKey
+	});
+}
+
+/**
+ * A delegate's action as this session may apply it: its `patch.text` opened,
+ * or dropped when it does not open. An action whose text was never sealed (a
+ * list from before #127) is returned as it is.
+ *
+ * @template {{ taskKey?: string, patch?: { text?: unknown } }} A
+ * @param {A} action
+ * @param {import('./key-ring.js').KeyRing} ring
+ * @returns {Promise<A>}
+ */
+export async function openActionText(action, ring) {
+	const text = action?.patch?.text;
+	if (typeof text !== 'string' || typeof action.taskKey !== 'string') return action;
+	const opened = await openText(text, { keyFor: ring.keyFor, entryKey: action.taskKey });
+	if (opened.state === 'open') return { ...action, patch: { ...action.patch, text: opened.value } };
+	if (opened.state === 'sealed' && opened.reason === 'not-an-envelope') return action;
+	const patch = { ...action.patch };
+	delete patch.text;
+	return { ...action, patch };
+}
+
+/**
+ * A todo as far as its seal depends on it.
+ *
+ * @typedef {Record<string, unknown> & {
+ *   delegation?: { delegateDid?: string | null, revokedAt?: string | null } | null
+ * }} HandedOver
+ */
+
+/** @param {HandedOver} todo */
+function isHandedOver(todo) {
+	const delegation = todo?.delegation;
+	return Boolean(delegation?.delegateDid) && !delegation?.revokedAt;
+}
+
+/** The ring holds no key for a todo that is handed to someone. */
+export class NoTaskKeyError extends Error {
+	/** @param {string} todoKey */
+	constructor(todoKey) {
+		super(`This todo is handed to someone, and this session holds no key for it: ${todoKey}`);
+		this.name = 'NoTaskKeyError';
+		this.todoKey = todoKey;
+	}
 }
 
 /**

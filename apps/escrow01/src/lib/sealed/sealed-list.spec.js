@@ -1,12 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { createKeyRing, LIST_SCOPE, newEpochKey } from './key-ring.js';
+import { createKeyRing, LIST_SCOPE, newEpochKey, taskScope } from './key-ring.js';
 import {
 	isMetaKey,
+	isSealedListName,
 	META_NAME_KEY,
 	NoListKeyError,
+	NoTaskKeyError,
+	openActionText,
 	openRecord,
 	openRecords,
-	sealForList
+	sealActionText,
+	sealedListName,
+	sealForList,
+	sealTodo
 } from './sealed-list.js';
 
 const todo = (/** @type {string} */ text) => ({
@@ -124,5 +130,72 @@ describe('reading a sealed list', () => {
 		await expect(openRecords([inClear], ring)).resolves.toMatchObject({ name: null, records: [] });
 		expect(isMetaKey('meta/anything')).toBe(true);
 		expect(isMetaKey('todo-1')).toBe(false);
+	});
+});
+
+describe('a todo handed to someone', () => {
+	/** A ring with the list key and the task key of `todo-gate`. */
+	function ringWithTask() {
+		const ring = createKeyRing();
+		ring.add(LIST_SCOPE, 0, newEpochKey());
+		ring.add(taskScope('todo-gate'), 0, newEpochKey());
+		return ring;
+	}
+	const handedOver = { text: 'Fix the gate', delegation: { delegateDid: 'did:key:zBob' } };
+
+	it('is sealed under its task key while handed over, under the list key once taken back', async () => {
+		const ring = ringWithTask();
+		expect(await sealTodo(ring, 'todo-gate', handedOver)).toMatchObject({
+			scope: 'task',
+			epoch: 0
+		});
+		const takenBack = {
+			...handedOver,
+			delegation: { ...handedOver.delegation, revokedAt: '2026-11-26T20:00:00.000Z' }
+		};
+		expect(await sealTodo(ring, 'todo-gate', takenBack)).toMatchObject({ scope: 'list' });
+		expect(await sealTodo(ring, 'todo-rent', { text: 'Pay rent' })).toMatchObject({
+			scope: 'list'
+		});
+	});
+
+	it('is not written in the clear, nor under the list key, without its task key', async () => {
+		const ring = createKeyRing();
+		ring.add(LIST_SCOPE, 0, newEpochKey());
+		await expect(sealTodo(ring, 'todo-gate', handedOver)).rejects.toBeInstanceOf(NoTaskKeyError);
+	});
+
+	it('carries the delegate’s rename sealed, which its readers open and others drop', async () => {
+		const ring = ringWithTask();
+		const action = {
+			taskKey: 'todo-gate',
+			action: 'patch-fields',
+			patch: { text: await sealActionText(ring, 'todo-gate', 'Gate fixed') }
+		};
+		expect(action.patch.text).not.toContain('Gate fixed');
+
+		await expect(openActionText(action, ring)).resolves.toMatchObject({
+			patch: { text: 'Gate fixed' }
+		});
+
+		const outsider = createKeyRing();
+		outsider.add(LIST_SCOPE, 0, newEpochKey());
+		const dropped = await openActionText(action, outsider);
+		expect(dropped.patch).toEqual({});
+	});
+
+	it('takes a rename from before #127 as it is', async () => {
+		const plain = { taskKey: 'todo-gate', patch: { text: 'Gate fixed' } };
+		await expect(openActionText(plain, createKeyRing())).resolves.toEqual(plain);
+	});
+});
+
+describe('a sealed list’s database name', () => {
+	it('is random, and tells a sealed list from one made before', () => {
+		const name = sealedListName();
+		expect(isSealedListName(name)).toBe(true);
+		expect(sealedListName()).not.toBe(name);
+		expect(isSealedListName('private-todos-x7k2')).toBe(false);
+		expect(isSealedListName(undefined)).toBe(false);
 	});
 });

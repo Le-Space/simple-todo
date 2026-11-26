@@ -10,19 +10,36 @@
  * - **Opening** a list loads every copy addressed to this reader, and loads
  *   again whenever the store changes: a grant arrives while the list is open,
  *   or the owner's copy replicates after the list did.
- * - **Granting** looks up the reader's public key in the account directory
- *   and wraps every list epoch for it. Only the owner can, because only her
- *   session can write the store.
+ * - **A writer** gets every key: the list's, and the task key of every todo
+ *   that was handed to someone (`grant`).
+ * - **A delegate** gets the key of his own todo and nothing else (user
+ *   decision 1, 25.11.2026; no interim with the list key, 26.11.2026). Every
+ *   delegation starts a new epoch of that todo's key, so an earlier delegate
+ *   of the same todo reads nothing written after him (`delegate`).
+ * - **A revocation** starts a new epoch (user decision 5): a writer who leaves
+ *   keeps the keys he had and gets none of the new ones (`rotate`). A revoked
+ *   delegation needs no new key: the todo goes back under the list key, which
+ *   the delegate never had.
  *
- * Only the list's creator makes a key. A device that opens a list and finds no
+ * Only the owner wraps, because only her session can write the store; only
+ * she can delegate in a sealed list. A device that opens a list and finds no
  * copy waits for one; it never makes a key of its own, which would seal
  * entries nobody else could read.
  */
-import { createKeyRing, LIST_SCOPE, newEpochKey } from './key-ring.js';
-import { grantListKeys, loadOwnKeys, openKeyStore, putListKeyCopy } from './key-store.js';
+import { createKeyRing, LIST_SCOPE, newEpochKey, taskScope } from './key-ring.js';
+import { loadOwnKeys, openKeyStore, putKeyCopy, putListKeyCopy, slotFor } from './key-store.js';
 
 /**
  * @typedef {{ did: string, agreementKey: import('./key-agreement.js').AgreementKey }} Reader
+ */
+
+/**
+ * Who could not be given a key: their DID has no X25519 key in the account
+ * directory yet (they have not started the app since #127), so there is
+ * nothing to wrap for. The owner's session gives it to them later
+ * (`ensureGranted`).
+ *
+ * @typedef {{ epoch: number, missing: string[] }} Rotation
  */
 
 /**
@@ -32,7 +49,14 @@ import { grantListKeys, loadOwnKeys, openKeyStore, putListKeyCopy } from './key-
  * @property {string} ownerDid
  * @property {() => boolean} canSeal true once this session holds a list key
  * @property {(did: string) => Promise<'granted' | 'no-public-key'>} grant
- *   wrap every list epoch for `did`; owner only
+ *   a writer: every epoch of every key this ring holds; owner only
+ * @property {(todoKey: string, delegateDid: string, readers: string[]) => Promise<Rotation | 'no-public-key'>} delegate
+ *   a new epoch of the todo's key, for the owner, `readers` and the delegate;
+ *   'no-public-key' when the delegate has none, and then nothing is written
+ * @property {(scopeId: string, readers: string[]) => Promise<Rotation>} rotate
+ *   a new epoch of one key, for the owner and `readers`
+ * @property {(did: string) => Promise<string[]>} ensureGranted
+ *   write the copies a writer is missing; the slots written
  * @property {(listener: () => void) => () => void} onChange
  *   hears that new keys arrived; returns the unsubscribe
  * @property {() => Promise<void>} close
@@ -45,7 +69,7 @@ import { grantListKeys, loadOwnKeys, openKeyStore, putListKeyCopy } from './key-
  * @param {{
  *   listAddress: string,
  *   own: Reader,
- *   lookupPublicKey: (did: string) => Promise<Uint8Array | null>
+ *   lookupPublicKey: (did: string, options?: { timeoutMs?: number }) => Promise<Uint8Array | null>
  * }} options `lookupPublicKey` reads a reader's key from the account directory
  * @returns {Promise<ListKeys>}
  */
@@ -75,7 +99,7 @@ export async function createListKeys(orbitdb, { listAddress, own, lookupPublicKe
  *   listAddress: string,
  *   ownerDid: string,
  *   own: Reader,
- *   lookupPublicKey: (did: string) => Promise<Uint8Array | null>
+ *   lookupPublicKey: (did: string, options?: { timeoutMs?: number }) => Promise<Uint8Array | null>
  * }} options
  * @returns {Promise<ListKeys>}
  */
@@ -92,7 +116,7 @@ export async function openListKeys(orbitdb, { listAddress, ownerDid, own, lookup
  *   ring: import('./key-ring.js').KeyRing,
  *   own: Reader,
  *   ownerDid: string,
- *   lookupPublicKey: (did: string) => Promise<Uint8Array | null>
+ *   lookupPublicKey: (did: string, options?: { timeoutMs?: number }) => Promise<Uint8Array | null>
  * }} parts
  * @returns {ListKeys}
  */
@@ -114,6 +138,52 @@ function listKeys({ store, ring, own, ownerDid, lookupPublicKey }) {
 	};
 	store.events.on('update', onUpdate);
 
+	const assertOwner = () => {
+		if (own.did !== ownerDid) throw new Error('Only the list’s owner hands out its keys.');
+	};
+
+	/**
+	 * The owner's own key and each reader's from the directory; the DIDs
+	 * without one are returned apart.
+	 *
+	 * @param {string[]} readers
+	 */
+	async function recipientsFor(readers) {
+		/** @type {import('./key-store.js').Recipient[]} */
+		const recipients = [{ did: own.did, publicKey: own.agreementKey.publicKey }];
+		/** @type {string[]} */
+		const missing = [];
+		for (const did of new Set(readers)) {
+			if (did === own.did) continue;
+			const publicKey = await lookupPublicKey(did);
+			if (publicKey) recipients.push({ did, publicKey });
+			else missing.push(did);
+		}
+		return { recipients, missing };
+	}
+
+	/**
+	 * A fresh key for the next epoch of `scopeId`, in the ring and wrapped for
+	 * every recipient.
+	 *
+	 * @param {string} scopeId
+	 * @param {import('./key-store.js').Recipient[]} recipients
+	 */
+	async function nextEpoch(scopeId, recipients) {
+		const epochs = ring.epochs(scopeId);
+		const epoch = epochs.length === 0 ? 0 : epochs[epochs.length - 1] + 1;
+		const key = newEpochKey();
+		try {
+			ring.add(scopeId, epoch, key);
+			for (const recipient of recipients) {
+				await putKeyCopy(store, { scopeId, epoch, key, recipient });
+			}
+		} finally {
+			key.fill(0);
+		}
+		return epoch;
+	}
+
 	return {
 		ring,
 		store,
@@ -121,13 +191,33 @@ function listKeys({ store, ring, own, ownerDid, lookupPublicKey }) {
 		canSeal: () => ring.current(LIST_SCOPE) !== null,
 
 		async grant(did) {
-			if (own.did !== ownerDid) {
-				throw new Error('Only the list’s owner hands out its keys.');
-			}
+			assertOwner();
 			const publicKey = await lookupPublicKey(did);
 			if (!publicKey) return 'no-public-key';
-			await grantListKeys(store, ring, { did, publicKey });
+			await writeCopies(did, publicKey, { onlyMissing: false });
 			return 'granted';
+		},
+
+		async delegate(todoKey, delegateDid, readers) {
+			assertOwner();
+			const delegateKey = await lookupPublicKey(delegateDid);
+			if (!delegateKey) return 'no-public-key';
+			const { recipients, missing } = await recipientsFor(readers.filter((d) => d !== delegateDid));
+			recipients.push({ did: delegateDid, publicKey: delegateKey });
+			return { epoch: await nextEpoch(taskScope(todoKey), recipients), missing };
+		},
+
+		async rotate(scopeId, readers) {
+			assertOwner();
+			const { recipients, missing } = await recipientsFor(readers);
+			return { epoch: await nextEpoch(scopeId, recipients), missing };
+		},
+
+		async ensureGranted(did) {
+			assertOwner();
+			const publicKey = await lookupPublicKey(did, { timeoutMs: 0 });
+			if (!publicKey) return [];
+			return writeCopies(did, publicKey, { onlyMissing: true });
 		},
 
 		onChange(listener) {
@@ -143,4 +233,30 @@ function listKeys({ store, ring, own, ownerDid, lookupPublicKey }) {
 			await store.close();
 		}
 	};
+
+	/**
+	 * Every epoch of every scope, for a writer.
+	 *
+	 * @param {string} did
+	 * @param {Uint8Array} publicKey
+	 * @param {{ onlyMissing: boolean }} options
+	 */
+	async function writeCopies(did, publicKey, { onlyMissing }) {
+		/** @type {string[]} */
+		const written = [];
+		for (const scopeId of ring.scopes()) {
+			for (const epoch of ring.epochs(scopeId)) {
+				if (onlyMissing && (await store.get(slotFor(scopeId, epoch, did))) !== undefined) continue;
+				const key = /** @type {Uint8Array} */ (ring.raw(scopeId, epoch));
+				try {
+					written.push(
+						await putKeyCopy(store, { scopeId, epoch, key, recipient: { did, publicKey } })
+					);
+				} finally {
+					key.fill(0);
+				}
+			}
+		}
+		return written;
+	}
 }
