@@ -6,7 +6,7 @@ settings:
 
 overrides:
   '@ipshipyard/node-datachannel': npm:node-datachannel@0.29.0
-  '@le-space/orbitdb-identity-provider-webauthn-did': 0.13.0
+  '@le-space/orbitdb-identity-provider-webauthn-did': 0.14.0
   '@libp2p/gossipsub': 16.1.0
   orbitdb-relay>@orbitdb/core: 4.0.0
   react: 19.2.6
@@ -59,8 +59,8 @@ importers:
         specifier: 0.14.3
         version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.13.0
-        version: 0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+        specifier: 0.14.0
+        version: 0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
       '@le-space/ui':
         specifier: 0.12.4
         version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -291,8 +291,8 @@ importers:
         specifier: 0.14.3
         version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.13.0
-        version: 0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+        specifier: 0.14.0
+        version: 0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
       '@le-space/orbitdb-storage-bridge':
         specifier: 0.22.1
         version: 0.22.1(@storacha/client@2.1.4(encoding@0.1.13))(encoding@0.1.13)(lucide-svelte@0.539.0(svelte@5.37.2))(react-native@0.80.2(@babel/core@7.29.7)(react@19.2.6))(svelte@5.37.2)
@@ -523,8 +523,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0(typescript@5.9.2)(zod@4.6.5)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.13.0
-        version: 0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+        specifier: 0.14.0
+        version: 0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
       '@le-space/ui':
         specifier: 0.12.4
         version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -753,10 +753,10 @@ importers:
         version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-access-controller-delegated-todo':
         specifier: 0.1.0
-        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4)))(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4)))(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.13.0
-        version: 0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+        specifier: 0.14.0
+        version: 0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
       '@le-space/ui':
         specifier: 0.12.4
         version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -988,13 +988,13 @@ importers:
         version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-access-controller-delegated-todo':
         specifier: 0.1.0
-        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4)))(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4)))(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.13.0
-        version: 0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+        specifier: 0.14.0
+        version: 0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
       '@le-space/passkey-wallet':
         specifier: 0.3.0
-        version: 0.3.0(@le-space/orbitdb-identity-provider-webauthn-did@0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4)))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))
+        version: 0.3.0(@le-space/orbitdb-identity-provider-webauthn-did@0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4)))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))
       '@le-space/ui':
         specifier: 0.12.4
         version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -1229,10 +1229,10 @@ importers:
         version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-access-controller-delegated-todo':
         specifier: 0.1.0
-        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4)))(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4)))(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.13.0
-        version: 0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+        specifier: 0.14.0
+        version: 0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
       '@le-space/ui':
         specifier: 0.12.4
         version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -1472,8 +1472,8 @@ importers:
         specifier: 0.14.3
         version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.13.0
-        version: 0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+        specifier: 0.14.0
+        version: 0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
       '@le-space/ui':
         specifier: 0.12.4
         version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -1704,8 +1704,8 @@ importers:
         specifier: 0.14.3
         version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.13.0
-        version: 0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+        specifier: 0.14.0
+        version: 0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
       '@le-space/ui':
         specifier: 0.12.4
         version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -1936,8 +1936,8 @@ importers:
         specifier: 0.14.3
         version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.13.0
-        version: 0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+        specifier: 0.14.0
+        version: 0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
       '@le-space/ui':
         specifier: 0.12.4
         version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -2168,8 +2168,8 @@ importers:
         specifier: 0.14.3
         version: 0.14.3(@multiformats/multiaddr@13.0.3)(libp2p@3.3.6)
       '@le-space/orbitdb-identity-provider-webauthn-did':
-        specifier: 0.13.0
-        version: 0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+        specifier: 0.14.0
+        version: 0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
       '@le-space/ui':
         specifier: 0.12.4
         version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -3568,11 +3568,11 @@ packages:
   '@le-space/orbitdb-access-controller-delegated-todo@0.1.0':
     resolution: {integrity: sha512-IYqHNFWlwKWRXYXsxbw2pIdwRVe//YP1Y6VWmMkkl/BulOyDAkiV3Xz+CZRVAbyVscVPm5tQtjxb7fdqaLznKg==}
     peerDependencies:
-      '@le-space/orbitdb-identity-provider-webauthn-did': 0.13.0
+      '@le-space/orbitdb-identity-provider-webauthn-did': 0.14.0
       '@orbitdb/core': ^3.0.0
 
-  '@le-space/orbitdb-identity-provider-webauthn-did@0.13.0':
-    resolution: {integrity: sha512-HkVK9AVjWN/rCECWYbyj8IzshxzC6aEgVbhEal2GSlCPaO7AZ75DTBypfaDv+vHKBZ31X28wPPiNBuuVTkkq/A==}
+  '@le-space/orbitdb-identity-provider-webauthn-did@0.14.0':
+    resolution: {integrity: sha512-UE7/Yl+MNca1EZ1p0j5YTjQwMs/L4FcdQgLK3v2+CqWzs9ictDKBCG7wX2zqd9ZkPG01Ek7LJBM6JXYgo6Qy3Q==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@orbitdb/core': ^4.0.0
@@ -3592,7 +3592,7 @@ packages:
     resolution: {integrity: sha512-Xi5/3oOavgjMf2cuOgFITP0495jJQ+w2Y94ypw5ty61TSymaS0j8Cylk7h6wFQm+9nd4w3rEs2Y5Mc+4gTYAJA==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
-      '@le-space/orbitdb-identity-provider-webauthn-did': 0.13.0
+      '@le-space/orbitdb-identity-provider-webauthn-did': 0.14.0
       viem: ^2.56.5
 
   '@le-space/playwright@0.7.0':
@@ -9937,12 +9937,12 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@le-space/orbitdb-access-controller-delegated-todo@0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4)))(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))':
+  '@le-space/orbitdb-access-controller-delegated-todo@0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4)))(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))':
     dependencies:
-      '@le-space/orbitdb-identity-provider-webauthn-did': 0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+      '@le-space/orbitdb-identity-provider-webauthn-did': 0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
       '@orbitdb/core': 4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4)
 
-  '@le-space/orbitdb-identity-provider-webauthn-did@0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))':
+  '@le-space/orbitdb-identity-provider-webauthn-did@0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))':
     dependencies:
       '@ipld/dag-cbor': 10.0.1
       '@ipld/dag-ucan': 3.4.5
@@ -9994,9 +9994,9 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@le-space/passkey-wallet@0.3.0(@le-space/orbitdb-identity-provider-webauthn-did@0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4)))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))':
+  '@le-space/passkey-wallet@0.3.0(@le-space/orbitdb-identity-provider-webauthn-did@0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4)))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))':
     dependencies:
-      '@le-space/orbitdb-identity-provider-webauthn-did': 0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+      '@le-space/orbitdb-identity-provider-webauthn-did': 0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
       viem: 2.56.8(typescript@5.9.2)(zod@4.6.5)
 
   '@le-space/playwright@0.7.0(@playwright/test@1.61.1)(typescript@5.9.2)(zod@4.6.5)':
@@ -14989,8 +14989,8 @@ snapshots:
       '@ipld/dag-cbor': 10.0.1
       '@ipld/dag-json': 11.0.0
       '@ipshipyard/libp2p-auto-tls': 2.0.2
-      '@le-space/orbitdb-access-controller-delegated-todo': 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4)))(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
-      '@le-space/orbitdb-identity-provider-webauthn-did': 0.13.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+      '@le-space/orbitdb-access-controller-delegated-todo': 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4)))(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
+      '@le-space/orbitdb-identity-provider-webauthn-did': 0.14.0(@orbitdb/core@4.0.0(patch_hash=ixw4feeafz2wcj2ld4uyrs6vk4))
       '@libp2p/autonat': 3.0.24
       '@libp2p/bootstrap': 12.0.27
       '@libp2p/circuit-relay-v2': 4.2.9
