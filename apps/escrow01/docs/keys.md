@@ -53,7 +53,7 @@ flowchart LR
     cred["Passkey credential<br/>P-256, non-exportable"]
   end
   subgraph browser["This browser"]
-    sign["List signing key<br/>secp256k1, HKDF from PRF<br/>keystore: memory or IndexedDB"]
+    sign["List signing key<br/>secp256k1, HKDF from PRF<br/>keystore: memory only"]
     read["Read key<br/>secp256k1, random<br/>sealed, 24 h"]
   end
   setup["Setup key<br/>secp256k1, random<br/>discarded"]
@@ -71,10 +71,12 @@ flowchart LR
    an assertion the authenticator produces after user verification.
 2. **The list signing key.** secp256k1, as OrbitDB's keystore wants it, derived by the provider: PRF
    output → HKDF-SHA256 with an info string that carries the DID. With PRF the same passkey derives
-   the same key on any device; without PRF the keystore generates one instead. Where it is kept
-   follows the storage choice: in memory it goes with the tab; if the reader chose to keep data, it
-   sits unencrypted in OrbitDB's keystore in IndexedDB and later sessions sign without asking the
-   passkey (`createOrbitDBInstance` in [`src/lib/p2p.js`](../src/lib/p2p.js)). It signs database entries, never a
+   the same key on any device; without PRF the keystore generates one instead. It is never stored:
+   the keystore lives in memory in both storage modes, and every start derives the key from that
+   start's one PRF read, which also gives the key for sealed lists
+   ([`sealed/start-prf.js`](../src/lib/sealed/start-prf.js), `createOrbitDBInstance` in
+   [`src/lib/p2p.js`](../src/lib/p2p.js)). A reload therefore asks for one touch. It signs database
+   entries, never a
    transaction.
 3. **The setup key.** secp256k1 from `generatePrivateKey()`, created in the wallet package's
    `createCaliburPasskeySetup` (`src/setup.js:200`). Its address _becomes_ the account's address; it

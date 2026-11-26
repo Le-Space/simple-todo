@@ -54,8 +54,9 @@ the panel, and the mnemonic list stays public.
   completed. (de2do re-applied every action forever; this is the one place
   the port departs from it.)
 - **Every delegated write asks for the passkey again.** Ordinary writes
-  never do: the identity's signing key sits in the keystore, unencrypted
-  (see _Passkey Identities_ below). A delegate changing someone else's todo
+  never do: the identity's signing key, derived when the app starts, is in
+  this tab's keystore (see _Passkey Identities_ below). A delegate changing
+  someone else's todo
   is the one thing this identity may do on a list it does not own, and it
   should not happen by accident. The header badge shows the prompt happen
   (`src/lib/delegated-write-auth.js`).
@@ -180,13 +181,16 @@ This chapter replaces that with an opt-in **passkey-backed identity**:
   [`@le-space/orbitdb-identity-provider-webauthn-did`](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did):
   the DID is the passkey's own P-256 key, and OrbitDB signs entries with a
   **secp256k1 key derived from the passkey** (PRF → HKDF-SHA256; without PRF
-  the keystore generates one instead). That key is **not encrypted**: with
-  **Keep in this browser** it sits in OrbitDB's keystore in this browser's
-  IndexedDB, where anyone who can read the browser's storage can read it
-  (unticked, in this tab's memory). Creating a passkey costs three
-  WebAuthn prompts (register, PRF, identity proof); after a reload a kept
-  credential costs one (the identity proof), and a device that kept nothing
-  costs three: two to restore, one to sign. On Sepolia, `escrow01` adds one
+  the keystore generates one instead). That key is **never stored**: the
+  keystore lives in this tab's memory, and every start derives the key again
+  from one PRF read, with **Keep in this browser** too (#127). Creating a
+  passkey costs three WebAuthn prompts (register, PRF, identity proof);
+  after a reload a kept credential costs one (the PRF output; the kept
+  identity proof spares a new signature), and a device that kept nothing
+  costs four: two to restore, the PRF output, one to sign (three once
+  provider #107 is released). Without PRF the keystore makes a key for each
+  start, and the touch after a reload signs a new identity document. On
+  Sepolia, `escrow01` adds one
   more ([how often the passkey asks](passkey-account.md#how-often-the-passkey-asks)).
   Signing entries never asks. (The stricter _varsig_ variant — a passkey prompt for
   every single write — exists in the same package and is a good follow-up
