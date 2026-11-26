@@ -77,7 +77,7 @@ In this app:
 | --- | --- |
 | gossipsub — `libp2p-config.js` sets `runOnLimitedConnection: true` | **yes** |
 | OrbitDB's heads sync — `dialProtocol(headsSyncAddress)`, flag set **nowhere** in `@orbitdb/core` | no |
-| bitswap — sets it on `handle`, drops it on the dial, and never asks to hear about limited peers; the documented option reaches neither site, in any published version (ipfs/helia#1124 — `Le-Space/ablage` carries a two-line patch) | no |
+| bitswap — `@helia/bitswap` 4.0.6 sets it on `handle` only and drops it on the dial and the topology (ipfs/helia#1124); 4.0.17 wires `runOnLimitedConnections` to all three (ipfs/helia#1129), off by default. escrow01 runs 4.0.20 with it on; the other chapters still run 4.0.6 without it | escrow01: **yes**; the others: no |
 
 ### Why replication appears to work anyway
 
@@ -93,6 +93,13 @@ connection — never through a circuit. `expectTodoRelayPinned` in
 entry bytes (`pubsub.publish(address, bytes)`) and the receiver decodes them
 directly — no blockstore, no bitswap. Since gossipsub does set the flag, new
 entries reach a peer even across a circuit.
+
+One block still comes by CID: the signer's identity document, which OrbitDB
+fetches through bitswap to check the entry. An entry that crossed a circuit is
+kept only if the reader has that document already or can fetch it — from the
+relay, or over the circuit where bitswap runs on it. Measured in escrow01's
+account directory on 2026-11-26: with bitswap 4.0.6 the entry arrived six
+times and was refused six times (`LoadBlockFailedError`).
 
 What does **not** work is the browser-to-browser case with no direct path and no
 relay holding the data: OrbitDB's join-time heads exchange is refused, and older

@@ -17,13 +17,41 @@
  * sepolia-chain.js). Registering a public key needs no private key, so a stranger
  * could register Bob's key in their own account — but they cannot publish
  * that account under Bob's DID.
+ *
+ * How the entry reaches Alice. Bob writes it once, usually long before Alice
+ * looks, so it is never a live update for her. OrbitDB hands an existing entry
+ * to a newcomer only in its join-time heads exchange, and that does not reach
+ * her when the two browsers first meet over the relay's circuit: the protocol
+ * is refused on a limited connection and never tried again, not even once a
+ * direct one is up (AGENTS.md). Measured on 2026-11-26: no entry in 60 s,
+ * with WebRTC between the two for most of it. The relay may hold the
+ * directory, but only when its queue gets to the topic in time, which it did
+ * in some runs and not in others. So Bob's browser answers every newcomer
+ * itself, over gossipsub, which does cross a circuit (`serve`). OrbitDB then
+ * fetches the signer's identity document by bitswap, which crosses the
+ * circuit too since p2p.js turns on `runOnLimitedConnections`.
  */
 
 import { IPFSAccessController } from '@orbitdb/core';
 import { getAddress, isAddress } from 'viem';
 
-export const ACCOUNT_DIRECTORY_NAME = 'simple-todo-escrow01-account-v1';
+/**
+ * v2 since provider 0.14.0. Readers refuse identity proofs in the first format
+ * (`acceptLegacyProofs: false`, GHSA-7j39-c465-x35x), and OrbitDB checks every
+ * entry from a head back, so a v1 directory written before the switch does not
+ * open on a fresh reader at all, and rewriting the entry in it does not help:
+ * the new one builds on the old. Every owner publishes its account again on its
+ * next start (`publishOnce` in budget-service-zama.js), into the fresh v2 log.
+ */
+export const ACCOUNT_DIRECTORY_NAME = 'simple-todo-escrow01-account-v2';
 const ENTRY_KEY = 'account';
+
+/** The owner answers a newcomer twice: at once, and again in case gossipsub had no stream to it yet. */
+const ANSWER_AGAIN_AFTER_MS = 3_000;
+/** Joins that come closer together than this get one answer. */
+const MIN_ANSWER_INTERVAL_MS = 1_000;
+/** While a lookup waits, the reader joins the directory's topic again, which the owner answers. */
+const ASK_AGAIN_AFTER_MS = [4_000, 10_000];
 
 /**
  * @typedef {{ address: `0x${string}`, chainId: number, publishedAt: string }} PublishedAccount
@@ -52,23 +80,106 @@ export function createAccountDirectory(getOrbitdb) {
 		return database;
 	}
 
+	/** How this session answers for a directory, by database address. @type {Map<string, () => void>} */
+	const serving = new Map();
+
+	/**
+	 * Answer every peer that joins the directory, from the browser that owns it:
+	 * its heads on the directory's topic, as `Sync.add()` publishes a new entry.
+	 * A peer that has the entry already drops it again in its log.
+	 *
+	 * Peers on the topic before this browser started answering never join in
+	 * its sight, a payer whose page was open before the owner's, say; `publish`
+	 * answers them at once with what this returns.
+	 *
+	 * @param {any} database
+	 * @returns {(() => void) | undefined}
+	 */
+	function serve(database) {
+		const topic = String(database.address);
+		const pubsub = getOrbitdb()?.ipfs?.libp2p?.services?.pubsub;
+		if (!pubsub) return undefined;
+		const known = serving.get(topic);
+		if (known) return known;
+
+		const announce = async () => {
+			for (const head of await database.log.heads()) {
+				const bytes = await database.log.storage.get(head.hash);
+				// Nobody on the topic: nobody to tell.
+				if (bytes) await pubsub.publish(topic, bytes).catch(() => {});
+			}
+		};
+		let answeredAt = 0;
+		const answer = () => {
+			if (Date.now() - answeredAt < MIN_ANSWER_INTERVAL_MS) return;
+			answeredAt = Date.now();
+			void announce().catch(() => {});
+			setTimeout(() => void announce().catch(() => {}), ANSWER_AGAIN_AFTER_MS);
+		};
+		/** @param {any} event */
+		const onSubscriptionChange = (event) => {
+			const joined = (event.detail?.subscriptions ?? []).some(
+				(/** @type {any} */ subscription) => subscription.subscribe && subscription.topic === topic
+			);
+			if (joined) answer();
+		};
+		pubsub.addEventListener('subscription-change', onSubscriptionChange);
+		database.events.once('close', () => {
+			pubsub.removeEventListener('subscription-change', onSubscriptionChange);
+			serving.delete(topic);
+		});
+		serving.set(topic, answer);
+		return answer;
+	}
+
+	/**
+	 * Join the directory's topic again, which its owner answers with the entry.
+	 * Through gossipsub alone: OrbitDB's Sync keeps listening, and only the
+	 * subscription is sent anew.
+	 *
+	 * @param {any} database
+	 */
+	function askAgain(database) {
+		const topic = String(database.address);
+		const pubsub = getOrbitdb()?.ipfs?.libp2p?.services?.pubsub;
+		if (!pubsub) return;
+		pubsub.unsubscribe(topic);
+		pubsub.subscribe(topic);
+	}
+
 	return {
 		/**
+		 * The directory database of `did`, as this directory opened it: for
+		 * diagnostics and the E2E hook, which must not open the address a second
+		 * time.
+		 *
+		 * @param {string} did
+		 */
+		database: (did) => open(did),
+
+		/**
 		 * Publish this session's account. Only its own DID can: OrbitDB refuses
-		 * the entry otherwise.
+		 * the entry otherwise. The directory stays open and answers peers that
+		 * join it later (`serve`).
 		 *
 		 * @param {string} did
 		 * @param {{ address: `0x${string}`, chainId: number }} account
 		 */
 		async publish(did, { address, chainId }) {
 			const database = await open(did);
+			const answer = serve(database);
 			const current = parsePublished(await database.get(ENTRY_KEY), chainId);
-			if (current && current.address === getAddress(address)) return;
-			await database.put(ENTRY_KEY, {
-				address: getAddress(address),
-				chainId,
-				publishedAt: new Date().toISOString()
-			});
+			if (!current || current.address !== getAddress(address)) {
+				await database.put(ENTRY_KEY, {
+					address: getAddress(address),
+					chainId,
+					publishedAt: new Date().toISOString()
+				});
+			}
+			const pubsub = getOrbitdb()?.ipfs?.libp2p?.services?.pubsub;
+			if (answer && (pubsub?.getSubscribers?.(String(database.address)) ?? []).length > 0) {
+				answer();
+			}
 		},
 
 		/**
@@ -92,6 +203,7 @@ export function createAccountDirectory(getOrbitdb) {
 					if (settled) return;
 					settled = true;
 					clearTimeout(timer);
+					for (const ask of asks) clearTimeout(ask);
 					database.events.off('update', onUpdate);
 					resolve(value);
 				};
@@ -99,6 +211,11 @@ export function createAccountDirectory(getOrbitdb) {
 					void read().then((value) => value && finish(value));
 				};
 				const timer = setTimeout(() => void read().then(finish), timeoutMs);
+				// The directory may have been open since before the owner was
+				// reachable, and its answer went nowhere: ask again.
+				const asks = ASK_AGAIN_AFTER_MS.filter((ms) => ms < timeoutMs).map((ms) =>
+					setTimeout(() => settled || askAgain(database), ms)
+				);
 				database.events.on('update', onUpdate);
 			});
 		}

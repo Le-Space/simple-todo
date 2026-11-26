@@ -39,7 +39,7 @@
 			"accountFailed": "Setting it up failed: {reason}",
 			"accountRetry": "Try again",
 			"accountNotFound": "No account was found for this passkey yet. If you set one up before, here or on another device, it may just not have arrived: search again. Otherwise, create one.",
-			"accountNotFoundTechnical": "The entry in the OrbitDB account directory (simple-todo-escrow01-account-v1, writable only by your DID) did not arrive within 3 seconds; searching again waits up to 20. A new account is a new setup key and so a new address, published over the old entry.",
+			"accountNotFoundTechnical": "The entry in the OrbitDB account directory (simple-todo-escrow01-account-v2, writable only by your DID) did not arrive within 3 seconds; searching again waits up to 20. A new account is a new setup key and so a new address, published over the old entry.",
 			"accountSearch": "Search again",
 			"accountCreate": "Create a new account",
 			"accountCreateHint": "A new account has a new address: the app then no longer shows the budgets and balance of an earlier one, though your passkey still controls it.",

@@ -157,22 +157,34 @@ async function createPersistentStores() {
  */
 function createHeliaWithLibp2p(libp2pNode, stores = {}) {
 	return withBitswap(
-		withLibp2p(
-			// Bitswap only, deliberately. `withHTTP` used to wrap this: it ships
-			// three public gateways and Helia asks them for any block bitswap does
-			// not produce. Nothing here can be there — todos are OrbitDB entries
-			// written in a browser, so the request can only fail while announcing
-			// the CID to three strangers.
-			createHeliaLight({
-				codecs: [dagCbor, dagJson, json],
-				hashers: [sha512],
-				// Omitted when the user chose in-memory: helia then falls back to
-				// MemoryBlockstore/MemoryDatastore, which is what this chapter did
-				// unconditionally until now.
-				...stores
-			}),
-			libp2pNode
-		)
+		// Typed against @libp2p/interface 3.4.0, which bitswap 4.0.20 brings,
+		// where this libp2p is 3.2.5: the same interface at runtime, a newer
+		// stream type in the declarations.
+		/** @type {any} */ (
+			withLibp2p(
+				// Bitswap only, deliberately. `withHTTP` used to wrap this: it ships
+				// three public gateways and Helia asks them for any block bitswap does
+				// not produce. Nothing here can be there — todos are OrbitDB entries
+				// written in a browser, so the request can only fail while announcing
+				// the CID to three strangers.
+				createHeliaLight({
+					codecs: [dagCbor, dagJson, json],
+					hashers: [sha512],
+					// Omitted when the user chose in-memory: helia then falls back to
+					// MemoryBlockstore/MemoryDatastore, which is what this chapter did
+					// unconditionally until now.
+					...stores
+				}),
+				libp2pNode
+			)
+		),
+		// Over the relay's circuit as well. Two browsers often have nothing else,
+		// and OrbitDB fetches by CID through bitswap what a gossipsub update does
+		// not carry: the signer's identity document, older entries of a log.
+		// Without it a delegate's account entry crossed the circuit and was refused
+		// for want of its signer (chain/account-directory.js). The option has
+		// reached the dial and the topology only since 4.0.17 (ipfs/helia#1129).
+		{ runOnLimitedConnections: true }
 	);
 }
 
@@ -572,7 +584,89 @@ function installE2ETestHooks() {
 			typeof hash === 'string' && Boolean(await orbitdb?.identities?.getIdentity?.(hash)),
 		getWebRTCEnabled,
 		setWebRTCEnabled,
-		connectToMultiaddr
+		connectToMultiaddr,
+		accountDirectory: accountDirectoryForTests()
+	};
+}
+
+/**
+ * The account directory (chain/account-directory.js), for the spec that checks
+ * a delegate's published account reaches the payer (account-directory.spec.js).
+ * Budgets run against the fake in E2E builds, and the fake never opens the
+ * directory, so the hook drives it with the same code the Sepolia service uses,
+ * loaded on first use as there. `inspect` also tells which peer delivered what:
+ * the spec has to tell the owner's answer from the relay's.
+ */
+function accountDirectoryForTests() {
+	/** @type {Promise<ReturnType<typeof import('./chain/account-directory.js').createAccountDirectory>> | null} */
+	let loading = null;
+	const directory = () =>
+		(loading ??= import('./chain/account-directory.js').then(({ createAccountDirectory }) =>
+			createAccountDirectory(() => orbitdb)
+		));
+	/** @type {Array<{ at: number, did: string, event: string, peer?: string, detail?: string }>} */
+	const events = [];
+	/** @type {Map<string, Promise<any>>} */
+	const watched = new Map();
+
+	/** @param {string} did */
+	function watch(did) {
+		const known = watched.get(did);
+		if (known) return known;
+		const watching = (async () => {
+			// The directory's own database: a second open of the address would
+			// register OrbitDB's heads protocol twice.
+			const database = await (await directory()).database(did);
+			const topic = String(database.address);
+			/** @param {string} event @param {any} [peer] @param {any} [detail] */
+			const note = (event, peer, detail) =>
+				events.push({
+					at: Date.now(),
+					did,
+					event,
+					...(peer ? { peer: String(peer) } : {}),
+					...(detail
+						? { detail: String(detail?.name ?? '') + ': ' + String(detail?.message ?? detail) }
+						: {})
+				});
+			database.events.on('join', (/** @type {any} */ peer) => note('join', peer));
+			database.events.on('leave', (/** @type {any} */ peer) => note('leave', peer));
+			database.events.on('update', () => note('update'));
+			database.events.on('error', (/** @type {any} */ error) => note('error', null, error));
+			libp2p?.services?.pubsub?.addEventListener('message', (/** @type {any} */ event) => {
+				if (event.detail?.topic === topic) note('pubsub-message', event.detail?.from);
+			});
+			return database;
+		})();
+		watched.set(did, watching);
+		return watching;
+	}
+
+	return {
+		/** @param {{ address: `0x${string}`, chainId: number }} account */
+		publish: async (account) => {
+			const did = orbitdb.identity.id;
+			await (await directory()).publish(did, account);
+			await watch(did);
+		},
+		/** @param {string} did @param {{ chainId: number, timeoutMs?: number }} options */
+		lookup: async (did, options) => {
+			// The directory's own order first (identity topic, then the database);
+			// the watch then finds the database it opened.
+			const pending = (await directory()).lookup(did, options);
+			await watch(did);
+			return pending;
+		},
+		/** @param {string} did */
+		inspect: async (did) => {
+			const database = await watch(did);
+			return {
+				address: String(database.address),
+				peers: Array.from(database.peers ?? [], String),
+				value: (await database.get('account')) ?? null,
+				events: events.filter((entry) => entry.did === did)
+			};
+		}
 	};
 }
 
