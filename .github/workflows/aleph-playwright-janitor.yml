@@ -27,13 +27,13 @@ jobs:
       # drained the E2E wallet from 846k to 35k credits while seven janitor runs
       # reported success (NiKrause/simple-todo#88). All ten chapters still use
       # that name, so the prefix stays.
-      extra_name_prefixes: simple-todo-e2e-
-      # Since 2026-11-02 the production relay, relay-main-ekb, runs from this
-      # wallet too (deployed with relay-button; the chapters find it by this
-      # account, #104). It is meant to live, so it is named here and neither
-      # swept nor reported. A redeploy under another name needs that name here,
-      # or this run turns red for it.
-      keep_name_prefixes: relay-main-ekb
+      extra_name_prefixes: simple-todo-e2e-,relay-main-ekb
+      # relay-main-ekb, the production relay this wallet ran from 2026-11-02,
+      # is swept now: it ran orbitdb-relay 0.10.11, with @libp2p/crypto 5.1.21
+      # (GHSA-rvfr-cqwq-rc4j) and a passkey provider that cannot verify the
+      # proofs of provider 0.14.0. Its successor runs from the orbitdb-relay
+      # account, where the chapters find it as before (#104). Nothing of this
+      # wallet is kept any more.
       # Everything else this wallet funds is an ephemeral E2E VM, so anything
       # past the TTL that the janitor can neither sweep nor keep is money
       # burning and must turn the run red rather than warn.
