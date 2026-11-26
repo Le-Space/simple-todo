@@ -30,6 +30,7 @@ import { seedRestoredSigningKey } from '@simple-todo/todo/restored-signing-key.j
 import { prfForStart } from './sealed/start-prf.js';
 import { ownAgreementKey } from './sealed/own-agreement-key.js';
 import { sealedReaderStore } from './sealed/session-reader.js';
+import { closeSealedLists } from './sealed/list-session.js';
 import { directoryFor } from './chain/session-directory.js';
 import { dropKeptSigningKeys } from './kept-signing-keys.js';
 import { forgetByPrefix, recall, remember } from '@simple-todo/todo/browser-memory.js';
@@ -309,6 +310,8 @@ async function stopP2P() {
 	discoveredPeers.clear();
 	relayReservationAttempts.clear();
 
+	// The key stores of sealed lists belong to this OrbitDB instance too.
+	await closeSealedLists().catch((error) => console.warn('Closing sealed lists:', error));
 	const resources = [todoDB, orbitdb, helia, libp2p];
 	todoDB = null;
 	orbitdb = null;

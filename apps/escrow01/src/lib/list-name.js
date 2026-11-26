@@ -1,4 +1,5 @@
 import { isValidSpanishMnemonic } from '@simple-todo/todo/spanish-mnemonic.js';
+import { isSealedListName } from './sealed/sealed-list.js';
 
 /**
  * A private list's name, and the database name it is stored under (escrow01).
@@ -38,6 +39,9 @@ const SUFFIX = /^(.+)-[0-9a-z]{7,9}-[0-9a-z]{1,6}$/;
  */
 export function listNameFromDatabase(databaseName) {
 	const name = String(databaseName ?? '');
+	// A sealed list's database name is random (#127): it names nothing, and its
+	// readable name comes sealed from the list itself.
+	if (isSealedListName(name)) return '';
 	if (!name || isValidSpanishMnemonic(name)) return name;
 	return name.match(SUFFIX)?.[1] ?? name;
 }
