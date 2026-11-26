@@ -25,7 +25,7 @@
 			"readingIsOpen": "Nothing here is encrypted. Anyone who has a list's address can read everything in it, including the relay that stores it. Do not put anything private in a todo.",
 			"identityPasskey": "Your passkey identifies you to the other devices. Nobody else can write as you.",
 			"identityAnonymous": "You are using a random identity that exists only in this browser. Close it and it is gone.",
-			"cookies": "No tracking cookies are used. If you tick \"don't show this again\", that choice is the only thing saved on this device.",
+			"cookies": "No tracking cookies are used. Kept in this browser, your decision to start is kept too, and this dialog does not come back; in memory only, it asks again.",
 			"delegation": "You decide who may write to a list, and you can take a grant back later — unlike a key you handed out, because nothing here is encrypted.",
 			"storageMemory": "You chose \"in memory only\": nothing is written to this device, and this browser starts over when the page reloads.",
 			"storagePersistent": "You chose \"keep them in this browser\": the todos survive a reload. They sit unencrypted in this browser’s storage, and clearing it loses them.",
@@ -97,6 +97,18 @@
 		"storageMemoryLabel": "In memory only",
 		"storageMemoryHint": "Todos and keys live in memory only and are gone on reload. Nothing is left on the device — your identity comes back through the passkey next time, in three touches.",
 		"storagePersistentLabel": "Keep them in this browser",
-		"storagePersistentHint": "Todos are stored in the browser's IndexedDB and survive a restart. They are not encrypted there, so anyone who can read this browser's storage can read them."
+		"storagePersistentHint": "Todos are stored in the browser's IndexedDB and survive a restart. They are not encrypted there, so anyone who can read this browser's storage can read them.",
+		"title": "Hand one todo to somebody, and take it back",
+		"promise": "Give one todo of your list to somebody else: they may finish or rename that one and nothing else, until you take it back or it runs out.",
+		"summary": {
+			"lists": "Nothing here is encrypted: anyone who has a list’s address can read it, todos and handed-over todos alike.",
+			"listsTechnical": "Nothing here is encrypted: the OrbitDB log of a list, delegations included, is readable by anyone with its address, the relay too.",
+			"delegate": "A todo goes to a person’s passkey identity, which comes back on every visit, unlike a browser’s random one.",
+			"kept": "Kept in this browser, your todos survive a reload. They sit unencrypted in its storage, and clearing the site data loses them.",
+			"keptTechnical": "Kept in this browser: the OrbitDB logs and the signing key sit unencrypted in IndexedDB and localStorage. Clearing the site data loses them.",
+			"memory": "In memory only: nothing stays on this device, and a reload starts over."
+		},
+		"identityLabelDefault": "Delegation-Todo",
+		"identityLabelTitle": "Name of the new passkey"
 	}
 }

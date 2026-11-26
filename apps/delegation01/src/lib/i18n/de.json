@@ -25,7 +25,7 @@
 			"readingIsOpen": "Hier ist nichts verschlüsselt. Wer die Adresse einer Liste hat, kann alles darin lesen, auch der Relay, der sie aufbewahrt. Schreiben Sie nichts Privates in ein Todo.",
 			"identityPasskey": "Ihr Passkey weist Sie gegenüber den anderen Geräten aus. Niemand sonst kann in Ihrem Namen schreiben.",
 			"identityAnonymous": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Schließen Sie ihn, ist sie weg.",
-			"cookies": "Es werden keine Tracking-Cookies verwendet. Wenn Sie \"nicht mehr anzeigen\" ankreuzen, ist diese Entscheidung das Einzige, was auf diesem Gerät gespeichert wird.",
+			"cookies": "Es werden keine Tracking-Cookies verwendet. In diesem Browser behalten, bleibt auch Ihre Entscheidung zu starten, und dieser Dialog kommt nicht wieder; nur im Arbeitsspeicher fragt er erneut.",
 			"delegation": "Wer in eine Liste schreiben darf, entscheiden Sie. Eine Freigabe können Sie später wieder zurücknehmen — anders als ein herausgegebener Schlüssel, denn hier wird nichts verschlüsselt.",
 			"storageMemory": "Sie haben „nur im Arbeitsspeicher\" gewählt: Auf diesem Gerät wird nichts abgelegt, und beim Neuladen fängt dieser Browser von vorn an.",
 			"storagePersistent": "Sie haben „in diesem Browser behalten\" gewählt: Die Todos bleiben nach dem Neuladen da. Sie liegen unverschlüsselt im Speicher dieses Browsers, und wer ihn löscht, verliert sie.",
@@ -97,6 +97,18 @@
 		"storageMemoryLabel": "Nur im Arbeitsspeicher",
 		"storageMemoryHint": "Aufgaben und Schlüssel liegen nur im Arbeitsspeicher und sind beim Neuladen weg. Auf dem Gerät bleibt nichts — Ihre Identität kommt beim nächsten Mal über den Passkey zurück, mit drei Berührungen.",
 		"storagePersistentLabel": "In diesem Browser behalten",
-		"storagePersistentHint": "Die Todos liegen in der IndexedDB des Browsers und überstehen einen Neustart. Verschlüsselt sind sie dort nicht: Wer den Speicher dieses Browsers lesen kann, liest sie mit."
+		"storagePersistentHint": "Die Todos liegen in der IndexedDB des Browsers und überstehen einen Neustart. Verschlüsselt sind sie dort nicht: Wer den Speicher dieses Browsers lesen kann, liest sie mit.",
+		"title": "Eine Aufgabe weitergeben – und zurücknehmen",
+		"promise": "Geben Sie eine Aufgabe Ihrer Liste an jemanden weiter: Diese Person darf genau diese erledigen oder umbenennen, sonst nichts – bis Sie sie zurücknehmen oder die Frist abläuft.",
+		"summary": {
+			"lists": "Hier ist nichts verschlüsselt: Wer die Adresse einer Liste hat, kann sie lesen, Aufgaben wie weitergegebene Aufgaben.",
+			"listsTechnical": "Hier ist nichts verschlüsselt: Das OrbitDB-Log einer Liste, Weitergaben eingeschlossen, ist für jeden mit ihrer Adresse lesbar, auch für den Relay.",
+			"delegate": "Eine Aufgabe geht an die Passkey-Identität einer Person, die bei jedem Besuch wiederkommt – anders als die zufällige eines Browsers.",
+			"kept": "In diesem Browser behalten, bleiben Ihre Aufgaben nach dem Neuladen da. Sie liegen unverschlüsselt in seinem Speicher, und wer die Website-Daten löscht, verliert sie.",
+			"keptTechnical": "In diesem Browser behalten: Die OrbitDB-Logs und der Signierschlüssel liegen unverschlüsselt in IndexedDB und localStorage. Wer die Website-Daten löscht, verliert sie.",
+			"memory": "Nur im Arbeitsspeicher: Auf diesem Gerät bleibt nichts, und beim Neuladen beginnt alles von vorn."
+		},
+		"identityLabelDefault": "Delegation-Todo",
+		"identityLabelTitle": "Name des neuen Passkeys"
 	}
 }
