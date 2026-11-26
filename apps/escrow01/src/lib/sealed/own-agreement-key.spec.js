@@ -1,60 +1,164 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
-	deviceAgreementKey,
-	forgetDeviceAgreementKey,
-	hasDeviceAgreementKey,
+	getPersistentStorageEnabled,
+	setPersistentStorageEnabled
+} from '@simple-todo/todo/storage-mode.js';
+import {
+	AGREEMENT_KEY_DATABASE,
+	forgetAgreementKey,
+	keptAgreementKey,
 	ownAgreementKey
 } from './own-agreement-key.js';
-import { agreementKeyFromPrf } from './key-agreement.js';
+import { agreementKeyFromPrf, unwrapKey, wrapKey } from './key-agreement.js';
+import { newEpochKey } from './key-ring.js';
 
 const alice = 'did:key:zDnaeAliceExample';
 const bob = 'did:key:zDnaeBobExample';
+const prf = (/** @type {number} */ fill) => new Uint8Array(32).fill(fill);
 
-afterEach(() => {
-	forgetDeviceAgreementKey(alice);
-	forgetDeviceAgreementKey(bob);
+/** What sits in the key database, read past the module. */
+async function storedRecords() {
+	const database = await new Promise((resolve, reject) => {
+		const request = indexedDB.open(AGREEMENT_KEY_DATABASE, 1);
+		request.onupgradeneeded = () => request.result.createObjectStore('keys');
+		request.onsuccess = () => resolve(request.result);
+		request.onerror = () => reject(request.error);
+	});
+	try {
+		return await new Promise((resolve, reject) => {
+			const request = database.transaction('keys', 'readonly').objectStore('keys').getAll();
+			request.onsuccess = () => resolve(request.result);
+			request.onerror = () => reject(request.error);
+		});
+	} finally {
+		database.close();
+	}
+}
+
+let persistentBefore = false;
+
+beforeEach(() => {
+	persistentBefore = getPersistentStorageEnabled();
 });
 
-describe('the session’s own key', () => {
-	it('comes from the PRF output when there is one, and leaves no device key', async () => {
-		const own = await ownAgreementKey({ did: alice, prfOutput: new Uint8Array(32).fill(5) });
-		const expected = await agreementKeyFromPrf(new Uint8Array(32).fill(5));
+afterEach(async () => {
+	await forgetAgreementKey(alice);
+	await forgetAgreementKey(bob);
+	setPersistentStorageEnabled(persistentBefore);
+});
 
-		expect(own.source).toBe('prf');
-		expect(own.publicKey).toEqual(expected.publicKey);
-		expect(hasDeviceAgreementKey(alice)).toBe(false);
+describe('the session’s own key, kept in this browser', () => {
+	beforeEach(() => setPersistentStorageEnabled(true));
+
+	it('comes from a PRF output at hand, without asking the passkey', async () => {
+		let asked = 0;
+		const own = await ownAgreementKey({
+			did: alice,
+			prfOutput: prf(5),
+			readPrfOutput: async () => {
+				asked += 1;
+				return prf(5);
+			}
+		});
+
+		expect(asked).toBe(0);
+		expect(own?.source).toBe('prf');
+		expect(own?.publicKey).toEqual((await agreementKeyFromPrf(prf(5))).publicKey);
 	});
 
-	it('without PRF is a device key, the same one on the next call', async () => {
-		const first = await ownAgreementKey({ did: alice, prfOutput: null });
-		const second = await deviceAgreementKey(alice);
+	it('is kept as a key that cannot be exported, and found on the next visit without a prompt', async () => {
+		const first = await ownAgreementKey({ did: alice, prfOutput: prf(5) });
+		const [record] = /** @type {any[]} */ (await storedRecords());
 
-		expect(first.source).toBe('device');
-		expect(hasDeviceAgreementKey(alice)).toBe(true);
-		expect(second.publicKey).toEqual(first.publicKey);
+		expect(record.privateKey).toBeInstanceOf(CryptoKey);
+		expect(record.privateKey.extractable).toBe(false);
+		await expect(crypto.subtle.exportKey('pkcs8', record.privateKey)).rejects.toThrow();
+		expect(record.publicKey).toEqual(first?.publicKey);
+
+		const next = await ownAgreementKey({
+			did: alice,
+			readPrfOutput: async () => {
+				throw new Error('a kept key must not prompt');
+			}
+		});
+		const copy = await wrapKey(newEpochKey(), /** @type {Uint8Array} */ (first?.publicKey), { slot: 's' });
+		await expect(unwrapKey(copy, /** @type {any} */ (next), { slot: 's' })).resolves.toHaveLength(32);
 	});
 
-	it('keeps one device key per identity', async () => {
-		const forAlice = await deviceAgreementKey(alice);
-		const forBob = await deviceAgreementKey(bob);
-		expect(forAlice.publicKey).not.toEqual(forBob.publicKey);
+	it('keeps one key per identity', async () => {
+		await ownAgreementKey({ did: alice, prfOutput: prf(5) });
+		await ownAgreementKey({ did: bob, prfOutput: prf(6) });
+
+		expect((await keptAgreementKey(alice))?.publicKey).toEqual((await agreementKeyFromPrf(prf(5))).publicKey);
+		expect((await keptAgreementKey(bob))?.publicKey).toEqual((await agreementKeyFromPrf(prf(6))).publicKey);
 	});
 
-	it('makes a new device key once the old one is forgotten', async () => {
-		const before = await deviceAgreementKey(alice);
-		forgetDeviceAgreementKey(alice);
-		const after = await deviceAgreementKey(alice);
-		expect(after.publicKey).not.toEqual(before.publicKey);
+	it('sits where the storage wipe deletes', () => {
+		// `wipePersistentStorage()` deletes the databases under this prefix. Not
+		// called here: it also clears localStorage, which other specs share.
+		expect(AGREEMENT_KEY_DATABASE.startsWith('level-js-simple-todo/')).toBe(true);
+	});
+});
+
+describe('the session’s own key, with nothing at hand', () => {
+	beforeEach(() => setPersistentStorageEnabled(true));
+
+	it('is null rather than a key of its own making', async () => {
+		await expect(ownAgreementKey({ did: alice })).resolves.toBeNull();
+		await expect(keptAgreementKey(alice)).resolves.toBeNull();
 	});
 
-	it('replaces a stored value that is no key', async () => {
-		localStorage.setItem('simpleTodo.escrow01.deviceAgreementKey.' + alice, 'garbage');
-		const own = await deviceAgreementKey(alice);
-		expect(own.publicKey).toHaveLength(32);
-		expect(hasDeviceAgreementKey(alice)).toBe(true);
+	it('asks the passkey once when told how, as after a restore', async () => {
+		let asked = 0;
+		const read = async () => {
+			asked += 1;
+			return prf(5);
+		};
+		const own = await ownAgreementKey({ did: alice, readPrfOutput: read });
+		await ownAgreementKey({ did: alice, readPrfOutput: read });
+
+		expect(asked).toBe(1);
+		expect(own?.source).toBe('prf');
+		expect(own?.publicKey).toEqual((await agreementKeyFromPrf(prf(5))).publicKey);
+	});
+
+	it('without PRF is a device key, kept, and the same one next time', async () => {
+		const own = await ownAgreementKey({ did: alice, readPrfOutput: async () => null });
+		const next = await ownAgreementKey({ did: alice });
+
+		expect(own?.source).toBe('device');
+		expect(own?.privateKey.extractable).toBe(false);
+		expect(next?.publicKey).toEqual(own?.publicKey);
+	});
+
+	it('lets a refused prompt through', async () => {
+		const refused = Object.assign(new Error('The operation either timed out or was not allowed.'), {
+			name: 'NotAllowedError'
+		});
+		await expect(
+			ownAgreementKey({ did: alice, readPrfOutput: () => Promise.reject(refused) })
+		).rejects.toBe(refused);
+		await expect(keptAgreementKey(alice)).resolves.toBeNull();
 	});
 
 	it('needs an identity to belong to', async () => {
-		await expect(deviceAgreementKey('')).rejects.toThrow(TypeError);
+		await expect(ownAgreementKey({ did: '' })).rejects.toThrow(TypeError);
+	});
+});
+
+describe('the session’s own key, in memory only', () => {
+	beforeEach(() => setPersistentStorageEnabled(false));
+
+	it('writes nothing to the device and still holds the key for the tab', async () => {
+		const own = await ownAgreementKey({ did: alice, prfOutput: prf(5) });
+
+		expect(await storedRecords()).toEqual([]);
+		expect((await keptAgreementKey(alice))?.publicKey).toEqual(own?.publicKey);
+	});
+
+	it('forgets the key when told to', async () => {
+		await ownAgreementKey({ did: alice, readPrfOutput: async () => null });
+		await forgetAgreementKey(alice);
+		await expect(keptAgreementKey(alice)).resolves.toBeNull();
 	});
 });
