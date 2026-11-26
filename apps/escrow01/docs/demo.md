@@ -125,12 +125,15 @@ passkey and start"); its press is the consent, and that is when she creates her 
 asks three times; before the second and the third a short dialog says which one comes and what it is
 for ("Passkey-Abfrage 2 von 3", "Passkey prompt 2 of 3") and waits for "Weiter" ("Continue"). She
 lands in her own private list, "Meine Aufgaben" ("My todos"). In Sepolia mode the "Konto" tab first
-says "Wird eingerichtet. Openfort zahlt die Gebühr, eine Passkey-Bestätigung ist dafür nicht nötig."
-("Being set up. Openfort pays the fee, no passkey confirmation needed.") and after about 20 seconds
-shows "Konto auf Sepolia" with the address and "Auf Etherscan ansehen" ("View on Etherscan"). Right
-then the passkey asks a fourth time, without a dialog before it: it seals the key that will read
-amounts ([how often the passkey asks](passkey-account.md#how-often-the-passkey-asks)). Announce it,
-or it looks like a contradiction of the sentence just shown.
+says "Wird eingerichtet. Openfort zahlt die Gebühr, die Einrichtung braucht deshalb keine
+Passkey-Bestätigung. Bei einem neuen Konto fragt Ihr Passkey danach einmal: Er verschließt den
+Schlüssel, der Beträge liest." ("Being set up. Openfort pays the fee, so setting up needs no passkey
+confirmation. For a new account your passkey then asks once, to lock away the key that reads
+amounts."). After about 20 seconds the passkey asks a fourth time, without a dialog before it: it
+seals the key that will read amounts
+([how often the passkey asks](passkey-account.md#how-often-the-passkey-asks)). Once that touch is
+done, the tab shows "Konto auf Sepolia" with the address and "Auf Etherscan ansehen" ("View on
+Etherscan"). The tab has announced the touch; say it too, so it does not come as a surprise.
 
 **Simple.** "Alice signs in with Touch ID. No password, no seed phrase."
 
