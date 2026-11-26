@@ -7,7 +7,10 @@
  * which order; this module only knows how. Tests replace it as a whole.
  */
 
-import { getP256CredentialDescriptor } from '@le-space/orbitdb-identity-provider-webauthn-did/standalone';
+import {
+	getP256CredentialDescriptor,
+	signP256Challenge
+} from '@le-space/orbitdb-identity-provider-webauthn-did/standalone';
 import {
 	createCaliburPasskeySetup,
 	getCaliburKeyState,
@@ -26,6 +29,8 @@ import {
 	CHAIN_ID,
 	ESCROW_ADDRESS,
 	ESCROW_DEPLOY_BLOCK,
+	MAX_USER_OPERATION_COST,
+	SETUP_GAS_CEILINGS,
 	TOKEN_ADDRESS,
 	UNDERLYING_ADDRESS
 } from './config.js';
@@ -76,13 +81,56 @@ async function settle(read, done) {
 }
 
 /**
- * @param {{ endpoints: import('./config.js').ChainEndpoints }} options
+ * @param {{
+ *   endpoints: import('./config.js').ChainEndpoints
+ *   client?: any
+ *   bundler?: any
+ *   signChallenge?: typeof signP256Challenge
+ * }} options
+ *   `client`, `bundler` and `signChallenge` (the passkey prompt) are for tests;
+ *   the page passes only `endpoints`.
  */
-export function createSepoliaChain({ endpoints }) {
-	const client = createSepoliaClient(endpoints.rpcUrls);
-	const bundler = createOpenfortBundler({ client, endpoints });
+export function createSepoliaChain({
+	endpoints,
+	client = createSepoliaClient(endpoints.rpcUrls),
+	bundler = createOpenfortBundler({ client, endpoints }),
+	signChallenge = signP256Challenge
+}) {
 	/** @type {Map<string, Promise<import('./zama-client.js').ZamaClient>>} */
 	const zamaBySession = new Map();
+
+	/**
+	 * One account's user operations go one after the other. The wallet puts
+	 * every operation on nonce key 0 (`SINGLE_NONCE_KEY`), so one sent before
+	 * the previous is included takes the same nonce: the bundler refuses it, or
+	 * it replaces the first, whose lock then never happens. Two budgets locked
+	 * in quick succession would do exactly that.
+	 *
+	 * @type {Map<string, Promise<void>>} by address, lower case
+	 */
+	const sending = new Map();
+	/** The nonce each account's last user operation was included with. @type {Map<string, bigint>} */
+	const lastNonce = new Map();
+
+	/**
+	 * @template T
+	 * @param {string} address
+	 * @param {() => Promise<T>} run
+	 * @returns {Promise<T>}
+	 */
+	function oneAtATime(address, run) {
+		const key = address.toLowerCase();
+		const turn = (sending.get(key) ?? Promise.resolve()).then(run);
+		const done = turn.then(
+			() => {},
+			() => {}
+		);
+		sending.set(key, done);
+		void done.then(() => {
+			if (sending.get(key) === done) sending.delete(key);
+		});
+		return turn;
+	}
 
 	/** @param {ReadKey} session */
 	function zamaFor(session) {
@@ -109,7 +157,8 @@ export function createSepoliaChain({ endpoints }) {
 		return {
 			success: Boolean(receipt.success),
 			txHash: /** @type {Hex} */ (receipt.receipt.transactionHash),
-			blockNumber: receipt.receipt.blockNumber
+			blockNumber: receipt.receipt.blockNumber,
+			nonce: BigInt(receipt.nonce)
 		};
 	}
 
@@ -225,7 +274,9 @@ export function createSepoliaChain({ endpoints }) {
 		 * A new Calibur account with the passkey as its admin key, and Zama user
 		 * decryption for the escrow and the token delegated to `sessionAddress`.
 		 * One sponsored user operation, signed by a setup key that is discarded
-		 * once the passkey is registered. No passkey prompt.
+		 * once the passkey is registered. No passkey prompt. Its gas and cost are
+		 * checked before the setup key signs, with a higher preVerificationGas
+		 * ceiling than the passkey's operations get (`SETUP_GAS_CEILINGS`).
 		 *
 		 * @param {{ descriptor: any, sessionAddress: Hex, readUntil: bigint }} input
 		 */
@@ -240,11 +291,17 @@ export function createSepoliaChain({ endpoints }) {
 				})
 			});
 			try {
-				const hash = await setup.sendUserOperation(bundler);
+				const hash = await setup.sendUserOperation(bundler, {
+					client,
+					chainId: CHAIN_ID,
+					maxUserOperationCost: MAX_USER_OPERATION_COST,
+					gasCeilings: SETUP_GAS_CEILINGS
+				});
 				const receipt = await receiptOf(hash);
 				if (!receipt.success || !(await settle(() => setup.isActive(client), Boolean))) {
 					throw new Error('The account setup did not register the passkey.');
 				}
+				lastNonce.set(setup.address.toLowerCase(), receipt.nonce);
 				return { address: setup.address, setupTx: receipt.txHash };
 			} finally {
 				setup.discard();
@@ -253,24 +310,47 @@ export function createSepoliaChain({ endpoints }) {
 
 		/**
 		 * Send `calls` from the account as one user operation the passkey signs:
-		 * one WebAuthn prompt, gas sponsored.
+		 * one WebAuthn prompt, gas sponsored. After the account's previous one,
+		 * if that is still under way (`oneAtATime`).
+		 *
+		 * The wallet checks the chain, the nonce key, each gas field and the cost
+		 * (`MAX_USER_OPERATION_COST`) first, and throws `UserOperationLimitError`
+		 * without prompting. `onPrompt` comes after those checks, right before the
+		 * WebAuthn request, so a refused operation never shows the prompt.
 		 *
 		 * @param {{ address: Hex, descriptor: any, calls: Call[], onPrompt?: () => void, onSigned?: () => void }} input
 		 */
 		async sendWithPasskey({ address, descriptor, calls, onPrompt, onSigned }) {
-			const account = await toCaliburPasskeyAccount({ client, address, descriptor });
-			const sign = account.signUserOperation.bind(account);
-			account.signUserOperation = async (parameters) => {
-				onPrompt?.();
-				const signature = await sign(parameters);
-				onSigned?.();
-				return signature;
-			};
-			const hash = await bundler.sendUserOperation({
-				account,
-				calls: calls.map((call) => ({ value: 0n, ...call }))
+			return oneAtATime(address, async () => {
+				const account = await toCaliburPasskeyAccount({
+					client,
+					address,
+					descriptor,
+					chainId: CHAIN_ID,
+					maxUserOperationCost: MAX_USER_OPERATION_COST,
+					async sign(challenge) {
+						onPrompt?.();
+						const assertion = await signChallenge(descriptor, challenge);
+						onSigned?.();
+						return assertion;
+					}
+				});
+				// Right after the previous receipt, a node a block behind still
+				// reports its nonce, and the bundler refuses a used one.
+				const previous = lastNonce.get(address.toLowerCase());
+				const nonce = await settle(
+					() => account.getNonce(),
+					(value) => previous === undefined || value > previous
+				);
+				const hash = await bundler.sendUserOperation({
+					account,
+					nonce,
+					calls: calls.map((call) => ({ value: 0n, ...call }))
+				});
+				const receipt = await receiptOf(hash);
+				lastNonce.set(address.toLowerCase(), receipt.nonce);
+				return receipt;
 			});
-			return receiptOf(hash);
 		},
 
 		/**

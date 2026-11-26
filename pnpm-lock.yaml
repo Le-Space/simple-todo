@@ -993,8 +993,8 @@ importers:
         specifier: 0.13.0
         version: 0.13.0(@orbitdb/core@4.0.0(patch_hash=ihdnyhppwvumeryubtrpbd443y))
       '@le-space/passkey-wallet':
-        specifier: 0.1.0
-        version: 0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.13.0(@orbitdb/core@4.0.0(patch_hash=ihdnyhppwvumeryubtrpbd443y)))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))
+        specifier: 0.3.0
+        version: 0.3.0(@le-space/orbitdb-identity-provider-webauthn-did@0.13.0(@orbitdb/core@4.0.0(patch_hash=ihdnyhppwvumeryubtrpbd443y)))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))
       '@le-space/ui':
         specifier: 0.12.4
         version: 0.12.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(svelte@5.37.2)(typescript@5.9.2)(zod@4.6.5)
@@ -3588,8 +3588,8 @@ packages:
       '@storacha/client':
         optional: true
 
-  '@le-space/passkey-wallet@0.1.0':
-    resolution: {integrity: sha512-yWyHhEpkekE161qtOwGd1CSwQt4NrQ1R6q7WbQUmAijPzoZQwVJzroooFj+VbHLnjWE16/PABoI+39B7O152Jg==}
+  '@le-space/passkey-wallet@0.3.0':
+    resolution: {integrity: sha512-Xi5/3oOavgjMf2cuOgFITP0495jJQ+w2Y94ypw5ty61TSymaS0j8Cylk7h6wFQm+9nd4w3rEs2Y5Mc+4gTYAJA==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       '@le-space/orbitdb-identity-provider-webauthn-did': 0.13.0
@@ -9994,7 +9994,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@le-space/passkey-wallet@0.1.0(@le-space/orbitdb-identity-provider-webauthn-did@0.13.0(@orbitdb/core@4.0.0(patch_hash=ihdnyhppwvumeryubtrpbd443y)))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))':
+  '@le-space/passkey-wallet@0.3.0(@le-space/orbitdb-identity-provider-webauthn-did@0.13.0(@orbitdb/core@4.0.0(patch_hash=ihdnyhppwvumeryubtrpbd443y)))(viem@2.56.8(typescript@5.9.2)(zod@4.6.5))':
     dependencies:
       '@le-space/orbitdb-identity-provider-webauthn-did': 0.13.0(@orbitdb/core@4.0.0(patch_hash=ihdnyhppwvumeryubtrpbd443y))
       viem: 2.56.8(typescript@5.9.2)(zod@4.6.5)

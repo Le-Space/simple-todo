@@ -340,6 +340,8 @@ zusätzlichen, temporären Schlüssel, weil Zamas aktuelle Version keine Signatu
 annehmen kann; die App hält ihn bis zu 24 Stunden und speichert ihn nur versiegelt, unter einem
 Schlüssel, den der Passkey ableitet. Ein Konto, dessen Passkey verloren
 ist, kann niemand wiederherstellen, und der Schlüssel, der das Gas bezahlt, ist in der Seite lesbar.
+Bevor der Passkey signiert, prüft der Wallet-Code, was der Blockchain-Dienst verlangt: Kein Schritt
+darf mehr als eine feste Grenze kosten, und die Schritte des Kontos laufen einer nach dem anderen.
 
 ### Passkey-Wallet: technisch
 
@@ -391,6 +393,20 @@ ist, kann niemand wiederherstellen, und der Schlüssel, der das Gas bezahlt, ist
   UserOperations auf Sepolia sponsern lassen, bis das Guthaben des Projekts aufgebraucht ist; für ein
   Konto signieren kann der Schlüssel nicht. Einen geheimen `sk_`-Schlüssel in der Konfiguration lehnt
   die App ab (`readChainEndpoints`).
+- **Was das Konto nicht signiert (Wallet 0.3.0).** Bundler, Paymaster und RPC gehören Openfort und
+  öffentlichen Knoten, und bis Wallet 0.2.0 signierte der Passkey die Gaswerte, Gebühren und den
+  Nonce-Schlüssel, die sie wählten (GHSA-fv6j-cmpw-5vf7). Seit 0.3.0 wird jede UserOperation geprüft,
+  bevor ein Schlüssel gefragt wird: Auf Chain 11155111 bleibt jedes Gasfeld unter einer Obergrenze
+  (preVerificationGas 250.000), Gaslimits × `maxFeePerGas` bleiben unter `MAX_USER_OPERATION_COST`,
+  0,02 ETH, und die Nonce liegt auf Schlüssel 0. Die Einrichtung, die der Setup-Schlüssel signiert,
+  darf bis zu 500.000 preVerificationGas tragen: Openfort setzte 317.856 bei den Einrichtungen vom
+  2026-11-25. Auf einem Nonce-Schlüssel laufen die Operationen eines Kontos nacheinander, darum sendet
+  die App sie eine nach der anderen (`oneAtATime` in
+  [`sepolia-chain.js`](../src/lib/chain/sepolia-chain.js)); gesendet, während die erste noch offen
+  ist, bekäme eine zweite deren Nonce und ersetzte sie oder würde abgelehnt. Eine Ablehnung erscheint
+  in der Seite als „Es wurde nichts signiert und nichts gesendet“, und der Passkey wird nicht gefragt.
+  Die Zahlen stammen aus allen 52 UserOperations, die escrow01 vom 2026-09-17 bis 2026-11-25 auf
+  Sepolia gesendet hat ([`config.js`](../src/lib/chain/config.js)).
 - **Keine Wiederherstellung ohne den Passkey.** Außer dem verworfenen Root-Key ist der Passkey der
   einzige Schlüssel des Kontos. Ein synchronisierter Passkey erreicht weitere Geräte und gibt dort
   seit Provider 0.8.0 Identität und Konto in drei Berührungen zurück, ohne gespeicherte Daten

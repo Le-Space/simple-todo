@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { budgetErrorCode } from './budget.js';
-import { createZamaBudgetService, wasCancelled } from './budget-service-zama.js';
+import { createZamaBudgetService, walletRefusal, wasCancelled } from './budget-service-zama.js';
 import { getAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { createAccountStore, parseRecord } from '../chain/account-store.js';
@@ -65,6 +65,13 @@ function fakeChain() {
 		sent,
 		created: /** @type {string[]} */ ([]),
 		cancelNext: false,
+		/**
+		 * The wallet refuses the next operation before the passkey is asked, as
+		 * 0.3.0 does: an error of this name, wrapped as viem wraps it.
+		 *
+		 * @type {'UserOperationLimitError' | null}
+		 */
+		refuseNext: null,
 		/** What the next lock moves: the amount, or 0 for an underfunded one. */
 		lockMoves: /** @type {'amount' | 'zero'} */ ('amount'),
 		/** A node a block behind: reads of the latest block miss the last operation. */
@@ -114,6 +121,12 @@ function fakeChain() {
 			return { address: at, setupTx: `0x${'5e'.repeat(32)}` };
 		},
 		sendWithPasskey: async (/** @type {any} */ { address: at, calls, onPrompt, onSigned }) => {
+			if (state.refuseNext) {
+				const name = state.refuseNext;
+				state.refuseNext = null;
+				const cause = Object.assign(new Error('user operation could cost up to …'), { name });
+				throw Object.assign(new Error('Execution reverted for an unknown reason.'), { cause });
+			}
 			onPrompt?.();
 			if (state.cancelNext) {
 				state.cancelNext = false;
@@ -505,6 +518,23 @@ describe('the Sepolia budget service', () => {
 			)
 		).toBe('passkey-cancelled');
 		expect(w.state.sent).toHaveLength(0);
+	});
+
+	it('says limit-exceeded when the wallet refuses the gas or the fee, and sends nothing', async () => {
+		const w = world();
+		await w.bob.service.prepareAccount();
+		await w.alice.service.lock({
+			todoRef: TODO_REF,
+			beneficiaryDid: BOB,
+			amount: 7n,
+			deadline: null
+		});
+		w.state.refuseNext = 'UserOperationLimitError';
+		expect(await codeOf(w.alice.service.release({ todoRef: TODO_REF }))).toBe('limit-exceeded');
+		expect(w.state.sent).toHaveLength(1);
+		// Nothing was sent, so the escrow is still locked and the next try goes through.
+		expect((await w.alice.service.release({ todoRef: TODO_REF })).releaseTx).toMatch(/^0x/);
+		expect(w.state.sent).toHaveLength(2);
 	});
 
 	it('validates amount, beneficiary and deadline before touching the chain', async () => {
@@ -946,6 +976,22 @@ describe('what the Sepolia service reads from outside', () => {
 			true
 		);
 		expect(wasCancelled(new Error('insufficient funds'))).toBe(false);
+	});
+
+	it("recognises the wallet's refusals anywhere in the cause chain", () => {
+		const named = (/** @type {string} */ name) => Object.assign(new Error('x'), { name });
+		expect(walletRefusal(new Error('outer', { cause: named('UserOperationLimitError') }))).toBe(
+			'limit-exceeded'
+		);
+		expect(
+			walletRefusal(
+				new Error('outer', {
+					cause: new Error('mid', { cause: named('AccountDomainMismatchError') })
+				})
+			)
+		).toBe('account-domain-mismatch');
+		expect(walletRefusal(named('NotAllowedError'))).toBe(null);
+		expect(walletRefusal(new Error('insufficient funds'))).toBe(null);
 	});
 
 	it('takes the bundler endpoint from the environment, and never a secret key', () => {

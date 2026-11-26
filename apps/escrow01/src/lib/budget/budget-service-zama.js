@@ -258,7 +258,9 @@ export function createZamaBudgetService({
 			}
 			const message = error instanceof Error ? error.message : String(error);
 			reportFailure(did, message);
-			throw error instanceof BudgetError ? error : new BudgetError('unavailable', message);
+			throw error instanceof BudgetError
+				? error
+				: new BudgetError(walletRefusal(error) ?? 'unavailable', message);
 		}
 	}
 
@@ -484,7 +486,7 @@ export function createZamaBudgetService({
 			if (wasCancelled(error)) {
 				throw new BudgetError('passkey-cancelled', 'The passkey confirmation was cancelled.');
 			}
-			throw new BudgetError('unavailable', describe(error));
+			throw new BudgetError(walletRefusal(error) ?? 'unavailable', describe(error));
 		}
 	}
 
@@ -773,6 +775,32 @@ export function wasCancelled(error) {
 		current = current.cause;
 	}
 	return false;
+}
+
+/**
+ * What the wallet refused to sign, somewhere down viem's cause chain. Both
+ * refusals come before any key is asked, so nothing was signed or sent:
+ *
+ * - `UserOperationLimitError`: a gas field over its ceiling, a cost over
+ *   `MAX_USER_OPERATION_COST`, another chain or another nonce key — what the
+ *   bundler or the RPC asked for, not what the app did.
+ * - `AccountDomainMismatchError`: the RPC reported an ERC-7739 domain that is
+ *   not this account's. Only `signTypedData` and `signMessage` read it, which
+ *   escrow01 does not call yet; the Zama permit signed by the passkey account
+ *   will (#54).
+ *
+ * @param {unknown} error
+ * @returns {'limit-exceeded' | 'account-domain-mismatch' | null}
+ */
+export function walletRefusal(error) {
+	/** @type {any} */
+	let current = error;
+	for (let depth = 0; current && depth < 10; depth += 1) {
+		if (current.name === 'UserOperationLimitError') return 'limit-exceeded';
+		if (current.name === 'AccountDomainMismatchError') return 'account-domain-mismatch';
+		current = current.cause;
+	}
+	return null;
 }
 
 /** @param {string} a @param {string} b */

@@ -48,6 +48,14 @@
 	// The lock went through and holds an encrypted 0, which is not a lock that
 	// failed to happen: its own title, its own sentence.
 	$: underfunded = notice?.action === 'lock' && notice.code === 'insufficient-balance';
+	// What the wallet refused before the passkey was asked reads the same for a
+	// lock and a release: nothing was signed, and the cause lies outside the app.
+	$: refusal =
+		notice?.code === 'limit-exceeded'
+			? 'budget.notice.limitExceeded'
+			: notice?.code === 'account-domain-mismatch'
+				? 'budget.notice.domainMismatch'
+				: null;
 	$: scheduleDecryptNotice($decryptingCount > 0);
 
 	/** @param {boolean} decrypting */
@@ -137,15 +145,17 @@
 					: notice.action === 'lock'
 						? $_('budget.notice.lockFailedTitle')
 						: $_('budget.notice.releaseFailedTitle')}
-				error={notice.action === 'release'
-					? $_('budget.notice.releaseFailed')
-					: underfunded
-						? $_('budget.notice.insufficient')
-						: notice.code === 'beneficiary-without-account'
-							? $_('budget.notice.noAccount')
-							: notice.code === 'account-not-found'
-								? $_('budget.notice.ownAccountNotFound')
-								: $_('budget.notice.lockFailed')}
+				error={refusal
+					? $_(refusal)
+					: notice.action === 'release'
+						? $_('budget.notice.releaseFailed')
+						: underfunded
+							? $_('budget.notice.insufficient')
+							: notice.code === 'beneficiary-without-account'
+								? $_('budget.notice.noAccount')
+								: notice.code === 'account-not-found'
+									? $_('budget.notice.ownAccountNotFound')
+									: $_('budget.notice.lockFailed')}
 				dismissible
 				on:dismiss={dismissBudgetNotice}
 			>

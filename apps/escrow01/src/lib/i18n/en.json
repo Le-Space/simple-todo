@@ -232,6 +232,8 @@
 			"ownAccountNotFound": "No account was found for your passkey yet. In the Account tab you can search again or create one.",
 			"releaseFailedTitle": "Budget not released.",
 			"releaseFailed": "The amount stays locked. Try again.",
+			"limitExceeded": "Nothing was signed and nothing was sent: the chain service asked for more gas or fees than this app allows for one step. Try again later.",
+			"domainMismatch": "Nothing was signed and nothing was sent: the chain service described your account differently from what it is, so the passkey was not asked. Try again later.",
 			"decrypting": "Decrypting the amount. This takes a few seconds.",
 			"expiredTitle": "Read access expired.",
 			"expired": "Confirm with your passkey to see the amounts again.",

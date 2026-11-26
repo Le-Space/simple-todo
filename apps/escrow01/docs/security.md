@@ -312,6 +312,8 @@ Reading amounts also needs an extra, temporary key in the browser, because Zama'
 cannot accept signatures from such accounts; the app keeps it for up to 24 hours, stored only
 sealed under a key the passkey derives. Nobody
 can restore an account whose passkey is lost, and the key that pays for gas is readable in the page.
+Before the passkey signs, the wallet code checks what the chain service asked for: no step may
+cost more than a fixed limit, and the account's steps go one at a time.
 
 ### Passkey wallet: technical
 
@@ -356,6 +358,18 @@ can restore an account whose passkey is lost, and the key that pays for gas is r
   restriction to contracts or functions. Anyone who reads the key out of the page can have arbitrary
   Sepolia user operations sponsored until the project's credits run out; the key cannot sign for any
   account. The app refuses a secret `sk_` key in its configuration (`readChainEndpoints`).
+- **What the account refuses to sign (wallet 0.3.0).** Bundler, paymaster and RPC are Openfort's and
+  public nodes', and up to wallet 0.2.0 the passkey signed whatever gas, fee and nonce key they chose
+  (GHSA-fv6j-cmpw-5vf7). Since 0.3.0 each user operation is checked before a key is asked: on chain
+  11155111 every gas field stays under a ceiling (preVerificationGas 250,000), gas limits ×
+  `maxFeePerGas` stay under `MAX_USER_OPERATION_COST`, 0.02 ETH, and the nonce is on key 0. The setup,
+  which the setup key signs, may carry up to 500,000 preVerificationGas: Openfort set 317,856 on the
+  setups of 2026-11-25. On one nonce key an account's operations are sequential, so the app sends
+  them one after the other (`oneAtATime` in [`sepolia-chain.js`](../src/lib/chain/sepolia-chain.js));
+  sent while the first is pending, a second would take its nonce and replace it or be refused. A
+  refusal reaches the page as "Nothing was signed and nothing was sent", and the passkey is not asked.
+  The figures come from all 52 user operations escrow01 sent on Sepolia from 2026-09-17 to 2026-11-25
+  ([`config.js`](../src/lib/chain/config.js)).
 - **No recovery for a lost passkey.** Besides the discarded root key the passkey is the account's
   only key. A synced passkey reaches further devices and, since provider 0.8.0, gives back the
   identity and the account there in three touches with nothing stored
