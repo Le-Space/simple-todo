@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { takeStorageInventory } from '@simple-todo/e2e-kit/storage-inventory.mjs';
-import { isConsentOpen, passConsent, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import {
+	isConsentOpen,
+	openAdvanced,
+	passConsent,
+	waitForConsent
+} from '@simple-todo/e2e-kit/consent.mjs';
 
 const timeout = 90000;
 
@@ -19,8 +24,8 @@ const timeout = 90000;
 async function openWith(page, mode) {
 	await page.goto('/');
 	await waitForConsent(page);
-	await page.getByTestId(`storage-mode-${mode}`).check();
-	await passConsent(page);
+	// The storage choice is on the dialog's second screen; passConsent goes there.
+	await passConsent(page, { persistent: mode === 'indexeddb' });
 	await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 }
 
@@ -110,6 +115,8 @@ test.describe('Where your todos are stored', () => {
 			test.setTimeout(timeout * 2);
 			await page.goto('/');
 			await waitForConsent(page);
+			// The storage choice is on the second screen of the short dialog.
+			await openAdvanced(page);
 			await expect(page.getByText('Wo Ihre Aufgaben liegen', { exact: true })).toBeVisible({
 				timeout
 			});
