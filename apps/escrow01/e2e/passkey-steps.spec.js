@@ -5,6 +5,7 @@ import {
 	recordCeremonies,
 	takeCeremonies
 } from '@simple-todo/e2e-kit/webauthn.mjs';
+import { CONTINUE_DELAY_MS } from '@le-space/orbitdb-identity-provider-webauthn-did/elements';
 
 /**
  * Between two passkey prompts, what the next one is for.
@@ -22,6 +23,38 @@ import {
 const timeout = 90000;
 const steps = (/** @type {import('@playwright/test').Page} */ page) =>
 	page.locator('passkey-step-dialog');
+
+/**
+ * "Continue", once the step on screen takes it.
+ *
+ * For `CONTINUE_DELAY_MS` after a step appears, the dialog ignores "Continue"
+ * (provider 0.14.0): the second click of a double click, or a held Enter,
+ * meant for the step before must not approve this one unread. A click made as
+ * soon as the step is visible lands in that window and is dropped, and the
+ * spec would then wait for a next step that never comes. So the wait comes
+ * first, and the click is checked: a step it answered is gone, the dialog
+ * closed or showing the next one.
+ *
+ * @param {import('@playwright/test').Page} page
+ */
+async function pressContinue(page) {
+	const before = await steps(page).locator('[part=count]').textContent();
+	await page.waitForTimeout(CONTINUE_DELAY_MS);
+	await steps(page).getByRole('button', { name: 'Continue' }).click();
+	await expect
+		.poll(
+			() =>
+				page.evaluate((count) => {
+					const dialog = /** @type {any} */ (document.querySelector('passkey-step-dialog'));
+					return (
+						!dialog?.isOpen ||
+						dialog.shadowRoot?.querySelector('[part=count]')?.textContent !== count
+					);
+				}, before),
+			{ message: '"Continue" answered the step', timeout: 5000 }
+		)
+		.toBe(true);
+}
 
 test.beforeEach(async ({ page }) => {
 	await page.addInitScript(() => {
@@ -46,12 +79,12 @@ test('a new passkey: prompts 2 and 3 say what they are for, and start from "Cont
 	// Held: only the passkey itself has been asked for so far.
 	expect((await takeCeremonies(page)).map((ceremony) => ceremony.kind)).toEqual(['create']);
 
-	await steps(page).getByRole('button', { name: 'Continue' }).click();
+	await pressContinue(page);
 	await expect(steps(page).locator('[part=count]')).toHaveText('Passkey prompt 3 of 3', {
 		timeout
 	});
 	await expect(steps(page).getByRole('heading')).toHaveText('Now confirm your identity');
-	await steps(page).getByRole('button', { name: 'Continue' }).click();
+	await pressContinue(page);
 
 	await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 	expect((await takeCeremonies(page)).map((ceremony) => ceremony.kind)).toEqual(['get', 'get']);
@@ -92,7 +125,7 @@ test('"Cancel" stops before the prompt, and the passkey just made is the one to 
 	]) {
 		await expect(steps(page).locator('[part=count]')).toHaveText(count, { timeout });
 		await expect(steps(page).getByRole('heading')).toHaveText(heading);
-		await steps(page).getByRole('button', { name: 'Continue' }).click();
+		await pressContinue(page);
 	}
 	await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 });
