@@ -842,13 +842,40 @@ small OrbitDB database that only its own DID can write to. Alice's app reads Bob
 also checks on chain that Bob's passkey is an admin of that account. Only if both hold does it lock;
 otherwise it reports that the delegate has no account for budgets yet, before the passkey is asked.
 
+Bob's browser hands his address to whoever asks, whenever another browser opens his little database,
+even when the two browsers reach each other only through the relay. So the lock works if Bob's app is
+open somewhere at that moment, or the relay happens to hold a copy.
+
 ### Account lookup: technical
 
 - **The directory** ([`account-directory.js`](../src/lib/chain/account-directory.js)): a keyvalue
-  database named `simple-todo-escrow01-account-v1` with `IPFSAccessController({ write: [did] })`. Its
+  database named `simple-todo-escrow01-account-v2` with `IPFSAccessController({ write: [did] })`. Its
   address follows from name and access rule, so anyone can open Bob's directory without knowing the
   address, and OrbitDB accepts only entries Bob's identity signed. The `account` entry is
   `{ address, chainId, publishedAt }`. Alice waits up to 20 seconds for replication.
+- **How the entry reaches Alice.** Bob writes it once, usually long before Alice looks, so it never
+  reaches her as a live update. OrbitDB passes an existing entry on only in the heads exchange when two
+  peers meet, and two browsers meet over the relay's circuit first: the exchange is refused on that
+  limited connection and not tried again, not even once a direct one is up (see "A circuit carries
+  data" in the repository's `AGENTS.md`). So the browser that published answers every peer that joins
+  its directory: first with its identity document on a topic named after the DID
+  (`/simple-todo/escrow01/account-identity/<did>`), then with its entry on the directory's topic, both
+  over gossipsub, which crosses the circuit. The identity document comes along because OrbitDB checks
+  the entry against it and would fetch it by bitswap, which does not cross the circuit either. Alice
+  keeps a document only if it names Bob's DID, under the hash of its own bytes; OrbitDB verifies it as
+  for any entry. While she waits she joins the identity topic again after 4 and 10 seconds, which Bob
+  answers. Every start publishes, a remembered account included.
+- **`-v2` since provider 0.14.0.** Readers refuse identity proofs in the first format
+  (`acceptLegacyProofs: false`), and OrbitDB checks every entry on the path back from a head, so a v1
+  directory written before the switch no longer opens on a fresh reader, and rewriting the entry in it
+  would not help. An existing account comes back without anyone doing anything as soon as its owner's
+  browser starts once on this build: it publishes the remembered account into v2. A browser in memory
+  mode remembers nothing, and finds its account only if another device of the same passkey has
+  published it into v2; otherwise the account tab offers "search again" or a new account.
+- **Measured on 2026-11-26** (two browsers on one machine, WebRTC off, the local relay): before, no
+  entry in 60 seconds, unless the relay had reached Bob's topic in time, which it did in some runs and
+  not in others; after, the entry in 0.35 seconds, straight from Bob's browser
+  ([`account-directory.spec.js`](../e2e/account-directory.spec.js)).
 - **The check on chain** (`isPasskeyAccount` in `sepolia-chain.js`): read the P-256 key from the DID
   ([`did-key.js`](../src/lib/chain/did-key.js); `did:key` with multicodec `0x1200`, written uncompressed
   by the identity provider, compressed ones read too), derive the `keyHash`, and require that the
@@ -919,6 +946,10 @@ otherwise it reports that the delegate has no account for budgets yet, before th
   after setup and reads the escrow at the receipt's block after a lock.
 - **P-256 without the precompile** costs about 370,000 gas per signature; Sepolia has the precompile.
 - **Calibur v1.0.0** rather than v1.1.0, see [What Calibur is](#calibur-technical).
+- **The delegate's browser answers the lookup.** Nobody asks the relay to keep account directories
+  (the `/pinning` routes are deprecated). It may hold one anyway, since it syncs every OrbitDB topic it
+  sees, but not dependably. With neither Bob's app open nor the relay's copy, a lock for Bob fails
+  with "the delegate has no account for budgets yet".
 - **Zama v0.14** also checks decryption permits through ERC-1271. `@fhevm/sdk` 0.14.3's precheck
   accepted a passkey permit on a Sepolia fork on 2026-10-12
   ([keys.md](keys.md#checked-ahead-of-zama-on-2026-10-12)); whether Zama's KMS accepts it, and the

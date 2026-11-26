@@ -241,10 +241,14 @@ function fakeDirectory() {
 	const entries = new Map();
 	/** The wait each lookup was given. @type {Array<number | undefined>} */
 	const lookups = [];
+	/** Who published, in order: a browser that publishes has its directory open. @type {string[]} */
+	const publishes = [];
 	return {
 		entries,
+		publishes,
 		directory: {
 			publish: async (/** @type {string} */ did, /** @type {any} */ account) => {
+				publishes.push(did);
 				entries.set(did, { ...account, publishedAt: 'now' });
 			},
 			lookup: async (/** @type {string} */ did, /** @type {any} */ options) => {
@@ -297,7 +301,7 @@ function fakePrf(did) {
 /** Alice and Bob on one fake chain, each with a service of their own. */
 function world() {
 	const { chain, state } = fakeChain();
-	const { directory, entries, lookups } = fakeDirectory();
+	const { directory, entries, lookups, publishes } = fakeDirectory();
 	/**
 	 * A session of `did`. Pass the `storage` of an earlier one for the same
 	 * browser after a reload: what was stored stays, what was in memory is gone.
@@ -352,6 +356,7 @@ function world() {
 		state,
 		entries,
 		lookups,
+		publishes,
 		alice: serviceFor(ALICE),
 		bob: serviceFor(BOB),
 		serviceFor
@@ -1074,6 +1079,27 @@ describe('the account record and the storage choice', () => {
 		const again = w.serviceFor(BOB, { accounts: createAccountStore() });
 		expect(again.accounts.load(BOB, CHAIN_ID)?.address).toBe(w.state.created[0]);
 		expect((await again.service.readKeyStatus()).state).toBe('locked');
+	});
+
+	it('publishes a remembered account again after a reload, once per session', async () => {
+		// The browser that publishes is the one that answers a payer's lookup: the
+		// directory is open only where it was published. A remembered account was
+		// returned before publishing, so after a reload nobody answered, and a lock
+		// for Bob failed with "beneficiary-without-account" (2026-11-26, Sepolia).
+		honourStorageChoice();
+		setPersistentStorageEnabled(true);
+		const w = world();
+		const bob = w.serviceFor(BOB, { accounts: createAccountStore() });
+		await bob.service.prepareAccount();
+		expect(w.publishes).toEqual([BOB]);
+
+		forgetSession();
+		const again = w.serviceFor(BOB, { accounts: createAccountStore(), newPasskey: false });
+		await again.service.prepareAccount();
+		await again.service.balance().catch(() => {});
+		await again.service.prepareAccount();
+		expect(w.state.created).toHaveLength(1);
+		expect(w.publishes).toEqual([BOB, BOB]);
 	});
 });
 

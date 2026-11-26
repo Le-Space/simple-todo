@@ -66,7 +66,7 @@ const UINT64_MAX = (1n << 64n) - 1n;
  *   identity: () => string | null | undefined
  *   credential: () => any
  *   chain: import('../chain/sepolia-chain.js').SepoliaChain
- *   directory: ReturnType<typeof import('../chain/account-directory.js').createAccountDirectory>
+ *   directory: Pick<ReturnType<typeof import('../chain/account-directory.js').createAccountDirectory>, 'publish' | 'lookup'>
  *   accounts?: ReturnType<typeof createAccountStore>
  *   prompt?: (action: string, run: (hooks: { onPrompt: () => void, onSigned: () => void }) => Promise<any>) => Promise<any>
  *   onAccount?: (status: AccountStatus) => void
@@ -154,6 +154,31 @@ export function createZamaBudgetService({
 		return rest;
 	}
 
+	/** What this session has published, as `did\naddress`. @type {Set<string>} */
+	const published = new Set();
+
+	/**
+	 * Publish the account once per session, whether it was created, found or
+	 * remembered. Publishing also opens the directory, and the open directory is
+	 * what answers a payer who looks the account up (account-directory.js); the
+	 * relay holds it only when its queue gets there in time. A remembered
+	 * account used to skip this, so after a reload no browser answered, and a
+	 * lock for this DID failed with `beneficiary-without-account`.
+	 *
+	 * @param {string} did
+	 * @param {`0x${string}`} address
+	 */
+	function publishOnce(did, address) {
+		const key = `${did}\n${address.toLowerCase()}`;
+		if (published.has(key)) return;
+		published.add(key);
+		void directory.publish(did, { address, chainId: CHAIN_ID }).catch((error) => {
+			// Not this session's for good: the next start of an operation tries again.
+			published.delete(key);
+			console.warn('Publishing the account failed:', error);
+		});
+	}
+
 	/** @param {string} did @param {string} message */
 	function reportFailure(did, message) {
 		onAccount({
@@ -184,6 +209,7 @@ export function createZamaBudgetService({
 		const known = load(did);
 		if (known) {
 			onAccount({ phase: 'ready', address: known.address, error: null });
+			publishOnce(did, known.address);
 			return known;
 		}
 		let running = creating.get(did);
@@ -245,11 +271,7 @@ export function createZamaBudgetService({
 		try {
 			const record = await running;
 			onAccount({ phase: 'ready', address: record.address, error: null });
-			// Published after every start, not only after creation: a profile that
-			// did not replicate the first time gets another chance.
-			void directory
-				.publish(did, { address: record.address, chainId: CHAIN_ID })
-				.catch((error) => console.warn('Publishing the account failed:', error));
+			publishOnce(did, record.address);
 			return record;
 		} catch (error) {
 			if (error instanceof BudgetError && error.code === 'account-not-found') {

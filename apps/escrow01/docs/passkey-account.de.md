@@ -880,14 +880,44 @@ schreiben kann. Alices App liest dort Bobs Adresse und prüft zusätzlich auf de
 Passkey in diesem Konto Admin ist. Erst wenn beides stimmt, sperrt sie; sonst meldet sie „Die
 delegierte Person hat noch kein Konto für Budgets“, bevor der Passkey gefragt wird.
 
+Bobs Browser gibt seine Adresse heraus, sobald ein anderer Browser seine kleine Datenbank öffnet, auch
+wenn die beiden einander nur über den Relay erreichen. Das Sperren klappt also, wenn Bobs App in dem
+Moment irgendwo offen ist oder der Relay zufällig eine Kopie hält.
+
 ### Kontozuordnung: technisch
 
 - **Das Verzeichnis** ([`account-directory.js`](../src/lib/chain/account-directory.js)): eine
-  Keyvalue-Datenbank namens `simple-todo-escrow01-account-v1` mit
+  Keyvalue-Datenbank namens `simple-todo-escrow01-account-v2` mit
   `IPFSAccessController({ write: [did] })`. Ihre Adresse folgt aus Name und Zugriffsregel, also kann
   jeder Bobs Verzeichnis öffnen, ohne die Adresse zu kennen, und OrbitDB nimmt nur Einträge an, die
   Bobs Identität signiert hat. Der Eintrag `account` ist `{ address, chainId, publishedAt }`. Alice
   wartet bis zu 20 Sekunden auf die Replikation.
+- **Wie der Eintrag zu Alice kommt.** Bob schreibt ihn einmal, meist lange bevor Alice nachsieht; als
+  Live-Update erreicht er sie also nie. Einen vorhandenen Eintrag gibt OrbitDB nur im Heads-Austausch
+  weiter, wenn sich zwei Peers treffen, und zwei Browser treffen sich zuerst über den Circuit des
+  Relays: Dort wird der Austausch auf der begrenzten Verbindung abgelehnt und nicht wiederholt, auch
+  nicht, wenn später eine direkte steht (siehe „A circuit carries data“ in der `AGENTS.md` des
+  Repositorys). Deshalb antwortet der Browser, der veröffentlicht hat, jedem Peer, der seinem
+  Verzeichnis beitritt: zuerst mit seinem Identitätsdokument auf einem Topic, das nach der DID benannt
+  ist (`/simple-todo/escrow01/account-identity/<did>`), dann mit seinem Eintrag auf dem Topic des
+  Verzeichnisses, beides über Gossipsub, das den Circuit passiert. Das Identitätsdokument kommt mit,
+  weil OrbitDB den Eintrag daran prüft und es sonst per Bitswap holen würde, das den Circuit ebenfalls
+  nicht passiert. Alice behält ein Dokument nur, wenn es Bobs DID nennt, unter dem Hash seiner eigenen
+  Bytes; OrbitDB prüft es wie bei jedem Eintrag. Während sie wartet, tritt sie dem Identitäts-Topic
+  nach 4 und nach 10 Sekunden erneut bei, und Bob antwortet. Jeder Start veröffentlicht, auch ein
+  gemerktes Konto.
+- **`-v2` seit Provider 0.14.0.** Lesende lehnen Identitätsnachweise im ersten Format ab
+  (`acceptLegacyProofs: false`), und OrbitDB prüft jeden Eintrag auf dem Weg von einem Head zurück. Ein
+  v1-Verzeichnis, das vor der Umstellung geschrieben wurde, öffnet sich auf einem frischen Gerät also
+  nicht mehr, und den Eintrag darin neu zu schreiben hülfe nicht. Ein bestehendes Konto kommt ohne
+  Zutun zurück, sobald der Browser seines Inhabers einmal mit diesem Build startet: Er veröffentlicht
+  das gemerkte Konto in v2. Ein Browser im Arbeitsspeicher-Modus merkt sich nichts und findet sein
+  Konto nur, wenn ein anderes Gerät mit demselben Passkey es schon in v2 veröffentlicht hat; sonst
+  bietet der Tab „Konto“ „Erneut suchen“ oder ein neues Konto an.
+- **Gemessen am 2026-11-26** (zwei Browser auf einem Rechner, WebRTC aus, lokaler Relay): vorher kein
+  Eintrag in 60 Sekunden, außer der Relay war rechtzeitig auf Bobs Topic, was in manchen Läufen so war
+  und in anderen nicht; nachher der Eintrag nach 0,35 Sekunden, direkt aus Bobs Browser
+  ([`account-directory.spec.js`](../e2e/account-directory.spec.js)).
 - **Die Prüfung auf der Chain** (`isPasskeyAccount` in `sepolia-chain.js`): den P-256-Schlüssel aus
   der DID lesen ([`did-key.js`](../src/lib/chain/did-key.js); `did:key` mit Multicodec `0x1200`, vom
   Identity-Provider unkomprimiert geschrieben, komprimiert ebenfalls lesbar), daraus den `keyHash`
@@ -964,6 +994,11 @@ delegierte Person hat noch kein Konto für Budgets“, bevor der Passkey gefragt
   Einrichtung bis zu 30 Sekunden erneut und liest die Treuhand nach dem Sperren am Block der Quittung.
 - **P-256 ohne Precompile** kostet etwa 370.000 Gas je Signatur; Sepolia hat den Precompile.
 - **Calibur v1.0.0** statt v1.1.0, siehe [Was Calibur ist](#calibur-technisch).
+- **Den Lookup beantwortet der Browser der delegierten Person.** Niemand bittet den Relay,
+  Kontoverzeichnisse zu behalten (die `/pinning`-Routen sind veraltet). Er hält womöglich trotzdem
+  eins, weil er jedes OrbitDB-Topic synchronisiert, das er sieht, aber nicht verlässlich. Ist weder
+  Bobs App offen noch die Kopie des Relays da, scheitert eine Sperre für Bob mit „Die delegierte
+  Person hat noch kein Konto für Budgets“.
 - **Zama v0.14** prüft Entschlüsselungserlaubnisse auch per ERC-1271. Die Vorprüfung von
   `@fhevm/sdk` 0.14.3 hat am 2026-10-12 auf einem Sepolia-Fork ein Passkey-Permit angenommen
   ([keys.de.md](keys.de.md#vorab-geprüft-ohne-zama-am-2026-10-12)); ob Zamas KMS es annimmt und der

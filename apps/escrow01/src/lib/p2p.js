@@ -572,7 +572,89 @@ function installE2ETestHooks() {
 			typeof hash === 'string' && Boolean(await orbitdb?.identities?.getIdentity?.(hash)),
 		getWebRTCEnabled,
 		setWebRTCEnabled,
-		connectToMultiaddr
+		connectToMultiaddr,
+		accountDirectory: accountDirectoryForTests()
+	};
+}
+
+/**
+ * The account directory (chain/account-directory.js), for the spec that checks
+ * a delegate's published account reaches the payer (account-directory.spec.js).
+ * Budgets run against the fake in E2E builds, and the fake never opens the
+ * directory, so the hook drives it with the same code the Sepolia service uses,
+ * loaded on first use as there. `inspect` also tells which peer delivered what:
+ * the spec has to tell the owner's answer from the relay's.
+ */
+function accountDirectoryForTests() {
+	/** @type {Promise<ReturnType<typeof import('./chain/account-directory.js').createAccountDirectory>> | null} */
+	let loading = null;
+	const directory = () =>
+		(loading ??= import('./chain/account-directory.js').then(({ createAccountDirectory }) =>
+			createAccountDirectory(() => orbitdb)
+		));
+	/** @type {Array<{ at: number, did: string, event: string, peer?: string, detail?: string }>} */
+	const events = [];
+	/** @type {Map<string, Promise<any>>} */
+	const watched = new Map();
+
+	/** @param {string} did */
+	function watch(did) {
+		const known = watched.get(did);
+		if (known) return known;
+		const watching = (async () => {
+			// The directory's own database: a second open of the address would
+			// register OrbitDB's heads protocol twice.
+			const database = await (await directory()).database(did);
+			const topic = String(database.address);
+			/** @param {string} event @param {any} [peer] @param {any} [detail] */
+			const note = (event, peer, detail) =>
+				events.push({
+					at: Date.now(),
+					did,
+					event,
+					...(peer ? { peer: String(peer) } : {}),
+					...(detail
+						? { detail: String(detail?.name ?? '') + ': ' + String(detail?.message ?? detail) }
+						: {})
+				});
+			database.events.on('join', (/** @type {any} */ peer) => note('join', peer));
+			database.events.on('leave', (/** @type {any} */ peer) => note('leave', peer));
+			database.events.on('update', () => note('update'));
+			database.events.on('error', (/** @type {any} */ error) => note('error', null, error));
+			libp2p?.services?.pubsub?.addEventListener('message', (/** @type {any} */ event) => {
+				if (event.detail?.topic === topic) note('pubsub-message', event.detail?.from);
+			});
+			return database;
+		})();
+		watched.set(did, watching);
+		return watching;
+	}
+
+	return {
+		/** @param {{ address: `0x${string}`, chainId: number }} account */
+		publish: async (account) => {
+			const did = orbitdb.identity.id;
+			await (await directory()).publish(did, account);
+			await watch(did);
+		},
+		/** @param {string} did @param {{ chainId: number, timeoutMs?: number }} options */
+		lookup: async (did, options) => {
+			// The directory's own order first (identity topic, then the database);
+			// the watch then finds the database it opened.
+			const pending = (await directory()).lookup(did, options);
+			await watch(did);
+			return pending;
+		},
+		/** @param {string} did */
+		inspect: async (did) => {
+			const database = await watch(did);
+			return {
+				address: String(database.address),
+				peers: Array.from(database.peers ?? [], String),
+				value: (await database.get('account')) ?? null,
+				events: events.filter((entry) => entry.did === did)
+			};
+		}
 	};
 }
 

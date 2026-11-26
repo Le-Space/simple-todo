@@ -39,7 +39,7 @@
 			"accountFailed": "Die Einrichtung ist fehlgeschlagen: {reason}",
 			"accountRetry": "Erneut versuchen",
 			"accountNotFound": "Für diesen Passkey wurde noch kein Konto gefunden. Haben Sie hier oder auf einem anderen Gerät schon eines eingerichtet, ist es vielleicht nur noch nicht angekommen: Suchen Sie erneut. Sonst legen Sie eines an.",
-			"accountNotFoundTechnical": "Der Eintrag im OrbitDB-Kontoverzeichnis (simple-todo-escrow01-account-v1, beschreibbar nur von Ihrer DID) kam nicht innerhalb von 3 Sekunden an; erneutes Suchen wartet bis zu 20. Ein neues Konto ist ein neuer Einrichtungsschlüssel und damit eine neue Adresse, veröffentlicht über den alten Eintrag.",
+			"accountNotFoundTechnical": "Der Eintrag im OrbitDB-Kontoverzeichnis (simple-todo-escrow01-account-v2, beschreibbar nur von Ihrer DID) kam nicht innerhalb von 3 Sekunden an; erneutes Suchen wartet bis zu 20. Ein neues Konto ist ein neuer Einrichtungsschlüssel und damit eine neue Adresse, veröffentlicht über den alten Eintrag.",
 			"accountSearch": "Erneut suchen",
 			"accountCreate": "Neues Konto anlegen",
 			"accountCreateHint": "Ein neues Konto hat eine neue Adresse: Budgets und Guthaben eines früheren Kontos zeigt die App dann nicht mehr an, auch wenn Ihr Passkey es weiterhin steuert.",
