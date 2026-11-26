@@ -29,6 +29,7 @@
 			"e2e/consent-network.spec.js",
 			"e2e/phone-layout.spec.js"
 		],
+		"lint": true,
 		"check": true
 	},
 	"title": "Invoices on top of delegation",
