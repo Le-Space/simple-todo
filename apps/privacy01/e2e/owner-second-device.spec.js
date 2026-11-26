@@ -10,9 +10,8 @@ import { addVirtualAuthenticator, forgetThisDevice } from '@simple-todo/e2e-kit/
 //
 // Now the owner is a recipient like any other: a copy of the key is sealed to
 // her when the list is created, and her encryption key pair is derived from the
-// signing key the passkey provider derives from the passkey's PRF output. So a
-// device that has never seen this identity arrives at the same pair, and finds
-// her copy.
+// passkey's PRF output, under a label of its own. So a device that has never
+// seen this identity arrives at the same pair, and finds her copy.
 //
 // **"A second device" is this browser with everything it kept wiped**, on the
 // same virtual authenticator: a credential copied into another browser context

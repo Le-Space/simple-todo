@@ -80,9 +80,14 @@ not from the spec:
 - **`escrow01` cannot seal.** The sealing key comes from the PRF output; a
   passkey without PRF gets a read key that holds for the session only
   (`passkey-without-prf`).
-- **`privacy01` and `invoice01` are unaffected beyond the identity.** Their
-  sealing key is a random key per database in this browser's storage, not
-  derived from the passkey.
+- **`privacy01` keeps its encryption key in the browser.** The key others seal
+  list keys to comes from the PRF output; without it, it is a random key that
+  exists only in this browser. It cannot be exported, but any script on the
+  page can use it, and its toast says so — a browser without extensions, or a
+  profile of its own, is the safer place for it.
+- **`invoice01` is unaffected beyond the identity.** Its sealing key is a
+  random key per database in this browser's storage, not derived from the
+  passkey.
 
 ## Troubleshooting
 

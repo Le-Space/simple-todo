@@ -31,8 +31,13 @@ import {
 	storeWebAuthnCredential,
 	loadWebAuthnCredential,
 	clearWebAuthnCredential,
-	restoreIdentityFromAuthenticator
+	restoreIdentityFromAuthenticator,
+	PasskeyStepCancelled
 } from '@le-space/orbitdb-identity-provider-webauthn-did';
+import {
+	readPrfOutput,
+	PrfUnavailableError
+} from '@le-space/orbitdb-identity-provider-webauthn-did/vault';
 
 const CREDENTIAL_STORAGE_KEY = 'simpleTodo.webauthnCredential';
 
@@ -43,9 +48,10 @@ const CREDENTIAL_STORAGE_KEY = 'simpleTodo.webauthnCredential';
  * built, and the restore below — because they used to disagree. The identity
  * was built with Ed25519 while the restore asked for the provider's default,
  * secp256k1, so a restored device signed under a different key than the
- * device the passkey was made on: the same DID, a different identity document,
- * and — since #120 derives the encryption key pair from the signing key — a
- * different pair, which cannot open the owner's own key copies.
+ * device the passkey was made on: the same DID and a different identity
+ * document. (Between #120 and the PRF derivation in ./device-keys.js it was a
+ * different encryption pair too, which is why that older pair is still derived
+ * from this key to read old copies with.)
  */
 export const SIGNING_KEY_TYPE = 'Ed25519';
 
@@ -67,8 +73,9 @@ function rememberCredential(credential) {
  * Register a brand-new passkey.
  *
  * Three prompts in all, counted in e2e/passkey-restore.spec.js: this `create`,
- * then — when OrbitDB builds the identity — one for the PRF output the signing
- * key is derived from and one to sign the identity.
+ * then — when OrbitDB builds the identity — one for the PRF output (both the
+ * signing key and the encryption pair come from it, see
+ * `readSessionPrfOutput`) and one to sign the identity.
  *
  * @param {{ userId: string, displayName: string }} options
  * @returns {Promise<any>} the WebAuthn credential for the identity provider
@@ -125,10 +132,13 @@ function credentialFromRestored(restored) {
  * Recover a previously registered passkey identity.
  *
  * A stored credential is used as it is: no WebAuthn call, so this step asks for
- * nothing — the identity signature when OrbitDB starts is the one touch left.
- * Without one, the authenticator is asked: two touches, and no fallback if it
- * cannot evaluate PRF -- an identity derived from something else would be a
- * different one wearing this name.
+ * nothing — the PRF output and the identity signature when OrbitDB starts are
+ * the two touches left. Without one, the authenticator is asked: two touches,
+ * and no fallback if it cannot evaluate PRF -- an identity derived from
+ * something else would be a different one wearing this name. Then the same two
+ * as above, four in all: the restore reads the PRF output in its first touch
+ * but hands back only the signing key derived from it, and the encryption pair
+ * needs the output itself (counted in e2e/passkey-restore.spec.js).
  *
  * @param {{ onTouch?: (step: { touch: number, of: number }) => void }} [options]
  * @returns {Promise<any | null>} the credential, or null when nothing found
@@ -156,6 +166,49 @@ export async function recoverPasskeyCredential({ onTouch } = {}) {
 	const credential = credentialFromRestored(restored);
 	rememberCredential(credential);
 	return credential;
+}
+
+/**
+ * Thrown when the passkey was asked for its PRF output and did not answer:
+ * the prompt was refused or timed out, or another passkey answered. The start
+ * stops rather than go on with keys the passkey did not give — a signing key
+ * for this session only, and an encryption pair that lives in this browser, for
+ * a passkey that could have done better.
+ */
+export class PrfReadRefusedError extends Error {
+	/** @param {unknown} cause */
+	constructor(cause) {
+		super('The passkey did not give its PRF output.', { cause });
+		this.name = 'PrfReadRefusedError';
+	}
+}
+
+/**
+ * The passkey's PRF output for this session — one touch — or null when this
+ * passkey has none.
+ *
+ * Read here rather than by the provider, because two keys come from it: the
+ * provider derives the signing key from what this returns (its `prfOutput`
+ * option), and ./device-keys.js the encryption pair, under a label of its own.
+ * One answer, one touch, and neither key derived from the other.
+ *
+ * Only an answer without PRF counts as "none". A refused or timed-out prompt is
+ * a {@link PrfReadRefusedError}; the provider's own read used to treat it as no
+ * PRF and carry on with a random signing key.
+ *
+ * @param {any} credential with `rawCredentialId` (and `prfInput`, when it was registered with one)
+ * @returns {Promise<Uint8Array | null>}
+ */
+export async function readSessionPrfOutput(credential) {
+	try {
+		return await readPrfOutput(credential);
+	} catch (error) {
+		if (error instanceof PrfUnavailableError) return null;
+		// Stopped between two prompts by the application's own step dialog:
+		// nothing was asked, and the caller knows that error already.
+		if (error instanceof PasskeyStepCancelled) throw error;
+		throw new PrfReadRefusedError(error);
+	}
 }
 
 /** True when a serialized credential exists in this browser profile. */

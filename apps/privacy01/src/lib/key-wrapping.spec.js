@@ -1,4 +1,3 @@
-import { setPersistentStorageEnabled } from '@simple-todo/todo/storage-mode.js';
 import { describe, expect, it } from 'vitest';
 
 import { newKey } from './db-encryption.js';
@@ -7,7 +6,7 @@ import { unwrapKey, wrapKey } from './key-wrapping.js';
 
 /** A reader with its own key pair, the way the directory would hand it over. */
 async function reader(/** @type {string} */ id) {
-	forgetDeviceKeys(id);
+	await forgetDeviceKeys(id);
 	const own = await ownDeviceKeys(id);
 	return { ...own, published: await importDeviceKey(own.publicKey) };
 }
@@ -69,102 +68,5 @@ describe('key-wrapping', () => {
 				bob.privateKey
 			)
 		).rejects.toThrow(/not a wrapped key/i);
-	});
-});
-
-describe('device-keys', () => {
-	it('keeps one pair per identity, so a reload can still unwrap', async () => {
-		// Surviving a reload is only on offer when the reader asked for things to
-		// be kept; in memory mode the pair dies with the tab, which is the point
-		// of that choice (#9).
-		setPersistentStorageEnabled(true);
-		forgetDeviceKeys('did:key:alice');
-		const first = await ownDeviceKeys('did:key:alice');
-		const copy = await wrapKey(newKey(), await importDeviceKey(first.publicKey));
-
-		// What a reload actually has: the contents of local storage, and nothing
-		// held in this module. So the stored private half is imported on its own
-		// and asked to do the one job it exists for. `forgetDeviceKeys` cannot
-		// stand in for a reload — it deletes the stored pair as well, which is
-		// the opposite of what is being proven here.
-		const stored = JSON.parse(localStorage.getItem('privacy01.deviceKey.did:key:alice') ?? 'null');
-		expect(stored?.publicKey).toBe(first.publicKey);
-
-		const fromStorage = await crypto.subtle.importKey(
-			'jwk',
-			stored.privateKey,
-			{ name: 'X25519' },
-			true,
-			['deriveBits']
-		);
-
-		expect(Array.from(await unwrapKey(copy, fromStorage))).toEqual(
-			Array.from(await unwrapKey(copy, first.privateKey))
-		);
-
-		setPersistentStorageEnabled(false);
-	});
-
-	it('gives two identities in one browser two pairs', async () => {
-		// Two passkeys in one browser are two people here, and what was sealed
-		// for one must not open for the other.
-		forgetDeviceKeys('did:key:one');
-		forgetDeviceKeys('did:key:two');
-		const one = await ownDeviceKeys('did:key:one');
-		const two = await ownDeviceKeys('did:key:two');
-
-		expect(one.publicKey).not.toBe(two.publicKey);
-
-		const forOne = await wrapKey(newKey(), await importDeviceKey(one.publicKey));
-		await expect(unwrapKey(forOne, two.privateKey)).rejects.toThrow();
-	});
-
-	it('derives one pair from one signing key, on every device', async () => {
-		// #120: the owner's key copy is sealed to this pair, so a second device
-		// with the same passkey has to arrive at the same pair — from the signing
-		// key the provider derives from the passkey's PRF output, and from nothing
-		// stored in this browser.
-		const signingKey = crypto.getRandomValues(new Uint8Array(64));
-		const keystore = { getKey: async () => ({ raw: signingKey }) };
-
-		forgetDeviceKeys('did:key:owner');
-		const first = await ownDeviceKeys('did:key:owner', { keystore });
-		const copy = await wrapKey(newKey(), await importDeviceKey(first.publicKey));
-		forgetDeviceKeys('did:key:owner'); // a device that has never seen this identity
-
-		const second = await ownDeviceKeys('did:key:owner', { keystore });
-
-		expect(second.publicKey).toBe(first.publicKey);
-		expect(Array.from(await unwrapKey(copy, second.privateKey))).toEqual(
-			Array.from(await unwrapKey(copy, first.privateKey))
-		);
-		// Nothing secret written down for it.
-		expect(localStorage.getItem('privacy01.deviceKey.did:key:owner')).toBeNull();
-	});
-
-	it('derives different pairs from different signing keys, and for different identities', async () => {
-		const one = crypto.getRandomValues(new Uint8Array(64));
-		const two = crypto.getRandomValues(new Uint8Array(64));
-		/** @param {Uint8Array} raw */
-		const keystoreOf = (raw) => ({ getKey: async () => ({ raw }) });
-
-		forgetDeviceKeys('did:key:a');
-		forgetDeviceKeys('did:key:b');
-		const a = await ownDeviceKeys('did:key:a', { keystore: keystoreOf(one) });
-		const b = await ownDeviceKeys('did:key:b', { keystore: keystoreOf(two) });
-		forgetDeviceKeys('did:key:b');
-		const sameKeyOtherId = await ownDeviceKeys('did:key:b', { keystore: keystoreOf(one) });
-
-		expect(a.publicKey).not.toBe(b.publicKey);
-		expect(sameKeyOtherId.publicKey).not.toBe(a.publicKey);
-	});
-
-	it('cannot be read back out of the derived private half', async () => {
-		forgetDeviceKeys('did:key:sealed');
-		const pair = await ownDeviceKeys('did:key:sealed', {
-			keystore: { getKey: async () => ({ raw: crypto.getRandomValues(new Uint8Array(64)) }) }
-		});
-
-		expect(pair.privateKey.extractable).toBe(false);
 	});
 });
