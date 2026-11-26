@@ -47,7 +47,7 @@ afterEach(async () => {
 	setPersistentStorageEnabled(persistentBefore);
 });
 
-describe('the session’s own key, kept in this browser', () => {
+describe('the session’s own key, with "Keep in this browser"', () => {
 	beforeEach(() => setPersistentStorageEnabled(true));
 
 	it('comes from a PRF output at hand, without asking the passkey', async () => {
@@ -66,30 +66,27 @@ describe('the session’s own key, kept in this browser', () => {
 		expect(own?.publicKey).toEqual((await agreementKeyFromPrf(prf(5))).publicKey);
 	});
 
-	it('is kept as a key that cannot be exported, and found on the next visit without a prompt', async () => {
-		const first = await ownAgreementKey({ did: alice, prfOutput: prf(5) });
-		const [record] = /** @type {any[]} */ (await storedRecords());
+	it('is held for the tab only when the passkey can derive it again', async () => {
+		const own = await ownAgreementKey({ did: alice, prfOutput: prf(5) });
 
-		expect(record.privateKey).toBeInstanceOf(CryptoKey);
-		expect(record.privateKey.extractable).toBe(false);
-		await expect(crypto.subtle.exportKey('pkcs8', record.privateKey)).rejects.toThrow();
-		expect(record.publicKey).toEqual(first?.publicKey);
+		// Nothing on the device: the next start derives it from its own touch.
+		expect(await storedRecords()).toEqual([]);
 
-		const next = await ownAgreementKey({
+		const again = await ownAgreementKey({
 			did: alice,
 			readPrfOutput: async () => {
-				throw new Error('a kept key must not prompt');
+				throw new Error('the tab already holds the key');
 			}
 		});
-		const copy = await wrapKey(newEpochKey(), /** @type {Uint8Array} */ (first?.publicKey), {
+		const copy = await wrapKey(newEpochKey(), /** @type {Uint8Array} */ (own?.publicKey), {
 			slot: 's'
 		});
-		await expect(unwrapKey(copy, /** @type {any} */ (next), { slot: 's' })).resolves.toHaveLength(
+		await expect(unwrapKey(copy, /** @type {any} */ (again), { slot: 's' })).resolves.toHaveLength(
 			32
 		);
 	});
 
-	it('keeps one key per identity', async () => {
+	it('holds one key per identity', async () => {
 		await ownAgreementKey({ did: alice, prfOutput: prf(5) });
 		await ownAgreementKey({ did: bob, prfOutput: prf(6) });
 
@@ -99,6 +96,18 @@ describe('the session’s own key, kept in this browser', () => {
 		expect((await keptAgreementKey(bob))?.publicKey).toEqual(
 			(await agreementKeyFromPrf(prf(6))).publicKey
 		);
+	});
+
+	it('keeps a device key, and only as a key that cannot be exported', async () => {
+		const own = await ownAgreementKey({ did: alice, readPrfOutput: async () => null });
+		const [record] = /** @type {any[]} */ (await storedRecords());
+
+		expect(own?.source).toBe('device');
+		expect(record.source).toBe('device');
+		expect(record.privateKey).toBeInstanceOf(CryptoKey);
+		expect(record.privateKey.extractable).toBe(false);
+		await expect(crypto.subtle.exportKey('pkcs8', record.privateKey)).rejects.toThrow();
+		expect(record.publicKey).toEqual(own?.publicKey);
 	});
 
 	it('sits where the storage wipe deletes', () => {
@@ -130,7 +139,7 @@ describe('the session’s own key, with nothing at hand', () => {
 		expect(own?.publicKey).toEqual((await agreementKeyFromPrf(prf(5))).publicKey);
 	});
 
-	it('without PRF is a device key, kept, and the same one next time', async () => {
+	it('without PRF is a device key, and the same one next time', async () => {
 		const own = await ownAgreementKey({ did: alice, readPrfOutput: async () => null });
 		const next = await ownAgreementKey({ did: alice });
 

@@ -2,23 +2,30 @@
  * Where this session's personal X25519 key comes from, and where it is kept
  * (#127).
  *
- * - **With PRF:** derived from the passkey's PRF output (./key-agreement.js).
- *   On a first start the app reads that output itself and hands the same bytes
- *   to the identity provider (`prfOutput`), so the passkey is asked no more
- *   often than before. After a restore from the authenticator the provider
- *   (0.13.0) does not hand its output out, and the app asks once more.
+ * - **With PRF:** derived from the passkey's PRF output (./key-agreement.js),
+ *   on every start. The app reads that output once per start and hands the
+ *   same bytes to the identity provider (`prfOutput`), so one touch serves the
+ *   OrbitDB signing key and this key alike. After a restore from the
+ *   authenticator the provider (0.13.0) does not hand its output out, and the
+ *   app asks once more.
  * - **Without PRF** — GrapheneOS, Android without Play services, a copied
  *   credential: there is nothing to derive from, so the key is random and this
  *   browser is the only place it exists. The app says so, and recommends a
  *   browser without extensions or a profile of its own (user decision,
  *   25.11.2026).
  *
- * **Kept as a CryptoKey that cannot be exported** (user decision, 26.11.2026).
- * With "Keep in this browser" the private key goes into IndexedDB as it is: a
- * script on the page can use it to open a copy sealed for it, but cannot read
- * its bytes, and nothing sends them anywhere. That is why a return asks the
- * passkey nothing for sealed lists. With "In memory only" nothing is written;
- * the key lives in this module and dies with the tab.
+ * **A key the passkey can derive is never written down** (user decision,
+ * 26.11.2026: as much as possible sealed, and a reload asks for a touch). It
+ * lives in this module and goes with the tab, in both storage modes; the next
+ * start derives it again from that start's PRF output. This replaces the
+ * decision of the same morning to keep it as a CryptoKey that cannot be
+ * exported, which spared the touch but left a usable key on the device.
+ *
+ * **A device key is the one exception.** Nothing could derive it again, so
+ * with "Keep in this browser" it goes into IndexedDB as a CryptoKey that cannot
+ * be exported: a script on the page can use it to open a copy sealed for it,
+ * but cannot read its bytes. With "In memory only" it lives for the tab, and
+ * the lists sealed for it close with the tab.
  *
  * The database sits under the prefix `wipePersistentStorage()` owns
  * (`level-js-simple-todo/`), so switching to "nothing on this device" deletes
@@ -37,12 +44,12 @@ const session = new Map();
 /**
  * This session's key.
  *
- * In this order: a PRF output the caller already holds; a key this browser
- * kept; one `readPrfOutput()` — a passkey prompt, so only ever behind a click —
- * which answers null for an authenticator without PRF, and then a device key
- * is made. With nothing of that at hand the answer is null: making a device key
- * here would quietly replace a passkey's key, and lock its owner out of every
- * copy sealed for it.
+ * In this order: a PRF output the caller already holds; a key this tab holds
+ * or this browser kept; one `readPrfOutput()` — a passkey prompt, so only ever
+ * behind a click — which answers null for an authenticator without PRF, and
+ * then a device key is made. With nothing of that at hand the answer is null:
+ * making a device key here would quietly replace a passkey's key, and lock its
+ * owner out of every copy sealed for it.
  *
  * @param {{
  *   did: string,
@@ -53,18 +60,21 @@ const session = new Map();
  */
 export async function ownAgreementKey({ did, prfOutput = null, readPrfOutput = null }) {
 	assertDid(did);
-	if (prfOutput) return keep(did, await agreementKeyFromPrf(prfOutput));
+	if (prfOutput) return holdForTab(did, await agreementKeyFromPrf(prfOutput));
 
 	const kept = await keptAgreementKey(did);
 	if (kept) return kept;
 	if (!readPrfOutput) return null;
 
 	const read = await readPrfOutput();
-	return keep(did, read ? await agreementKeyFromPrf(read) : await newDeviceAgreementKey());
+	return read
+		? holdForTab(did, await agreementKeyFromPrf(read))
+		: keepDeviceKey(did, await newDeviceAgreementKey());
 }
 
 /**
- * The key this browser holds for `did`, without asking anything.
+ * The key this tab holds for `did`, or the device key this browser kept,
+ * without asking anything.
  *
  * @param {string} did
  * @returns {Promise<import('./key-agreement.js').AgreementKey | null>}
@@ -104,16 +114,25 @@ async function newDeviceAgreementKey() {
 }
 
 /**
- * Keep the key where the storage choice says, and hand it back.
+ * Hold a key for this tab only. A key the passkey derives is never written
+ * down; see the module comment.
  *
  * @param {string} did
  * @param {import('./key-agreement.js').AgreementKey} key
  */
-async function keep(did, key) {
-	if (!getPersistentStorageEnabled()) {
-		session.set(did, key);
-		return key;
-	}
+function holdForTab(did, key) {
+	session.set(did, key);
+	return key;
+}
+
+/**
+ * Keep a device key where the storage choice says, and hand it back.
+ *
+ * @param {string} did
+ * @param {import('./key-agreement.js').AgreementKey} key
+ */
+async function keepDeviceKey(did, key) {
+	if (!getPersistentStorageEnabled()) return holdForTab(did, key);
 	session.delete(did);
 	const written = await withStore('readwrite', (store) => store.put(key, did));
 	// A browser that refuses IndexedDB still gets the key for this visit.
@@ -128,7 +147,7 @@ function isKept(value) {
 		value.privateKey.algorithm?.name === 'X25519' &&
 		value.publicKey instanceof Uint8Array &&
 		value.publicKey.length === 32 &&
-		(value.source === 'prf' || value.source === 'device')
+		value.source === 'device'
 	);
 }
 
