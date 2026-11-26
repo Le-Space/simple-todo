@@ -30,6 +30,12 @@ what Zama's v0.14 changes about it and what we do next:
 credential provider gives the passkey its PRF, and what the chapters do without
 it — [docs/grapheneos.md](docs/grapheneos.md).
 
+**Lists from before passkey provider 0.14.0.** Since 2026-11-26 the passkey
+chapters refuse identity proofs in the first format, a security fix. A list
+written before then works on the device that has it and looks empty everywhere
+else. What to expect, and why — [docs/identity-proofs.md](docs/identity-proofs.md)
+([Deutsch](docs/identity-proofs.de.md)).
+
 ## A list, on another device
 
 The QR icon in every chapter's header shows the page as a code. The open list
