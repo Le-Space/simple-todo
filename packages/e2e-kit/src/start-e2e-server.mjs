@@ -170,6 +170,13 @@ function startRelay() {
 			RELAY_DISABLE_BOOTSTRAP: 'true',
 			RELAY_DISABLE_DHT: 'true',
 			RELAY_DISABLE_AUTONAT: 'true',
+			// orbitdb-relay limits each client IP (since 0.11.0). Every browser
+			// in a test comes from 127.0.0.1, so Alice, Bob and Mallory would
+			// share one client's budget, which no real user ever does.
+			RELAY_HTTP_REQUESTS_PER_10S_PER_IP: process.env.RELAY_HTTP_REQUESTS_PER_10S_PER_IP || '10000',
+			RELAY_HTTP_MAX_OPEN_PER_IP: process.env.RELAY_HTTP_MAX_OPEN_PER_IP || '1000',
+			RELAY_WS_NEW_PER_SECOND_PER_IP: process.env.RELAY_WS_NEW_PER_SECOND_PER_IP || '1000',
+			RELAY_WS_MAX_OPEN_PER_IP: process.env.RELAY_WS_MAX_OPEN_PER_IP || '1000',
 			STRUCTURED_LOGS: 'false',
 			ENABLE_GENERAL_LOGS: process.env.ENABLE_GENERAL_LOGS || 'false',
 			ENABLE_SYNC_LOGS: process.env.ENABLE_SYNC_LOGS || 'true',
