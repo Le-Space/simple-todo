@@ -14,6 +14,13 @@
  * authenticator stays, and with it the PRF secret, which a copied credential
  * would not carry.
  *
+ * The first device is wiped only once the relay holds every record the second
+ * one needs: the registry, the list and its key store. Before that, the second
+ * device asks for data that existed only on the wiped one -- measured on main
+ * e400756 (27.11.2026): the wipe came 2.6 s after the first todo, the relay
+ * connected at 4.8 s and held the list at 37 s. The relay's proof is no
+ * substitute; it says "unavailable" at once and is not asked again.
+ *
  * Timings are logged. On main the home list of a fresh device stays "to come"
  * and opens only at the first todo (measured by the provider 0.14.0 session,
  * 26.11.2026); this spec writes that todo and asks that it lands in the old
@@ -23,6 +30,7 @@ import { test, expect } from '@playwright/test';
 import { passConsent, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import { addVirtualAuthenticator, forgetThisDevice } from '@simple-todo/e2e-kit/webauthn.mjs';
 import { openSection } from './sections.mjs';
+import { waitUntilRelayHolds } from './relay-holds.mjs';
 
 const timeout = 90_000;
 
@@ -42,7 +50,8 @@ async function openedAddress(page) {
 }
 
 test('a device that never saw this passkey finds its sealed home list, by name, with its todos', async ({
-	page
+	page,
+	request
 }) => {
 	test.setTimeout(480_000);
 	page.on('console', (message) => {
@@ -63,18 +72,29 @@ test('a device that never saw this passkey finds its sealed home list, by name, 
 	const name = ((await page.getByTestId('active-list-name').textContent()) ?? '').trim();
 	expect(name).not.toBe('');
 	expect(name).not.toContain('sealed-v1-');
-	// The relay's proof has run. Not "pinned" as a precondition: the proof
-	// compares the relay's last record, which says "unavailable" on lists in
-	// the clear too when more than one entry arrives at once. Whether the relay
-	// holds the list is what the second half of this test finds out.
-	await expect(page.getByTestId('todo-relay-status')).not.toHaveAttribute(
-		'data-status',
-		'pending',
-		{
-			timeout
-		}
-	);
-	step(`relay proof: ${await page.getByTestId('todo-relay-status').getAttribute('data-status')}`);
+
+	step('the relay is to hold the registry, the list and its key store before the wipe');
+	/** @type {Array<{ role: string, address: string | null, records: Array<{ key: string, hash: string }> }>} */
+	let databases = [];
+	// The list's name goes into the key store after its key; wait for both.
+	await expect
+		.poll(
+			async () => {
+				databases = await page.evaluate(() =>
+					/** @type {any} */ (window).__simpleTodoE2E.getRecordsToRestore()
+				);
+				return databases.every(
+					({ role, address, records }) =>
+						address &&
+						records.length > 0 &&
+						(role !== 'keys' || records.some(({ key }) => key === 'meta/name'))
+				);
+			},
+			{ timeout }
+		)
+		.toBe(true);
+	step(databases.map(({ role, records }) => `${role} ${records.length}`).join(', '));
+	await waitUntilRelayHolds(request, databases, { timeout: 180_000, log: step });
 
 	step('the device forgets everything; the passkey stays on the authenticator');
 	await forgetThisDevice(page);

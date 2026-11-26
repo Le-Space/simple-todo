@@ -148,6 +148,11 @@ export const sealedListStore = writable(
 	/** @type {{ sealed: boolean, canSeal: boolean }} */ ({ sealed: false, canSeal: false })
 );
 
+/** #127: the open sealed list's key store, null otherwise -- for the E2E hook. */
+export function activeKeyStore() {
+	return activeKeys?.store ?? null;
+}
+
 // Derived store that updates when todos change
 export const todosCountStore = derived(todosStore, ($todos) => $todos.length);
 

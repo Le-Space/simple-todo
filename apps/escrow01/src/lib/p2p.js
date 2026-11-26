@@ -39,8 +39,14 @@ import {
 	getPersistentStorageEnabled,
 	PERSISTENT_STORAGE_PATHS
 } from '@simple-todo/todo/storage-mode.js';
-import { initializeDatabase, todoDBAddressStore, todoDBStore, todosStore } from './db-actions.js';
-import { resetListRegistry } from './list-registry.js';
+import {
+	activeKeyStore,
+	initializeDatabase,
+	todoDBAddressStore,
+	todoDBStore,
+	todosStore
+} from './db-actions.js';
+import { openedListRegistry, resetListRegistry } from './list-registry.js';
 import {
 	getWebRTCEnabled,
 	initializeWebRTCSetting,
@@ -652,6 +658,30 @@ function installE2ETestHooks() {
 				op: entry?.payload?.op ?? null,
 				value: entry?.payload?.value ?? null
 			}));
+		},
+		// #127: the records a fresh device with this passkey needs -- the
+		// registry, the open list and its key store -- by address and hash, so a
+		// spec can wait until the relay holds each one before it wipes the device.
+		getRecordsToRestore: async () => {
+			const databases = [
+				['registry', openedListRegistry()],
+				['list', get(todoDBStore)],
+				['keys', activeKeyStore()]
+			];
+			return Promise.all(
+				databases.map(async ([role, db]) => ({
+					role,
+					address: db?.address ? String(db.address) : null,
+					records: db
+						? ((await db.all?.()) ?? [])
+								.filter((/** @type {any} */ record) => record?.hash)
+								.map((/** @type {any} */ record) => ({
+									key: String(record.key),
+									hash: String(record.hash)
+								}))
+						: []
+				}))
+			);
 		},
 		setWebRTCEnabled,
 		connectToMultiaddr,

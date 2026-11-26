@@ -235,6 +235,11 @@ export async function forgetList(orbitdb, address) {
 	await refreshRegistry();
 }
 
+/** The open registry, null before it opens -- for the E2E hook (#127). */
+export function openedListRegistry() {
+	return registryDB;
+}
+
 /** Drop the cached handle; used when the OrbitDB instance goes away. */
 export function resetListRegistry() {
 	registryDB = null;
