@@ -34,7 +34,7 @@
 			"auditorHint": "See the escrow records the way the auditor sees them.",
 			"auditorOpen": "Open the auditor view",
 			"chainAccount": "Account on Sepolia",
-			"accountCreating": "Being set up. Openfort pays the fee; no passkey confirmation is needed for this.",
+			"accountCreating": "Being set up. Openfort pays the fee, so setting up needs no passkey confirmation. For a new account your passkey then asks once, to lock away the key that reads amounts.",
 			"accountHint": "Your passkey is this account's admin key.",
 			"accountFailed": "Setting it up failed: {reason}",
 			"accountRetry": "Try again",

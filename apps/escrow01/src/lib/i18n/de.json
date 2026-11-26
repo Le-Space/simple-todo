@@ -34,7 +34,7 @@
 			"auditorHint": "Die Treuhand-Vorgänge so ansehen, wie die Prüfstelle sie sieht.",
 			"auditorOpen": "Prüfansicht öffnen",
 			"chainAccount": "Konto auf Sepolia",
-			"accountCreating": "Wird eingerichtet. Openfort zahlt die Gebühr, eine Passkey-Bestätigung ist dafür nicht nötig.",
+			"accountCreating": "Wird eingerichtet. Openfort zahlt die Gebühr, die Einrichtung braucht deshalb keine Passkey-Bestätigung. Bei einem neuen Konto fragt Ihr Passkey danach einmal: Er verschließt den Schlüssel, der Beträge liest.",
 			"accountHint": "Ihr Passkey ist der Admin-Schlüssel dieses Kontos.",
 			"accountFailed": "Die Einrichtung ist fehlgeschlagen: {reason}",
 			"accountRetry": "Erneut versuchen",

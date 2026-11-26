@@ -129,11 +129,12 @@ und starten“; der Druck ist die Zustimmung, und dabei legt sie ihren Passkey a
 dreimal; vor der zweiten und der dritten Abfrage sagt ein kurzer Dialog, welche kommt und wofür sie
 ist („Passkey-Abfrage 2 von 3“), und wartet auf „Weiter“. Sie landet in ihrer eigenen privaten
 Liste, „Meine Aufgaben“. Im Sepolia-Modus steht im Tab „Konto“ zuerst „Wird eingerichtet. Openfort
-zahlt die Gebühr, eine Passkey-Bestätigung ist dafür nicht nötig.“ und nach etwa 20 Sekunden „Konto
-auf Sepolia“ mit Adresse und „Auf Etherscan ansehen“. Genau dann fragt der Passkey ein viertes Mal,
-ohne Dialog davor: Er versiegelt den Schlüssel, der später Beträge liest
-([wie oft der Passkey fragt](passkey-account.de.md#wie-oft-der-passkey-fragt)). Vorher ansagen, sonst
-wirkt es wie ein Widerspruch zum Satz, der gerade zu sehen war.
+zahlt die Gebühr, die Einrichtung braucht deshalb keine Passkey-Bestätigung. Bei einem neuen Konto
+fragt Ihr Passkey danach einmal: Er verschließt den Schlüssel, der Beträge liest.“ Nach etwa 20
+Sekunden fragt der Passkey ein viertes Mal, ohne Dialog davor: Er versiegelt den Schlüssel, der
+später Beträge liest ([wie oft der Passkey fragt](passkey-account.de.md#wie-oft-der-passkey-fragt)).
+Danach zeigt der Tab „Konto auf Sepolia“ mit Adresse und „Auf Etherscan ansehen“. Der Tab hat die
+Berührung angekündigt; trotzdem ansagen, damit sie nicht überrascht.
 
 **Einfach.** „Alice meldet sich mit Touch ID an. Kein Passwort, keine Seed-Phrase.“
 
