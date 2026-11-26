@@ -51,6 +51,13 @@ test.describe('Passkey identities', () => {
 			expect(bobDid).toMatch(/^did:/);
 			expect(aliceDid).not.toBe(bobDid);
 
+			// A todo reaches the other browser as a live update on the list's topic,
+			// and one published before the other browser is on that topic is not
+			// sent again: the heads exchange happens when a browser joins, and both
+			// joined with an empty list. Written straight after the start, the two
+			// todos missed each other in most runs, on main as well (2026-11-25).
+			await Promise.all([expectOtherBrowserInList(alice), expectOtherBrowserInList(bob)]);
+
 			await addTodo(alice, aliceTodo);
 			await addTodo(bob, bobTodo);
 
@@ -124,6 +131,22 @@ async function expectAppReady(page) {
 	await openSection(page, 'aufgaben');
 	await expect(getTodoInput(page)).toBeVisible();
 	await expect(getTodoInput(page)).toBeEnabled({ timeout: collaborationTimeout });
+}
+
+/**
+ * The light under the list's name: another browser subscribes to this list's
+ * topic, directly or through the relay -- which of the two is not this spec's
+ * business (`list-peer-led.spec.js`).
+ *
+ * @param {import('@playwright/test').Page} page
+ */
+async function expectOtherBrowserInList(page) {
+	await openSection(page, 'aufgaben');
+	await expect(page.getByTestId('list-peer-led')).toHaveAttribute(
+		'data-state',
+		/^(direct|relay)$/,
+		{ timeout: collaborationTimeout }
+	);
 }
 
 /** @param {import('@playwright/test').Page} page */

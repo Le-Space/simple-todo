@@ -90,7 +90,9 @@
 	} from '$lib/start/identity.js';
 	import {
 		cameBackToThisAddress,
+		joinedMnemonic,
 		loadOrGenerateMnemonic,
+		rememberJoined,
 		storedMnemonic
 	} from '$lib/start/three-words.js';
 	import {
@@ -343,6 +345,9 @@
 		} catch {
 			// ignore storage errors
 		}
+		// And whether they were joined, so a reload comes back to that shared list
+		// rather than to one's own (`onMount`).
+		rememberJoined(wordsChosen ? canonicalMnemonic : null);
 		const startedAs = identityMode;
 		const prompts = passkeyPromptsFor(identityMode);
 		try {
@@ -465,6 +470,10 @@
 				address opens the shared list …", for a link nobody had followed.
 				Own words, and words a reload brings back where nothing is kept, are
 				this browser's list; anything else is a link.
+
+				escrow01: not a link is not yet one's own list. Words the last start
+				joined are that shared list again, without the greeting; only other
+				own words end in the private list a start without words goes to.
 			*/
 			const stored = storedMnemonic();
 			const fromAddress = listLink.initial.words;
@@ -472,12 +481,13 @@
 				fromAddress !== null &&
 				fromAddress !== stored &&
 				!(stored === null && cameBackToThisAddress());
+			const rejoined = fromAddress !== null && !followed && fromAddress === joinedMnemonic();
 			ownMnemonic = fromAddress !== null && !followed ? fromAddress : loadOrGenerateMnemonic();
-			if (followed) {
+			if (followed || rejoined) {
 				joinWords = fromAddress;
 				joinList = true;
-				linkedWords = fromAddress;
 			}
+			if (followed) linkedWords = fromAddress;
 			if (listLink.initial.rejected.length > 0) {
 				showToast(
 					get(t)(

@@ -66,24 +66,44 @@ What this chapter adds is tested on three levels:
 ## Specs CI leaves out
 
 `manual-multiaddr-connection.spec.js`, inherited from `main`, joined `ci.specs` after it passed on
-`main` and on the refactor branch (2026-11-25).
+`main` and on the refactor branch (2026-11-25). `shared-list-mnemonic.spec.js` and
+`passkey-identity.spec.js` joined it the same day. The private start (#140) had turned both red, each
+for a reason of its own, and the passkey spec also raced its own writes. All three are described
+below.
 
-| Spec                                | Why it is not in `ci.specs`                                                                                                                                                                                                                                        |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `shared-list-mnemonic.spec.js`      | red on `main` as well (2026-11-25, one run each on main and on the refactor): Bob, who joins with Alice's words, never sees her todo (spec line 84). Cause not established                                                                                         |
-| `passkey-identity.spec.js`          | inherited from `passkey01`; red on `main` as well (same runs): after Alice's reload with her passkey her DID survives, but her todo from the shared list is not on screen (spec line 69). Possibly because a start now ends in a private list (#140); not verified |
-| `relay-button-provisioning.spec.js` | deploys a real relay through the Relay Button, with an Aleph account                                                                                                                                                                                               |
-| `relay-button-drag.spec.js`         | the Relay Button's own behaviour, covered in its repository                                                                                                                                                                                                        |
-| `remote-main-local.spec.js`         | drives a deployed site (`e2e/remote/`), not the local build                                                                                                                                                                                                        |
+| Spec                                | Why it is not in `ci.specs`                                          |
+| ----------------------------------- | -------------------------------------------------------------------- |
+| `relay-button-provisioning.spec.js` | deploys a real relay through the Relay Button, with an Aleph account |
+| `relay-button-drag.spec.js`         | the Relay Button's own behaviour, covered in its repository          |
+| `remote-main-local.spec.js`         | drives a deployed site (`e2e/remote/`), not the local build          |
 
-The mnemonic spec copies Alice's three-word Spanish share code from her
-**Lists** tab into Bob's start dialog (**Settings** → **Join a shared list**),
-proves both derive the same OrbitDB address, verifies bidirectional
-replication, and confirms a third browser using another mnemonic remains
-isolated:
+The mnemonic spec has Alice join fresh three Spanish words in her start dialog
+(**Settings** → **Join a shared list**). It copies them from her **Lists** tab into
+Bob's start dialog, proves both derive the same OrbitDB address, verifies
+bidirectional replication, and confirms that a third browser using another
+mnemonic remains isolated. Alice has to join on purpose. A start without words
+ends in the private list her first todo makes. Her browser's own three-word list
+is open only underneath, even though the **Lists** tab shows its words in the
+meantime, so a todo never reaches the list Bob joined:
 
 ```bash
 pnpm exec playwright test e2e/shared-list-mnemonic.spec.js --project=chromium
+```
+
+The passkey spec, from `passkey01`, gives Alice and Bob a passkey each in a
+virtual authenticator. Both join the same shared list. Each waits until the
+light under the list's name shows the other browser, and only then writes. A
+todo travels as a live update on the list's topic, and one published before the
+other browser is on that topic is not sent again. Both then see each other's
+todos with the author's DID. Then Alice reloads and signs in again: her DID is the
+same, and she is back in the shared list with her todo. She gets back there
+because the start keeps the words it joined (`rememberJoined` in
+[`src/lib/start/three-words.js`](../src/lib/start/three-words.js)). Before
+that, a reload read them as the browser's own words and ended in her private
+list. In memory mode nothing is kept across a reload, so there it still does:
+
+```bash
+pnpm exec playwright test e2e/passkey-identity.spec.js --project=chromium
 ```
 
 ## Per-todo delegation (from `delegation01`)
