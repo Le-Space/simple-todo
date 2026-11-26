@@ -134,7 +134,7 @@ function holdForTab(did, key) {
 async function keepDeviceKey(did, key) {
 	if (!getPersistentStorageEnabled()) return holdForTab(did, key);
 	session.delete(did);
-	const written = await withStore('readwrite', (store) => store.put(key, did));
+	const written = await withStore('readwrite', (store) => store.put(key, did), { create: true });
 	// A browser that refuses IndexedDB still gets the key for this visit.
 	if (written === undefined) session.set(did, key);
 	return key;
@@ -157,10 +157,15 @@ function isKept(value) {
  *
  * @param {IDBTransactionMode} mode
  * @param {(store: IDBObjectStore) => IDBRequest} run
+ * @param {{ create?: boolean }} [options] create the database if it is missing
  * @returns {Promise<any>}
  */
-async function withStore(mode, run) {
+async function withStore(mode, run, { create = false } = {}) {
 	if (typeof indexedDB === 'undefined') return undefined;
+	// Only keeping a key may create the database: opening one creates it, and
+	// a lookup or a forget would leave it behind, in memory mode on a device
+	// that was promised nothing would be kept.
+	if (!create && !(await databaseExists())) return undefined;
 	/** @type {IDBDatabase | undefined} */
 	let database;
 	try {
@@ -186,6 +191,18 @@ async function withStore(mode, run) {
 		return undefined;
 	} finally {
 		database?.close();
+	}
+}
+
+/** Whether this browser has the key database; true when it cannot tell. */
+async function databaseExists() {
+	if (typeof indexedDB.databases !== 'function') return true;
+	try {
+		return (await indexedDB.databases()).some(
+			(database) => database.name === AGREEMENT_KEY_DATABASE
+		);
+	} catch {
+		return true;
 	}
 }
 

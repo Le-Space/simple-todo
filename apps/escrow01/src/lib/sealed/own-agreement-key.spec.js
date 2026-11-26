@@ -173,6 +173,17 @@ describe('the session’s own key, in memory only', () => {
 		expect((await keptAgreementKey(alice))?.publicKey).toEqual(own?.publicKey);
 	});
 
+	it('does not create the key database by looking for a key, or forgetting one', async () => {
+		await new Promise((resolve) => {
+			const request = indexedDB.deleteDatabase(AGREEMENT_KEY_DATABASE);
+			request.onsuccess = request.onerror = () => resolve(undefined);
+		});
+		await ownAgreementKey({ did: alice });
+		await forgetAgreementKey(alice);
+		const names = (await indexedDB.databases()).map((database) => database.name);
+		expect(names).not.toContain(AGREEMENT_KEY_DATABASE);
+	});
+
 	it('forgets the key when told to', async () => {
 		await ownAgreementKey({ did: alice, readPrfOutput: async () => null });
 		await forgetAgreementKey(alice);

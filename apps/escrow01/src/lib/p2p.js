@@ -11,12 +11,7 @@ import { createLibp2p } from 'libp2p';
 import { createHeliaLight } from 'helia';
 import { withBitswap } from '@helia/bitswap';
 import { withLibp2p } from '@helia/libp2p';
-import {
-	createOrbitDB,
-	IPFSAccessController,
-	Identities,
-	useIdentityProvider
-} from '@orbitdb/core';
+import { createOrbitDB, IPFSAccessController, useIdentityProvider } from '@orbitdb/core';
 import {
 	configureWebAuthn,
 	OrbitDBWebAuthnIdentityProviderFunction,
@@ -32,6 +27,11 @@ import { multiaddr } from '@multiformats/multiaddr';
 import { createLibp2pConfig } from '@simple-todo/net/libp2p-config.js';
 import { createMemoryIdentities } from '@simple-todo/todo/memory-identities.js';
 import { seedRestoredSigningKey } from '@simple-todo/todo/restored-signing-key.js';
+import { prfForStart } from './sealed/start-prf.js';
+import { ownAgreementKey } from './sealed/own-agreement-key.js';
+import { sealedReaderStore } from './sealed/session-reader.js';
+import { directoryFor } from './chain/session-directory.js';
+import { dropKeptSigningKeys } from './kept-signing-keys.js';
 import { forgetByPrefix, recall, remember } from '@simple-todo/todo/browser-memory.js';
 import {
 	createLogStorages,
@@ -108,6 +108,12 @@ let peerId = /** @type {string | null} */ (null);
  * @type {any | null}
  */
 let activePasskeyCredential = null;
+/**
+ * The PRF output of this start, from `createOrbitDBInstance` to
+ * `setUpSealedReader`, which derives the list key from it and zeroes it.
+ * @type {Uint8Array | null}
+ */
+let startPrfOutput = null;
 let todoDB = /** @type {any} */ (null);
 let defaultTodoDbAddress = '';
 let activeTodoDatabaseName = '';
@@ -235,6 +241,7 @@ export async function initializeP2P(
 		setInitializationProgress(3);
 		console.log('🛬 Creating OrbitDB instance...');
 		orbitdb = await createOrbitDBInstance(helia);
+		await setUpSealedReader(orbitdb);
 		setInitializationProgress(4);
 		todoDB = await openInitialTodoDatabase(options.todoDbAddress, options.todoDbName);
 
@@ -295,6 +302,7 @@ async function stopP2P() {
 	peerIdStore.set(null);
 	ownDidStore.set(null);
 	passkeyCredentialStore.set(null);
+	sealedReaderStore.set(null);
 	peerId = null;
 	activeTodoDatabaseName = '';
 	stopDiscoveryDialRetryInterval();
@@ -410,42 +418,53 @@ async function createOrbitDBInstance(heliaNode) {
 	}
 
 	// The DID is the passkey's own P-256 key. OrbitDB signs entries with a
-	// separate secp256k1 key (the provider's default `signingKeyType`), which
-	// the provider derives from the passkey's PRF output before OrbitDB asks
-	// for it, so one passkey yields one identity document on every device.
-	// Without PRF the keystore generates that key instead — see
-	// `warnIfIdentityCannotTravel` in +page.svelte.
+	// separate secp256k1 key (the provider's default `signingKeyType`), derived
+	// from the passkey's PRF output, so one passkey yields one identity document
+	// on every device.
 	//
-	// Where the key lives follows the storage choice. With "Keep in this
-	// browser" it sits in OrbitDB's default keystore, unencrypted in this
-	// browser's IndexedDB, and later sessions sign with it without asking for
-	// the passkey; the list registry -- whose name is derived from a signature
-	// -- then still points at the same place after a reload. In memory mode the
-	// key goes with the tab, and with PRF the passkey derives the same one again
-	// (#9). (An `encryptKeystore: true` used to sit here: the provider reads it
-	// only together with `useKeystoreDID`, so it encrypted nothing.)
+	// That key is never written down (user decision, 26.11.2026: as much as
+	// possible sealed, and a reload asks for a touch). The keystore lives in
+	// memory in both storage modes, and every start reads the PRF output once,
+	// behind its click (sealed/start-prf.js); the provider derives the signing
+	// key from that answer, and setUpSealedReader the key for sealed lists. With
+	// "Keep in this browser" a reload therefore costs one touch, the PRF read:
+	// the identity proof the provider keeps (`webauthn-identity-proof:…`) is
+	// public, and it keeps the document the same, so it is not signed again.
+	// Until then the key sat unencrypted in OrbitDB's default keystore in
+	// IndexedDB; `dropKeptSigningKeys` deletes what an earlier visit left there.
+	//
+	// Without PRF there is nothing to derive from: the keystore makes a key for
+	// this start, the document is new each time, and its signature is the touch
+	// (`warnIfIdentityCannotTravel` in +page.svelte says what that costs).
 	// Wrapped by the provider (0.11.0): OrbitDB's identity cache refuses another
 	// session of the same passkey — entries of an earlier session arrive, and
 	// this session can no longer write (orbitdb/orbitdb#1258).
-	const identities = withoutStaleIdentityCache(
-		getPersistentStorageEnabled()
-			? await Identities({ ipfs: heliaNode })
-			: await createMemoryIdentities(heliaNode)
-	);
-	// A passkey restored on this device brought its signing key along; in the
-	// keystore before the provider looks, it spares the passkey a touch that
-	// would only read the PRF output the restore already read.
+	const identities = withoutStaleIdentityCache(await createMemoryIdentities(heliaNode));
+	await dropKeptSigningKeys();
+	// The provider reads `prfOutput` and leaves the bytes alone; the copy is
+	// so that setUpSealedReader's derivation, which zeroes its seed, cannot
+	// reach the provider's.
+	const prfOutput = await prfForStart(activePasskeyCredential);
+	startPrfOutput = prfOutput ? Uint8Array.from(prfOutput) : null;
+	// A passkey restored on this device brought its signing key along. With
+	// the PRF output at hand it is the same key; without one it spares the
+	// touch a second derivation would cost.
 	await seedRestoredSigningKey(identities.keystore, activePasskeyCredential);
 	const identity = await identities.createIdentity({
 		provider: OrbitDBWebAuthnIdentityProviderFunction({
-			webauthnCredential: activePasskeyCredential
+			webauthnCredential: activePasskeyCredential,
+			...(prfOutput ? { prfOutput } : { deriveSigningKeyFromPrf: false })
 		})
 	});
+	prfOutput?.fill(0);
 	// The provider files a proof under `webauthn-identity-proof:…` in
 	// localStorage as well as in its own Map, with no way to hand it another
-	// store. In memory mode that is a trace the reader asked us not to leave, so
-	// it goes -- the Map still answers for this session (#9).
-	if (!getPersistentStorageEnabled()) forgetByPrefix('webauthn-identity-proof:');
+	// store. In memory mode that is a trace the reader asked us not to leave,
+	// and without PRF it is never used again -- the next start signs a new
+	// document -- so it goes in both cases; the Map still answers for this
+	// session (#9). This also drops the proofs of another passkey on this
+	// browser, which then signs once more.
+	if (!getPersistentStorageEnabled() || !startPrfOutput) forgetByPrefix('webauthn-identity-proof:');
 
 	ownDidStore.set(identity.id);
 	console.log(`✅ Passkey identity ready: ${identity.id}`);
@@ -454,6 +473,43 @@ async function createOrbitDBInstance(heliaNode) {
 	// `@orbitdb/core/src/orbitdb.js`. Only the bundled declaration omits it.
 	// @ts-expect-error incomplete upstream types, not a wrong call
 	return wrapInstance(await createOrbitDB({ ipfs: heliaNode, identities, identity }));
+}
+
+/**
+ * This session's reader for sealed lists (#127): its DID and X25519 key, set
+ * for the list code (sealed/session-reader.js), and the key's public half in
+ * the account directory, where an owner finds it to share a list.
+ *
+ * A passkey with PRF derives the key from this start's PRF output, and holds
+ * it for the tab only. A passkey without PRF, and an anonymous identity, have
+ * nothing to derive from: they get a device key, which "Keep in this browser"
+ * keeps as one that cannot be exported (sealed/own-agreement-key.js).
+ *
+ * Never fatal: without a reader the app runs, and sealed lists say they
+ * cannot be opened.
+ *
+ * @param {any} instance the OrbitDB instance just created
+ */
+async function setUpSealedReader(instance) {
+	const seed = startPrfOutput;
+	startPrfOutput = null;
+	try {
+		const did = instance.identity.id;
+		const agreementKey = await ownAgreementKey({
+			did,
+			prfOutput: seed,
+			readPrfOutput: seed ? null : async () => null
+		});
+		if (!agreementKey) return;
+		sealedReaderStore.set({ did, agreementKey });
+		void directoryFor(instance)
+			.then((directory) => directory.publishAgreementKey(did, agreementKey.publicKey))
+			.catch((error) => console.warn('Could not publish the key for sealed lists:', error));
+	} catch (error) {
+		console.warn('No key for sealed lists in this session:', error);
+	} finally {
+		seed?.fill(0);
+	}
 }
 
 /**
