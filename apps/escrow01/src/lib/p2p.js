@@ -39,7 +39,7 @@ import {
 	getPersistentStorageEnabled,
 	PERSISTENT_STORAGE_PATHS
 } from '@simple-todo/todo/storage-mode.js';
-import { initializeDatabase, todoDBAddressStore, todosStore } from './db-actions.js';
+import { initializeDatabase, todoDBAddressStore, todoDBStore, todosStore } from './db-actions.js';
 import { resetListRegistry } from './list-registry.js';
 import {
 	getWebRTCEnabled,
@@ -642,6 +642,17 @@ function installE2ETestHooks() {
 		hasOrbitDBIdentity: async (/** @type {unknown} */ hash) =>
 			typeof hash === 'string' && Boolean(await orbitdb?.identities?.getIdentity?.(hash)),
 		getWebRTCEnabled,
+		// #127: what the open list's log holds, as any peer with its address
+		// receives it -- for the specs that prove a stranger reads nothing.
+		getOpenListEntries: async () => {
+			const db = get(todoDBStore);
+			const entries = (await db?.log?.values?.()) ?? [];
+			return entries.map((/** @type {any} */ entry) => ({
+				key: entry?.payload?.key ?? null,
+				op: entry?.payload?.op ?? null,
+				value: entry?.payload?.value ?? null
+			}));
+		},
 		setWebRTCEnabled,
 		connectToMultiaddr,
 		accountDirectory: accountDirectoryForTests()
