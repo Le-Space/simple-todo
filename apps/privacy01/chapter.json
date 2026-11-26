@@ -26,6 +26,7 @@
 			"e2e/consent-network.spec.js",
 			"e2e/phone-layout.spec.js"
 		],
+		"lint": true,
 		"check": true
 	},
 	"title": "Entries are sealed; holding the address is not reading it",
