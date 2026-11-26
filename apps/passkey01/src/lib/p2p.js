@@ -12,6 +12,7 @@ import {
 	useIdentityProvider
 } from '@orbitdb/core';
 import {
+	configureWebAuthn,
 	OrbitDBWebAuthnIdentityProviderFunction,
 	withoutStaleIdentityCache
 } from '@le-space/orbitdb-identity-provider-webauthn-did';
@@ -353,6 +354,22 @@ async function openInitialTodoDatabase(address, databaseName) {
  * @param {any} heliaNode
  */
 async function createOrbitDBInstance(heliaNode) {
+	// Identity proofs in the first format are refused (provider 0.14.0,
+	// GHSA-7j39-c465-x35x). Their challenge was a bare 32-byte hash, so one
+	// signature this passkey made for anything else that signs 32 bytes could
+	// stand in for an identity of its DID, for good. A device that kept such a
+	// proof makes a new one on its next start: one more passkey prompt, a new
+	// identity document, the same DID.
+	//
+	// What that costs a list with history: OrbitDB checks every entry on the
+	// path from a new head back to what a device already has, so one entry
+	// under a first-format document anywhere in it stops the whole head. A
+	// device that does not hold the list yet sees none of it, not even what was
+	// written after the switch; a device that does hold it refuses new entries
+	// from others that build on that history. Its own copy stays readable. The
+	// relays keep the provider's default and still accept such proofs.
+	configureWebAuthn({ acceptLegacyProofs: false });
+
 	// Register the provider type first, on every path. It used to sit behind
 	// the passkey branch below, so a browser *without* a passkey never
 	// registered it — and OrbitDB cannot verify an identity whose provider it
