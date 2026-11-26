@@ -8,7 +8,7 @@
 	import { _, locale, json } from '$lib/i18n/index.js';
 	import { initializationStore, ownDidStore } from '$lib/p2p-stores.js';
 	import OnePasskeyIntro from '$lib/OnePasskeyIntro.svelte';
-	import StartChoices from '$lib/StartChoices.svelte';
+	import StartChoices from '@simple-todo/ui/StartChoices.svelte';
 	import KeepInBrowser from '$lib/KeepInBrowser.svelte';
 	import JoinSharedList from '$lib/JoinSharedList.svelte';
 	import BudgetIcon from '$lib/BudgetIcon.svelte';
@@ -31,7 +31,11 @@
 		watchPayouts
 	} from '$lib/budget/budget-store.js';
 	import { shortId } from '@simple-todo/todo/utils.js';
-	import { createPasskeyCredential, recoverPasskeyCredential } from '$lib/passkey-identity.js';
+	import {
+		createPasskeyCredential,
+		hasStoredPasskeyCredential,
+		recoverPasskeyCredential
+	} from '$lib/passkey-identity.js';
 	import {
 		todosStore,
 		todoDBStore,
@@ -875,7 +879,7 @@
 			<BudgetIcon name={summaryIcons[index] ?? 'shield'} size={18} />
 		</svelte:fragment>
 		<svelte:fragment slot="beside-start">
-			<StartChoices bind:mode={identityMode} />
+			<StartChoices bind:mode={identityMode} hasStoredPasskey={hasStoredPasskeyCredential()} />
 		</svelte:fragment>
 		<svelte:fragment slot="advanced">
 			<KeepInBrowser bind:mode={storageMode} />

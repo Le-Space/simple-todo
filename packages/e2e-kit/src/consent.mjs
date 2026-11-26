@@ -134,6 +134,23 @@ async function takeWay(page, identity) {
 }
 
 /**
+ * Choose the identity, in either form of the dialog: the radio of the long
+ * form, or in the short form the link under the button (the way taken has
+ * none). Leaves the short form on its first screen; a caller that sets
+ * something next opens the settings (`openAdvanced`).
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {'anonymous' | 'create' | 'existing'} identity
+ */
+export async function chooseIdentity(page, identity) {
+	if (await isShortForm(page)) {
+		await takeWay(page, identity);
+		return;
+	}
+	await page.getByTestId(`identity-mode-${identity}`).check();
+}
+
+/**
  * The assembled statement's clauses.
  *
  * They live in the element's shadow tree, which Playwright pierces. There is no
@@ -225,6 +242,17 @@ export async function rememberDecision(page) {
 	if ((await own.count()) > 0) {
 		await openAdvanced(page);
 		await own.check();
+		return;
+	}
+	/*
+		The short form in the chapters that kept the shared `StorageModeSelector`:
+		the same rule as escrow01's box, "keep in this browser" keeps the decision
+		too. The element's own "do not show this again" is hidden there and does
+		nothing.
+	*/
+	if (await isShortForm(page)) {
+		await openAdvanced(page);
+		await page.getByTestId('storage-mode-indexeddb').check();
 		return;
 	}
 	await page.evaluate(() => {

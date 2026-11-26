@@ -321,6 +321,15 @@
 		startEl?.focus({ preventScroll: true });
 	}
 
+	/**
+	 * A string of the short form: the chapter's own `consent.<key>` where it
+	 * words one (escrow01 does), otherwise the shared `ui.consent.<key>` from
+	 * `messages.js`, which every chapter with a catalogue registers, in English
+	 * and German. A chapter that opts in need not copy eight strings.
+	 */
+	$: short = (/** @type {string} */ key, /** @type {string} */ english) =>
+		$t(`consent.${key}`, $t(`ui.consent.${key}`, english));
+
 	$: warningBody = $t(
 		'consent.warningBody',
 		'This is a working demonstration rather than a finished product. It does what it says, and the format may still change - so keep anything you would be sorry to lose somewhere else as well.'
@@ -629,7 +638,7 @@
 			class="outline-none"
 			hidden={view !== 'settings'}
 			data-testid="consent-settings"
-			aria-label={$t('consent.settingsHeading', 'Notices and settings')}
+			aria-label={short('settingsHeading', 'Notices and settings')}
 		>
 			<button
 				type="button"
@@ -637,7 +646,7 @@
 				data-testid="consent-back"
 				class="text-text hover:text-heading -ml-1 inline-flex min-h-10 items-center px-1 text-sm"
 			>
-				‹ {$t('consent.back', 'Back')}
+				‹ {short('back', 'Back')}
 			</button>
 			<div class="mt-2 flex flex-col gap-3">
 				<slot name="advanced" />
@@ -650,11 +659,11 @@
 					/>
 					<span class="text-sm">
 						<span class="text-heading block font-medium"
-							>{$t('consent.technicalRow', 'Technical view')}</span
+							>{short('technicalRow', 'Technical view')}</span
 						>
 						<span class="text-faint block text-xs"
-							>{$t(
-								'consent.technicalRowHint',
+							>{short(
+								'technicalRowHint',
 								'Shows the technical terms, versions and what happens under the hood.'
 							)}</span
 						>
@@ -752,13 +761,13 @@
 				class="text-faint text-center text-xs"
 				data-testid="consent-agreement"
 			>
-				{$t('consent.agreementBefore', 'By starting you accept the ')}<button
+				{short('agreementBefore', 'By starting you accept the ')}<button
 					type="button"
 					on:click={() => showSettings({ notices: true })}
 					data-testid="consent-open-notices"
 					class="consent-inline-link text-text hover:text-heading underline underline-offset-2"
-					>{$t('consent.agreementLink', 'notices')}</button
-				>{$t('consent.agreementAfter', '.')}
+					>{short('agreementLink', 'notices')}</button
+				>{short('agreementAfter', '.')}
 				{#if view === 'start'}
 					<span aria-hidden="true">·</span>
 					<button
@@ -766,7 +775,7 @@
 						on:click={() => showSettings()}
 						data-testid="consent-open-settings"
 						class="consent-inline-link text-text hover:text-heading underline underline-offset-2"
-						>{$t('consent.settingsLink', 'Settings')}</button
+						>{short('settingsLink', 'Settings')}</button
 					>
 				{/if}
 			</p>
