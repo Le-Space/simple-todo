@@ -86,7 +86,11 @@
 	"identity": {
 		"passkeyDid": "Passkey-DID",
 		"copy": "Kopieren",
-		"copied": "Kopiert ✓"
+		"copied": "Kopiert ✓",
+		"header": {
+			"copy": "Ihre DID kopieren, {did}",
+			"title": "Ihre DID: {did}. Zum Kopieren klicken."
+		}
 	},
 	"auth": {
 		"awaiting": "Passkey bestätigen …",

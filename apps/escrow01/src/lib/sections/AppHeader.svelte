@@ -9,6 +9,7 @@
 	import DelegatedAuthBadge from '$lib/DelegatedAuthBadge.svelte';
 	import DidBadge from '$lib/DidBadge.svelte';
 	import NetworkStatusDot from '$lib/NetworkStatusDot.svelte';
+	import HeaderDid from '$lib/HeaderDid.svelte';
 	import DemoVideoButton from '$lib/DemoVideoButton.svelte';
 	import TechnicalToggle from '$lib/TechnicalToggle.svelte';
 
@@ -19,7 +20,8 @@
 <!--
 	What stays on screen on every tab: the app, the network's state as a dot
 	(a link to the network tab), the language and the technical view — the
-	switches somebody presenting reaches for while they talk.
+	switches somebody presenting reaches for while they talk — and, once there
+	is a passkey identity, its DID, copied by a click.
 
 	A grid, so a phone gets two short rows instead of three wrapped ones: the
 	title and the switches on the first, the state on the second. From `sm` on,
@@ -93,13 +95,24 @@
 			>
 		{/if}
 		<NetworkStatusDot />
+		<!-- This session's DID, on a phone; from `sm` on it sits under the
+		     switches (HeaderDid.svelte says why). The auditor view names the
+		     auditor's instead. -->
+		{#if !auditorOpen}
+			<HeaderDid placement="row" />
+		{/if}
 		<!-- Here rather than beside the switches: on a phone this group has a row of
 		     its own, and beside them it cut the German title down to "Treuh…". -->
 		<DemoVideoButton variant="link" />
 	</div>
-	<div class="col-start-2 row-start-1 flex items-center gap-1 sm:col-start-3 sm:gap-2">
-		<LanguageSwitcher />
-		<PageQr />
-		<TechnicalToggle />
+	<div class="col-start-2 row-start-1 flex flex-col items-end gap-1.5 sm:col-start-3">
+		<div class="flex items-center gap-1 sm:gap-2">
+			<LanguageSwitcher />
+			<PageQr />
+			<TechnicalToggle />
+		</div>
+		{#if !auditorOpen}
+			<HeaderDid placement="corner" />
+		{/if}
 	</div>
 </header>
