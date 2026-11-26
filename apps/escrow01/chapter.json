@@ -20,6 +20,7 @@
 			"e2e/budget.spec.js",
 			"e2e/delegation.spec.js",
 			"e2e/sealed-lists.spec.js",
+			"e2e/sealed-second-device.spec.js",
 			"e2e/acl-permissions.spec.js",
 			"e2e/consent-screen.spec.js",
 			"e2e/first-frame.spec.js",
