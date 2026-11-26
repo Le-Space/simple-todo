@@ -83,12 +83,15 @@ test.describe('Sealed private lists (#127)', () => {
 			step('Alice takes the todo back: Bob no longer reads it');
 			await openSection(alice.page, 'aufgaben');
 			await rowFor(alice.page, renamed).getByTestId('todo-revoke-delegation').click();
-			await expect(rowFor(alice.page, renamed).getByTestId('todo-delegation-status')).toHaveText(
+			// Taking it back takes Bob's rename back too, as in delegation.spec.js:
+			// the row shows Alice's own text again.
+			await expect(rowFor(alice.page, delegated).getByTestId('todo-delegation-status')).toHaveText(
 				'revoked',
 				{ timeout }
 			);
 			await expectHidden(bob.page, 2);
 			await expect(bob.page.getByText(renamed, { exact: true })).toHaveCount(0);
+			await expect(bob.page.getByText(delegated, { exact: true })).toHaveCount(0);
 		} finally {
 			await Promise.all([alice.close(), bob.close(), mallory.close()]);
 		}

@@ -62,12 +62,18 @@ test('a device that never saw this passkey finds the sealed home list, by name, 
 	const name = ((await page.getByTestId('active-list-name').textContent()) ?? '').trim();
 	expect(name).not.toBe('');
 	expect(name).not.toContain('sealed-v1-');
-	// The relay has the todo, so a device with nothing finds it there rather
-	// than here. The list holds todos only -- its name is in the key store -- so
-	// the relay's proof compares this todo, as on a list in the clear.
-	await expect(page.getByTestId('todo-relay-status')).toHaveAttribute('data-status', 'pinned', {
-		timeout
-	});
+	// The relay's proof has run. Not "pinned" as a precondition: the proof
+	// compares the relay's last record, which says "unavailable" on lists in
+	// the clear too when more than one entry arrives at once. Whether the relay
+	// holds the list is what the second half of this test finds out.
+	await expect(page.getByTestId('todo-relay-status')).not.toHaveAttribute(
+		'data-status',
+		'pending',
+		{
+			timeout
+		}
+	);
+	step(`relay proof: ${await page.getByTestId('todo-relay-status').getAttribute('data-status')}`);
 
 	step('the device forgets everything; the passkey stays on the authenticator');
 	await forgetThisDevice(page);
