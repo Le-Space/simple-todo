@@ -290,7 +290,7 @@ export function createAccountDirectory(getOrbitdb) {
 				}),
 				(value) => {
 					const current = parsePublishedAgreementKey(value);
-					return Boolean(current) && publicKeyToText(current.publicKey) === text;
+					return current !== null && publicKeyToText(current.publicKey) === text;
 				}
 			);
 		},
