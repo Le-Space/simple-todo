@@ -1,11 +1,22 @@
 <script>
 	import '../app.css';
+	import { onMount } from 'svelte';
 	import { afterNavigate, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { _, addressWithoutLocale } from '$lib/i18n/index.js';
 	// import favicon from '$lib/assets/favicon.svg';
 
 	let { children } = $props();
+
+	// The splash in app.html has done its work once anything here is mounted:
+	// the page is mounted by now, and its start dialog opens before the browser
+	// draws again (e2e/first-frame.spec.js). The `:has()` rule there hides it
+	// too; this is for a browser without `:has()`, which would otherwise leave
+	// it over the app.
+	onMount(() => {
+		document.getElementById('app-splash')?.remove();
+		document.getElementById('app-root')?.removeAttribute('aria-busy');
+	});
 
 	// `?lang=` has done its work once the language is set; take it out of the
 	// address, through the router, which owns the history entry. Not in
