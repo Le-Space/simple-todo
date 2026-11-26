@@ -151,3 +151,17 @@ textarea::placeholder {
 .badge {
 	@apply inline-flex items-center rounded-full px-2 py-1 text-xs font-medium;
 }
+
+/*
+	The provider's <passkey-step-dialog> (between two passkey prompts) in this
+	app's colours. Its own defaults would sit beside the theme rather than in it.
+*/
+passkey-step-dialog {
+	--passkey-step-background: var(--surface);
+	--passkey-step-color: var(--text);
+	--passkey-step-muted: var(--faint);
+	--passkey-step-border: var(--border);
+	/* coral-700, the app's call to action; `@theme inline` defines no variable for it. */
+	--passkey-step-accent: #cf3f30;
+	--passkey-step-on-accent: #ffffff;
+}

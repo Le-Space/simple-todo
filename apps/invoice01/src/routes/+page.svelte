@@ -4,7 +4,7 @@
 	import { get } from 'svelte/store';
 	import { createListLink } from '@simple-todo/todo/list-link.js';
 	import { t } from '@simple-todo/ui/i18n.js';
-	import { _, json } from '$lib/i18n/index.js';
+	import { _, json, locale } from '$lib/i18n/index.js';
 	import { peerIdStore, initializationStore, ownDidStore } from '$lib/p2p-stores.js';
 	import PasskeyOnboarding from '$lib/PasskeyOnboarding.svelte';
 	import DidBadge from '@simple-todo/ui/DidBadge.svelte';
@@ -14,7 +14,19 @@
 		recoverPasskeyCredential
 	} from '$lib/passkey-identity.js';
 	import { readPrfOutput } from '@le-space/orbitdb-identity-provider-webauthn-did/vault';
-	import { openListVault, setVaultCredential, vaultStatus } from '$lib/list-vault.js';
+	// Between two passkey prompts, what the next one is for (the provider's
+	// ./elements): the step module and the element, nothing else.
+	import {
+		connectPasskeyStepDialog,
+		withPasskeySteps,
+		PasskeyStepCancelled
+	} from '@le-space/orbitdb-identity-provider-webauthn-did/elements';
+	import {
+		keepsAnyVault,
+		openListVault,
+		setVaultCredential,
+		vaultStatus
+	} from '$lib/list-vault.js';
 	import {
 		todosStore,
 		todoDBStore,
@@ -39,8 +51,9 @@
 	import { placeRelayButtonForThisScreen } from '$lib/relay-fab-position.js';
 	import { formatVersions } from '@simple-todo/todo/build-info.js';
 	import ConsentModal from '@simple-todo/ui/ConsentModal.svelte';
+	import StartChoices from '@simple-todo/ui/StartChoices.svelte';
 	import LanguageSwitcher from '@simple-todo/ui/LanguageSwitcher.svelte';
-	import { clauses as consentClauses } from '$lib/consent-clauses.js';
+	import { clauses as consentClauses, summary as consentSummary } from '$lib/consent-clauses.js';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
 	import ThemeToggle from '@simple-todo/ui/ThemeToggle.svelte';
 	import LocalFirstLink from '@simple-todo/ui/LocalFirstLink.svelte';
@@ -106,6 +119,54 @@
 	let passkeyLabel = get(_)('consent.identityLabelDefault');
 	/** Past the stored passkey, to the authenticator: another passkey of these lists. */
 	let askAuthenticator = false;
+
+	// The short form of the start dialog: the button names what its press does.
+	$: proceedText = $_(`ui.consent.startAs.${identityMode}`);
+
+	/** @type {any} The <passkey-step-dialog> on this page. */
+	let passkeyStepDialog;
+
+	onMount(() => {
+		// E2E builds: the virtual authenticator needs no word in between, and
+		// every spec that creates a passkey would have to click through it. The
+		// spec for the dialog asks for it (e2e/passkey-steps.spec.js).
+		if (
+			import.meta.env.VITE_E2E === 'true' &&
+			!(/** @type {any} */ (globalThis).__simpleTodoPasskeySteps)
+		) {
+			return;
+		}
+		return connectPasskeyStepDialog(passkeyStepDialog);
+	});
+
+	/**
+	 * How many passkey prompts a start takes, counted in
+	 * e2e/passkey-steps.spec.js and e2e/list-vault.spec.js. Every prompt after
+	 * the first gets a word on what it is for, so the number matters from two up.
+	 *
+	 * - A new passkey: three. The passkey, its PRF output (read once, for the
+	 *   signing key and the lists' vault), the identity signature.
+	 * - One found on the authenticator: three. Two to restore it, then the
+	 *   signature. A vault kept in this browser adds one, for its PRF output.
+	 *   Which passkey answers is only known afterwards, so the count is said for
+	 *   the likely one, a passkey of these lists. It can be one too many: a
+	 *   passkey whose identity proof this browser kept is not asked to sign
+	 *   again, and the dialog then never reaches its last number.
+	 * - A passkey this browser keeps: usually none, or one that comes from
+	 *   the click -- the signing key and the identity's proof are kept. A start
+	 *   stopped between two prompts may have left them unmade, though, so the
+	 *   count stays open (0): a prompt that does come says "Passkey prompt 2"
+	 *   without an "of".
+	 *
+	 * @param {'create' | 'existing' | 'anonymous'} mode
+	 * @returns {number | null} null without a passkey, 0 for a count left open
+	 */
+	function passkeyPromptsFor(mode) {
+		if (mode === 'create') return 3;
+		if (mode !== 'existing') return null;
+		if (hasStoredPasskeyCredential() && !askAuthenticator) return 0;
+		return 3 + (keepsAnyVault() ? 1 : 0);
+	}
 
 	/** @type {string | null} */
 	let toastMessage = null;
@@ -200,7 +261,6 @@
 
 	// Modal state
 	let showModal = true;
-	let rememberDecision = false;
 
 	/**
 	 * A choice the person made that cannot be carried out — no passkey behind
@@ -330,6 +390,9 @@
 		try {
 			await startP2P({ ...choice, ...identity });
 		} catch (err) {
+			// A stop between two passkey prompts is an answer, not a list that
+			// would not open: falling back would ask the passkey all over again.
+			if (err instanceof PasskeyStepCancelled) throw err;
 			if (!choice.todoDbAddress) throw err;
 			console.warn('Remembered list could not be opened, falling back:', err);
 			await startP2P({ todoDbName: words, ...identity });
@@ -365,6 +428,9 @@
 		const wanted = kept.here || (creating && credential.extensionSupport?.prf !== false);
 		if (!wanted) return null;
 		const prfOutput = await readPrfOutput(credential).catch((err) => {
+			// "Cancel" in the step dialog stops the start; it is not a passkey
+			// without PRF.
+			if (err instanceof PasskeyStepCancelled) throw err;
 			console.warn('The passkey gave no PRF output:', err);
 			return null;
 		});
@@ -396,53 +462,24 @@
 			// are stored by whoever opens a public list, and storing them here as
 			// well would name a list this visit never went near.
 			if (listLink.initial.words) remember(SPANISH_MNEMONIC_STORAGE_KEY, canonicalMnemonic);
-			if (rememberDecision) {
-				remember(CONSENT_KEY, 'true');
-			}
 		} catch {
 			// ignore storage errors
 		}
+		const startedAs = identityMode;
+		const prompts = passkeyPromptsFor(identityMode);
 		try {
-			// Resolve the identity choice first — WebAuthn calls must run inside
-			// the user gesture of the proceed click.
-			let passkeyCredential = null;
-			if (identityMode === 'create') {
-				if (!passkeyLabel.trim()) {
-					throw new IdentityChoiceError($_('consent.errorNeedsLabel'));
-				}
-				// The same label goes into both WebAuthn fields on purpose: they are
-				// the account name and the display name of one credential, and the
-				// picker shows them together. Neither identifies the passkey.
-				passkeyCredential = await createPasskeyCredential({
-					userId: passkeyLabel.trim(),
-					displayName: passkeyLabel.trim()
-				});
-			} else if (identityMode === 'existing') {
-				passkeyCredential = await recoverPasskeyCredential({
-					fromAuthenticator: askAuthenticator
-				});
-				if (!passkeyCredential) {
-					throw new IdentityChoiceError($_('consent.errorNoPasskey'));
-				}
-			}
+			// Numbered when there is a passkey: its later prompts each get a word
+			// on what they are for, and start from the click that answers it.
+			const begin = () => beginWith(canonicalMnemonic);
+			await (prompts === null ? begin() : withPasskeySteps(prompts || null, begin));
+			// The press was the consent. Kept with everything else: "in memory
+			// only" writes nothing (honourStorageChoice), so there the dialog
+			// asks again after a reload, and kept, it does not.
 			try {
-				remember(IDENTITY_MODE_KEY, passkeyCredential ? 'passkey' : 'anon');
+				remember(CONSENT_KEY, 'true');
 			} catch {
 				// ignore storage errors
 			}
-			const prfOutput = await prepareListVault(passkeyCredential, identityMode === 'create');
-
-			if ($initializationStore.isInitialized) {
-				await restartP2PLazy({ todoDbName: canonicalMnemonic });
-			} else {
-				await startWithFallback(listToOpen(canonicalMnemonic), canonicalMnemonic, {
-					passkeyCredential,
-					prfOutput
-				});
-			}
-			activeMnemonic = canonicalMnemonic;
-			void listLink.openLinked();
-			warnIfIdentityCannotTravel(passkeyCredential);
 		} catch (err) {
 			showModal = true;
 			const reason = err instanceof Error ? err.message : String(err);
@@ -450,9 +487,69 @@
 				err instanceof IdentityChoiceError
 					? reason
 					: $_('consent.errorStart', { values: { reason } });
+			if (err instanceof PasskeyStepCancelled) {
+				// Stopped between two prompts. A passkey created before the stop
+				// exists now: going on with it, not making a second one.
+				error =
+					startedAs === 'create'
+						? $_('ui.consent.stepCancelledCreated')
+						: $_('ui.consent.stepCancelled');
+				if (startedAs === 'create') {
+					identityMode = 'existing';
+					askAuthenticator = false;
+				}
+			}
 			console.error('P2P initialization failed:', err);
 		}
 	};
+
+	/**
+	 * The start itself: the identity, then the network.
+	 *
+	 * @param {string} canonicalMnemonic
+	 */
+	async function beginWith(canonicalMnemonic) {
+		// Resolve the identity choice first — WebAuthn calls must run inside
+		// the user gesture of the proceed click.
+		let passkeyCredential = null;
+		if (identityMode === 'create') {
+			if (!passkeyLabel.trim()) {
+				throw new IdentityChoiceError($_('consent.errorNeedsLabel'));
+			}
+			// The same label goes into both WebAuthn fields on purpose: they are
+			// the account name and the display name of one credential, and the
+			// picker shows them together. Neither identifies the passkey.
+			passkeyCredential = await createPasskeyCredential({
+				userId: passkeyLabel.trim(),
+				displayName: passkeyLabel.trim()
+			});
+		} else if (identityMode === 'existing') {
+			passkeyCredential = await recoverPasskeyCredential({
+				fromAuthenticator: askAuthenticator
+			});
+			if (!passkeyCredential) {
+				throw new IdentityChoiceError($_('consent.errorNoPasskey'));
+			}
+		}
+		try {
+			remember(IDENTITY_MODE_KEY, passkeyCredential ? 'passkey' : 'anon');
+		} catch {
+			// ignore storage errors
+		}
+		const prfOutput = await prepareListVault(passkeyCredential, identityMode === 'create');
+
+		if ($initializationStore.isInitialized) {
+			await restartP2PLazy({ todoDbName: canonicalMnemonic });
+		} else {
+			await startWithFallback(listToOpen(canonicalMnemonic), canonicalMnemonic, {
+				passkeyCredential,
+				prfOutput
+			});
+		}
+		activeMnemonic = canonicalMnemonic;
+		void listLink.openLinked();
+		warnIfIdentityCannotTravel(passkeyCredential);
+	}
 
 	// Loaded on demand, not at page load. `p2p.js` pulls libp2p, Helia, OrbitDB
 	// and gossipsub, and none of it is needed to render the consent dialog —
@@ -665,6 +762,9 @@
 
 <ToastNotification message={toastMessage} type={toastType} duration={toastDuration} />
 
+<!-- Between two passkey prompts: which one comes, what for, and "Continue". -->
+<passkey-step-dialog bind:this={passkeyStepDialog} lang={$locale ?? 'en'}></passkey-step-dialog>
+
 <svelte:head>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<meta
@@ -673,13 +773,19 @@
 	/>
 </svelte:head>
 
-<!-- Only render the modal when needed -->
+<!--
+	The short form (`summary`): what this chapter is for, three sentences about
+	the data, and one button whose press is the consent, the other ways in as
+	links under it. Where the todos are kept and the passkey's details are the
+	dialog's second screen ("Notices and settings"), with the full statement.
+-->
 {#if showModal}
 	<ConsentModal
 		bind:show={showModal}
-		bind:rememberDecision
 		choices={{ identity: identityMode, storage: storageMode }}
 		clauses={consentClauses}
+		summary={consentSummary}
+		{proceedText}
 		elementStrings={$json('consent.element')}
 		{error}
 		{notice}
@@ -687,6 +793,14 @@
 	>
 		<svelte:fragment slot="header"><LanguageSwitcher /></svelte:fragment>
 		<svelte:fragment slot="before-confirmation">
+			<p class="text-base leading-relaxed text-text" data-testid="consent-promise">
+				{$_('consent.promise')}
+			</p>
+		</svelte:fragment>
+		<svelte:fragment slot="beside-start">
+			<StartChoices bind:mode={identityMode} hasStoredPasskey={hasStoredPasskeyCredential()} />
+		</svelte:fragment>
+		<svelte:fragment slot="advanced">
 			<StorageModeSelector bind:mode={storageMode} />
 			<PasskeyOnboarding bind:mode={identityMode} bind:label={passkeyLabel} bind:askAuthenticator />
 		</svelte:fragment>

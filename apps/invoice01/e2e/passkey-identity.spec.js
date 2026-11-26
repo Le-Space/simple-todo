@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { openPublicList } from './public-list.mjs';
-import { acceptNotice, consentModal, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import { consentModal, openAdvanced, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
 
 // Chapter (passkey01): Alice and Bob each register a WebAuthn passkey in
 // their own browser context (CDP virtual authenticator), write todos into
@@ -98,7 +98,8 @@ async function openReadyAppWithNewPasskey(page, { label }) {
 	await page.goto(testUrl);
 	await fillConsentModal(page);
 
-	await page.getByTestId('identity-mode-create').check();
+	// "Create a passkey" is the way the dialog starts on; its name is a setting.
+	await expect(page.getByTestId('consent-proceed')).toHaveText('Create a passkey and start');
 	await page.getByTestId('passkey-label').fill(label);
 
 	await page.getByTestId('consent-proceed').click();
@@ -114,8 +115,10 @@ async function openReadyAppWithNewPasskey(page, { label }) {
 /** @param {import('@playwright/test').Page} page */
 async function proceedWithExistingPasskey(page) {
 	await fillConsentModal(page);
-	// A remembered passkey session preselects "Use an existing passkey".
-	await expect(page.getByTestId('identity-mode-existing')).toBeChecked();
+	// A remembered passkey session preselects the passkey it knows about.
+	await expect(page.getByTestId('consent-proceed')).toHaveText(
+		'Sign in with your passkey and start'
+	);
 	await page.getByTestId('consent-proceed').click();
 	await page.waitForFunction(
 		() => document.querySelector('[data-testid="consent-modal"]')?.isOpen !== true
@@ -130,11 +133,10 @@ async function fillConsentModal(page) {
 	// the passkey it knows about -- so it asks for the storage that remembers.
 	// In memory mode nothing is kept, and the identity comes back through the
 	// authenticator instead; `passkey-restore.spec.js` covers that path (#9).
+	// On the dialog's second screen, with the passkey's name. There is no tick:
+	// the press on the button is the consent, so callers leave when they choose.
+	await openAdvanced(page);
 	await page.getByTestId('storage-mode-indexeddb').check();
-
-	// Ticked here rather than at the click, so this helper still hands back a
-	// dialog its callers can leave whenever they choose to.
-	await acceptNotice(page);
 	return consentModal(page);
 }
 

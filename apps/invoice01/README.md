@@ -79,12 +79,24 @@ cancelled, all offline, all in a list that replicates to your other devices.
   new list is named with three words you can tell from the next one. **The open
   list is remembered**, so a bookmark comes back to the list you were working
   in rather than to the public one.
-- **Two questions on the first screen, both already answered.** Where the todos
-  are kept ("in this browser", because a tool that forgets on reload is not an
-  invoicing tool) and who you are ("create a passkey", because the number circle
-  is derived from the identity). Both can be changed; neither has to be. The
-  three words are no longer among them: joining a public list is a deliberate
-  act in the lists tab, next to the other ways to open one.
+- **A short first screen, with both questions already answered.** What the
+  chapter is for, three sentences about the data, and one button whose press
+  is the consent: "Create a passkey and start", because the number circle is
+  derived from the identity. The other ways in — an existing passkey, or none —
+  are links under it. Where the todos are kept ("in this browser", because a
+  tool that forgets on reload is not an invoicing tool) and the passkey's name
+  are on a second screen, _Notices and settings_, with the full statement. Kept
+  in this browser, the decision is kept too, and the dialog does not come back.
+  The three words are no longer among the questions: joining a public list is a
+  deliberate act in the lists tab, next to the other ways to open one.
+- **A word before each passkey prompt.** A new passkey takes three prompts, and
+  without a word in between that looks like a loop. The provider's
+  `<passkey-step-dialog>` says before the second and the third which one comes
+  and why ("Passkey prompt 2 of 3"); the prompt starts from _Continue_, and
+  _Cancel_ stops the start, keeping a passkey already made. The count is said
+  before the first prompt: three for a new passkey or one found on the
+  authenticator, one for a passkey this browser keeps, and one more where this
+  browser keeps a vault (below).
 - **German or English.** The whole chapter is translated — the invoices, the
   todos, the lists and the network panel — and the language is chosen in the
   first dialog, the one screen everybody sees before anything else. The startup
@@ -113,8 +125,8 @@ passkey. As in Belege, the root is the PRF output of the passkey that made
 the vault, so that passkey reaches its sealed lists on every device, vault or
 not. Under _Lists → Passkeys of these lists_ it can give a **second passkey**
 — the backup key in the drawer — a slot. That one opens the sealed lists
-where the vault is kept, in this browser: start with _Use an existing
-passkey_ and tick _Another passkey of these lists_. It reads the first
+where the vault is kept, in this browser: start with _Sign in with your
+passkey_, and under _Settings_ tick _Another passkey of these lists_. It reads the first
 passkey's lists, through the registry address the vault carries, and writes
 once its DID is granted under write permissions.
 

@@ -22,10 +22,10 @@
 			"relay": "Relay-Knoten machen Geräte miteinander bekannt und behalten unter Umständen eine Kopie einer Liste, damit ein anderes Gerät sie später abholen kann.",
 			"sharedList": "Die Liste hinter den drei spanischen Wörtern ist offen: Wer die Wörter hat, kann sie lesen und beschreiben. Die Wörter sind ein Weg, sich zu treffen - kein Passwort.",
 			"privateList": "Eine Liste, die Sie selbst anlegen, bestimmt, wer hineinschreiben darf - Sie und wen Sie hineinlassen. Sie bestimmt nicht, wer sie lesen darf.",
-			"readingIsOpen": "Hier ist nichts verschlüsselt. Wer die Adresse einer Liste hat, kann alles darin lesen, auch der Relay, der sie aufbewahrt. Schreiben Sie nichts Privates in ein Todo.",
+			"readingIsOpen": "Hier ist nichts verschlüsselt, außer Sie versiegeln eine Liste. Wer die Adresse einer unversiegelten Liste hat, kann alles darin lesen, auch der Relay, der sie aufbewahrt. Schreiben Sie nichts Privates hinein.",
 			"identityPasskey": "Ihr Passkey weist Sie gegenüber den anderen Geräten aus. Niemand sonst kann in Ihrem Namen schreiben.",
 			"identityAnonymous": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Schließen Sie ihn, ist sie weg.",
-			"cookies": "Es werden keine Tracking-Cookies verwendet. Wenn Sie \"nicht mehr anzeigen\" ankreuzen, ist diese Entscheidung das Einzige, was auf diesem Gerät gespeichert wird.",
+			"cookies": "Es werden keine Tracking-Cookies verwendet. In diesem Browser behalten, bleibt auch Ihre Entscheidung zu starten, und dieser Dialog kommt nicht wieder; nur im Arbeitsspeicher fragt er erneut.",
 			"delegation": "Wer in eine Liste schreiben darf, entscheiden Sie. Eine Freigabe können Sie später wieder zurücknehmen — anders als ein herausgegebener Schlüssel, denn hier wird nichts verschlüsselt.",
 			"storageMemory": "Sie haben „nur im Arbeitsspeicher\" gewählt: Auf diesem Gerät wird nichts abgelegt, und beim Neuladen fängt dieser Browser von vorn an.",
 			"storagePersistent": "Sie haben „in diesem Browser behalten\" gewählt: Die Todos bleiben nach dem Neuladen da. Sie liegen unverschlüsselt im Speicher dieses Browsers, und wer ihn löscht, verliert sie.",
@@ -101,7 +101,18 @@
 		"storagePersistentLabel": "In diesem Browser behalten",
 		"storagePersistentHint": "Die Todos liegen in der IndexedDB des Browsers und überstehen einen Neustart. Verschlüsselt sind sie dort nicht: Wer den Speicher dieses Browsers lesen kann, liest sie mit.",
 		"identityAnother": "Einen anderen Passkey dieser Listen verwenden",
-		"identityAnotherHint": "Fragt Ihren Authenticator, statt den hier gespeicherten Passkey zu nehmen — für den zweiten Schlüssel, wenn der erste nicht zur Hand ist. Zwei Berührungen, dann eine weitere, um die Listen zu öffnen."
+		"identityAnotherHint": "Fragt Ihren Authenticator, statt den hier gespeicherten Passkey zu nehmen — für den zweiten Schlüssel, wenn der erste nicht zur Hand ist. Zwei Berührungen, dann eine weitere, um die Listen zu öffnen.",
+		"title": "Rechnungen in eigenen Listen",
+		"promise": "Rechnungen schreiben, wo Ihre Aufgaben stehen: in Listen, die auf Ihren Geräten liegen statt auf einem Server. Mit einem Passkey bleiben Ihre Rechnungsnummern auf jedem Gerät Ihre.",
+		"summary": {
+			"lists": "Listen und Rechnungen sind nicht verschlüsselt, außer Sie versiegeln eine Liste: Wer die Adresse einer Liste hat, kann den Rest lesen.",
+			"listsTechnical": "Einträge liegen unverschlüsselt in OrbitDB-Logs, lesbar für jeden mit der Adresse der Liste, auch für den Relay. Die Einträge einer versiegelten Liste sind mit einem Schlüssel aus der PRF-Ausgabe Ihres Passkeys verschlüsselt.",
+			"write": "Wer in eine Liste schreiben darf, entscheiden Sie – und Sie können es später zurücknehmen.",
+			"kept": "In diesem Browser behalten, bleiben Ihre Rechnungen nach dem Neuladen da. Wer die Website-Daten löscht, verliert sie, und eine Kopie auf einem Server von uns gibt es nicht.",
+			"keptTechnical": "In diesem Browser behalten: Die OrbitDB-Logs und der Signierschlüssel liegen unverschlüsselt in IndexedDB und localStorage. Wer die Website-Daten löscht, verliert sie; eine Kopie auf einem Server gibt es nicht.",
+			"memory": "Nur im Arbeitsspeicher: Auf diesem Gerät bleibt nichts, und beim Neuladen beginnt alles von vorn."
+		},
+		"identityLabelTitle": "Name des neuen Passkeys"
 	},
 	"invoice": {
 		"tab": "Rechnungen",

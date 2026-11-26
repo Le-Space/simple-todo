@@ -13,7 +13,7 @@
  * on B, and B's start costs one more than a plain restore.
  */
 import { test, expect } from '@playwright/test';
-import { passConsent, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import { openAdvanced, passConsent, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import { recordCeremonies, takeCeremonies } from '@simple-todo/e2e-kit/webauthn.mjs';
 import { openSection } from './sections.mjs';
 
@@ -124,7 +124,11 @@ test('a second passkey opens the sealed list when the first one is gone', async 
 	// B, past the stored passkey.
 	await page.reload();
 	await waitForConsent(page);
-	await page.getByTestId('identity-mode-existing').check();
+	// The stored passkey is the way in already; past it, under "Settings".
+	await expect(page.getByTestId('consent-proceed')).toHaveText(
+		'Sign in with your passkey and start'
+	);
+	await openAdvanced(page);
 	await page.getByTestId('passkey-ask-authenticator').check();
 	await passConsent(page, { persistent: true, identity: 'existing' });
 	await expect(todoInput(page)).toBeEnabled({ timeout: 120000 });
