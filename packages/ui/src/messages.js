@@ -82,7 +82,36 @@ export const uiMessages = {
 				advanced: 'Advanced',
 				advancedHint: 'where data is kept, the list, your identity',
 				start: 'Start',
-				hintAccept: 'Confirm the notices above first.'
+				hintAccept: 'Confirm the notices above first.',
+				// The short form (`summary`): one button whose press is the consent,
+				// and the settings on a second screen. escrow01 wrote these first;
+				// here, so a chapter that opts in need not copy them.
+				agreementBefore: 'By starting you accept the ',
+				agreementLink: 'notices',
+				agreementAfter: '.',
+				settingsLink: 'Settings',
+				settingsHeading: 'Notices and settings',
+				back: 'Back',
+				technicalRow: 'Technical view',
+				technicalRowHint: 'Shows the technical terms, versions and what happens under the hood.',
+				// What the button says, by the way taken.
+				startAs: {
+					create: 'Create a passkey and start',
+					existing: 'Sign in with your passkey and start',
+					anonymous: 'Start without a passkey'
+				},
+				// The ways not taken, as links under the button (`StartChoices`).
+				choice: {
+					existing: 'Already have a passkey? Sign in with it',
+					create: 'Create a new passkey',
+					createAnother: 'Create another passkey – a second identity',
+					anonymous: 'Continue without a passkey'
+				},
+				// "Cancel" between two passkey prompts (the provider's step dialog).
+				stepCancelled:
+					'Stopped before the next passkey prompt. Nothing was started: press the button to try again.',
+				stepCancelledCreated:
+					'Stopped before the next passkey prompt. Your new passkey exists already: “Sign in with your passkey and start” goes on with it.'
 			}
 		}
 	},
@@ -151,7 +180,30 @@ export const uiMessages = {
 				advanced: 'Erweitert',
 				advancedHint: 'Speicherort, Liste, Identität',
 				start: 'Starten',
-				hintAccept: 'Bitte zuerst die Hinweise oben bestätigen.'
+				hintAccept: 'Bitte zuerst die Hinweise oben bestätigen.',
+				agreementBefore: 'Mit dem Start akzeptieren Sie die ',
+				agreementLink: 'Hinweise',
+				agreementAfter: '.',
+				settingsLink: 'Einstellungen',
+				settingsHeading: 'Hinweise und Einstellungen',
+				back: 'Zurück',
+				technicalRow: 'Technische Ansicht',
+				technicalRowHint: 'Zeigt Fachbegriffe, Versionen und was unter der Haube passiert.',
+				startAs: {
+					create: 'Passkey anlegen und starten',
+					existing: 'Mit Passkey anmelden und starten',
+					anonymous: 'Ohne Passkey starten'
+				},
+				choice: {
+					existing: 'Schon einen Passkey? Damit anmelden',
+					create: 'Neuen Passkey anlegen',
+					createAnother: 'Weiteren Passkey anlegen – eine zweite Identität',
+					anonymous: 'Ohne Passkey weiter'
+				},
+				stepCancelled:
+					'Vor der nächsten Passkey-Abfrage angehalten. Gestartet wurde nichts: Mit dem Knopf geht es noch einmal los.',
+				stepCancelledCreated:
+					'Vor der nächsten Passkey-Abfrage angehalten. Ihr neuer Passkey ist schon angelegt: Mit „Mit Passkey anmelden und starten“ geht es damit weiter.'
 			}
 		}
 	}

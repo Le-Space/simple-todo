@@ -1,14 +1,16 @@
 <script>
-	// Identity chooser for the onboarding modal: every user decides before the
-	// P2P stack starts whether this session uses a passkey-backed DID identity
-	// (new or recovered) or the anonymous throwaway identity from the previous
-	// chapters. The actual WebAuthn calls happen in +page.svelte on proceed —
-	// they need the button click's user gesture.
+	// The passkey's details, on the start dialog's second screen ("Notices and
+	// settings"). Which way somebody takes -- a new passkey, an existing one, or
+	// none -- is the button and the links under it (`StartChoices`); what is
+	// left to set is here: the new passkey's name, and for an existing one,
+	// whether to ask the authenticator past the one this browser keeps. The
+	// WebAuthn calls happen in +page.svelte on the button's press -- they need
+	// its user gesture.
 	import { _ } from '$lib/i18n/index.js';
 	import { hasStoredPasskeyCredential } from './passkey-identity.js';
 
 	/** @type {'create' | 'existing' | 'anonymous'} */
-	export let mode = 'anonymous';
+	export let mode = 'create';
 
 	// One field, because there is only one thing to say. WebAuthn takes a
 	// `user.name` and a `displayName`, but both are labels for the credential
@@ -26,86 +28,37 @@
 	export let askAuthenticator = false;
 
 	const hasStoredPasskey = hasStoredPasskeyCredential();
-
-	$: options = [
-		{
-			value: 'create',
-			label: $_('consent.identityCreate'),
-			hint: hasStoredPasskey
-				? $_('consent.identityCreateHintAnother')
-				: $_('consent.identityCreateHint')
-		},
-		{
-			value: 'existing',
-			label: $_('consent.identityExisting'),
-			// The second half used to promise recovery "from a passkey created
-			// earlier on this origin", which is more than this can do:
-			// `recoverPasskeyCredential()` reads the authenticator's largeBlob
-			// and otherwise falls back to this browser's localStorage. A passkey
-			// that exists in the operating system but carries no largeBlob, in a
-			// browser whose storage was cleared, cannot be found — and the option
-			// stays selectable, because a largeBlob-carrying passkey genuinely is
-			// recoverable here and disabling it would take that away.
-			hint: hasStoredPasskey
-				? $_('consent.identityExistingFound')
-				: $_('consent.identityExistingNone')
-		},
-		{
-			value: 'anonymous',
-			label: $_('consent.identityAnonymous'),
-			hint: $_('consent.identityAnonymousHint')
-		}
-	];
 </script>
 
-<fieldset class="mb-4 rounded-lg border border-gray-200 p-3" data-testid="passkey-onboarding">
-	<legend class="px-1 text-sm font-semibold">{$_('consent.identityLegend')}</legend>
-	<div class="space-y-2">
-		{#each options as option (option.value)}
+{#if mode === 'create' || (mode === 'existing' && hasStoredPasskey)}
+	<div class="rounded-lg border border-border p-3" data-testid="passkey-onboarding">
+		{#if mode === 'create'}
+			<label class="block text-sm">
+				<span class="block font-medium text-heading">{$_('consent.identityLabelTitle')}</span>
+				<input
+					type="text"
+					bind:value={label}
+					placeholder={$_('consent.identityLabelPlaceholder')}
+					data-testid="passkey-label"
+					class="mt-2 w-full rounded-md border border-border px-2 py-1.5 text-sm"
+				/>
+				<span class="mt-1 block text-xs text-faint" data-testid="passkey-label-hint">
+					{$_('consent.identityLabelHint')}
+				</span>
+			</label>
+		{:else}
 			<label class="flex cursor-pointer items-start gap-2 text-sm">
 				<input
-					type="radio"
-					name="identity-mode"
-					value={option.value}
-					bind:group={mode}
-					data-testid={`identity-mode-${option.value}`}
+					type="checkbox"
+					bind:checked={askAuthenticator}
+					data-testid="passkey-ask-authenticator"
 					class="mt-0.5"
 				/>
 				<span>
-					<span class="font-medium">{option.label}</span>
-					<span class="block text-xs text-gray-500">{option.hint}</span>
+					<span class="font-medium text-heading">{$_('consent.identityAnother')}</span>
+					<span class="block text-xs text-faint">{$_('consent.identityAnotherHint')}</span>
 				</span>
 			</label>
-		{/each}
+		{/if}
 	</div>
-
-	{#if mode === 'existing' && hasStoredPasskey}
-		<label class="mt-3 flex cursor-pointer items-start gap-2 text-sm">
-			<input
-				type="checkbox"
-				bind:checked={askAuthenticator}
-				data-testid="passkey-ask-authenticator"
-				class="mt-0.5"
-			/>
-			<span>
-				<span class="font-medium">{$_('consent.identityAnother')}</span>
-				<span class="block text-xs text-gray-500">{$_('consent.identityAnotherHint')}</span>
-			</span>
-		</label>
-	{/if}
-
-	{#if mode === 'create'}
-		<div class="mt-3">
-			<input
-				type="text"
-				bind:value={label}
-				placeholder={$_('consent.identityLabelPlaceholder')}
-				data-testid="passkey-label"
-				class="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
-			/>
-			<p class="mt-1 text-xs text-gray-500" data-testid="passkey-label-hint">
-				{$_('consent.identityLabelHint')}
-			</p>
-		</div>
-	{/if}
-</fieldset>
+{/if}

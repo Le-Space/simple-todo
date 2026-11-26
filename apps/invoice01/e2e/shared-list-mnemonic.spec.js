@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { acceptNotice, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import { waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import { openSection } from './sections.mjs';
 import { openPublicList } from './public-list.mjs';
 
@@ -111,8 +111,7 @@ async function openApp(page) {
 	// This spec is about lists, not identities, and has no virtual
 	// authenticator — so away from the chapter's default, which creates a
 	// passkey and would leave the dialog standing.
-	await page.getByTestId('identity-mode-anonymous').check();
-	await acceptNotice(page);
+	await page.getByTestId('consent-identity-anonymous').click();
 	await page.getByTestId('consent-proceed').click();
 	await page.waitForFunction(
 		() => document.querySelector('[data-testid="consent-modal"]')?.isOpen !== true

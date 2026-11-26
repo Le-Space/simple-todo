@@ -31,7 +31,8 @@ import {
 	storeWebAuthnCredential,
 	loadWebAuthnCredential,
 	clearWebAuthnCredential,
-	restoreIdentityFromAuthenticator
+	restoreIdentityFromAuthenticator,
+	PasskeyStepCancelled
 } from '@le-space/orbitdb-identity-provider-webauthn-did';
 
 const CREDENTIAL_STORAGE_KEY = 'simpleTodo.webauthnCredential';
@@ -160,6 +161,9 @@ export async function recoverPasskeyCredential({ onTouch, fromAuthenticator = fa
 	try {
 		restored = await restoreIdentityFromAuthenticator({ onTouch });
 	} catch (error) {
+		// Somebody stopped between the restore's two prompts (the step dialog):
+		// that is their answer, not the authenticator's, and the start says so.
+		if (error instanceof PasskeyStepCancelled) throw error;
 		console.warn('the authenticator could not answer for an identity:', error);
 		return null;
 	}

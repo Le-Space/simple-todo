@@ -63,8 +63,8 @@ spot and asked once. The browser goes on with the passkey it started with.
 The panel shows the new passkey's DID, so it can be granted write permission
 on the lists it should write to.
 
-To use it, start with _Use an existing passkey_ and tick _Another passkey of
-these lists_. The authenticator is then asked which passkey it holds, instead
+To use it, start with _Sign in with your passkey_, and under _Settings_ tick
+_Another passkey of these lists_. The authenticator is then asked which passkey it holds, instead
 of the one stored here. The second passkey:
 
 - opens the vault through its own slot, and with it every sealed list;

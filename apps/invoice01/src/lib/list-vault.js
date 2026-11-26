@@ -150,6 +150,22 @@ export async function vaultStatus() {
 	return { here, removed };
 }
 
+/**
+ * Whether this browser keeps any vault at all, asked of storage only. The
+ * start says how many passkey prompts it takes before the first one, and a
+ * vault kept here costs one more. For a passkey the start has not found yet
+ * (a restore), which one answers is only known afterwards; where a vault is
+ * kept here, the passkey of these lists is the likely one.
+ */
+export function keepsAnyVault() {
+	try {
+		const kept = JSON.parse(recall(VAULTS_STORAGE_KEY) ?? '[]');
+		return Array.isArray(kept) && kept.length > 0;
+	} catch {
+		return false;
+	}
+}
+
 /** True while a vault is open. */
 export function isVaultOpen() {
 	return Boolean(opened);

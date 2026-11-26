@@ -68,8 +68,8 @@ dem Passkey weiter, mit dem er gestartet ist. Das Feld zeigt die DID des neuen
 Passkeys, damit er auf den Listen, in die er schreiben soll, Schreibrechte
 bekommen kann.
 
-Um ihn zu verwenden, starten Sie mit _Vorhandenen Passkey verwenden_ und haken
-_Einen anderen Passkey dieser Listen verwenden_ an. Dann wird der Authenticator
+Um ihn zu verwenden, starten Sie mit _Mit Passkey anmelden_ und haken unter
+_Einstellungen_ _Einen anderen Passkey dieser Listen verwenden_ an. Dann wird der Authenticator
 gefragt, welchen Passkey er hält, statt den hier gespeicherten zu nehmen. Der
 zweite Passkey:
 

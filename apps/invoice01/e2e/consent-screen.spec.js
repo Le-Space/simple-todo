@@ -5,26 +5,24 @@ import { openSection } from './sections.mjs';
 import { test, expect } from '@playwright/test';
 import { addVirtualAuthenticator } from '@simple-todo/e2e-kit/webauthn.mjs';
 import {
-	acceptNotice,
 	consentModal,
 	isConsentOpen,
+	openAdvanced,
 	passConsent,
-	waitForConsent,
-	expectProceedRevealsTick
+	waitForConsent
 } from '@simple-todo/e2e-kit/consent.mjs';
 
 const timeout = 30000;
 
 /**
- * The statement the dialog assembles, read from the element's shadow tree.
+ * The statement the dialog assembles, under "All notices". Read from the DOM
+ * whether the section is unfolded or not: what is accepted is what is there.
  *
  * @param {import('@playwright/test').Page} page
  */
 const clauses = (page) =>
-	page.$$eval('[data-testid="consent-modal"]', (els) =>
-		[...(els[0].shadowRoot?.querySelectorAll('.privacy ul li') ?? [])].map(
-			(item) => item.textContent?.trim() ?? ''
-		)
+	page.$$eval('[data-testid="consent-clauses"] li', (items) =>
+		items.map((item) => item.textContent?.trim() ?? '')
 	);
 
 /** The English catalogue, which mirrors the element's own defaults. */
@@ -33,49 +31,110 @@ const en = JSON.parse(
 );
 
 test.describe('Consent screen', () => {
-	test('will not let you out until the statement is accepted', async ({ page }) => {
-		// The dialog now starts on "create a passkey", so the way out leads
-		// through WebAuthn.
+	test('the press on the button is the consent: no tick, and the button says what it does', async ({
+		page
+	}) => {
+		// The dialog starts on "create a passkey" -- the invoice numbers hang off
+		// the identity -- so the button says so, and its press is the consent.
 		await addVirtualAuthenticator(page);
 		await page.goto('/');
 		await waitForConsent(page);
 
 		const proceed = page.getByTestId('consent-proceed');
-		await expect(proceed).toHaveAttribute('aria-disabled', 'true');
-
-		await acceptNotice(page);
+		await expect(proceed).toHaveText('Create a passkey and start');
 		await expect(proceed).toHaveAttribute('aria-disabled', 'false');
+		await expect(page.getByTestId('consent-accept')).toHaveCount(0);
+		await expect(page.getByTestId('consent-agreement')).toContainText(
+			'By starting you accept the notices.'
+		);
 
 		await proceed.click();
 		expect(await isConsentOpen(page)).toBe(false);
 		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 	});
 
-	test('names the one requirement that is holding the button', async ({ page }) => {
-		// There used to be two: an invalid mnemonic and the tick. The three words
-		// moved to the lists tab, where opening a public list is a deliberate act,
-		// so the tick is all that holds this button — and the label says so.
+	test('Escape is not a way out, and starts nothing', async ({ page }) => {
+		// With no tick to ask, the element would let the browser close the dialog
+		// on Escape -- and a close is what starts the app. Only the button may.
 		await page.goto('/');
 		await waitForConsent(page);
+		await page.getByTestId('consent-identity-anonymous').click();
 
-		const proceed = page.getByTestId('consent-proceed');
-		await expect(proceed).toHaveText('Confirm the notice first');
+		for (let press = 0; press < 3; press += 1) {
+			await page.keyboard.press('Escape');
+			await page.waitForTimeout(300);
+			expect(await isConsentOpen(page), `after Escape #${press + 1}`).toBe(true);
+		}
+		await expect(page.getByPlaceholder('What needs to be done?')).toBeDisabled();
 
-		await acceptNotice(page);
-		await expect(proceed).toHaveText('Get started');
-		await expect(proceed).toHaveAttribute('aria-disabled', 'false');
+		// On the settings screen, Escape goes back to the first one.
+		await openAdvanced(page);
+		await page.keyboard.press('Escape');
+		await expect(page.getByTestId('consent-start')).toBeVisible();
+		expect(await isConsentOpen(page)).toBe(true);
 	});
 
-	test('a press on the waiting button opens the statement and puts the cursor on the tick', async ({
+	test('the first screen is the promise, three sentences and the button; the rest is on the second', async ({
 		page
 	}) => {
 		await page.goto('/');
 		await waitForConsent(page);
-		await expectProceedRevealsTick(page);
+
+		await expect(page.getByTestId('consent-promise')).toContainText(
+			'Write invoices beside your todos'
+		);
+		const summary = page.getByTestId('consent-summary').locator('li');
+		await expect(summary).toHaveCount(3);
+		await expect(summary.nth(0)).toContainText('not encrypted unless you seal a list');
+		await expect(summary.nth(1)).toContainText('take that back');
+		await expect(summary.nth(2)).toContainText('Kept in this browser');
+		await expect(page.getByTestId('consent-settings')).toBeHidden();
+		// The words that belong to the technical view are not on the first screen.
+		const shown = await page.evaluate(() => document.querySelector('qr-intro')?.innerText ?? '');
+		for (const term of ['DID', 'OrbitDB', 'IndexedDB', 'Kubo', 'IPFS', 'WebAuthn', 'PRF']) {
+			expect(shown, term).not.toContain(term);
+		}
+		expect(shown).not.toContain('previous chapter');
+
+		// "Settings" and "notices" both lead to the second screen, and back.
+		await page.getByTestId('consent-open-notices').click();
+		await expect(page.getByTestId('consent-settings')).toBeVisible();
+		await expect(page.getByTestId('consent-notices')).toHaveAttribute('open', '');
+		await expect(page.getByTestId('consent-start')).toBeHidden();
+		await page.getByTestId('consent-back').click();
+		await expect(page.getByTestId('consent-start')).toBeVisible();
+		await expect(page.getByTestId('consent-start')).toBeFocused();
+	});
+
+	test('a first start creates a passkey; the other ways are links under the button', async ({
+		page
+	}) => {
+		await page.goto('/');
+		await waitForConsent(page);
+
+		const proceed = page.getByTestId('consent-proceed');
+		await expect(proceed).toHaveText('Create a passkey and start');
+		// No radios any more: the way taken is the choice.
+		await expect(page.locator('[data-testid^="identity-mode-"]')).toHaveCount(0);
+		// The new passkey's name is a setting, filled in already.
+		await openAdvanced(page);
+		await expect(page.getByTestId('passkey-label')).toHaveValue('Invoices');
+		await page.getByTestId('consent-back').click();
+
+		// For somebody who already has one: no second identity by accident.
+		await page.getByTestId('consent-identity-existing').click();
+		await expect(proceed).toHaveText('Sign in with your passkey and start');
+		await expect(page.getByTestId('consent-identity-create')).toBeVisible();
+
+		await page.getByTestId('consent-identity-anonymous').click();
+		await expect(proceed).toHaveText('Start without a passkey');
+		// Nothing started on the way.
 		expect(await isConsentOpen(page)).toBe(true);
 	});
 
-	test('a failed start is readable, not hidden behind the dialog it reopens', async ({ page }) => {
+	test('a failed start is readable, and the button can be pressed again at once', async ({
+		page
+	}) => {
 		// Every failure in the proceed handler reopens the dialog, and the alert
 		// it sets renders in <main> — behind it. The consent screen coming back
 		// with nothing to read was the app's whole failure signal.
@@ -83,8 +142,7 @@ test.describe('Consent screen', () => {
 		await waitForConsent(page);
 
 		// Nothing was ever registered in this profile, so recovery cannot succeed.
-		await page.getByTestId('identity-mode-existing').check();
-		await acceptNotice(page);
+		await page.getByTestId('consent-identity-existing').click();
 		await page.getByTestId('consent-proceed').click();
 
 		const alert = page.getByTestId('consent-error');
@@ -101,6 +159,11 @@ test.describe('Consent screen', () => {
 			return el === hit || el.contains(hit);
 		});
 		expect(onTop).toBe(true);
+
+		// Ready for the next try, on the way that was chosen.
+		const proceed = page.getByTestId('consent-proceed');
+		await expect(proceed).toHaveAttribute('aria-disabled', 'false');
+		await expect(proceed).toHaveText('Sign in with your passkey and start');
 	});
 
 	test('hands the element every string it has, in the language on screen', async ({ browser }) => {
@@ -141,24 +204,39 @@ test.describe('Consent screen', () => {
 		}, en.consent.element);
 		expect(stillEnglish).toEqual([]);
 
+		// The short form's own wording, which comes from the shared catalogue.
+		await expect(page.getByTestId('consent-proceed')).toHaveText('Passkey anlegen und starten');
+		await expect(page.getByTestId('consent-agreement')).toContainText(
+			'Mit dem Start akzeptieren Sie die Hinweise.'
+		);
+		await expect(page.getByTestId('consent-identity-existing')).toHaveText(
+			'Schon einen Passkey? Damit anmelden'
+		);
+
 		await context.close();
 	});
 
-	test('the storage sentence follows the radio that decides it', async ({ page }) => {
+	test('the storage sentence follows the choice that decides it', async ({ page }) => {
 		// The storage choice is the only decision in this dialog that changes what
 		// the app does rather than what has been read, so the statement names the
 		// consequence of the option actually selected instead of describing both
 		// and leaving the reader to work out which one is theirs.
 		await page.goto('/');
 		await waitForConsent(page);
+		await openAdvanced(page);
 
-		await page.getByTestId('storage-mode-memory').check();
-		expect((await clauses(page)).join(' ')).toContain('nothing is written to this device');
-
-		await page.getByTestId('storage-mode-indexeddb').check();
+		// "Keep them in this browser", unless somebody chooses otherwise.
+		await expect(page.getByTestId('storage-mode-indexeddb')).toBeChecked();
 		const kept = (await clauses(page)).join(' ');
 		expect(kept).toContain('survive a reload');
 		expect(kept).not.toContain('nothing is written to this device');
+
+		await page.getByTestId('storage-mode-memory').check();
+		const memory = (await clauses(page)).join(' ');
+		expect(memory).toContain('nothing is written to this device');
+		expect(memory).toContain('it asks again');
+		await page.getByTestId('consent-back').click();
+		await expect(page.getByTestId('consent-summary')).toContainText('In memory only');
 	});
 
 	test('says what this chapter does to your data, in plain words', async ({ page }) => {
@@ -172,22 +250,31 @@ test.describe('Consent screen', () => {
 		expect(statement).toContain('who may write');
 
 		// And the sentence this chapter exists to make people read: write access
-		// is not read access. Nothing here is encrypted, so an address is enough
-		// to read everything — including for the relay that stores it.
+		// is not read access. Only a sealed list is encrypted, so an address is
+		// enough to read every other one — including for the relay that stores it.
 		expect(statement).toContain('does not decide who may read');
-		expect(statement).toContain('Nothing here is encrypted');
+		expect(statement).toContain('Nothing here is encrypted unless you seal a list');
+		// No "don't show this again" any more: what is kept follows the storage choice.
+		expect(statement).not.toContain("don't show this again");
 	});
 
-	test('rewrites the line a choice changes, and only that line', async ({ page }) => {
+	test('marks the lines a choice rewrote, and only those', async ({ page }) => {
 		await page.goto('/');
 		await waitForConsent(page);
+		await page.getByTestId('consent-notices').evaluate((el) => (el.open = true));
 
 		const before = await clauses(page);
 		// Away from the default, which is "create a passkey" in this chapter.
-		await page.getByTestId('identity-mode-anonymous').check();
-		await expect
-			.poll(async () => (await clauses(page)).filter((c, i) => c !== before[i]).length)
-			.toBe(1);
+		await page.getByTestId('consent-identity-anonymous').click();
+		await expect.poll(async () => (await clauses(page)).join('|')).not.toBe(before.join('|'));
+
+		const rewritten = (await clauses(page)).filter((line) => !before.includes(line));
+		expect(rewritten.length).toBe(1);
+		const marked = await page.$$eval(
+			'[data-testid="consent-clauses"] li.consent-changed',
+			(items) => items.map((item) => item.textContent?.trim() ?? '')
+		);
+		expect(marked).toEqual(rewritten);
 	});
 
 	test('offers the technical view beside the plain one', async ({ page }) => {
@@ -200,29 +287,31 @@ test.describe('Consent screen', () => {
 		expect(await isTechnical()).toBe(false);
 		await page.getByTestId('consent-technical').click();
 		await expect.poll(isTechnical).toBe(true);
+		await expect(page.getByTestId('consent-summary')).toContainText('OrbitDB');
+
+		// The same switch on the settings screen, for somebody who looks there.
+		await openAdvanced(page);
+		const row = page.getByTestId('consent-technical-row');
+		await expect(row).toBeChecked();
+		await row.uncheck();
+		await expect.poll(isTechnical).toBe(false);
 	});
 
-	test('on a phone, the acceptance tick is reachable from the foot', async ({ browser }) => {
-		// The dialog's body scrolls and its foot does not, so the tick that the
-		// button names can sit a screen and a half above the fold while the
-		// button naming it is in view.
-		const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
-		const page = await context.newPage();
-		await page.goto('/');
-		await waitForConsent(page);
-
-		const tickBox = () =>
-			page.$eval('[data-testid="consent-modal"]', (el) => {
-				const tick = el.shadowRoot?.querySelector('input[part=accept]');
-				const box = tick.getBoundingClientRect();
-				return { top: box.top, onScreen: box.top >= 0 && box.bottom <= window.innerHeight };
+	test('the first screen fits a phone without scrolling', async ({ browser }) => {
+		for (const locale of ['en-US', 'de-DE']) {
+			const context = await browser.newContext({ viewport: { width: 390, height: 844 }, locale });
+			const page = await context.newPage();
+			await page.goto('/');
+			await waitForConsent(page);
+			const overflow = await page.evaluate(() => {
+				const body = document
+					.querySelector('[data-testid="consent-modal"]')
+					?.shadowRoot?.querySelector('.body');
+				return body ? body.scrollHeight - body.clientHeight : null;
 			});
-
-		expect((await tickBox()).onScreen).toBe(false);
-		await page.getByTestId('consent-show-notice').click();
-		await expect.poll(async () => (await tickBox()).onScreen).toBe(true);
-
-		await context.close();
+			expect(overflow, locale).toBeLessThanOrEqual(1);
+			await context.close();
+		}
 	});
 
 	test('the close control that does nothing is not on screen', async ({ page }) => {
@@ -233,7 +322,9 @@ test.describe('Consent screen', () => {
 		await waitForConsent(page);
 
 		const dead = await page.$eval('[data-testid="consent-modal"]', (el) => {
-			const control = el.shadowRoot?.querySelector('button[disabled]');
+			// Not disabled in the short form — there is no statement in the element
+			// to gate it — and it would only bring the dialog straight back.
+			const control = el.shadowRoot?.querySelector('button.close');
 			return control ? { hidden: control.hidden, aria: control.getAttribute('aria-hidden') } : null;
 		});
 		expect(dead).toEqual({ hidden: true, aria: 'true' });
@@ -258,25 +349,26 @@ test.describe('Consent screen', () => {
 
 			const statement = (await clauses(page)).join(' ');
 			expect(statement).toContain('Wir betreiben keinen Server');
-			expect(statement).toContain('nichts verschlüsselt');
+			expect(statement).toContain('außer Sie versiegeln eine Liste');
 			// Not a single English clause left behind: a half-translated statement
 			// reads as a decision rather than an omission.
 			expect(statement).not.toContain('We run no server');
+			await expect(page.getByTestId('consent-summary')).toContainText('nicht verschlüsselt');
 		} finally {
 			await context.close();
 		}
 	});
 
-	test('remembers the decision when asked to', async ({ page }) => {
+	test('kept in this browser, the decision is kept too: no dialog after a reload', async ({
+		page
+	}) => {
+		// "Don't show this again" is gone with the tick. Keeping things in this
+		// browser keeps the decision with them, and the list it was made in.
 		await page.goto('/');
-		// Remembering is itself something kept, so it needs the choice that keeps
-		// things: in memory mode nothing survives the reload by design (#9).
-		await passConsent(page, { remember: true, persistent: true });
-
+		await passConsent(page, { identity: 'anonymous', persistent: true });
 		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 
-		// The list this visit started, so the reload can be held against it. It is
-		// a list of this browser's own now, not the public one everybody lands in.
+		// The list this visit started, so the reload can be held against it.
 		await openSection(page, 'listen');
 		const address = await page.getByTestId('active-database-address').textContent();
 		expect(address).toMatch(/^\/orbitdb\//);
@@ -298,6 +390,18 @@ test.describe('Consent screen', () => {
 		});
 
 		await page.evaluate(() => localStorage.clear());
+	});
+
+	test('in memory only, nothing is kept, the decision included: a reload asks again', async ({
+		page
+	}) => {
+		await page.goto('/');
+		await passConsent(page, { identity: 'anonymous', persistent: false });
+		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
+
+		await page.goto('/');
+		await waitForConsent(page);
+		expect(await isConsentOpen(page)).toBe(true);
 	});
 });
 

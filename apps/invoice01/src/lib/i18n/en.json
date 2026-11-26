@@ -22,10 +22,10 @@
 			"relay": "Relay nodes introduce devices to each other and may keep a copy of a list so another device can collect it later.",
 			"sharedList": "The list named by the three Spanish words is open: anyone who has those words can read it and write to it. Treat the words as a way to meet, not as a password.",
 			"privateList": "A list you create yourself decides who may write to it - you, and anyone you let in. It does not decide who may read it.",
-			"readingIsOpen": "Nothing here is encrypted. Anyone who has a list's address can read everything in it, including the relay that stores it. Do not put anything private in a todo.",
+			"readingIsOpen": "Nothing here is encrypted unless you seal a list. Anyone who has the address of an unsealed list can read everything in it, including the relay that stores it. Do not put anything private in one.",
 			"identityPasskey": "Your passkey identifies you to the other devices. Nobody else can write as you.",
 			"identityAnonymous": "You are using a random identity that exists only in this browser. Close it and it is gone.",
-			"cookies": "No tracking cookies are used. If you tick \"don't show this again\", that choice is the only thing saved on this device.",
+			"cookies": "No tracking cookies are used. Kept in this browser, your decision to start is kept too, and this dialog does not come back; in memory only, it asks again.",
 			"delegation": "You decide who may write to a list, and you can take a grant back later — unlike a key you handed out, because nothing here is encrypted.",
 			"storageMemory": "You chose \"in memory only\": nothing is written to this device, and this browser starts over when the page reloads.",
 			"storagePersistent": "You chose \"keep them in this browser\": the todos survive a reload. They sit unencrypted in this browser’s storage, and clearing it loses them.",
@@ -101,7 +101,18 @@
 		"storagePersistentLabel": "Keep them in this browser",
 		"storagePersistentHint": "Todos are stored in the browser's IndexedDB and survive a restart. They are not encrypted there, so anyone who can read this browser's storage can read them.",
 		"identityAnother": "Another passkey of these lists",
-		"identityAnotherHint": "Asks your authenticator instead of using the passkey stored here — for the second key, when the first is not at hand. Two touches, then one more to open the lists."
+		"identityAnotherHint": "Asks your authenticator instead of using the passkey stored here — for the second key, when the first is not at hand. Two touches, then one more to open the lists.",
+		"title": "Invoices in lists of your own",
+		"promise": "Write invoices beside your todos, in lists that live on your devices rather than on a server. With a passkey, your invoice numbers stay yours on every device.",
+		"summary": {
+			"lists": "Lists and invoices are not encrypted unless you seal a list: anyone who has a list’s address can read the rest.",
+			"listsTechnical": "Entries are stored unencrypted in OrbitDB logs, readable by anyone with the list’s address, the relay included. A sealed list’s entries are encrypted with a key from your passkey’s PRF output.",
+			"write": "You decide who may write to a list, and you can take that back later.",
+			"kept": "Kept in this browser, your invoices survive a reload. Clearing the site data loses them, and there is no copy on a server of ours.",
+			"keptTechnical": "Kept in this browser: the OrbitDB logs and the signing key sit unencrypted in IndexedDB and localStorage. Clearing the site data loses them; there is no server copy.",
+			"memory": "In memory only: nothing stays on this device, and a reload starts over."
+		},
+		"identityLabelTitle": "Name of the new passkey"
 	},
 	"invoice": {
 		"tab": "Invoices",
