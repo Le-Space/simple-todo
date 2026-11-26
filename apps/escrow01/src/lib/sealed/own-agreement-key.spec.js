@@ -81,16 +81,24 @@ describe('the session’s own key, kept in this browser', () => {
 				throw new Error('a kept key must not prompt');
 			}
 		});
-		const copy = await wrapKey(newEpochKey(), /** @type {Uint8Array} */ (first?.publicKey), { slot: 's' });
-		await expect(unwrapKey(copy, /** @type {any} */ (next), { slot: 's' })).resolves.toHaveLength(32);
+		const copy = await wrapKey(newEpochKey(), /** @type {Uint8Array} */ (first?.publicKey), {
+			slot: 's'
+		});
+		await expect(unwrapKey(copy, /** @type {any} */ (next), { slot: 's' })).resolves.toHaveLength(
+			32
+		);
 	});
 
 	it('keeps one key per identity', async () => {
 		await ownAgreementKey({ did: alice, prfOutput: prf(5) });
 		await ownAgreementKey({ did: bob, prfOutput: prf(6) });
 
-		expect((await keptAgreementKey(alice))?.publicKey).toEqual((await agreementKeyFromPrf(prf(5))).publicKey);
-		expect((await keptAgreementKey(bob))?.publicKey).toEqual((await agreementKeyFromPrf(prf(6))).publicKey);
+		expect((await keptAgreementKey(alice))?.publicKey).toEqual(
+			(await agreementKeyFromPrf(prf(5))).publicKey
+		);
+		expect((await keptAgreementKey(bob))?.publicKey).toEqual(
+			(await agreementKeyFromPrf(prf(6))).publicKey
+		);
 	});
 
 	it('sits where the storage wipe deletes', () => {

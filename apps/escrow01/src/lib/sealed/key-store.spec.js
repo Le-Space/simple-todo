@@ -40,8 +40,9 @@ async function orbitdbInMemory() {
 		createHeliaLight({ codecs: [dagCbor, dagJson, json], hashers: [sha512] }),
 		libp2p
 	).start();
-	// @ts-expect-error `identities` is documented; the bundled declaration omits it (see p2p.js)
-	const orbitdb = wrapInstance(await createOrbitDB({ ipfs, identities: await createMemoryIdentities(ipfs) }));
+	// `identities` is documented; the bundled declaration omits it (see p2p.js).
+	const options = /** @type {any} */ ({ ipfs, identities: await createMemoryIdentities(ipfs) });
+	const orbitdb = wrapInstance(await createOrbitDB(options));
 	running.push(orbitdb, ipfs);
 	return orbitdb;
 }
@@ -65,7 +66,14 @@ describe('the key store’s names', () => {
 			epoch: 3,
 			did: BOB
 		});
-		for (const other of ['meta/name', 'list/x/' + BOB, 'list/01/' + BOB, 'list/0/', 'task/t/0', 42]) {
+		for (const other of [
+			'meta/name',
+			'list/x/' + BOB,
+			'list/01/' + BOB,
+			'list/0/',
+			'task/t/0',
+			42
+		]) {
 			expect(parseSlot(other)).toBeNull();
 		}
 		expect(() => listSlot(0, 'did:with/slash')).toThrow(TypeError);
@@ -94,7 +102,9 @@ describe('the key store', () => {
 		const aliceElsewhere = createKeyRing();
 		const bobs = createKeyRing();
 		const mallorys = createKeyRing();
-		await expect(loadOwnKeys(store, aliceElsewhere, { did: ownerDid, agreementKey: aliceKey })).resolves.toEqual({
+		await expect(
+			loadOwnKeys(store, aliceElsewhere, { did: ownerDid, agreementKey: aliceKey })
+		).resolves.toEqual({
 			added: [listSlot(0, ownerDid)],
 			failed: []
 		});
@@ -102,7 +112,9 @@ describe('the key store', () => {
 			added: [listSlot(0, BOB)],
 			failed: []
 		});
-		await expect(loadOwnKeys(store, mallorys, { did: MALLORY, agreementKey: malloryKey })).resolves.toEqual({
+		await expect(
+			loadOwnKeys(store, mallorys, { did: MALLORY, agreementKey: malloryKey })
+		).resolves.toEqual({
 			added: [],
 			failed: []
 		});
@@ -112,7 +124,9 @@ describe('the key store', () => {
 		expect(mallorys.epochs(LIST_SCOPE)).toEqual([]);
 
 		// Claiming Bob's DID does not open Bob's copy.
-		await expect(loadOwnKeys(store, mallorys, { did: BOB, agreementKey: malloryKey })).resolves.toEqual({
+		await expect(
+			loadOwnKeys(store, mallorys, { did: BOB, agreementKey: malloryKey })
+		).resolves.toEqual({
 			added: [],
 			failed: [{ slot: listSlot(0, BOB), reason: 'unwrap' }]
 		});
@@ -143,10 +157,9 @@ describe('the key store', () => {
 		ring.add(LIST_SCOPE, 0, newEpochKey());
 		ring.add(LIST_SCOPE, 1, newEpochKey());
 
-		await expect(grantListKeys(store, ring, { did: BOB, publicKey: bobKey.publicKey })).resolves.toEqual([
-			listSlot(0, BOB),
-			listSlot(1, BOB)
-		]);
+		await expect(
+			grantListKeys(store, ring, { did: BOB, publicKey: bobKey.publicKey })
+		).resolves.toEqual([listSlot(0, BOB), listSlot(1, BOB)]);
 		const bobs = createKeyRing();
 		await loadOwnKeys(store, bobs, { did: BOB, agreementKey: bobKey });
 		expect(bobs.epochs(LIST_SCOPE)).toEqual([0, 1]);

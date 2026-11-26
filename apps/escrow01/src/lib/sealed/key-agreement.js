@@ -199,7 +199,8 @@ export async function unwrapKey(copy, own, { slot }) {
 			/** @type {BufferSource} */ (ct)
 		)
 	);
-	if (key.length !== WRAPPED_KEY_BYTES) throw new TypeError('A wrapped key opened to the wrong size.');
+	if (key.length !== WRAPPED_KEY_BYTES)
+		throw new TypeError('A wrapped key opened to the wrong size.');
 	return key;
 }
 

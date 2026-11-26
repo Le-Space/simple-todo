@@ -31,8 +31,9 @@ async function orbitdbInMemory() {
 		createHeliaLight({ codecs: [dagCbor, dagJson, json], hashers: [sha512] }),
 		libp2p
 	).start();
-	// @ts-expect-error `identities` is documented; the bundled declaration omits it (see p2p.js)
-	const orbitdb = wrapInstance(await createOrbitDB({ ipfs, identities: await createMemoryIdentities(ipfs) }));
+	// `identities` is documented; the bundled declaration omits it (see p2p.js).
+	const options = /** @type {any} */ ({ ipfs, identities: await createMemoryIdentities(ipfs) });
+	const orbitdb = wrapInstance(await createOrbitDB(options));
 	running.push(orbitdb, ipfs);
 	return orbitdb;
 }
@@ -60,7 +61,10 @@ describe('the keys of one sealed list', () => {
 		expect(created.canSeal()).toBe(true);
 		expect(created.ring.epochs(LIST_SCOPE)).toEqual([0]);
 
-		const record = { key: 'todo-1', value: await sealForList(created.ring, 'todo-1', { text: 'Pay rent' }) };
+		const record = {
+			key: 'todo-1',
+			value: await sealForList(created.ring, 'todo-1', { text: 'Pay rent' })
+		};
 		// The next visit derives the same X25519 key from the same passkey.
 		const nextVisit = await openListKeys(orbitdb, {
 			listAddress: LIST,
@@ -85,7 +89,10 @@ describe('the keys of one sealed list', () => {
 			own: owner,
 			lookupPublicKey: async (did) => (did === BOB ? bob.agreementKey.publicKey : null)
 		});
-		const record = { key: 'todo-1', value: await sealForList(ownersKeys.ring, 'todo-1', { text: 'Pay rent' }) };
+		const record = {
+			key: 'todo-1',
+			value: await sealForList(ownersKeys.ring, 'todo-1', { text: 'Pay rent' })
+		};
 
 		const bobsKeys = await openListKeys(orbitdb, {
 			listAddress: LIST,
@@ -94,7 +101,10 @@ describe('the keys of one sealed list', () => {
 			lookupPublicKey: async () => null
 		});
 		expect(bobsKeys.canSeal()).toBe(false);
-		await expect(openRecords([record], bobsKeys.ring)).resolves.toMatchObject({ records: [], hidden: 1 });
+		await expect(openRecords([record], bobsKeys.ring)).resolves.toMatchObject({
+			records: [],
+			hidden: 1
+		});
 
 		const arrived = nextChange(bobsKeys);
 		await expect(ownersKeys.grant(BOB)).resolves.toBe('granted');
@@ -122,7 +132,11 @@ describe('the keys of one sealed list', () => {
 	it('are handed out by the owner only', async () => {
 		const orbitdb = await orbitdbInMemory();
 		const owner = { did: orbitdb.identity.id, agreementKey: await keyFor(1) };
-		await createListKeys(orbitdb, { listAddress: LIST, own: owner, lookupPublicKey: async () => null });
+		await createListKeys(orbitdb, {
+			listAddress: LIST,
+			own: owner,
+			lookupPublicKey: async () => null
+		});
 		const bobsKeys = await openListKeys(orbitdb, {
 			listAddress: LIST,
 			ownerDid: owner.did,
@@ -136,7 +150,11 @@ describe('the keys of one sealed list', () => {
 	it('are forgotten on close', async () => {
 		const orbitdb = await orbitdbInMemory();
 		const own = { did: orbitdb.identity.id, agreementKey: await keyFor(1) };
-		const keys = await createListKeys(orbitdb, { listAddress: LIST, own, lookupPublicKey: async () => null });
+		const keys = await createListKeys(orbitdb, {
+			listAddress: LIST,
+			own,
+			lookupPublicKey: async () => null
+		});
 		await keys.close();
 
 		expect(keys.canSeal()).toBe(false);

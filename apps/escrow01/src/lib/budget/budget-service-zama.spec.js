@@ -254,7 +254,10 @@ function fakeDirectory() {
 			lookup: async (/** @type {string} */ did, /** @type {any} */ options) => {
 				lookups.push(options?.timeoutMs);
 				return entries.get(did) ?? null;
-			}
+			},
+			// The sealed lists' key (#127); budgets never read it.
+			publishAgreementKey: async () => {},
+			lookupAgreementKey: async () => null
 		},
 		lookups
 	};

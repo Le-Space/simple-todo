@@ -45,9 +45,9 @@ describe('the key ring', () => {
 		expect(ring.has(taskScope('todo-1'), 0)).toBe(true);
 		expect(ring.has(taskScope('todo-2'), 0)).toBe(false);
 		await expect(ring.keyFor({ scope: 'list', epoch: 0, entryKey: 'todo-1' })).resolves.toBeNull();
-		await expect(ring.keyFor({ scope: 'task', epoch: 0, entryKey: 'todo-1' })).resolves.toBeInstanceOf(
-			CryptoKey
-		);
+		await expect(
+			ring.keyFor({ scope: 'task', epoch: 0, entryKey: 'todo-1' })
+		).resolves.toBeInstanceOf(CryptoKey);
 	});
 
 	it('takes the same key twice, and refuses a second one for the same epoch', () => {

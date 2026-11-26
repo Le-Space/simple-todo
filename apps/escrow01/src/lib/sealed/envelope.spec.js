@@ -55,7 +55,12 @@ describe('a sealed envelope', () => {
 
 	it('takes a fresh nonce every time', async () => {
 		const ring = await ringWith([LIST_SCOPE, 0]);
-		const options = { key: await listKey(ring), scope: /** @type {const} */ ('list'), epoch: 0, entryKey: 'todo-1' };
+		const options = {
+			key: await listKey(ring),
+			scope: /** @type {const} */ ('list'),
+			epoch: 0,
+			entryKey: 'todo-1'
+		};
 		const nonces = new Set();
 		for (let i = 0; i < 20; i += 1) nonces.add((await sealValue(todo, options)).nonce);
 		expect(nonces.size).toBe(20);
@@ -71,9 +76,9 @@ describe('a sealed envelope', () => {
 			entryKey: 'todo-1'
 		});
 
-		await expect(openValue(envelope, { keyFor: other.keyFor, entryKey: 'todo-1' })).resolves.toEqual(
-			{ state: 'sealed', reason: 'unreadable' }
-		);
+		await expect(
+			openValue(envelope, { keyFor: other.keyFor, entryKey: 'todo-1' })
+		).resolves.toEqual({ state: 'sealed', reason: 'unreadable' });
 	});
 
 	it('stays sealed for a reader without the epoch, as after a revocation', async () => {
@@ -87,9 +92,9 @@ describe('a sealed envelope', () => {
 		const removed = createKeyRing();
 		removed.add(LIST_SCOPE, 0, /** @type {Uint8Array} */ (ring.raw(LIST_SCOPE, 0)));
 
-		await expect(openValue(envelope, { keyFor: removed.keyFor, entryKey: 'todo-1' })).resolves.toEqual(
-			{ state: 'sealed', reason: 'no-key' }
-		);
+		await expect(
+			openValue(envelope, { keyFor: removed.keyFor, entryKey: 'todo-1' })
+		).resolves.toEqual({ state: 'sealed', reason: 'no-key' });
 		// An old epoch still opens for him: what he had, he keeps.
 		const old = await sealValue(todo, {
 			key: await listKey(ring, 0),
@@ -132,7 +137,10 @@ describe('a sealed envelope', () => {
 		).resolves.toEqual({ state: 'sealed', reason: 'unreadable' });
 		// Relabelled scope, with the very key that sealed it: the associated data refuses it.
 		await expect(
-			openValue({ ...envelope, scope: 'task' }, { keyFor: () => listKey(ring, 0), entryKey: 'todo-1' })
+			openValue(
+				{ ...envelope, scope: 'task' },
+				{ keyFor: () => listKey(ring, 0), entryKey: 'todo-1' }
+			)
 		).resolves.toEqual({ state: 'sealed', reason: 'unreadable' });
 	});
 
@@ -206,15 +214,15 @@ describe('a sealed envelope', () => {
 	it('refuses to seal what it could not open again', async () => {
 		const ring = await ringWith([LIST_SCOPE, 0]);
 		const key = await listKey(ring);
-		await expect(sealValue(undefined, { key, scope: 'list', epoch: 0, entryKey: 'k' })).rejects.toThrow(
-			TypeError
-		);
+		await expect(
+			sealValue(undefined, { key, scope: 'list', epoch: 0, entryKey: 'k' })
+		).rejects.toThrow(TypeError);
 		await expect(
 			sealValue(todo, { key, scope: /** @type {any} */ ('all'), epoch: 0, entryKey: 'k' })
 		).rejects.toThrow(TypeError);
-		await expect(sealValue(todo, { key, scope: 'list', epoch: 1.5, entryKey: 'k' })).rejects.toThrow(
-			TypeError
-		);
+		await expect(
+			sealValue(todo, { key, scope: 'list', epoch: 1.5, entryKey: 'k' })
+		).rejects.toThrow(TypeError);
 		await expect(sealValue(todo, { key, scope: 'list', epoch: 0, entryKey: '' })).rejects.toThrow(
 			TypeError
 		);

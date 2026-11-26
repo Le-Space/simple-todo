@@ -16,7 +16,9 @@ import { READ_KEY_SEAL_INFO } from '../chain/read-key-seal.js';
 
 const prf = (/** @type {number} */ fill) => new Uint8Array(32).fill(fill);
 const hex = (/** @type {string} */ text) =>
-	Uint8Array.from(/** @type {RegExpMatchArray} */ (text.match(/../g)), (byte) => parseInt(byte, 16));
+	Uint8Array.from(/** @type {RegExpMatchArray} */ (text.match(/../g)), (byte) =>
+		parseInt(byte, 16)
+	);
 
 // RFC 7748, section 6.1.
 const RFC_ALICE_PRIVATE = hex('77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a');
@@ -34,7 +36,13 @@ describe('the personal X25519 key', () => {
 		expect(alice.publicKey).toEqual(RFC_ALICE_PUBLIC);
 		expect(bob.publicKey).toEqual(RFC_BOB_PUBLIC);
 
-		const bobPublic = await crypto.subtle.importKey('raw', RFC_BOB_PUBLIC, { name: 'X25519' }, true, []);
+		const bobPublic = await crypto.subtle.importKey(
+			'raw',
+			RFC_BOB_PUBLIC,
+			{ name: 'X25519' },
+			true,
+			[]
+		);
 		const shared = await crypto.subtle.deriveBits(
 			{ name: 'X25519', public: bobPublic },
 			alice.privateKey,
@@ -60,7 +68,10 @@ describe('the personal X25519 key', () => {
 	it('is another passkey’s for another PRF output, and unrelated to the read key’s seal', async () => {
 		const mine = await agreementKeyFromPrf(prf(7));
 		const theirs = await agreementKeyFromPrf(prf(8));
-		const fromSealInfo = await agreementKeyFromSeed(await deriveSubkey(prf(7), READ_KEY_SEAL_INFO), 'prf');
+		const fromSealInfo = await agreementKeyFromSeed(
+			await deriveSubkey(prf(7), READ_KEY_SEAL_INFO),
+			'prf'
+		);
 
 		expect(mine.publicKey).not.toEqual(theirs.publicKey);
 		expect(mine.publicKey).not.toEqual(fromSealInfo.publicKey);
@@ -148,7 +159,13 @@ describe('a wrapped key', () => {
 		await expect(wrapKey(newEpochKey(), bob.publicKey, { slot: '' })).rejects.toThrow(TypeError);
 
 		const copy = await wrapKey(newEpochKey(), bob.publicKey, { slot });
-		for (const broken of [null, 'copy', { ...copy, v: 2 }, { ...copy, nonce: 'AAAA' }, { ...copy, ct: '' }]) {
+		for (const broken of [
+			null,
+			'copy',
+			{ ...copy, v: 2 },
+			{ ...copy, nonce: 'AAAA' },
+			{ ...copy, ct: '' }
+		]) {
 			expect(isWrappedKey(broken)).toBe(false);
 			await expect(unwrapKey(broken, bob, { slot })).rejects.toThrow(TypeError);
 		}

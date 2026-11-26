@@ -9,7 +9,11 @@ import {
 	sealForList
 } from './sealed-list.js';
 
-const todo = (/** @type {string} */ text) => ({ text, completed: false, createdAt: '2026-11-26T09:00:00.000Z' });
+const todo = (/** @type {string} */ text) => ({
+	text,
+	completed: false,
+	createdAt: '2026-11-26T09:00:00.000Z'
+});
 
 function ringAt(/** @type {number[]} */ ...epochs) {
 	const ring = createKeyRing();
@@ -34,7 +38,11 @@ describe('reading a sealed list', () => {
 		const owner = ringAt(0, 1);
 		const removedAfterEpoch0 = createKeyRing();
 		removedAfterEpoch0.add(LIST_SCOPE, 0, /** @type {Uint8Array} */ (owner.raw(LIST_SCOPE, 0)));
-		const writeAt = async (/** @type {number} */ epoch, /** @type {string} */ key, /** @type {any} */ value) => {
+		const writeAt = async (
+			/** @type {number} */ epoch,
+			/** @type {string} */ key,
+			/** @type {any} */ value
+		) => {
 			const ring = createKeyRing();
 			ring.add(LIST_SCOPE, epoch, /** @type {Uint8Array} */ (owner.raw(LIST_SCOPE, epoch)));
 			return { key, hash: `hash-${key}`, value: await sealForList(ring, key, value) };
@@ -44,19 +52,38 @@ describe('reading a sealed list', () => {
 			await writeAt(0, META_NAME_KEY, 'Groceries'),
 			await writeAt(0, 'todo-old', todo('Old one')),
 			await writeAt(1, 'todo-new', todo('New one')),
-			{ key: 'delegation-action/1', hash: 'hash-action', value: { action: 'set-completed', setCompleted: true } },
-			{ key: 'todo-broken', hash: 'hash-broken', value: { sealed: 1, scope: 'list', epoch: 0, nonce: 'AAAA', ct: 'AAAA' } }
+			{
+				key: 'delegation-action/1',
+				hash: 'hash-action',
+				value: { action: 'set-completed', setCompleted: true }
+			},
+			{
+				key: 'todo-broken',
+				hash: 'hash-broken',
+				value: { sealed: 1, scope: 'list', epoch: 0, nonce: 'AAAA', ct: 'AAAA' }
+			}
 		];
 
 		const forOwner = await openRecords(records, owner);
 		expect(forOwner.name).toBe('Groceries');
 		expect(forOwner.hidden).toBe(1);
-		expect(forOwner.records.map((record) => record.key)).toEqual(['todo-old', 'todo-new', 'delegation-action/1']);
-		expect(forOwner.records[1]).toEqual({ key: 'todo-new', hash: 'hash-todo-new', value: todo('New one') });
+		expect(forOwner.records.map((record) => record.key)).toEqual([
+			'todo-old',
+			'todo-new',
+			'delegation-action/1'
+		]);
+		expect(forOwner.records[1]).toEqual({
+			key: 'todo-new',
+			hash: 'hash-todo-new',
+			value: todo('New one')
+		});
 
 		const forRemoved = await openRecords(records, removedAfterEpoch0);
 		expect(forRemoved.name).toBe('Groceries');
-		expect(forRemoved.records.map((record) => record.key)).toEqual(['todo-old', 'delegation-action/1']);
+		expect(forRemoved.records.map((record) => record.key)).toEqual([
+			'todo-old',
+			'delegation-action/1'
+		]);
 		expect(forRemoved.hidden).toBe(2);
 
 		const forStranger = await openRecords(records, createKeyRing());
@@ -87,7 +114,10 @@ describe('reading a sealed list', () => {
 
 	it('takes the name only from a sealed string', async () => {
 		const ring = ringAt(0);
-		const asObject = { key: META_NAME_KEY, value: await sealForList(ring, META_NAME_KEY, { name: 'x' }) };
+		const asObject = {
+			key: META_NAME_KEY,
+			value: await sealForList(ring, META_NAME_KEY, { name: 'x' })
+		};
 		const inClear = { key: META_NAME_KEY, value: 'Planted name' };
 
 		await expect(openRecords([asObject], ring)).resolves.toMatchObject({ name: null, records: [] });

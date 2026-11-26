@@ -156,6 +156,7 @@ async function withStore(mode, run) {
 		return await new Promise((resolve, reject) => {
 			const transaction = db.transaction(STORE, mode);
 			const request = run(transaction.objectStore(STORE));
+			/** @type {any} */
 			let result;
 			request.onsuccess = () => (result = request.result ?? null);
 			transaction.oncomplete = () => resolve(result);

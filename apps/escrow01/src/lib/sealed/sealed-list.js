@@ -45,7 +45,12 @@ export class NoListKeyError extends Error {
 export async function sealForList(ring, entryKey, value) {
 	const current = ring.current(LIST_SCOPE);
 	if (!current) throw new NoListKeyError();
-	return sealValue(value, { key: await current.key, scope: 'list', epoch: current.epoch, entryKey });
+	return sealValue(value, {
+		key: await current.key,
+		scope: 'list',
+		epoch: current.epoch,
+		entryKey
+	});
 }
 
 /**
@@ -97,7 +102,11 @@ export async function openRecords(records, ring) {
 			continue;
 		}
 		if (isMetaKey(record.key)) {
-			if (record.key === META_NAME_KEY && read.state === 'open' && typeof read.record.value === 'string') {
+			if (
+				record.key === META_NAME_KEY &&
+				read.state === 'open' &&
+				typeof read.record.value === 'string'
+			) {
 				name = read.record.value;
 			}
 			continue;
