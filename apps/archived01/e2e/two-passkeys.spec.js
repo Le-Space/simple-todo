@@ -1,5 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { acceptNotice, consentModal, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import {
+	chooseIdentity,
+	consentModal,
+	openAdvanced,
+	waitForConsent
+} from '@simple-todo/e2e-kit/consent.mjs';
 import { addVirtualAuthenticator } from '@simple-todo/e2e-kit/webauthn.mjs';
 
 // Chapter (archived01): two passkeys of this site on one authenticator.
@@ -154,9 +159,7 @@ test.describe('Two passkeys of this site on one authenticator', () => {
 			).toBe(true);
 
 			// Answered by Alice, the same start goes through, and the list is hers.
-			// The failed start leaves the notice unconfirmed, as any failed start does.
 			await page.evaluate(() => sessionStorage.removeItem('steer-prf-to'));
-			await acceptNotice(page);
 			await proceed(page);
 			await expect(page.getByText(secret, { exact: true })).toBeVisible({ timeout: readyTimeout });
 			expect((await logOf(page)).every((e) => e.sealed)).toBe(true);
@@ -180,7 +183,9 @@ async function aliceThenBob(page, secret) {
 	await page.addInitScript(recordRequests);
 	await page.goto('/');
 	await fillConsent(page);
-	await page.getByTestId('identity-mode-create').check();
+	// The way in is a link under the button; the passkey's name is a setting.
+	await chooseIdentity(page, 'create');
+	await openAdvanced(page);
 	await page.getByTestId('passkey-label').fill('Alice');
 	await expect(page.getByTestId('seal-list')).toBeChecked();
 	await proceed(page);
@@ -231,17 +236,20 @@ async function aliceThenBob(page, secret) {
 async function startAgain(page) {
 	await fillConsent(page);
 	await consentModal(page).getByTestId('p2p-mode-off').check();
-	await expect(page.getByTestId('identity-mode-existing')).toBeChecked();
+	await expect(page.getByTestId('consent-proceed')).toHaveText(
+		'Sign in with your passkey and start'
+	);
 	await expect(page.getByTestId('seal-list')).toBeChecked();
 }
 
 /** @param {import('@playwright/test').Page} page */
 async function fillConsent(page) {
 	await waitForConsent(page);
+	// The settings are the dialog's second screen; there is no tick to set.
+	await openAdvanced(page);
 	await consentModal(page).getByTestId('shared-list-mnemonic-input').fill(mnemonic);
 	const keep = consentModal(page).getByTestId('storage-mode-indexeddb');
 	if (!(await keep.isChecked())) await keep.check();
-	await acceptNotice(page);
 }
 
 /** @param {import('@playwright/test').Page} page */

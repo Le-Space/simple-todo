@@ -29,11 +29,11 @@
 			"identityAnonymous": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Beim Neuladen ist sie weg, und nichts verbindet einen Besuch mit dem nächsten.",
 			"identityAnonymousKept": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Er behält sie, bis Sie die Website-Daten löschen; nichts verbindet sie mit Ihnen.",
 			"storageKept": "Dieser Browser behält die Liste, Ihre Sprache, das Theme und die Archiv-Einstellung; mit einem Passkey auch dessen Kennung. Löschen Sie die Website-Daten, ist das weg – außer dem, was im Archiv liegt.",
-			"storageMemory": "Nur im Arbeitsspeicher: Beim Neuladen beginnt die Liste in diesem Browser leer. Sprache, Theme und diese Entscheidung bleiben.",
+			"storageMemory": "Nur im Arbeitsspeicher: Beim Neuladen beginnt die Liste in diesem Browser leer, und dieser Dialog fragt erneut. Sprache und Theme bleiben.",
 			"archiveOn": "Das Archiv ist an: Jede Änderung geht kurz darauf versiegelt an den gewählten Speicher. Der Speicher sieht die Kontoadresse, den Kanal, Größen und Zeitpunkte, nicht den Inhalt; das Guthaben einer Adresse ist öffentlich einsehbar.",
 			"archiveOnOwner": "Das Archiv ist an: Jede Änderung geht kurz darauf versiegelt an den gewählten Speicher. Der Speicher sieht die Kontoadresse, den Kanal, Größen und Zeitpunkte, nicht den Inhalt. Die Adresse des Besitzerkontos und seine Freigaben stehen öffentlich bei Aleph.",
 			"archiveOff": "Das Archiv ist aus: Außerhalb dieses Geräts wird nichts aufbewahrt, bis Sie es im Bereich „Archiv“ einschalten.",
-			"noTracking": "Keine Tracking-Cookies, keine Analyse. „Nicht mehr anzeigen“ merkt sich nur diese Entscheidung auf diesem Gerät."
+			"noTracking": "Keine Tracking-Cookies, keine Analyse. In diesem Browser behalten, bleibt auch Ihre Entscheidung zu starten; nur im Arbeitsspeicher fragt dieser Dialog erneut."
 		},
 		"errorNoPasskey": "In diesem Browser ist kein Passkey hinterlegt, und Ihr Authenticator hat keinen herausgegeben. Legen Sie einen neuen an oder fahren Sie ohne fort.",
 		"errorOtherPasskey": "Geantwortet hat ein anderer Passkey dieser Seite, nicht der, mit dem dieser Browser gestartet ist. Mit ihm wurde nichts versiegelt und nichts archiviert. Starten Sie erneut, und antworten Sie mit dem Passkey, mit dem Sie hier gestartet sind.",
@@ -107,7 +107,20 @@
 		"p2pOnLabel": "An",
 		"p2pOnHint": "Dieser Browser verbindet sich mit einem Relay und anderen Geräten, und die Liste repliziert zwischen ihnen.",
 		"p2pOffLabel": "Aus",
-		"p2pOffHint": "Kein Relay, keine anderen Geräte: Die Liste repliziert nicht. Das Archiv spricht weiter mit seinem Speicher (Upload, STORE, Guthaben); sonst verlässt nichts den Browser. So sieht man, was eine Wiederherstellung allein zurückbringt."
+		"p2pOffHint": "Kein Relay, keine anderen Geräte: Die Liste repliziert nicht. Das Archiv spricht weiter mit seinem Speicher (Upload, STORE, Guthaben); sonst verlässt nichts den Browser. So sieht man, was eine Wiederherstellung allein zurückbringt.",
+		"title": "Eine versiegelte Liste und ein Archiv außerhalb dieses Browsers",
+		"promise": "Versiegeln Sie Ihre Liste mit einem Schlüssel aus Ihrem Passkey, und schalten Sie ein Archiv ein, das jede Änderung außerhalb dieses Browsers aufbewahrt, ebenfalls versiegelt.",
+		"summary": {
+			"sealed": "Versiegelt mit einem Schlüssel aus Ihrem Passkey: Wer die Liste bekommt, kann sie nicht lesen, auch der Relay nicht.",
+			"notSealed": "Nicht versiegelt: Wer die drei Wörter hat, liest neue Einträge, auch der Relay.",
+			"noPasskey": "Ohne Passkey wird nichts versiegelt: Wer die drei Wörter hat, liest die Liste, auch der Relay.",
+			"archiveOn": "Das Archiv ist an: Jede Änderung geht kurz danach versiegelt an den gewählten Speicher.",
+			"archiveOff": "Das Archiv ist aus: Außerhalb dieses Geräts wird nichts aufbewahrt, bis Sie es einschalten.",
+			"kept": "In diesem Browser behalten, übersteht die Liste ein Neuladen; wer die Website-Daten löscht, verliert sie – bis auf das, was das Archiv hält.",
+			"memory": "Nur im Arbeitsspeicher: Beim Neuladen beginnt die Liste von vorn, und dieser Dialog fragt erneut."
+		},
+		"identityLabelDefault": "Archive-Todo",
+		"identityLabelTitle": "Name des neuen Passkeys"
 	},
 	"archive": {
 		"title": "Archiv",
@@ -238,21 +251,6 @@
 		"elsewhere": "Das Konto hält {count} weitere Inkremente außerhalb der Kette dieser Liste: andere Listen oder ältere aus der Zeit, bevor Ketten unterschieden wurden. Eine Wiederherstellung liest sie, wenn diese Kette leer ist.",
 		"restoredChain": "Kette: {duplicates} Sequenznummern doppelt (zwei Geräte zählen für sich, harmlos), {gaps} fehlend (Inkremente, die der Speicher nicht hat).",
 		"restoredFromAccount": "Die Kette dieser Liste war leer, deshalb wurde das ganze Archiv des Kontos gelesen; Todos anderer Listen wurden kopiert, nicht zusammengeführt."
-	},
-	"passkeySteps": {
-		"count": "Passkey-Abfrage {n} von {of}",
-		"prf": {
-			"title": "Jetzt die Schlüssel aus dem Passkey",
-			"why": "Ihr Passkey gibt der App ein Geheimnis. Daraus entstehen das Archivkonto und der Schlüssel, der die Inkremente versiegelt, und bei einem neuen Passkey auch der Schlüssel, mit dem Ihre Einträge signiert werden. Gespeichert wird davon nichts."
-		},
-		"proof": {
-			"title": "Zuletzt: Ihre Unterschrift",
-			"why": "Ihr Passkey unterschreibt einmal, dass die Einträge dieser Identität von Ihnen stammen. Der Browser bewahrt diese Unterschrift auf; beim nächsten Start fragt er nicht noch einmal."
-		},
-		"notALoop": "Jede Abfrage hat ihren eigenen Zweck, es ist keine Wiederholung. Mit einem Sicherheitsschlüssel: berühren und, falls gefragt, die PIN eingeben.",
-		"continue": "Weiter",
-		"cancel": "Abbrechen",
-		"restoreTouch": "Passkey-Abfrage 2 von {of}: eine zweite Unterschrift, aus der sich Ihre Identität errechnen lässt. Keine Wiederholung."
 	},
 	"sealList": {
 		"title": "Verschlüsselung",

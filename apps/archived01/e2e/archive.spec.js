@@ -1,5 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { acceptNotice, consentModal, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import {
+	chooseIdentity,
+	consentModal,
+	openAdvanced,
+	waitForConsent
+} from '@simple-todo/e2e-kit/consent.mjs';
 import { addVirtualAuthenticator } from '@simple-todo/e2e-kit/webauthn.mjs';
 
 // Chapter (archived01): the list's changes go out as sealed increments, and
@@ -141,7 +146,9 @@ test.describe('Archive increments', () => {
 async function openReadyAppWithNewPasskey(page, { label }) {
 	await page.goto(testUrl);
 	await fillConsentModal(page);
-	await page.getByTestId('identity-mode-create').check();
+	// The way in is a link under the button; the passkey's name is a setting.
+	await chooseIdentity(page, 'create');
+	await openAdvanced(page);
 	await page.getByTestId('passkey-label').fill(label);
 	await page.getByTestId('consent-proceed').click();
 	await page.waitForFunction(
@@ -157,7 +164,9 @@ async function openReadyAppWithNewPasskey(page, { label }) {
 async function proceedWithExistingPasskey(page, { p2p } = {}) {
 	await fillConsentModal(page);
 	if (p2p === false) await consentModal(page).getByTestId('p2p-mode-off').check();
-	await expect(page.getByTestId('identity-mode-existing')).toBeChecked();
+	await expect(page.getByTestId('consent-proceed')).toHaveText(
+		'Sign in with your passkey and start'
+	);
 	await page.getByTestId('consent-proceed').click();
 	await page.waitForFunction(
 		() => document.querySelector('[data-testid="consent-modal"]')?.isOpen !== true
@@ -168,12 +177,13 @@ async function proceedWithExistingPasskey(page, { p2p } = {}) {
 /** @param {import('@playwright/test').Page} page */
 async function fillConsentModal(page) {
 	await waitForConsent(page);
+	// The settings are the dialog's second screen; there is no tick to set.
+	await openAdvanced(page);
 	await consentModal(page).getByTestId('shared-list-mnemonic-input').fill(sharedMnemonic);
 	// Keep things: the credential, the archive's settings and its numbering
 	// have to survive the reload below, which is the case the chapter is about.
 	const keep = consentModal(page).getByTestId('storage-mode-indexeddb');
 	if ((await keep.count()) > 0 && !(await keep.isChecked())) await keep.check();
-	await acceptNotice(page);
 	return consentModal(page);
 }
 

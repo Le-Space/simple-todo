@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { acceptNotice, consentModal, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import {
+	chooseIdentity,
+	consentModal,
+	openAdvanced,
+	privacyClauses,
+	waitForConsent
+} from '@simple-todo/e2e-kit/consent.mjs';
 import { addVirtualAuthenticator } from '@simple-todo/e2e-kit/webauthn.mjs';
 
 // Chapter (archived01): the list sealed with a key from the passkey.
@@ -40,14 +46,16 @@ test.describe('A sealed list', () => {
 			const cdp = await addVirtualAuthenticator(page);
 			await page.goto('/');
 			await fillConsent(page);
-			await page.getByTestId('identity-mode-create').check();
+			// The way in is a link under the button; the passkey's name is a setting.
+			await chooseIdentity(page, 'create');
+			await openAdvanced(page);
 			await page.getByTestId('passkey-label').fill('Alice');
 			// On by default once a passkey is chosen, and the statement says so.
 			await expect(page.getByTestId('seal-list')).toBeChecked();
 			await expect(
-				consentModal(page)
-					.locator('.privacy ul li')
-					.filter({ hasText: 'The entries are sealed with a key from your passkey' })
+				privacyClauses(page).filter({
+					hasText: 'The entries are sealed with a key from your passkey'
+				})
 			).toHaveCount(1);
 			await proceed(page);
 			await addTodo(page, secret);
@@ -73,7 +81,9 @@ test.describe('A sealed list', () => {
 			await page.reload();
 			await fillConsent(page);
 			await consentModal(page).getByTestId('p2p-mode-off').check();
-			await expect(page.getByTestId('identity-mode-existing')).toBeChecked();
+			await expect(page.getByTestId('consent-proceed')).toHaveText(
+				'Sign in with your passkey and start'
+			);
 			await expect(page.getByTestId('seal-list')).toBeChecked();
 			await proceed(page);
 			await expect(page.getByText(secret, { exact: true })).toHaveCount(0);
@@ -92,9 +102,7 @@ test.describe('A sealed list', () => {
 			await consentModal(page).getByTestId('p2p-mode-off').check();
 			await page.getByTestId('seal-list').uncheck();
 			await expect(
-				consentModal(page)
-					.locator('.privacy ul li')
-					.filter({ hasText: 'New entries are not encrypted' })
+				privacyClauses(page).filter({ hasText: 'New entries are not encrypted' })
 			).toHaveCount(1);
 			await proceed(page);
 			await expect(page.getByText(secret, { exact: true })).toBeVisible({ timeout: readyTimeout });
@@ -111,10 +119,11 @@ test.describe('A sealed list', () => {
 /** @param {import('@playwright/test').Page} page */
 async function fillConsent(page) {
 	await waitForConsent(page);
+	// The settings are the dialog's second screen; there is no tick to set.
+	await openAdvanced(page);
 	await consentModal(page).getByTestId('shared-list-mnemonic-input').fill(mnemonic);
 	const keep = consentModal(page).getByTestId('storage-mode-indexeddb');
 	if (!(await keep.isChecked())) await keep.check();
-	await acceptNotice(page);
 }
 
 /** @param {import('@playwright/test').Page} page */

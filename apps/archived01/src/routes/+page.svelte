@@ -4,7 +4,7 @@
 	import { get } from 'svelte/store';
 	import { createListLink } from '@simple-todo/todo/list-link.js';
 	import { t } from '@simple-todo/ui/i18n.js';
-	import { _, json } from '$lib/i18n/index.js';
+	import { _, json, locale } from '$lib/i18n/index.js';
 	import { peerIdStore, initializationStore, ownDidStore } from '$lib/p2p-stores.js';
 	import PasskeyOnboarding from '$lib/PasskeyOnboarding.svelte';
 	import DidBadge from '@simple-todo/ui/DidBadge.svelte';
@@ -15,8 +15,15 @@
 	} from '$lib/passkey-identity.js';
 	import ArchivePanel from '$lib/ArchivePanel.svelte';
 	import { readArchiveSettings, rememberPrfOutput, unlockArchive } from '$lib/archive/archive.js';
-	import PasskeyStepDialog from '$lib/PasskeyStepDialog.svelte';
-	import { passkeyStepsFor, announce, PasskeyStepCancelled } from '$lib/passkey-steps.js';
+	// Between two passkey prompts, what the next one is for: the provider's own
+	// step module and element (./elements, 0.13.0), which announce every prompt
+	// it makes. This chapter carried its own dialog until then (belege#430),
+	// announcing the provider's prompts from what it knew would come.
+	import {
+		connectPasskeyStepDialog,
+		withPasskeySteps,
+		PasskeyStepCancelled
+	} from '@le-space/orbitdb-identity-provider-webauthn-did/elements';
 	import {
 		todosStore,
 		todoDBAddressStore,
@@ -27,7 +34,8 @@
 	} from '$lib/db-actions.js';
 	import { formatVersions } from '@simple-todo/todo/build-info.js';
 	import ConsentModal from '@simple-todo/ui/ConsentModal.svelte';
-	import { clauses as consentClauses } from '$lib/consent-clauses.js';
+	import StartChoices from '@simple-todo/ui/StartChoices.svelte';
+	import { clauses as consentClauses, summary as consentSummary } from '$lib/consent-clauses.js';
 	import SocialIcons from '@simple-todo/ui/SocialIcons.svelte';
 	import ThemeToggle from '@simple-todo/ui/ThemeToggle.svelte';
 	import LanguageSwitcher from '@simple-todo/ui/LanguageSwitcher.svelte';
@@ -79,7 +87,55 @@
 	let identityMode = 'anonymous';
 	/** The passkey behind the running identity; null for the anonymous one. */
 	let activeCredential = /** @type {any} */ (null);
-	let passkeyLabel = '';
+	// Filled in, so "Create a passkey and start" needs no typing: it names the
+	// passkey in the browser's picker and nothing else. Changed under "Settings".
+	let passkeyLabel = get(_)('consent.identityLabelDefault');
+
+	// The short form of the start dialog: the button names what its press does.
+	$: proceedText = $_(`ui.consent.startAs.${identityMode}`);
+
+	/** @type {any} The <passkey-step-dialog> on this page. */
+	let passkeyStepDialog;
+
+	onMount(() => {
+		// E2E builds: the virtual authenticator needs no word in between, and
+		// every spec that creates a passkey would have to click through it. The
+		// spec for the dialog asks for it (e2e/passkey-steps.spec.js).
+		if (
+			import.meta.env.VITE_E2E === 'true' &&
+			!(/** @type {any} */ (globalThis).__simpleTodoPasskeySteps)
+		) {
+			return;
+		}
+		return connectPasskeyStepDialog(passkeyStepDialog);
+	});
+
+	/**
+	 * How many passkey prompts a start takes, counted in
+	 * e2e/passkey-steps.spec.js. Every prompt after the first gets a word on
+	 * what it is for, so the number matters from two up.
+	 *
+	 * - A new passkey: three. The passkey, its PRF output (read here, for the
+	 *   signing key, the archive and the seal), the identity signature.
+	 * - One found on the authenticator: three -- two to restore it, then the
+	 *   signature -- and one more for the PRF output when the archive is on or
+	 *   the list is sealed.
+	 * - A passkey this browser keeps: usually none, or one that comes from
+	 *   the click -- the signing key and the identity's proof are kept. A start
+	 *   stopped between two prompts may have left them unmade, though, so the
+	 *   count stays open (0): a prompt that does come says "Passkey prompt 2"
+	 *   without an "of".
+	 *
+	 * @param {'create' | 'existing' | 'anonymous'} mode
+	 * @param {boolean} wantsPrf the archive is on or the list is sealed
+	 * @returns {number | null} null without a passkey, 0 for a count left open
+	 */
+	function passkeyPromptsFor(mode, wantsPrf) {
+		if (mode === 'create') return 3;
+		if (mode !== 'existing') return null;
+		if (hasStoredPasskeyCredential()) return 0;
+		return 3 + (wantsPrf ? 1 : 0);
+	}
 
 	/** @type {string | null} */
 	let toastMessage = null;
@@ -125,7 +181,6 @@
 
 	// Modal state
 	let showModal = true;
-	let rememberDecision = false;
 
 	/**
 	 * A choice the person made that cannot be carried out — no passkey behind
@@ -187,109 +242,125 @@
 		selectedMnemonic = canonicalMnemonic;
 		try {
 			remember(SPANISH_MNEMONIC_STORAGE_KEY, canonicalMnemonic);
-			if (rememberDecision) {
-				remember(CONSENT_KEY, 'true');
-			}
 		} catch {
 			// ignore storage errors
 		}
+		// The PRF output is read here when the archive is on, or when a new
+		// passkey is made — the provider would ask for it then anyway, and reading
+		// it here lets the archive unlock from the start. Sealing the list needs
+		// the same PRF output as the archive.
+		const archiveOn = readArchiveSettings().enabled;
+		const sealOn = getSealListEnabled();
+		const wantsPrf = archiveOn || sealOn;
+		const startedAs = identityMode;
+		const prompts = passkeyPromptsFor(identityMode, wantsPrf);
 		try {
-			// Resolve the identity choice first — WebAuthn calls must run inside
-			// the user gesture of the proceed click.
-			let passkeyCredential = null;
-			// What the start will ask the passkey after this click, and what each
-			// touch is for (passkey-steps.js). The PRF output is read here when the
-			// archive is on, or when a new passkey is made — the provider would ask
-			// for it then anyway, and reading it here lets the archive unlock from
-			// the start.
-			const archiveOn = readArchiveSettings().enabled;
-			// Sealing the list needs the same PRF output as the archive.
-			const sealOn = getSealListEnabled();
-			const wantsPrf = archiveOn || sealOn;
-			/** @type {ReturnType<typeof passkeyStepsFor>} */
-			let steps = {};
-			if (identityMode === 'create') {
-				if (!passkeyLabel.trim()) {
-					throw new IdentityChoiceError($_('consent.errorNeedsLabel'));
-				}
-				steps = passkeyStepsFor({ mode: 'create', prf: true });
-				// The same label goes into both WebAuthn fields on purpose: they are
-				// the account name and the display name of one credential, and the
-				// picker shows them together. Neither identifies the passkey.
-				passkeyCredential = await createPasskeyCredential({
-					userId: passkeyLabel.trim(),
-					displayName: passkeyLabel.trim()
-				});
-			} else if (identityMode === 'existing') {
-				const stored = hasStoredPasskeyCredential();
-				steps = passkeyStepsFor({ mode: stored ? 'stored' : 'restore', prf: wantsPrf });
-				// The authenticator's two touches come right after each other; the
-				// second is named as it comes, not gated — a browser with no passkey
-				// has to reach its "nothing here" without a dialog in the way.
-				const of = 3 + (wantsPrf ? 1 : 0);
-				passkeyCredential = await recoverPasskeyCredential({
-					onTouch: ({ touch }) => {
-						if (touch === 2)
-							showToast($_('passkeySteps.restoreTouch', { values: { of } }), 'default', 6000);
-					}
-				});
-				if (!passkeyCredential) {
-					throw new IdentityChoiceError($_('consent.errorNoPasskey'));
-				}
-			}
+			// Numbered when there is a passkey: its later prompts each get a word
+			// on what they are for, and start from the click that answers it.
+			const begin = () => beginWith(canonicalMnemonic, { sealOn, wantsPrf });
+			await (prompts === null ? begin() : withPasskeySteps(prompts || null, begin));
+			// The press was the consent. Kept with everything else: "in memory
+			// only" writes nothing (honourStorageChoice), so there the dialog
+			// asks again after a reload, and kept, it does not.
 			try {
-				remember(IDENTITY_MODE_KEY, passkeyCredential ? 'passkey' : 'anon');
+				remember(CONSENT_KEY, 'true');
 			} catch {
 				// ignore storage errors
 			}
-
-			let prfOutput = null;
-			if (passkeyCredential && (identityMode === 'create' || wantsPrf)) {
-				await announce(steps, 'prf');
-				const { readPrfOutput, WebAuthnAuthenticationError } = await import(
-					'@le-space/orbitdb-identity-provider-webauthn-did'
-				);
-				prfOutput = await readPrfOutput(passkeyCredential).catch((e) => {
-					// Another passkey of this site answered. Its PRF output would
-					// seal the list and pay the archive under keys that are not
-					// this passkey's, and going on without one would write in the
-					// clear what was chosen sealed. So the start stops.
-					if (e instanceof WebAuthnAuthenticationError) {
-						throw new IdentityChoiceError($_('consent.errorOtherPasskey'));
-					}
-					return null;
-				});
-				rememberPrfOutput(prfOutput);
-				// Chosen, and not possible: say so, rather than seal nothing quietly.
-				if (sealOn && !prfOutput) showToast($_('sealList.noPrf'), 'warning', 8000);
-			}
-			activeCredential = passkeyCredential;
-			await announce(steps, 'proof');
-
-			if ($initializationStore.isInitialized) {
-				await restartP2PLazy({ todoDbName: canonicalMnemonic });
-			} else {
-				await startP2P({ todoDbName: canonicalMnemonic, passkeyCredential, prfOutput });
-			}
-			activeMnemonic = canonicalMnemonic;
-			void listLink.openLinked();
-			warnIfIdentityCannotTravel(passkeyCredential);
-			if (prfOutput) {
-				unlockArchive({ credential: passkeyCredential, prfOutput }).catch((e) =>
-					console.warn('archive: could not unlock', e)
-				);
-			}
 		} catch (err) {
 			showModal = true;
-			if (err instanceof PasskeyStepCancelled) return;
 			const reason = err instanceof Error ? err.message : String(err);
 			error =
 				err instanceof IdentityChoiceError
 					? reason
 					: $_('consent.errorStart', { values: { reason } });
+			if (err instanceof PasskeyStepCancelled) {
+				// Stopped between two prompts. A passkey created before the stop
+				// exists now: going on with it, not making a second one.
+				error =
+					startedAs === 'create'
+						? $_('ui.consent.stepCancelledCreated')
+						: $_('ui.consent.stepCancelled');
+				if (startedAs === 'create') identityMode = 'existing';
+			}
 			console.error('P2P initialization failed:', err);
 		}
 	};
+
+	/**
+	 * The start itself: the identity, its PRF output, then the network.
+	 *
+	 * @param {string} canonicalMnemonic
+	 * @param {{ sealOn: boolean, wantsPrf: boolean }} wanted
+	 */
+	async function beginWith(canonicalMnemonic, { sealOn, wantsPrf }) {
+		// Resolve the identity choice first — WebAuthn calls must run inside
+		// the user gesture of the proceed click.
+		let passkeyCredential = null;
+		if (identityMode === 'create') {
+			if (!passkeyLabel.trim()) {
+				throw new IdentityChoiceError($_('consent.errorNeedsLabel'));
+			}
+			// The same label goes into both WebAuthn fields on purpose: they are
+			// the account name and the display name of one credential, and the
+			// picker shows them together. Neither identifies the passkey.
+			passkeyCredential = await createPasskeyCredential({
+				userId: passkeyLabel.trim(),
+				displayName: passkeyLabel.trim()
+			});
+		} else if (identityMode === 'existing') {
+			// The restore's second prompt is the provider's to announce, after the
+			// first answered: a browser with no passkey reaches its "nothing
+			// here" without a dialog in the way.
+			passkeyCredential = await recoverPasskeyCredential();
+			if (!passkeyCredential) {
+				throw new IdentityChoiceError($_('consent.errorNoPasskey'));
+			}
+		}
+		try {
+			remember(IDENTITY_MODE_KEY, passkeyCredential ? 'passkey' : 'anon');
+		} catch {
+			// ignore storage errors
+		}
+
+		let prfOutput = null;
+		if (passkeyCredential && (identityMode === 'create' || wantsPrf)) {
+			const { readPrfOutput, WebAuthnAuthenticationError } = await import(
+				'@le-space/orbitdb-identity-provider-webauthn-did'
+			);
+			prfOutput = await readPrfOutput(passkeyCredential).catch((e) => {
+				// "Cancel" in the step dialog stops the start; it is not a passkey
+				// without PRF.
+				if (e instanceof PasskeyStepCancelled) throw e;
+				// Another passkey of this site answered. Its PRF output would
+				// seal the list and pay the archive under keys that are not
+				// this passkey's, and going on without one would write in the
+				// clear what was chosen sealed. So the start stops.
+				if (e instanceof WebAuthnAuthenticationError) {
+					throw new IdentityChoiceError($_('consent.errorOtherPasskey'));
+				}
+				return null;
+			});
+			rememberPrfOutput(prfOutput);
+			// Chosen, and not possible: say so, rather than seal nothing quietly.
+			if (sealOn && !prfOutput) showToast($_('sealList.noPrf'), 'warning', 8000);
+		}
+		activeCredential = passkeyCredential;
+
+		if ($initializationStore.isInitialized) {
+			await restartP2PLazy({ todoDbName: canonicalMnemonic });
+		} else {
+			await startP2P({ todoDbName: canonicalMnemonic, passkeyCredential, prfOutput });
+		}
+		activeMnemonic = canonicalMnemonic;
+		void listLink.openLinked();
+		warnIfIdentityCannotTravel(passkeyCredential);
+		if (prfOutput) {
+			unlockArchive({ credential: passkeyCredential, prfOutput }).catch((e) =>
+				console.warn('archive: could not unlock', e)
+			);
+		}
+	}
 
 	// Loaded on demand, not at page load. `p2p.js` pulls libp2p, Helia, OrbitDB
 	// and gossipsub, and none of it is needed to render the consent dialog —
@@ -456,7 +527,9 @@
 </script>
 
 <ToastNotification message={toastMessage} type={toastType} duration={toastDuration} />
-<PasskeyStepDialog />
+
+<!-- Between two passkey prompts: which one comes, what for, and "Continue". -->
+<passkey-step-dialog bind:this={passkeyStepDialog} lang={$locale ?? 'en'}></passkey-step-dialog>
 
 <svelte:head>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -466,11 +539,16 @@
 	/>
 </svelte:head>
 
-<!-- Only render the modal when needed -->
+<!--
+	The short form (`summary`): what this chapter is for, three sentences about
+	the data, and one button whose press is the consent, the other ways in as
+	links under it. The network, where the list is kept, the three words, the
+	new passkey's name and the seal are the dialog's second screen ("Notices and
+	settings"), with the full statement.
+-->
 {#if showModal}
 	<ConsentModal
 		bind:show={showModal}
-		bind:rememberDecision
 		choices={{
 			identity: identityMode,
 			p2p: p2pEnabled,
@@ -480,6 +558,8 @@
 			owner: Boolean(archiveSettings.owner)
 		}}
 		clauses={consentClauses}
+		summary={consentSummary}
+		{proceedText}
 		elementStrings={$json('consent.element')}
 		canProceed={mnemonicValid}
 		{error}
@@ -488,6 +568,14 @@
 	>
 		<svelte:fragment slot="header"><LanguageSwitcher /></svelte:fragment>
 		<svelte:fragment slot="before-confirmation">
+			<p class="text-base leading-relaxed text-text" data-testid="consent-promise">
+				{$_('consent.promise')}
+			</p>
+		</svelte:fragment>
+		<svelte:fragment slot="beside-start">
+			<StartChoices bind:mode={identityMode} hasStoredPasskey={hasStoredPasskeyCredential()} />
+		</svelte:fragment>
+		<svelte:fragment slot="advanced">
 			<P2PModeSelector bind:enabled={p2pEnabled} />
 			<StorageModeSelector bind:mode={storageMode} />
 			<SharedListSelector bind:value={selectedMnemonic} />

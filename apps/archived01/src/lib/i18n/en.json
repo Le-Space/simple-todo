@@ -29,11 +29,11 @@
 			"identityAnonymous": "You are using a random identity that exists only in this browser. Reload and it is gone, and nothing connects one visit to the next.",
 			"identityAnonymousKept": "You are using a random identity that exists only in this browser. It keeps it until you clear the site data; nothing links it to you.",
 			"storageKept": "This browser keeps the list, your language, the theme and the archive setting; with a passkey, its identifier too. Clear the site data and it is gone – except what the archive holds.",
-			"storageMemory": "Memory only: reload and the list in this browser starts empty. Language, theme and this decision stay.",
+			"storageMemory": "Memory only: reload and the list in this browser starts empty, and this dialog asks again. Language and theme stay.",
 			"archiveOn": "The archive is on: every change goes out shortly afterwards, sealed, to the chosen store. The store sees the account address, the channel, sizes and times, not the content; the balance of an address is publicly readable.",
 			"archiveOnOwner": "The archive is on: every change goes out shortly afterwards, sealed, to the chosen store. The store sees the account address, the channel, sizes and times, not the content. The owner account’s address and its grants are public on Aleph.",
 			"archiveOff": "The archive is off: nothing is kept outside this device until you switch it on in the “Archive” section.",
-			"noTracking": "No tracking cookies, no analytics. “Don’t show this again” remembers only that decision, on this device."
+			"noTracking": "No tracking cookies, no analytics. Kept in this browser, your decision to start is kept with the rest; in memory only, this dialog asks again."
 		},
 		"errorNoPasskey": "No passkey is stored in this browser, and your authenticator did not hand one over. Create a new one, or continue without one.",
 		"errorOtherPasskey": "Another passkey of this site answered, not the one this browser started with. Nothing was sealed or archived with it. Start again, and answer with the passkey you started with here.",
@@ -107,7 +107,20 @@
 		"p2pOnLabel": "On",
 		"p2pOnHint": "This browser connects to a relay and to other devices, and the list replicates between them.",
 		"p2pOffLabel": "Off",
-		"p2pOffHint": "No relay, no other devices: the list does not replicate. The archive still talks to its store (upload, STORE, balance); nothing else leaves the browser. That is how to see what a restore alone gives back."
+		"p2pOffHint": "No relay, no other devices: the list does not replicate. The archive still talks to its store (upload, STORE, balance); nothing else leaves the browser. That is how to see what a restore alone gives back.",
+		"title": "A sealed list, and an archive outside this browser",
+		"promise": "Seal your list with a key from your passkey, and switch on an archive that keeps every change outside this browser, sealed as well.",
+		"summary": {
+			"sealed": "Sealed with a key from your passkey: whoever gets the list cannot read it, the relay included.",
+			"notSealed": "Not sealed: anyone with the three words reads new entries, the relay included.",
+			"noPasskey": "Without a passkey nothing is sealed: anyone with the three words reads the list, the relay included.",
+			"archiveOn": "The archive is on: every change goes out shortly afterwards, sealed, to the store you chose.",
+			"archiveOff": "The archive is off: nothing is kept outside this device until you switch it on.",
+			"kept": "Kept in this browser, the list survives a reload; clearing the site data loses it, except what the archive holds.",
+			"memory": "In memory only: a reload starts the list over, and this dialog asks again."
+		},
+		"identityLabelDefault": "Archive-Todo",
+		"identityLabelTitle": "Name of the new passkey"
 	},
 	"archive": {
 		"title": "Archive",
@@ -238,21 +251,6 @@
 		"elsewhere": "The account keeps {count} more increments beyond this list’s chain: other lists, or older ones from before chains were told apart. A restore reads them when this chain is empty.",
 		"restoredChain": "Chain: {duplicates} sequence numbers carried twice (two devices numbering on their own, harmless), {gaps} missing (increments the store does not hold).",
 		"restoredFromAccount": "This list’s chain was empty, so the account’s whole archive was read; todos of other lists were copied, not joined."
-	},
-	"passkeySteps": {
-		"count": "Passkey prompt {n} of {of}",
-		"prf": {
-			"title": "Now the keys from the passkey",
-			"why": "Your passkey gives the app a secret. It becomes the archive account and the key that seals the increments — and, for a new passkey, the key your entries are signed with. None of it is stored."
-		},
-		"proof": {
-			"title": "Last: your signature",
-			"why": "Your passkey signs once that this identity's entries are yours. The browser keeps that signature; the next start does not ask again."
-		},
-		"notALoop": "Each prompt has its own purpose; it is not a repeat. With a security key: touch it and, if asked, enter the PIN.",
-		"continue": "Continue",
-		"cancel": "Cancel",
-		"restoreTouch": "Passkey prompt 2 of {of}: a second signature your identity is computed from. Not a repeat."
 	},
 	"sealList": {
 		"title": "Encryption",

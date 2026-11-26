@@ -19,8 +19,8 @@ const timeout = 90000;
 async function openWith(page, mode) {
 	await page.goto('/');
 	await waitForConsent(page);
-	await page.getByTestId(`storage-mode-${mode}`).check();
-	await passConsent(page);
+	// The storage choice is on the dialog's second screen; passConsent goes there.
+	await passConsent(page, { persistent: mode === 'indexeddb' });
 	await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 }
 

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { acceptNotice, consentModal, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import { consentModal, openAdvanced, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
 
 const testUrl = '/';
 const timeout = 90000;
@@ -90,10 +90,11 @@ test.describe('Spanish mnemonic shared todo lists', () => {
 async function openSelection(page) {
 	await page.goto(testUrl);
 	await waitForConsent(page);
+	// The three words are on the dialog's second screen; there is no tick.
+	await openAdvanced(page);
 	await expect(consentModal(page).getByTestId('shared-list-mnemonic-input')).toHaveValue(
 		/.+-.+-.+/
 	);
-	await acceptNotice(page);
 	return consentModal(page);
 }
 

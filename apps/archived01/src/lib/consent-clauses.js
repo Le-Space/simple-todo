@@ -37,3 +37,29 @@ export const clauses = (state) => {
 		t('consent.clause.noTracking')
 	].filter(Boolean);
 };
+
+/**
+ * The start dialog's short form: three sentences under the promise, the gist
+ * of `clauses` for somebody outside the tutorial. The full statement stays on
+ * the dialog's second screen, unabridged; what is accepted is still all of it.
+ *
+ * What a person has to know before the first entry: whether the list is
+ * sealed (and that it cannot be without a passkey), whether anything leaves
+ * this device for the archive, and what a reload keeps.
+ *
+ * @param {{ identity?: string, persistent?: boolean, seal?: boolean, archive?: boolean }} state
+ * @returns {string[]}
+ */
+export const summary = (state) => {
+	const passkey = state.identity !== 'anonymous';
+	const t = get(_);
+	return [
+		!passkey
+			? t('consent.summary.noPasskey')
+			: state.seal
+				? t('consent.summary.sealed')
+				: t('consent.summary.notSealed'),
+		state.archive ? t('consent.summary.archiveOn') : t('consent.summary.archiveOff'),
+		state.persistent ? t('consent.summary.kept') : t('consent.summary.memory')
+	];
+};
