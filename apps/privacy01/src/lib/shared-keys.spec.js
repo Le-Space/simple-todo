@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import { newKey } from './db-encryption.js';
-import { forgetDeviceKeys, importDeviceKey, ownDeviceKeys } from './device-keys.js';
+import {
+	forgetDeviceKeys,
+	importDeviceKey,
+	ownDeviceKeys,
+	pairFromPrf,
+	pairFromSigningKey
+} from './device-keys.js';
 import { createKeyring, epochKey } from './keyring.js';
 import { wrapKey } from './key-wrapping.js';
 import { adminsOf, keysForRecipient, rotateKey, shareKeyWith } from './shared-keys.js';
@@ -10,7 +16,7 @@ const LIST = '/orbitdb/zdpuSharedKeysSpecList';
 
 /** A reader with a published key, the way the directory would hold it. */
 async function reader(/** @type {string} */ did) {
-	forgetDeviceKeys(did);
+	await forgetDeviceKeys(did);
 	const own = await ownDeviceKeys(did);
 	return { did, ...own };
 }
@@ -54,6 +60,43 @@ function withDirectory(/** @type {{ did: string, publicKey: string }[]} */ reade
 /** @param {{ key: Uint8Array }[]} keys */
 const bytesOf = (keys) => keys.map(({ key }) => Array.from(key));
 
+/**
+ * Only the keys, for the cases that are not about which pair opened them.
+ *
+ * @param {any} store
+ * @param {Parameters<typeof keysForRecipient>[1]} who
+ */
+const keysOf = async (store, who) => (await keysForRecipient(store, who)).keys;
+
+/**
+ * A reader as one is after the PRF derivation: the current pair from the PRF
+ * output, and the pair the signing key gave before, to read old copies with.
+ *
+ * @param {string} did
+ */
+async function migratedReader(did) {
+	const current = await pairFromPrf(crypto.getRandomValues(new Uint8Array(32)));
+	const earlier = await pairFromSigningKey(did, crypto.getRandomValues(new Uint8Array(64)));
+	return { did, ...current, earlier };
+}
+
+/**
+ * A copy of `key`, sealed by `admin` to one public key.
+ *
+ * @param {ReturnType<typeof fakeStore>} store
+ * @param {string} admin
+ * @param {string} recipientDid
+ * @param {import('./keyring.js').EpochKey} key
+ * @param {string} publicKey
+ */
+async function sealCopy(store, admin, recipientDid, key, publicKey) {
+	await store.as(admin).put(`${LIST}|${recipientDid}|${key.epoch}`, {
+		epoch: key.epoch,
+		keyId: key.keyId,
+		...(await wrapKey(key.key, await importDeviceKey(publicKey)))
+	});
+}
+
 describe('shared-keys', () => {
 	it('hands a granted reader the keys an admin sealed for them', async () => {
 		const alice = await reader('did:key:alice');
@@ -69,7 +112,7 @@ describe('shared-keys', () => {
 		);
 
 		expect(result).toEqual({ shared: true });
-		const found = await keysForRecipient(store, {
+		const found = await keysOf(store, {
 			listAddress: LIST,
 			did: bob.did,
 			privateKey: bob.privateKey,
@@ -106,7 +149,7 @@ describe('shared-keys', () => {
 			...(await wrapKey(evesKey, bobsPublicKey))
 		});
 
-		const found = await keysForRecipient(store, {
+		const found = await keysOf(store, {
 			listAddress: LIST,
 			did: bob.did,
 			privateKey: bob.privateKey,
@@ -131,7 +174,7 @@ describe('shared-keys', () => {
 		);
 
 		expect(
-			await keysForRecipient(store, {
+			await keysOf(store, {
 				listAddress: LIST,
 				did: bob.did,
 				privateKey: bob.privateKey,
@@ -168,7 +211,7 @@ describe('shared-keys', () => {
 		const admins = new Set([alice.did]);
 		// Eve reads Bob's entry key as well as her own; neither opens for her.
 		expect(
-			await keysForRecipient(store, {
+			await keysOf(store, {
 				listAddress: LIST,
 				did: bob.did,
 				privateKey: eve.privateKey,
@@ -177,7 +220,7 @@ describe('shared-keys', () => {
 			})
 		).toEqual([]);
 		expect(
-			await keysForRecipient(store, {
+			await keysOf(store, {
 				listAddress: LIST,
 				did: eve.did,
 				privateKey: eve.privateKey,
@@ -200,7 +243,7 @@ describe('shared-keys', () => {
 		);
 
 		expect(
-			await keysForRecipient(store, {
+			await keysOf(store, {
 				listAddress: '/orbitdb/zdpuAnotherListEntirely',
 				did: bob.did,
 				privateKey: bob.privateKey,
@@ -264,7 +307,7 @@ describe('shared-keys', () => {
 		/** @param {{ did: string, privateKey: CryptoKey }} who */
 		const epochsOf = async (who) =>
 			(
-				await keysForRecipient(store, {
+				await keysOf(store, {
 					listAddress: LIST,
 					did: who.did,
 					privateKey: who.privateKey,
@@ -279,5 +322,90 @@ describe('shared-keys', () => {
 		expect(await epochsOf(carol)).toEqual([0]);
 		// The owner's own copy of the new key, which is what her other devices read.
 		expect(await epochsOf(alice)).toEqual([1]);
+	});
+
+	describe('after the pair moved to the PRF output', () => {
+		it('opens a copy sealed to the earlier pair, and says only that one opened it', async () => {
+			// Copies sealed before the change went to the pair derived from the
+			// signing key, and the log keeps them. The reader still gets the key —
+			// and the owner learns it has no copy for the current pair yet.
+			const alice = await reader('did:key:alice');
+			const bob = await migratedReader('did:key:bob');
+			const store = fakeStore();
+			const key = await epochKey(newKey(), 0);
+			await sealCopy(store, alice.did, bob.did, key, bob.earlier.publicKey);
+
+			const { keys, onlyUnderEarlier } = await keysForRecipient(store, {
+				listAddress: LIST,
+				did: bob.did,
+				privateKey: bob.privateKey,
+				earlierPrivateKeys: [bob.earlier.privateKey],
+				admins: new Set([alice.did]),
+				identities
+			});
+
+			expect(bytesOf(keys)).toEqual(bytesOf([key]));
+			expect([...onlyUnderEarlier]).toEqual([key.keyId]);
+		});
+
+		it('does not open a copy for the earlier pair without that pair', async () => {
+			const alice = await reader('did:key:alice');
+			const bob = await migratedReader('did:key:bob');
+			const store = fakeStore();
+			await sealCopy(store, alice.did, bob.did, await epochKey(newKey(), 0), bob.earlier.publicKey);
+
+			expect(
+				await keysForRecipient(store, {
+					listAddress: LIST,
+					did: bob.did,
+					privateKey: bob.privateKey,
+					admins: new Set([alice.did]),
+					identities
+				})
+			).toEqual({ keys: [], onlyUnderEarlier: new Set() });
+		});
+
+		it('counts a key as moved once a copy for the current pair is there', async () => {
+			// The owner re-seals to her current pair when she opens the list; the
+			// old copy stays in the log, and must not make the key look unmoved.
+			const alice = await migratedReader('did:key:alice');
+			const store = fakeStore();
+			const key = await epochKey(newKey(), 0);
+			await sealCopy(store, alice.did, alice.did, key, alice.earlier.publicKey);
+			await sealCopy(store, alice.did, alice.did, key, alice.publicKey);
+
+			const { keys, onlyUnderEarlier } = await keysForRecipient(store, {
+				listAddress: LIST,
+				did: alice.did,
+				privateKey: alice.privateKey,
+				earlierPrivateKeys: [alice.earlier.privateKey],
+				admins: new Set([alice.did]),
+				identities
+			});
+
+			expect(bytesOf(keys)).toEqual(bytesOf([key]));
+			expect([...onlyUnderEarlier]).toEqual([]);
+		});
+
+		it('believes no planted copy for the earlier pair either', async () => {
+			// The earlier public key was in the directory too, so Eve can seal to
+			// it. The admin check comes before any pair is tried.
+			const alice = await reader('did:key:alice');
+			const bob = await migratedReader('did:key:bob');
+			const eve = await reader('did:key:eve');
+			const store = fakeStore();
+			await sealCopy(store, eve.did, bob.did, await epochKey(newKey(), 0), bob.earlier.publicKey);
+
+			expect(
+				await keysForRecipient(store, {
+					listAddress: LIST,
+					did: bob.did,
+					privateKey: bob.privateKey,
+					earlierPrivateKeys: [bob.earlier.privateKey],
+					admins: new Set([alice.did]),
+					identities
+				})
+			).toEqual({ keys: [], onlyUnderEarlier: new Set() });
+		});
 	});
 });

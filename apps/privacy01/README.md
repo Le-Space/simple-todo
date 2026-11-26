@@ -44,12 +44,30 @@ collaboration the earlier chapters teach rather than protect it.
 
 Every identity has an **X25519 key pair** for this one job, and publishes the
 public half in a small, public directory. The pair is not stored anywhere: it is
-derived (HKDF) from the identity's signing key, which the passkey provider in
-turn derives from the passkey's PRF output — so one passkey gives the same pair
-on every device. When you grant a DID write access, the app also seals a copy of
-each of that list's keys to that DID's published key — an _envelope_. The
-wrapped copies replicate in the open, because each one opens only for its
-recipient.
+derived (HKDF) from the passkey's PRF output under a label of its own,
+`simple-todo/privacy01/list-key-agreement/v1` — so one passkey gives the same
+pair on every device. The signing key comes from the same PRF output under
+another label, and neither key is derived from the other: whoever holds the
+signing key cannot open what was sealed to this pair. One PRF read serves both,
+so this costs no extra touch. When you grant a DID write access, the app also
+seals a copy of each of that list's keys to that DID's published key — an
+_envelope_. The wrapped copies replicate in the open, because each one opens
+only for its recipient.
+
+**Without PRF** — an authenticator that has none, or no passkey at all — there
+is nothing to derive the pair from. It is then random, made as a WebCrypto key
+that cannot be exported, and kept as it is in IndexedDB
+(`level-js-simple-todo/privacy01/agreement-keys`; for the tab only in memory
+mode). No script can read its bytes, but any script on the page can use it, a
+browser extension included. The toast says so and suggests a browser without
+extensions, or a profile of its own.
+
+**Copies from before the PRF derivation** went to a pair derived from the
+signing key. That pair is still computed to open them — never published, never
+sealed to — and the owner's own copies move to the new pair the first time she
+opens the list. Copies for other readers stay as they are — the older pair
+keeps opening them — until the owner grants that reader again; a new epoch is
+sealed to the new pair anyway.
 
 ```
 your list key K ──AES-GCM──▶ the todos
@@ -98,7 +116,13 @@ Stated plainly, because encryption invites more confidence than it earns:
   the old one for a moment, and that entry is readable to the removed DID too.
 - **The list keys are cached in local storage in the clear**, no better
   protected than anything else in the browser. The encryption key pair is not
-  stored; it is derived from the signing key each session.
+  stored when the passkey has PRF; it is derived from the PRF output each
+  session. Without PRF it is stored in IndexedDB as a key that cannot be
+  exported — usable by any script on the page, readable by none.
+- **Old copies stay where they are.** The store of copies is an append-only
+  log, so a copy sealed to the pair that came from the signing key stays in it.
+  Whoever holds the signing key can open those old copies; only keys of a new
+  epoch are out of its reach.
 - **Metadata is not hidden.** Who wrote, how often and when stays visible to
   anyone replicating the list, including a relay. Only the contents are sealed.
 - **Nothing survives a reload yet.** This chapter runs Helia in memory
@@ -182,6 +206,11 @@ This chapter replaces that with an opt-in **passkey-backed identity**:
   derived again when a session starts, never written to IndexedDB, gone when
   the tab closes. The same passkey yields the same identity document on every
   device; an authenticator without PRF gets a fresh key per session instead.
+  The app reads the PRF output itself (`readSessionPrfOutput`) and hands it to
+  the provider as `prfOutput`, because the encryption pair comes from the same
+  answer. Restoring a passkey on a device that stored nothing therefore costs a
+  fourth touch: the provider's restore reads the PRF output but hands back only
+  the signing key derived from it.
   (The stricter _varsig_ variant — a passkey prompt for every single write —
   exists in the same package and is a good follow-up exercise, but is not used
   here.)

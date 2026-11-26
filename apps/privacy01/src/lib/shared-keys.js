@@ -125,15 +125,21 @@ export async function shareKeyWith(orbitdb, { directory, store }, what) {
  * before it is even opened — opening proves only that it was sealed to this
  * reader, which anybody can do.
  *
+ * Tries the reader's current pair first and its earlier ones after
+ * (./device-keys.js): copies sealed before the pair came from the PRF output
+ * went to the one derived from the signing key. `onlyUnderEarlier` names the
+ * keys no copy for the current pair opened yet, so an owner can seal them to
+ * herself again.
+ *
  * @param {any} store
- * @param {{ listAddress: string, did: string, privateKey: CryptoKey, admins: Set<string>, identities: any }} who
- * @returns {Promise<import('./keyring.js').EpochKey[]>}
+ * @param {{ listAddress: string, did: string, privateKey: CryptoKey, earlierPrivateKeys?: CryptoKey[], admins: Set<string>, identities: any }} who
+ * @returns {Promise<{ keys: import('./keyring.js').EpochKey[], onlyUnderEarlier: Set<string> }>}
  */
 export async function keysForRecipient(
 	store,
-	{ listAddress, did, privateKey, admins, identities }
+	{ listAddress, did, privateKey, earlierPrivateKeys = [], admins, identities }
 ) {
-	if (!admins?.size) return [];
+	if (!admins?.size) return { keys: [], onlyUnderEarlier: new Set() };
 
 	const prefix = copyPrefix(listAddress, did);
 	const entries = (await store?.log?.values?.()) ?? [];
@@ -141,27 +147,37 @@ export async function keysForRecipient(
 	const byAdmin = new Map();
 	/** @type {Map<string, import('./keyring.js').EpochKey>} */
 	const found = new Map();
+	/** @type {Set<string>} */
+	const underCurrent = new Set();
 
 	for (const entry of entries) {
 		const payload = entry?.payload;
 		const value = payload?.value;
 		if (typeof payload?.key !== 'string' || !payload.key.startsWith(prefix) || !value) continue;
-		if (typeof value.keyId !== 'string' || found.has(value.keyId)) continue;
+		if (typeof value.keyId !== 'string' || underCurrent.has(value.keyId)) continue;
 		if (!(await writtenByAdmin(entry.identity))) continue;
 
-		try {
-			const key = await epochKey(await unwrapKey(value, privateKey), value.epoch);
-			// The id is part of what the admin signed, and it has to be the id of
-			// what was inside — otherwise entries tagged with it would be looked
-			// up under a key that does not open them.
-			if (key.keyId === value.keyId) found.set(key.keyId, key);
-		} catch {
-			// Sealed for somebody else, or altered. Both look the same from here,
-			// and both mean: not this one.
+		const current = await opened(value, privateKey);
+		if (current) {
+			found.set(current.keyId, current);
+			underCurrent.add(current.keyId);
+			continue;
+		}
+		if (found.has(value.keyId)) continue;
+
+		for (const earlierKey of earlierPrivateKeys) {
+			const earlier = await opened(value, earlierKey);
+			if (earlier) {
+				found.set(earlier.keyId, earlier);
+				break;
+			}
 		}
 	}
 
-	return [...found.values()];
+	return {
+		keys: [...found.values()],
+		onlyUnderEarlier: new Set([...found.keys()].filter((keyId) => !underCurrent.has(keyId)))
+	};
 
 	/** @param {string} identityHash */
 	async function writtenByAdmin(identityHash) {
@@ -179,6 +195,28 @@ export async function keysForRecipient(
 		}
 		byAdmin.set(identityHash, isAdmin);
 		return isAdmin;
+	}
+}
+
+/**
+ * The key inside one copy, when it opens under this private key and is what
+ * its admin said it is.
+ *
+ * @param {any} value the copy, as stored
+ * @param {CryptoKey} privateKey
+ * @returns {Promise<import('./keyring.js').EpochKey | null>}
+ */
+async function opened(value, privateKey) {
+	try {
+		const key = await epochKey(await unwrapKey(value, privateKey), value.epoch);
+		// The id is part of what the admin signed, and it has to be the id of
+		// what was inside — otherwise entries tagged with it would be looked up
+		// under a key that does not open them.
+		return key.keyId === value.keyId ? key : null;
+	} catch {
+		// Sealed for somebody else, or altered. Both look the same from here,
+		// and both mean: not this one.
+		return null;
 	}
 }
 

@@ -21,6 +21,13 @@ export const peerIdStore = writable(/** @type {string | null} */ (null));
 /** The DID of the passkey-backed identity, or null for the anonymous one. */
 export const ownDidStore = writable(/** @type {string | null} */ (null));
 
+/**
+ * Where this session's encryption pair came from: `'prf'` when the passkey
+ * gave its PRF output, `'browser'` when the pair is the one kept in this
+ * browser (./device-keys.js). Null until the identity exists.
+ */
+export const deviceKeySourceStore = writable(/** @type {'prf' | 'browser' | null} */ (null));
+
 /** @typedef {'pending' | 'active' | 'complete' | 'error'} InitializationStepStatus */
 /** @typedef {{ label: string, description: string, status: InitializationStepStatus }} InitializationStep */
 

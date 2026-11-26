@@ -230,7 +230,8 @@ async function keySharingOpened() {
 }
 
 /**
- * This identity's encryption key pair, derived from its signing key.
+ * This identity's encryption key pair: from the passkey's PRF output, or kept
+ * in this browser without one (./device-keys.js).
  *
  * @param {any} orbitdb
  */
@@ -246,17 +247,18 @@ function ownKeys(orbitdb) {
  *
  * @param {string} address
  * @param {any} database the list, open
- * @returns {Promise<import('./keyring.js').EpochKey[]>}
+ * @returns {Promise<{ keys: import('./keyring.js').EpochKey[], onlyUnderEarlier: Set<string> }>}
  */
 async function findSharedKeys(address, database) {
 	const orbitdb = get(orbitdbStore);
-	if (!orbitdb || !(await keySharingOpened())) return [];
+	if (!orbitdb || !(await keySharingOpened())) return { keys: [], onlyUnderEarlier: new Set() };
 
-	const { privateKey } = await ownKeys(orbitdb);
+	const { privateKey, earlier } = await ownKeys(orbitdb);
 	return keysForRecipient(sharedKeys, {
 		listAddress: address,
 		did: orbitdb.identity.id,
 		privateKey,
+		earlierPrivateKeys: earlier.map((pair) => pair.privateKey),
 		admins: await adminsOf(database?.access),
 		identities: orbitdb.identities
 	});
@@ -275,9 +277,12 @@ let refreshAgain = false;
  * that was opened in the clear because no key was here has to be reopened.
  *
  * And the other direction, for an admin: a key of this list that has no copy
- * for this identity in the store yet gets one. That is what lets the owner's
- * second device read lists made before #120, and lists whose first copy could
- * not be written because the store was not open yet.
+ * for this identity's current pair in the store yet gets one. That is what lets
+ * the owner's second device read lists made before #120, and lists whose first
+ * copy could not be written because the store was not open yet. It is also how
+ * the owner moves her own copies to the pair derived from the PRF output: a
+ * key that only a copy for her earlier pair opened counts as missing, and is
+ * sealed to the current one the first time she opens the list.
  *
  * @returns {Promise<void>}
  */
@@ -308,17 +313,27 @@ async function refreshActiveKeysOnce() {
 	if (!orbitdb || !database || !address.startsWith('/orbitdb/') || !sharedKeys) return;
 
 	const keyring = keyringFor(address);
-	const found = await findSharedKeys(address, database);
+	const { keys: found, onlyUnderEarlier } = await findSharedKeys(address, database);
 	if (get(todoDBStore) !== database) return;
 
 	if (keyring.addAll(found) > 0) {
 		rememberKeys(address, keyring);
-		if (isSealedDatabase(database)) await loadTodos();
-		else await loadTodoDatabase(address);
-		return;
+		if (!isSealedDatabase(database)) {
+			// Reopened sealed. That open asks for this again, and the copies
+			// below are written then, against the database that is open.
+			await loadTodoDatabase(address);
+			return;
+		}
+		await loadTodos();
 	}
 
-	await copyMissingKeysToSelf(orbitdb, address, database, keyring, found);
+	await copyMissingKeysToSelf(
+		orbitdb,
+		address,
+		database,
+		keyring,
+		found.filter((key) => !onlyUnderEarlier.has(key.keyId))
+	);
 }
 
 /**
@@ -326,7 +341,7 @@ async function refreshActiveKeysOnce() {
  * @param {string} address
  * @param {any} database
  * @param {import('./keyring.js').Keyring} keyring
- * @param {import('./keyring.js').EpochKey[]} found what the store already has for this identity
+ * @param {import('./keyring.js').EpochKey[]} found what the store already has for this identity's current pair
  */
 async function copyMissingKeysToSelf(orbitdb, address, database, keyring, found) {
 	if (keyring.size === 0) return;
@@ -492,7 +507,12 @@ export async function loadTodoDatabase(address) {
 			orbitdb,
 			normalizedAddress,
 			{ type: 'keyvalue', sync: true },
-			{ findSharedKeys }
+			{
+				// Only the keys. Which of them still lack a copy for this
+				// identity's current pair is settled by the refresh at the end.
+				findSharedKeys: async (/** @type {string} */ address, /** @type {any} */ plain) =>
+					(await findSharedKeys(address, plain)).keys
+			}
 		);
 
 		// Prefer what the registry already knows: a list you created is yours even

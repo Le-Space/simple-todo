@@ -9,8 +9,10 @@
  *
  * The inventory in the middle is the point of the test as much as the DID: a
  * run that kept the credential around would pass the second half for the wrong
- * reason. And the touches are counted, because "in three touches" is a promise
- * the chapter makes in its own words.
+ * reason. And the touches are counted, because how many a restore takes is a
+ * promise the chapter makes in its own words — four since the encryption pair
+ * comes from the PRF output: the provider's restore reads it, and hands back
+ * only the signing key derived from it.
  */
 import { test, expect } from '@playwright/test';
 import { passConsent, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
@@ -32,7 +34,7 @@ async function writeTodo(page, text) {
 	await expect(page.getByText(text, { exact: true })).toBeVisible({ timeout: 60000 });
 }
 
-test('the identity comes back from the passkey alone, in three touches', async ({ page }) => {
+test('the identity comes back from the passkey alone, in four touches', async ({ page }) => {
 	test.setTimeout(300000);
 	await addVirtualAuthenticator(page);
 	await recordCeremonies(page);
@@ -43,9 +45,14 @@ test('the identity comes back from the passkey alone, in three touches', async (
 	await expect(todoInput(page)).toBeEnabled({ timeout: 90000 });
 	const before = await page.getByTestId('own-did-value').getAttribute('data-did');
 	expect(before).toMatch(/^did:key:/);
-	// Registering: the passkey itself, the PRF output the signing key comes from,
-	// and the signature on the identity. No largeBlob write -- it never worked.
-	expect((await takeCeremonies(page)).map((c) => c.kind)).toEqual(['create', 'get', 'get']);
+	// Registering: the passkey itself, the PRF output both the signing key and
+	// the encryption pair come from, and the signature on the identity. No
+	// largeBlob write -- it never worked.
+	expect((await takeCeremonies(page)).map((c) => `${c.kind}${c.prf ? '+prf' : ''}`)).toEqual([
+		'create+prf',
+		'get+prf',
+		'get'
+	]);
 
 	// Nothing on the device: no credential to recover from, so the restore below
 	// has to come from the authenticator.
@@ -62,11 +69,17 @@ test('the identity comes back from the passkey alone, in three touches', async (
 	const after = await page.getByTestId('own-did-value').getAttribute('data-did');
 	expect(after).toBe(before);
 
-	// Two to restore -- the first with PRF -- and one to sign the identity. The
-	// restore's own signing key goes into the keystore, so the provider does not
-	// ask the passkey for the PRF output a second time.
+	// Two to restore -- the first with PRF -- then the PRF output once more, for
+	// the encryption pair (the restore keeps it to itself), and one to sign the
+	// identity. The restore's signing key goes into the keystore, so the provider
+	// does not ask on its own as well.
 	const restore = await takeCeremonies(page);
-	expect(restore.map((c) => `${c.kind}${c.prf ? '+prf' : ''}`)).toEqual(['get+prf', 'get', 'get']);
+	expect(restore.map((c) => `${c.kind}${c.prf ? '+prf' : ''}`)).toEqual([
+		'get+prf',
+		'get',
+		'get+prf',
+		'get'
+	]);
 	expect(restore.every((c) => c.ok)).toBe(true);
 
 	// And the restored identity signs: the step after the restore, which is
@@ -94,7 +107,7 @@ test('a device that keeps things restores the passkey too, and keeps it', async 
 	await passConsent(page, { persistent: true, identity: 'existing' });
 	await expect(todoInput(page)).toBeEnabled({ timeout: 120000 });
 	expect(await page.getByTestId('own-did-value').getAttribute('data-did')).toBe(before);
-	expect((await takeCeremonies(page)).length).toBe(3);
+	expect((await takeCeremonies(page)).length).toBe(4);
 
 	// Keeping a restored credential used to throw -- it has no attestation
 	// object, and the serialiser read one. Now it is written down, so the next

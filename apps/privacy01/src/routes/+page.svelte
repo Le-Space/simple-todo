@@ -5,13 +5,19 @@
 	import { createListLink } from '@simple-todo/todo/list-link.js';
 	import { t } from '@simple-todo/ui/i18n.js';
 	import { _, json } from '$lib/i18n/index.js';
-	import { peerIdStore, initializationStore, ownDidStore } from '$lib/p2p-stores.js';
+	import {
+		peerIdStore,
+		initializationStore,
+		ownDidStore,
+		deviceKeySourceStore
+	} from '$lib/p2p-stores.js';
 	import PasskeyOnboarding from '$lib/PasskeyOnboarding.svelte';
 	import DidBadge from '@simple-todo/ui/DidBadge.svelte';
 	import {
 		createPasskeyCredential,
 		hasStoredPasskeyCredential,
-		recoverPasskeyCredential
+		recoverPasskeyCredential,
+		PrfReadRefusedError
 	} from '$lib/passkey-identity.js';
 	import {
 		todosStore,
@@ -146,21 +152,27 @@
 	/**
 	 * The passkey binds the identity only as far as the authenticator lets it.
 	 *
-	 * `ensureDerivedSigningKey` derives the OrbitDB signing key from the
+	 * Both the OrbitDB signing key and the encryption pair come from the
 	 * credential's PRF output, which is what makes the same passkey produce the
-	 * same identity document everywhere. Without PRF it is never fatal: the
-	 * keystore generates its own key, the DID stays the same, and the public
-	 * key differs per device — two identity documents under one DID. The
-	 * provider tests that fallback as intended behaviour and logs one debug
-	 * line, so nothing reaches the person it affects. This does.
+	 * same identity document and the same pair everywhere. Without PRF it is
+	 * never fatal, and it costs twice: the keystore generates its own signing
+	 * key, so the DID stays the same and the public key differs per session —
+	 * and the encryption pair is a random one that exists only in this browser,
+	 * where any script on the page can use it. Nothing would tell the
+	 * person it affects. This does.
 	 *
-	 * Once per credential: it describes the authenticator, and the answer will
-	 * not change on the next start.
+	 * Asked of the session, not only of the registration: a restored credential
+	 * carries no `extensionSupport`, and the session's own PRF read is the
+	 * answer that counts. Once per credential: it describes the authenticator,
+	 * and the answer will not change on the next start.
 	 *
 	 * @param {any} credential
 	 */
 	function warnIfIdentityCannotTravel(credential) {
-		if (!credential || credential.extensionSupport?.prf !== false) return;
+		if (!credential) return;
+		const withoutPrf =
+			credential.extensionSupport?.prf === false || get(deviceKeySourceStore) === 'browser';
+		if (!withoutPrf) return;
 		const seen = `simpleTodo.prfWarned.${credential.credentialId ?? 'unknown'}`;
 		try {
 			if (recall(seen) === 'true') return;
@@ -174,10 +186,10 @@
 		// (Passchain) that answers no PRF. The hint names the fix;
 		// docs/grapheneos.md has the rest.
 		if (onAndroid()) {
-			showToast($_('consent.prfMissingAndroid'), 'warning', 20_000);
+			showToast($_('consent.prfMissingAndroid'), 'warning', 24_000);
 			return;
 		}
-		showToast($_('consent.prfMissing'), 'warning', 12_000);
+		showToast($_('consent.prfMissing'), 'warning', 16_000);
 	}
 
 	/** Android as the browser reports it — Vanadium presents as Chrome on Android. */
@@ -241,7 +253,9 @@
 			error =
 				err instanceof IdentityChoiceError
 					? reason
-					: $_('consent.errorStart', { values: { reason } });
+					: err instanceof PrfReadRefusedError
+						? $_('consent.errorPrfRefused')
+						: $_('consent.errorStart', { values: { reason } });
 			console.error('P2P initialization failed:', err);
 		}
 	};

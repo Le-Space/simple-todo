@@ -1,5 +1,11 @@
 import { get } from 'svelte/store';
-import { libp2pStore, peerIdStore, ownDidStore, initializationStore } from './p2p-stores.js';
+import {
+	libp2pStore,
+	peerIdStore,
+	ownDidStore,
+	initializationStore,
+	deviceKeySourceStore
+} from './p2p-stores.js';
 
 import { createLibp2p } from 'libp2p';
 import { createHeliaLight } from 'helia';
@@ -26,7 +32,8 @@ import { multiaddr } from '@multiformats/multiaddr';
 import { createLibp2pConfig } from '@simple-todo/net/libp2p-config.js';
 import { createMemoryIdentities } from '@simple-todo/todo/memory-identities.js';
 import { seedRestoredSigningKey } from '@simple-todo/todo/restored-signing-key.js';
-import { SIGNING_KEY_TYPE } from './passkey-identity.js';
+import { SIGNING_KEY_TYPE, readSessionPrfOutput } from './passkey-identity.js';
+import { setUpDeviceKeys } from './device-keys.js';
 import { keepLogsWhereTheChoiceSays } from '@simple-todo/todo/keep-logs-in-memory.js';
 import { forgetByPrefix, recall, remember } from '@simple-todo/todo/browser-memory.js';
 import {
@@ -300,6 +307,7 @@ async function stopP2P() {
 	libp2pStore.set(null);
 	peerIdStore.set(null);
 	ownDidStore.set(null);
+	deviceKeySourceStore.set(null);
 	peerId = null;
 	activeTodoDatabaseName = '';
 	stopDiscoveryDialRetryInterval();
@@ -362,6 +370,9 @@ async function openInitialTodoDatabase(address, databaseName) {
 async function createOrbitDBInstance(heliaNode) {
 	if (!activePasskeyCredential) {
 		ownDidStore.set(null);
+		// No passkey, no PRF: the encryption pair is the one kept in this browser
+		// (./device-keys.js), settled when key sharing first asks for it.
+		deviceKeySourceStore.set('browser');
 		return keepLogsWhereTheChoiceSays(
 			await createOrbitDB({
 				ipfs: heliaNode,
@@ -407,7 +418,8 @@ async function createOrbitDBInstance(heliaNode) {
 	// and the key type), again every time a session starts. One passkey still
 	// yields one identity document on every device, and a closed tab leaves no
 	// key behind. Without PRF the keystore generates a key for this session
-	// only — see `warnIfIdentityCannotTravel` in +page.svelte.
+	// only, and the encryption pair is one kept in this browser — see
+	// `warnIfIdentityCannotTravel` in +page.svelte.
 	//
 	// No `encryptKeystore`: it encrypted a separate key pair that signed
 	// nothing, and cost a passkey prompt to unlock it.
@@ -416,16 +428,36 @@ async function createOrbitDBInstance(heliaNode) {
 	// session of the same passkey — entries of an earlier session arrive, and
 	// this session can no longer write (orbitdb/orbitdb#1258).
 	const identities = withoutStaleIdentityCache(await Identities({ ipfs: heliaNode, keystore }));
-	// A passkey restored on this device brought its signing key along; in the
-	// keystore before the provider looks, it spares the passkey a touch that
-	// would only read the PRF output the restore already read.
+	// A passkey restored on this device brought its signing key along, and it
+	// goes into the keystore before the provider looks; the provider leaves a
+	// key it finds alone. It no longer spares a touch: the restore hands back
+	// the signing key but not the PRF output, and the encryption pair below
+	// needs the output itself.
 	await seedRestoredSigningKey(identities.keystore, activePasskeyCredential);
-	const identity = await identities.createIdentity({
-		provider: OrbitDBWebAuthnIdentityProviderFunction({
-			webauthnCredential: activePasskeyCredential,
-			signingKeyType: SIGNING_KEY_TYPE
-		})
-	});
+	// The PRF output, read once for the two keys that come from it: the
+	// provider derives the signing key from it rather than asking again, and
+	// ./device-keys.js the encryption pair, under a label of its own. Neither
+	// key is derived from the other. Without PRF the provider is told not to ask
+	// either — the one touch has already said there is none.
+	const prfOutput = await readSessionPrfOutput(activePasskeyCredential);
+	let identity;
+	try {
+		identity = await identities.createIdentity({
+			provider: OrbitDBWebAuthnIdentityProviderFunction({
+				webauthnCredential: activePasskeyCredential,
+				signingKeyType: SIGNING_KEY_TYPE,
+				...(prfOutput ? { prfOutput } : { deriveSigningKeyFromPrf: false })
+			})
+		});
+		const { source } = await setUpDeviceKeys(identity.id, {
+			prfOutput,
+			keystore: identities.keystore
+		});
+		deviceKeySourceStore.set(source);
+	} finally {
+		// Both keys are derived; the secret they came from is not kept.
+		prfOutput?.fill(0);
+	}
 	// The provider files a proof under `webauthn-identity-proof:…` in
 	// localStorage as well as in its own Map, with no way to hand it another
 	// store. In memory mode that is a trace the reader asked us not to leave, so
