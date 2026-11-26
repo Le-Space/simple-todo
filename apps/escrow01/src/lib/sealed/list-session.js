@@ -16,13 +16,11 @@ import { LIST_SCOPE, taskScope } from './key-ring.js';
 import { createListKeys, openListKeys } from './list-keys.js';
 import {
 	isSealedListName,
-	META_NAME_KEY,
 	openActionText,
 	openRecord,
 	openRecords,
 	sealActionText,
 	sealedListName,
-	sealForList,
 	sealTodo
 } from './sealed-list.js';
 import { currentReader } from './session-reader.js';
@@ -49,8 +47,8 @@ export function isSealedList(db) {
 
 /**
  * Make a sealed list: a random database name, the creator as its only writer
- * and its owner, the first list key, and its readable name sealed as
- * `meta/name`.
+ * and its owner, the first list key, and its readable name sealed in the key
+ * store (list-keys.js says why there).
  *
  * @param {any} orbitdb
  * @param {{ name: string }} options
@@ -74,7 +72,7 @@ export async function createSealedList(orbitdb, { name }) {
 	});
 	opened.set(address, keys);
 	const ready = await keys;
-	await db.put(META_NAME_KEY, await sealForList(ready.ring, META_NAME_KEY, name));
+	await ready.setName(name);
 	return { db, keys: ready };
 }
 
@@ -145,7 +143,7 @@ export function actionTextToWrite(keys, todoKey, text) {
  */
 export async function recordsToShow(keys, records, { isAction }) {
 	if (!keys) return { records, hidden: 0, name: null };
-	const read = await openRecords(records, keys.ring);
+	const [read, name] = await Promise.all([openRecords(records, keys.ring), keys.name()]);
 	const shown = await Promise.all(
 		read.records.map(async (record) =>
 			isAction(record.key)
@@ -153,7 +151,7 @@ export async function recordsToShow(keys, records, { isAction }) {
 				: record
 		)
 	);
-	return { records: shown, hidden: read.hidden, name: read.name };
+	return { records: shown, hidden: read.hidden, name: name ?? read.name };
 }
 
 /**

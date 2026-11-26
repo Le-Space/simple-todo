@@ -162,6 +162,43 @@ describe('the keys of one sealed list', () => {
 	});
 });
 
+describe('the name of a sealed list', () => {
+	beforeEach(() => setPersistentStorageEnabled(false));
+
+	afterEach(async () => {
+		for (const node of running.splice(0)) await node.stop?.();
+	});
+
+	it('is kept sealed by the owner, and read by whoever holds the list key', async () => {
+		const orbitdb = await orbitdbInMemory();
+		const owner = { did: orbitdb.identity.id, agreementKey: await keyFor(1) };
+		const bob = { did: BOB, agreementKey: await keyFor(2) };
+		const ownersKeys = await createListKeys(orbitdb, {
+			listAddress: LIST,
+			own: owner,
+			lookupPublicKey: async (did) => (did === BOB ? bob.agreementKey.publicKey : null)
+		});
+		await ownersKeys.setName('Household');
+
+		expect(await ownersKeys.name()).toBe('Household');
+		expect(JSON.stringify(await ownersKeys.store.all())).not.toContain('Household');
+
+		const bobsKeys = await openListKeys(orbitdb, {
+			listAddress: LIST,
+			ownerDid: owner.did,
+			own: bob,
+			lookupPublicKey: async () => null
+		});
+		expect(await bobsKeys.name()).toBeNull();
+		await expect(bobsKeys.setName('Mine now')).rejects.toThrow(/owner/);
+
+		const arrived = nextChange(bobsKeys);
+		await ownersKeys.grant(BOB);
+		await arrived;
+		expect(await bobsKeys.name()).toBe('Household');
+	});
+});
+
 describe('the task keys of a sealed list', () => {
 	beforeEach(() => setPersistentStorageEnabled(false));
 

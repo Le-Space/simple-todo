@@ -62,8 +62,9 @@ test('a device that never saw this passkey finds the sealed home list, by name, 
 	const name = ((await page.getByTestId('active-list-name').textContent()) ?? '').trim();
 	expect(name).not.toBe('');
 	expect(name).not.toContain('sealed-v1-');
-	// The relay has the todo (its index reads an envelope like any value), so a
-	// device with nothing finds it there rather than here.
+	// The relay has the todo, so a device with nothing finds it there rather
+	// than here. The list holds todos only -- its name is in the key store -- so
+	// the relay's proof compares this todo, as on a list in the clear.
 	await expect(page.getByTestId('todo-relay-status')).toHaveAttribute('data-status', 'pinned', {
 		timeout
 	});

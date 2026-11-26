@@ -59,9 +59,8 @@ test.describe('Sealed private lists (#127)', () => {
 			await addTodoExpectDenied(mallory.page, `intruder-${runId}`);
 
 			step('what Mallory holds of the list is sealed');
-			const held = await entriesOnceThere(mallory.page, 3);
+			const held = await entriesOnceThere(mallory.page, 2);
 			expectNothingInTheClear(held, [kept, delegated]);
-			expect(held.some((entry) => entry.key === 'meta/name')).toBe(true);
 
 			step('Bob renames his todo; Alice reads it, Mallory does not');
 			await renameTodo(bob.page, delegated, renamed);
@@ -124,6 +123,16 @@ test.describe('Sealed private lists (#127)', () => {
 			await revokeWrite(alice.page, carol.did);
 			await expect(alice.page.getByTestId('permission-key-note')).toBeVisible({ timeout });
 			await addTodoOk(alice.page, after);
+			// Whether the entry reaches Carol at all, apart from whether she can open
+			// it: the two failed together until now, and only this tells them apart.
+			await expect
+				.poll(
+					async () =>
+						(await carol.page.evaluate(() => window.__simpleTodoE2E.getOpenListEntries())).length,
+					{ timeout, message: 'waiting for Alice’s todo to reach Carol at all' }
+				)
+				.toBeGreaterThanOrEqual(3);
+			step('Alice’s todo reached Carol; is it sealed to her?');
 			await expectHidden(carol.page, 1);
 			await expect(carol.page.getByText(after, { exact: true })).toHaveCount(0);
 			// What she could read stays readable to her: a grant cannot be taken back.

@@ -27,6 +27,8 @@
  * entries nobody else could read.
  */
 import { createKeyRing, LIST_SCOPE, newEpochKey, taskScope } from './key-ring.js';
+import { openValue } from './envelope.js';
+import { META_NAME_KEY, sealForList } from './sealed-list.js';
 import { loadOwnKeys, openKeyStore, putKeyCopy, putListKeyCopy, slotFor } from './key-store.js';
 import { createNewcomerAnswers } from '../newcomers.js';
 
@@ -71,6 +73,11 @@ const LOOKUP_DURING_WRITE_MS = 5_000;
  * @property {(todoKey: string, did: string, options?: { timeoutMs?: number }) => Promise<string[]>} ensureTaskGranted
  *   write a delegate's copy of the current epoch of his todo's key, if it is
  *   missing; the slots written
+ * @property {(name: string) => Promise<void>} setName
+ *   the list's readable name, sealed under the list key, in the key store;
+ *   owner only
+ * @property {() => Promise<string | null>} name
+ *   the list's name, when this session holds the key it was sealed under
  * @property {(listener: () => void) => () => void} onChange
  *   hears that new keys arrived; returns the unsubscribe
  * @property {() => Promise<void>} close
@@ -272,6 +279,23 @@ function listKeys({ orbitdb, store, ring, own, ownerDid, lookupPublicKey }) {
 				key.fill(0);
 			}
 			return [slot];
+		},
+
+		// The name lives here rather than in the list (#127): only the owner
+		// writes this store, so the name is hers, and the list itself holds
+		// todos only -- the relay's proof for a todo compares it with the list's
+		// last record, which a name written beside the todos would be.
+		async setName(name) {
+			assertOwner();
+			await store.put(META_NAME_KEY, await sealForList(ring, META_NAME_KEY, name));
+		},
+
+		async name() {
+			const opened = await openValue(await store.get(META_NAME_KEY), {
+				keyFor: ring.keyFor,
+				entryKey: META_NAME_KEY
+			});
+			return opened.state === 'open' && typeof opened.value === 'string' ? opened.value : null;
 		},
 
 		onChange(listener) {
