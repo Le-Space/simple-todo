@@ -45,8 +45,17 @@ test.describe('the page in tabs', () => {
 			await openSection(page, /** @type {any} */ (section));
 			expect(await shownSections(page)).toEqual([`section-${section}`]);
 			await expect(page.locator('[aria-current="page"]')).toHaveCount(1);
-			// The section leads the fragment; the open list follows it, so a tab
-			// switch never drops the list from the link and the page QR.
+			// The section leads the fragment. The list of one's own is still to be
+			// made, so there is no list yet to follow it.
+			await expect.poll(() => new URL(page.url()).hash).toBe(`#${section}`);
+		}
+
+		// With a list on screen, the list follows the section, so a tab switch
+		// never drops it from the link and the page QR.
+		await openSection(page, 'listen');
+		await page.getByTestId('three-word-list-open').click();
+		for (const section of [...TABS.slice(1), 'aufgaben']) {
+			await openSection(page, /** @type {any} */ (section));
 			await expect
 				.poll(() => new URL(page.url()).hash)
 				.toMatch(new RegExp(`^#${section}&list=[^&]+$`));

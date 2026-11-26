@@ -16,7 +16,9 @@
  * new tab starts by itself -- which is where "the same list again" is asked.
  */
 import { test, expect } from '@playwright/test';
-import { passConsent, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import { isConsentOpen, passConsent, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
+import { expectPageQr, readListLink } from '@simple-todo/e2e-kit/page-qr.mjs';
+import { openSection } from './sections.mjs';
 
 const timeout = 90_000;
 
@@ -60,6 +62,12 @@ test('a first visit shows a private list to come, the first todo makes it, a new
 	const home = await openedAddress(first);
 	// The address bar names it, so the link and the page QR are this list.
 	await expect.poll(() => decodeURIComponent(new URL(first.url()).hash)).toContain('db=');
+	// And so does the lists tab: what it copies is this list's address. The
+	// browser's three words are named beside it, not offered as this list's.
+	await openSection(first, 'listen');
+	await expect(first.getByTestId('shared-list-details')).toHaveAttribute('data-kind', 'private');
+	await expect(first.getByTestId('active-shared-list-name')).toHaveCount(0);
+	await expect(first.getByTestId('three-word-list-name')).toHaveText(/^\S+-\S+-\S+$/);
 	await first.close();
 
 	// No link this time: the start has to find the list it made, not make one.
@@ -90,4 +98,67 @@ test('three words from a link open the shared list, and it points to a private o
 	await expect(listKind(page)).toHaveAttribute('data-kind', 'private', { timeout });
 	await expect(page.getByTestId('add-todo-delegate-toggle')).toBeVisible();
 	await expect(hint).toHaveCount(0);
+});
+
+test('the shared list underneath is offered only once it is on screen', async ({ page }) => {
+	// The start opens the browser's three-word list and keeps it open under the
+	// list still to be made. The lists tab, the address bar and the page QR used
+	// to name it as the open one, so its words, handed on, sent the other person
+	// into a list the first todo never reached.
+	test.setTimeout(180_000);
+	await page.goto('/');
+	await waitForConsent(page);
+	await passConsent(page);
+	await expect(todoInput(page)).toBeEnabled({ timeout });
+	await expect(listKind(page)).toHaveAttribute('data-pending', 'true', { timeout });
+
+	// The list to come has nothing to pass on yet: no list in the address, so
+	// none in the page QR either ...
+	expect(readListLink(page.url())).toMatchObject({ words: null, address: null });
+	expect(readListLink(await expectPageQr(page, expect))).toMatchObject({
+		words: null,
+		address: null
+	});
+
+	// ... and nothing to copy in the lists tab. The browser's words are named
+	// beside it, with the switch to their list.
+	await openSection(page, 'listen');
+	const details = page.getByTestId('shared-list-details');
+	await expect(details).toHaveAttribute('data-kind', 'pending');
+	await expect(details.getByTestId('active-list-label')).toHaveText('· My todos');
+	await expect(details.getByTestId('active-list-pending-note')).toBeVisible();
+	await expect(details.getByRole('button', { name: 'Copy', exact: true })).toHaveCount(0);
+	await expect(page.getByTestId('active-shared-list-name')).toHaveCount(0);
+	const words = ((await page.getByTestId('three-word-list-name').textContent()) ?? '').trim();
+	expect(words).toMatch(/^\S+-\S+-\S+$/);
+
+	// "Open this list" puts it on screen, without the dialog: it was open all along.
+	await page.getByTestId('three-word-list-open').click();
+	await expect(details).toHaveAttribute('data-kind', 'shared', { timeout });
+	await expect(details.getByTestId('active-shared-list-name')).toHaveText(words);
+	await expect(details.getByRole('button', { name: 'Copy', exact: true })).toBeVisible();
+	await expect(page.getByTestId('share-by-three-words')).toHaveCount(0);
+	expect(await isConsentOpen(page)).toBe(false);
+	await expect.poll(() => readListLink(page.url()).words).toBe(words);
+	expect(readListLink(await expectPageQr(page, expect)).words).toBe(words);
+
+	// And the first todo goes where the words lead.
+	await openSection(page, 'aufgaben');
+	await expect(listKind(page)).toHaveAttribute('data-kind', 'shared');
+	await expect(listKind(page)).not.toHaveAttribute('data-pending', 'true');
+	await expect(page.getByTestId('active-list-name')).toHaveText(words);
+	const text = `shared-${Date.now().toString(36)}`;
+	await todoInput(page).fill(text);
+	await page.getByTestId('add-todo-submit').click();
+	await expect(page.getByText(text, { exact: true })).toBeVisible({ timeout });
+	await expect(listKind(page)).toHaveAttribute('data-kind', 'shared');
+	expect(readListLink(page.url()).words).toBe(words);
+
+	// Kept like a start that joined it: a reload comes back to it, not to the
+	// list still to be made.
+	await page.reload();
+	await expect(todoInput(page)).toBeEnabled({ timeout });
+	await expect(listKind(page)).toHaveAttribute('data-kind', 'shared', { timeout });
+	await expect(page.getByTestId('active-list-name')).toHaveText(words);
+	await expect(page.getByText(text, { exact: true })).toBeVisible({ timeout });
 });

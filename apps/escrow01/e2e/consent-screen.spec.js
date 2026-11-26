@@ -544,8 +544,8 @@ test.describe('Consent screen', () => {
 			// The simple view: whether the app is ready, and which list is open.
 			await expect(page.getByTestId('p2p-status-nav')).toHaveAttribute('data-view', 'simple');
 			// escrow01 starts towards a list of one's own, named in the reader's
-			// language; it is made with the first todo, so the lists tab still shows
-			// the shared list open underneath.
+			// language; it is made with the first todo. The lists tab shows that list
+			// too, and the shared list open underneath only beside it.
 			await expect(page.getByTestId('active-list-heading')).toContainText('Private Liste');
 			await expect(page.getByTestId('active-list-name')).toHaveText('Meine Aufgaben');
 			await expect(page.getByTestId('active-list-pending')).toHaveText(
@@ -555,7 +555,11 @@ test.describe('Consent screen', () => {
 			await expect(page.getByTestId('network-details')).toHaveCount(0);
 
 			await openSection(page, 'listen');
-			await expect(page.getByTestId('active-list-kind')).toHaveText('Geteilte Liste');
+			await expect(page.getByTestId('active-list-kind')).toHaveText('Private Liste');
+			await expect(page.getByTestId('active-list-pending-note')).toHaveText(
+				'Diese Liste entsteht mit Ihrer ersten Aufgabe. Bis dahin hat sie keine Adresse, keinen Link und keinen QR-Code zum Weitergeben.'
+			);
+			await expect(page.getByTestId('three-word-list-open')).toHaveText('Diese Liste öffnen');
 			await page.getByTestId('new-list-name').fill('Prüfbericht');
 			await page.getByTestId('new-list-create').click();
 			await expect(page.getByTestId('permissions-panel')).toBeVisible({ timeout });
@@ -569,6 +573,8 @@ test.describe('Consent screen', () => {
 				const shown = await page.evaluate(() => document.body.innerText);
 				for (const english of [
 					'Create a private list',
+					'Share by three words',
+					'Open this list',
 					'Open a shared list by address',
 					'Write permissions',
 					'Your lists',
@@ -618,14 +624,15 @@ test.describe('Consent screen', () => {
 		expect(await isConsentOpen(page)).toBe(false);
 		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 
-		// The lists tab opens with the open list's details already unfolded.
+		// The lists tab opens with the open list's details already unfolded. That
+		// is the list of one's own, still to be made; the kept words are the
+		// browser's shared list beside it.
 		await openSection(page, 'listen');
 		const sharedListDetails = page.getByTestId('shared-list-details');
 		await expect(sharedListDetails).toBeVisible({ timeout });
 		await expect(sharedListDetails).toHaveAttribute('open', '');
-		await expect(sharedListDetails.getByTestId('active-shared-list-name')).toHaveText(
-			savedMnemonic ?? ''
-		);
+		await expect(sharedListDetails).toHaveAttribute('data-kind', 'pending');
+		await expect(page.getByTestId('three-word-list-name')).toHaveText(savedMnemonic ?? '');
 	});
 
 	test('unticked, nothing is kept, the decision included: a reload asks again', async ({
@@ -645,24 +652,36 @@ test.describe('Consent screen', () => {
 		page,
 		browser
 	}) => {
-		// After a start the app writes the open list into the address. Read back
-		// on the next load, it greeted every return with "this address opens the
-		// shared list …", for a link nobody had followed.
+		// The app writes the list on screen into the address. Read back on the
+		// next load, it greeted every return with "this address opens the shared
+		// list …", for a link nobody had followed.
+		//
+		// escrow01: a start without a link ends in a list still to be made, which
+		// has no address to write. The browser's own three words, put on screen
+		// from the lists tab, are a list the address carries.
 		await page.goto('/');
 		await passConsent(page, { persistent: false });
 		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
+		await expect(page.getByTestId('active-list-heading')).toHaveAttribute('data-pending', 'true', {
+			timeout
+		});
+		expect(new URL(page.url()).hash).not.toContain('list=');
+		await openSection(page, 'listen');
+		const own = ((await page.getByTestId('three-word-list-name').textContent()) ?? '').trim();
+		await page.getByTestId('three-word-list-open').click();
 		await expect.poll(() => new URL(page.url()).hash).toContain('list=');
-		const own = decodeURIComponent(new URL(page.url()).hash.match(/list=([^&]+)/)?.[1] ?? '');
+		expect(decodeURIComponent(new URL(page.url()).hash.match(/list=([^&]+)/)?.[1] ?? '')).toBe(own);
 
 		await page.reload();
 		await waitForConsent(page);
 		await expect(page.getByTestId('consent-linked-list')).toHaveCount(0);
 		await openAdvanced(page);
 		await expect(page.getByTestId('consent-join-list')).not.toBeChecked();
-		// Memory mode forgot the way taken too, so it is taken again.
+		// Memory mode forgot the way taken too, so the start ends in the list to
+		// come again, with the same words beside it.
 		await passConsent(page);
 		await openSection(page, 'listen');
-		await expect(page.getByTestId('active-shared-list-name')).toHaveText(own, { timeout });
+		await expect(page.getByTestId('three-word-list-name')).toHaveText(own, { timeout });
 
 		// Somebody else's browser, sent the same address: that is a link.
 		const context = await browser.newContext();

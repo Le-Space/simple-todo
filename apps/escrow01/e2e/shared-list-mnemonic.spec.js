@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 import { passConsent, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
-import { generateSpanishMnemonic } from '@simple-todo/todo/spanish-mnemonic.js';
 import { openSection } from './sections.mjs';
 import { pinTechnicalView } from './technical-view.mjs';
 
@@ -25,22 +24,26 @@ test.describe('Spanish mnemonic shared todo lists', () => {
 		const bobTodo = `mnemonic-${runId}-from-bob`;
 
 		try {
-			// Alice opens a shared list on purpose. A start without words ends in a
-			// private list of her own, made by her first todo (#140); her browser's
-			// three words stay open only underneath, and a todo never reaches them.
-			// She hands the words on from the lists tab, where the open list's
-			// details are.
-			const aliceWords = generateSpanishMnemonic();
-			await openList(alice, aliceWords);
+			// Alice follows foundations.md, "Shared lists by three words", step 3.
+			// A start without words ends in a private list of her own, made by her
+			// first todo (#140); her browser's three words stay open only
+			// underneath, and a todo never reaches them. So the lists tab offers
+			// them to copy only once she has put their list on screen.
+			await openList(alice);
 			await openSection(alice, 'listen');
+			const aliceCard = alice.getByTestId('shared-list-details');
+			await expect(aliceCard).toHaveAttribute('data-kind', 'pending', { timeout });
+			await expect(aliceCard.getByRole('button', { name: 'Copy', exact: true })).toHaveCount(0);
+			const aliceWords = (
+				(await alice.getByTestId('three-word-list-name').textContent()) ?? ''
+			).trim();
+			await alice.getByTestId('three-word-list-open').click();
+			await expect(aliceCard).toHaveAttribute('data-kind', 'shared', { timeout });
 			const aliceMnemonic = (
 				await alice.getByTestId('active-shared-list-name').textContent()
 			)?.trim();
 			expect(aliceMnemonic).toBe(aliceWords);
-			await alice
-				.getByTestId('shared-list-details')
-				.getByRole('button', { name: 'Copy', exact: true })
-				.click();
+			await aliceCard.getByRole('button', { name: 'Copy', exact: true }).click();
 			const copiedMnemonic = await alice.evaluate(() => navigator.clipboard.readText());
 			expect(copiedMnemonic).toBe(aliceMnemonic);
 
@@ -98,11 +101,11 @@ test.describe('Spanish mnemonic shared todo lists', () => {
 });
 
 /**
- * Through the start dialog without a passkey, joining the shared list behind
- * the words.
+ * Through the start dialog without a passkey: with words, joining the shared
+ * list behind them; without, as a first visit does.
  *
  * @param {import('@playwright/test').Page} page
- * @param {string} mnemonic
+ * @param {string} [mnemonic]
  */
 async function openList(page, mnemonic) {
 	// The spec checks that the network details stay closed next to the list
@@ -110,7 +113,7 @@ async function openList(page, mnemonic) {
 	await pinTechnicalView(page);
 	await page.goto(testUrl);
 	await waitForConsent(page);
-	await passConsent(page, { mnemonic });
+	await passConsent(page, mnemonic === undefined ? {} : { mnemonic });
 	await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 }
 
