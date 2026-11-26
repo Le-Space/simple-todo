@@ -32,6 +32,7 @@
 			"e2e/two-passkeys.spec.js",
 			"e2e/phone-layout.spec.js"
 		],
+		"lint": true,
 		"check": true
 	},
 	"title": "Every change archived as it happens, with one passkey touch",
