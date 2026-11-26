@@ -44,15 +44,17 @@ export function cameBackToThisAddress() {
 
 	Before the private start, the own words were the list on screen, so own
 	words in the address meant "this list again". Now a start without "Join a
-	shared list" ends in one's own private list, while its address still carries
-	the own words until the first todo makes that list. And a start that joins
-	keeps the joined words as its own. So own words in the address no longer
-	tell a reload of a joined shared list from a reload of the list still to be
-	made. This key does.
+	shared list" ends in one's own private list, and the shared list underneath
+	reaches the screen, and the address, only by a start that joins it or by
+	"Open this list" in the lists tab. A start that joins keeps the joined words
+	as its own, and words in an address can be older than the last start. So
+	own words in the address do not say whether the last start ended in that
+	shared list or in one's own. This key does: the words of the shared list
+	last joined or put on screen.
 */
 const JOINED_LIST_KEY = 'simpleTodo.joinedList';
 
-/** The words the last start joined, if it joined a shared list. */
+/** The words of the shared list last joined or put on screen, if any. */
 export function joinedMnemonic() {
 	try {
 		const saved = recall(JOINED_LIST_KEY);
