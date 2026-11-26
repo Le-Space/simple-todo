@@ -19,6 +19,27 @@
 	 * `elementStrings`.
 	 */
 	import { createEventDispatcher, onMount } from 'svelte';
+	/*
+		The element, with this component rather than after it. Imported in
+		`onMount` until 2026-11, it arrived one round trip after the page: the
+		dialog's content was already on the page, and until `<qr-intro>` was
+		defined it had no shadow root to be slotted into, so it rendered inline,
+		unstyled, above the app — 2.3 s of it on a slow phone line, the first
+		thing a visitor saw. Imported here, it is fetched alongside the page and
+		defined before this component mounts, so the dialog is modal in the first
+		frame that shows it. It is the first screen of every chapter on a first
+		visit; there is no later to put it off to.
+
+		The class, and defined here, rather than `import '…/elements'` for the
+		module's own `customElements.define`: the package declares only its
+		sources as having side effects (`sideEffects: ["./src/elements/*.js"]`),
+		not the `dist/elements.js` that `./elements` resolves to, so a bundler
+		drops a bare import of it without a word — the build passed and shipped
+		no element at all. A dynamic import is never dropped, which is why the
+		old way worked. Naming the class also keeps the other five elements of
+		that bundle out of the page.
+	*/
+	import { QrIntroElement } from '@le-space/libp2p-webrtc-qr/elements';
 	import { locale, t } from './i18n.js';
 	import { formatBuildDate, formatVersions } from '@simple-todo/todo/build-info.js';
 	import {
@@ -27,6 +48,13 @@
 		deferNetworkCheck,
 		withoutNetworkCheck
 	} from './qr-intro-network.js';
+
+	// Before the markup below is created, so `<qr-intro>` is born upgraded.
+	// The bundle defines it too when it is loaded whole (main's QR connect
+	// does); whichever comes first stands.
+	if (typeof customElements !== 'undefined' && !customElements.get('qr-intro')) {
+		customElements.define('qr-intro', QrIntroElement);
+	}
 
 	const dispatch = createEventDispatcher();
 
@@ -496,8 +524,9 @@
 		box.addEventListener('change', () => (accepted = box.checked === true));
 	}
 
-	onMount(async () => {
-		await import('@le-space/libp2p-webrtc-qr/elements');
+	// Synchronous, and that is the point: no await between the mount and the
+	// open, so no frame in which the dialog is on the page but not yet modal.
+	onMount(() => {
 		introEl.strings = strings;
 		patchElementStyle();
 
@@ -869,6 +898,17 @@
 
 	:global(html.dark) qr-intro {
 		--qr-intro-changed: rgba(250, 204, 21, 0.4);
+	}
+
+	/*
+		An undefined element is an ordinary inline one, and everything slotted
+		into it is laid out on the page as if there were no dialog at all. The
+		import above defines it before this component mounts; this is what keeps
+		a later change to that order from putting the dialog's text back above
+		the app (e2e/first-frame.spec.js in escrow01).
+	*/
+	qr-intro:not(:defined) {
+		display: none;
 	}
 
 	/*

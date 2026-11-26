@@ -108,9 +108,161 @@
 		/>
 		<meta itemprop="image" content="https://escrow01.le-space.de/og/escrow01.jpg" />
 
+		<!-- The splash: the mark, while the app's code is on its way. Nothing
+		     can be drawn before it arrives (ssr = false), and on a slow phone
+		     line that is several seconds of an empty page. It waits 0.6 s before
+		     it fades in, so a load that finishes sooner (any local one, the demo
+		     film's) never shows it, and it goes the moment the app has put
+		     anything on the page — the start dialog, modal from its first frame,
+		     or an error. If that never happens, it says so after 15 s and offers
+		     a reload rather than turning for ever. A style, no script: the
+		     removal is the layout's, with the `:has()` rule as the fallback. -->
+		<style>
+			#app-splash {
+				--coral: #e8503f;
+				--cyan: #0e86c4;
+				position: fixed;
+				inset: 0;
+				z-index: 40;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 1.25rem;
+				padding: 1rem;
+				color: #41506b;
+				font:
+					14px/1.5 system-ui,
+					-apple-system,
+					'Segoe UI',
+					Roboto,
+					sans-serif;
+				text-align: center;
+				opacity: 0;
+				pointer-events: none;
+				animation: app-splash-in 300ms ease-out 600ms forwards;
+			}
+			.dark #app-splash {
+				--coral: #ff6b5b;
+				--cyan: #58c7f3;
+				color: #a8b3c7;
+			}
+			body:has(#app-root > :not(script)) #app-splash {
+				display: none;
+			}
+			#app-splash .flow {
+				animation: app-splash-flow 1.2s linear infinite;
+			}
+			#app-splash p {
+				margin: 0;
+			}
+			#app-splash .slow {
+				visibility: hidden;
+				pointer-events: auto;
+				animation: app-splash-show 0s 15s forwards;
+			}
+			#app-splash a {
+				color: inherit;
+				text-decoration: underline;
+				text-underline-offset: 2px;
+			}
+			#app-splash .sr {
+				position: absolute;
+				width: 1px;
+				height: 1px;
+				overflow: hidden;
+				clip-path: inset(50%);
+				white-space: nowrap;
+			}
+			@keyframes app-splash-in {
+				to {
+					opacity: 1;
+				}
+			}
+			/* Two dash periods per turn, so the loop has no seam. */
+			@keyframes app-splash-flow {
+				to {
+					stroke-dashoffset: calc(var(--period) * -2);
+				}
+			}
+			@keyframes app-splash-show {
+				to {
+					visibility: visible;
+				}
+			}
+			@media (prefers-reduced-motion: reduce) {
+				#app-splash {
+					animation-duration: 1ms;
+				}
+				#app-splash .flow {
+					animation: none;
+				}
+			}
+		</style>
+
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents">%sveltekit.body%</div>
+		<!-- The Le-Space mark (packages/ui/src/LeSpaceLogo.svelte), its sync
+		     links flowing. Not a dialog and nothing to focus until the slow
+		     notice shows; `role="status"` names what is happening. -->
+		<div id="app-splash" role="status" data-testid="app-splash">
+			<svg width="72" height="72" viewBox="0 0 96 96" aria-hidden="true">
+				<line
+					x1="42.7"
+					y1="49.96"
+					x2="58.56"
+					y2="34.94"
+					stroke="var(--cyan)"
+					stroke-width="4"
+					stroke-linecap="round"
+				/>
+				<line
+					class="flow"
+					style="--period: 8.1px"
+					x1="47.43"
+					y1="63.58"
+					x2="62.8"
+					y2="64.98"
+					stroke="var(--cyan)"
+					stroke-width="4"
+					stroke-linecap="round"
+					stroke-dasharray="0.1 8"
+				/>
+				<line
+					class="flow"
+					style="--period: 6.1px"
+					x1="69.85"
+					y1="38.36"
+					x2="72.41"
+					y2="55.37"
+					stroke="var(--cyan)"
+					stroke-width="2.5"
+					stroke-linecap="round"
+					stroke-dasharray="0.1 6"
+					opacity="0.65"
+				/>
+				<circle cx="30" cy="62" r="15" fill="var(--coral)" />
+				<circle cx="68" cy="26" r="8" fill="none" stroke="var(--cyan)" stroke-width="5" />
+				<circle cx="74" cy="66" r="6.5" fill="none" stroke="var(--cyan)" stroke-width="4.5" />
+				<circle cx="17" cy="21" r="2.6" fill="var(--cyan)" opacity="0.55" />
+			</svg>
+			<span class="sr"
+				><span lang="de">escrow01 wird geladen</span> ·
+				<span lang="en">Loading escrow01</span></span
+			>
+			<p class="slow" data-testid="app-splash-slow">
+				<span lang="de">Das dauert ungewöhnlich lange. <a href="">Neu laden</a></span
+				><br />
+				<span lang="en">This is taking unusually long. <a href="">Reload</a></span>
+			</p>
+			<noscript>
+				<p>
+					<span lang="de">escrow01 braucht JavaScript.</span><br />
+					<span lang="en">escrow01 needs JavaScript.</span>
+				</p>
+			</noscript>
+		</div>
+		<div id="app-root" aria-busy="true" style="display: contents">%sveltekit.body%</div>
 	</body>
 </html>
