@@ -18,6 +18,7 @@
 	import { _ } from '$lib/i18n/index.js';
 	import LanguageSwitcher from '@simple-todo/ui/LanguageSwitcher.svelte';
 	import BudgetIcon from './BudgetIcon.svelte';
+	import ForgetThisBrowserLink from './ForgetThisBrowserLink.svelte';
 
 	/** Whether the passkey prompt is up, so the button says so and waits. */
 	export let busy = false;
@@ -98,4 +99,7 @@
 	>
 		{$_('welcome.more')}
 	</button>
+	<!-- The moment somebody on a shared computer needs it, and it asks for no
+	     passkey: what this browser keeps goes, and the start begins anew. -->
+	<ForgetThisBrowserLink className="mt-2 block text-sm text-text" />
 </dialog>

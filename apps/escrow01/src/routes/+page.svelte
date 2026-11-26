@@ -14,6 +14,9 @@
 	import BudgetIcon from '$lib/BudgetIcon.svelte';
 	import DemoVideoButton from '$lib/DemoVideoButton.svelte';
 	import DemoVideoPlayer from '$lib/DemoVideoPlayer.svelte';
+	import ForgetThisBrowser from '$lib/ForgetThisBrowser.svelte';
+	import ForgetThisBrowserLink from '$lib/ForgetThisBrowserLink.svelte';
+	import { keepsSomethingHereStore } from '$lib/forget-this-browser.js';
 	import PasskeyWelcomeBack from '$lib/PasskeyWelcomeBack.svelte';
 	import LanguageSwitcher from '@simple-todo/ui/LanguageSwitcher.svelte';
 	import AuditorView from '$lib/budget/AuditorView.svelte';
@@ -949,6 +952,7 @@
 
 <!-- The demo video, over the dialog or over the page: opened by the teaser or the header link. -->
 <DemoVideoPlayer />
+<ForgetThisBrowser />
 
 <main class="container mx-auto max-w-4xl px-4 pt-4 pb-28 sm:px-6 sm:pt-6 sm:pb-6">
 	<AppHeader {auditorOpen} />
@@ -1077,7 +1081,12 @@
 		<NetworkSection on:connected={handleManualConnect} />
 	</section>
 
-	<AppFooter />
+	<!-- The way out of "Keep in this browser", only where there is something kept. -->
+	{#if $keepsSomethingHereStore}
+		<AppFooter><ForgetThisBrowserLink /></AppFooter>
+	{:else}
+		<AppFooter />
+	{/if}
 </main>
 
 <!--

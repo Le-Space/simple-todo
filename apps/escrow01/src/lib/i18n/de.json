@@ -646,6 +646,20 @@
 		"more": "Andere Optionen und alle Hinweise",
 		"accepted": "Es gelten die Hinweise, denen Sie beim ersten Start mit diesem Passkey zugestimmt haben."
 	},
+	"forget": {
+		"open": "Mich in diesem Browser vergessen",
+		"title": "Soll dieser Browser Sie vergessen?",
+		"goes": "Das löscht alles, was dieser Browser für Sie behält: Ihre Anmeldung hier und seine Kopie Ihrer Listen und Ihrer Kontodaten. Danach startet die App wie auf einem neuen Gerät und fragt wieder nach Ihrem Passkey.",
+		"unsynced": "Ein Eintrag, der noch kein anderes Gerät und kein Relay erreicht hat, geht dabei verloren.",
+		"staysTitle": "Was bleibt",
+		"staysPasskey": "Ihr Passkey – auf Ihrem Handy, Computer oder Sicherheitsschlüssel.",
+		"staysLists": "Ihre Listen – auf Ihren anderen Geräten und dort, wo ein Relay eine Kopie behalten hat.",
+		"staysAccount": "Ihr Konto auf Sepolia mit seinem Guthaben. Derselbe Passkey öffnet es wieder.",
+		"technical": "Gelöscht werden localStorage und sessionStorage dieses Origins vollständig und alle IndexedDB-Datenbanken unter level-js-orbitdb/ und level-js-simple-todo/ – das Passkey-Credential und die Identitätsnachweise, die Logs der Listen und ihr Verzeichnis, der Kontoeintrag und jeder Schlüssel, den dieser Browser behalten hat. Die Sprache geht über die Adresse mit, Farbschema und technische Ansicht nicht. Der nächste Start findet die Identität wieder auf dem Authenticator, wie ein neues Gerät.",
+		"cancel": "Abbrechen",
+		"confirm": "Vergessen und neu starten",
+		"busy": "Wird vergessen …"
+	},
 	"video": {
 		"teaser": "So funktioniert’s",
 		"short": "Video",

@@ -646,6 +646,20 @@
 		"more": "Other options and all notices",
 		"accepted": "The notices you accepted when you first started with this passkey still apply."
 	},
+	"forget": {
+		"open": "Forget me on this browser",
+		"title": "Should this browser forget you?",
+		"goes": "This deletes everything this browser keeps for you: your sign-in here, and its copy of your lists and of your account details. The app then starts as on a new device and asks for your passkey again.",
+		"unsynced": "An entry that has not reached another device or a relay yet is lost with it.",
+		"staysTitle": "What stays",
+		"staysPasskey": "Your passkey, on your phone, computer or security key.",
+		"staysLists": "Your lists, on your other devices and wherever a relay kept a copy.",
+		"staysAccount": "Your account on Sepolia, with its balance. The same passkey opens it again.",
+		"technical": "Deleted: this origin’s localStorage and sessionStorage in full, and every IndexedDB database under level-js-orbitdb/ and level-js-simple-todo/ — the passkey credential and identity proofs, the lists’ logs and registry, the account record, and any key this browser kept. The language carries over in the address; the theme and this technical view do not. The next start finds the identity on the authenticator again, as a new device does.",
+		"cancel": "Cancel",
+		"confirm": "Forget and restart",
+		"busy": "Forgetting…"
+	},
 	"video": {
 		"teaser": "How it works",
 		"short": "Video",
