@@ -24,7 +24,7 @@
 			"readingIsOpen": "A passkey says who wrote something. It does not make it private - nothing here is encrypted, and anyone who has the three words reads everything, including the relay that stores it.",
 			"identityPasskey": "Your passkey identifies you to the other devices. It stays with your authenticator – in the device, on a security key, or in a password manager that may sync it between your devices. We never see it, and nobody else can write as you.",
 			"identityAnonymous": "You are using a random identity that exists only in this browser. Close it and it is gone, and nothing connects one visit to the next.",
-			"cookies": "No tracking cookies are used. If you tick \"don't show this again\", that choice is the only thing saved on this device.",
+			"cookies": "No tracking cookies are used. Kept in this browser, your decision to start is kept too, and this dialog does not come back; in memory only, it asks again.",
 			"identityAnonymousKept": "You are using a random identity that exists only in this browser. It keeps it until you clear the site data; nothing links it to you.",
 			"storageMemory": "You chose \"in memory only\": nothing is written to this device, and this browser starts over when the page reloads.",
 			"storagePersistent": "You chose \"keep them in this browser\": the todos survive a reload. They sit unencrypted in this browser’s storage, and clearing it loses them."
@@ -95,6 +95,18 @@
 		"storageMemoryLabel": "In Memory Only",
 		"storageMemoryHint": "Todos are stored in a shared, unencrypted OrbitDB database in memory and will be deleted on app reload or on exit.",
 		"storagePersistentLabel": "IndexedDB",
-		"storagePersistentHint": "I understand todos are stored in a shared, unencrypted OrbitDB database in the browser's IndexedDB and will persist between app restarts or after app exit."
+		"storagePersistentHint": "I understand todos are stored in a shared, unencrypted OrbitDB database in the browser's IndexedDB and will persist between app restarts or after app exit.",
+		"title": "Your todos, signed with your passkey",
+		"promise": "One shared list, and a passkey that says who wrote what, on every device where you use it.",
+		"summary": {
+			"lists": "A passkey says who wrote something; it does not make it private. Nothing here is encrypted, and anyone with the three words reads the list.",
+			"listsTechnical": "A passkey signs, it does not encrypt: the list’s OrbitDB log is readable by anyone with the three words, the relay too.",
+			"authenticator": "The passkey stays with your authenticator: in the device, on a security key or in a password manager. We never see it.",
+			"kept": "Kept in this browser, your todos survive a reload. They sit unencrypted in its storage, and clearing the site data loses them.",
+			"keptTechnical": "Kept in this browser: the OrbitDB logs and the signing key sit unencrypted in IndexedDB and localStorage. Clearing the site data loses them.",
+			"memory": "In memory only: nothing stays on this device, and a reload starts over."
+		},
+		"identityLabelDefault": "Passkey-Todo",
+		"identityLabelTitle": "Name of the new passkey"
 	}
 }
