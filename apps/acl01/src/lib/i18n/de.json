@@ -25,7 +25,7 @@
 			"readingIsOpen": "Hier ist nichts verschlüsselt. Wer die Adresse einer Liste hat, kann alles darin lesen, auch der Relay, der sie aufbewahrt. Schreiben Sie nichts Privates in ein Todo.",
 			"identityPasskey": "Ihr Passkey weist Sie gegenüber den anderen Geräten aus. Niemand sonst kann in Ihrem Namen schreiben.",
 			"identityAnonymous": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Schließen Sie ihn, ist sie weg.",
-			"cookies": "Es werden keine Tracking-Cookies verwendet. Wenn Sie \"nicht mehr anzeigen\" ankreuzen, ist diese Entscheidung das Einzige, was auf diesem Gerät gespeichert wird.",
+			"cookies": "Es werden keine Tracking-Cookies verwendet. In diesem Browser behalten, bleibt auch Ihre Entscheidung zu starten, und dieser Dialog kommt nicht wieder; nur im Arbeitsspeicher fragt er erneut.",
 			"identityAnonymousKept": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Er behält sie, bis Sie die Website-Daten löschen; nichts verbindet sie mit Ihnen.",
 			"storageMemory": "Sie haben „nur im Arbeitsspeicher“ gewählt: Auf diesem Gerät wird nichts abgelegt, und beim Neuladen fängt dieser Browser von vorn an.",
 			"storagePersistent": "Sie haben „in diesem Browser behalten“ gewählt: Die Todos bleiben nach dem Neuladen da. Sie liegen unverschlüsselt im Speicher dieses Browsers, und wer ihn löscht, verliert sie."
@@ -96,6 +96,18 @@
 		"storageMemoryLabel": "Nur im Arbeitsspeicher",
 		"storageMemoryHint": "Die Aufgaben liegen in einer geteilten, unverschlüsselten OrbitDB-Datenbank im Arbeitsspeicher und sind beim Neuladen oder Beenden weg.",
 		"storagePersistentLabel": "IndexedDB",
-		"storagePersistentHint": "Mir ist klar, dass die Aufgaben in einer geteilten, unverschlüsselten OrbitDB-Datenbank in der IndexedDB des Browsers liegen und einen Neustart überdauern."
+		"storagePersistentHint": "Mir ist klar, dass die Aufgaben in einer geteilten, unverschlüsselten OrbitDB-Datenbank in der IndexedDB des Browsers liegen und einen Neustart überdauern.",
+		"title": "Eigene Listen – und wer hineinschreiben darf",
+		"promise": "Legen Sie eine eigene Liste an und entscheiden Sie Person für Person, wer hineinschreiben darf. Deren Passkey ist der Name, unter dem Sie sie eintragen.",
+		"summary": {
+			"lists": "Schreibrecht ist kein Leserecht: Hier ist nichts verschlüsselt, und wer die Adresse einer Liste hat, kann sie lesen.",
+			"listsTechnical": "Schreibrecht ist kein Leserecht: Der Access Controller entscheidet, wer anhängen darf, und das OrbitDB-Log ist für jeden mit der Adresse lesbar.",
+			"writers": "Sie können jederzeit jemanden als Schreibende hinzufügen oder entfernen, und die Liste behält ihre Adresse.",
+			"kept": "In diesem Browser behalten, bleiben Ihre Aufgaben nach dem Neuladen da. Sie liegen unverschlüsselt in seinem Speicher, und wer die Website-Daten löscht, verliert sie.",
+			"keptTechnical": "In diesem Browser behalten: Die OrbitDB-Logs und der Signierschlüssel liegen unverschlüsselt in IndexedDB und localStorage. Wer die Website-Daten löscht, verliert sie.",
+			"memory": "Nur im Arbeitsspeicher: Auf diesem Gerät bleibt nichts, und beim Neuladen beginnt alles von vorn."
+		},
+		"identityLabelDefault": "ACL-Todo",
+		"identityLabelTitle": "Name des neuen Passkeys"
 	}
 }

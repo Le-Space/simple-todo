@@ -31,3 +31,31 @@ export const clauses = (state) => {
 		t('consent.clause.cookies')
 	].filter(Boolean);
 };
+
+/**
+ * The start dialog's short form: three sentences under the promise, the gist
+ * of `clauses` for somebody outside the tutorial. The full statement stays on
+ * the dialog's second screen, unabridged; what is accepted is still all of it.
+ *
+ * What a person has to know before a list of their own: that write access is
+ * not read access, that writers come and go without a new address, and where
+ * the todos are kept.
+ *
+ * @param {{ identity?: string, storage?: string, technical?: boolean }} state
+ * @returns {string[]}
+ */
+export const summary = (state) => {
+	const t = get(_);
+	const kept = state.storage === 'indexeddb';
+	return [
+		t(state.technical ? 'consent.summary.listsTechnical' : 'consent.summary.lists'),
+		t('consent.summary.writers'),
+		t(
+			kept
+				? state.technical
+					? 'consent.summary.keptTechnical'
+					: 'consent.summary.kept'
+				: 'consent.summary.memory'
+		)
+	];
+};

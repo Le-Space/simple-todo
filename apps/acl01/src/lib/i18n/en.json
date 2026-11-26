@@ -25,7 +25,7 @@
 			"readingIsOpen": "Nothing here is encrypted. Anyone who has a list's address can read everything in it, including the relay that stores it. Do not put anything private in a todo.",
 			"identityPasskey": "Your passkey identifies you to the other devices. Nobody else can write as you.",
 			"identityAnonymous": "You are using a random identity that exists only in this browser. Close it and it is gone.",
-			"cookies": "No tracking cookies are used. If you tick \"don't show this again\", that choice is the only thing saved on this device.",
+			"cookies": "No tracking cookies are used. Kept in this browser, your decision to start is kept too, and this dialog does not come back; in memory only, it asks again.",
 			"identityAnonymousKept": "You are using a random identity that exists only in this browser. It keeps it until you clear the site data; nothing links it to you.",
 			"storageMemory": "You chose \"in memory only\": nothing is written to this device, and this browser starts over when the page reloads.",
 			"storagePersistent": "You chose \"keep them in this browser\": the todos survive a reload. They sit unencrypted in this browser’s storage, and clearing it loses them."
@@ -96,6 +96,18 @@
 		"storageMemoryLabel": "In Memory Only",
 		"storageMemoryHint": "Todos are stored in a shared, unencrypted OrbitDB database in memory and will be deleted on app reload or on exit.",
 		"storagePersistentLabel": "IndexedDB",
-		"storagePersistentHint": "I understand todos are stored in a shared, unencrypted OrbitDB database in the browser's IndexedDB and will persist between app restarts or after app exit."
+		"storagePersistentHint": "I understand todos are stored in a shared, unencrypted OrbitDB database in the browser's IndexedDB and will persist between app restarts or after app exit.",
+		"title": "Lists of your own, and who may write to them",
+		"promise": "Make a list of your own and decide, person by person, who may write to it. Their passkey is the name you put them down under.",
+		"summary": {
+			"lists": "Write access is not read access: nothing here is encrypted, and anyone with a list’s address can read it.",
+			"listsTechnical": "Write access is not read access: the access controller decides who may append, and the OrbitDB log is readable by anyone with the address.",
+			"writers": "You can add or remove a writer at any time, and the list keeps its address.",
+			"kept": "Kept in this browser, your todos survive a reload. They sit unencrypted in its storage, and clearing the site data loses them.",
+			"keptTechnical": "Kept in this browser: the OrbitDB logs and the signing key sit unencrypted in IndexedDB and localStorage. Clearing the site data loses them.",
+			"memory": "In memory only: nothing stays on this device, and a reload starts over."
+		},
+		"identityLabelDefault": "ACL-Todo",
+		"identityLabelTitle": "Name of the new passkey"
 	}
 }
