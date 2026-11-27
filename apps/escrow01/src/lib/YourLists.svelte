@@ -15,6 +15,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import { _ } from '$lib/i18n/index.js';
 	import ListSwitcher from './ListSwitcher.svelte';
+	import { listRegistryReadyStore, listRegistryStore } from './list-registry.js';
 
 	/** This browser's three words; empty while there are none to offer. */
 	export let mnemonic = '';
@@ -42,7 +43,8 @@
 
 	{#if mnemonic}
 		<div
-			class="mt-1 flex items-center gap-2 border-t border-border pt-2"
+			class="mt-1 flex items-center gap-2 border-border pt-2"
+			class:border-t={$listRegistryReadyStore && $listRegistryStore.length > 0}
 			data-testid="three-word-list-row"
 			data-active={sharedOpen}
 		>

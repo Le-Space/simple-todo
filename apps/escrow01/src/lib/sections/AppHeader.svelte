@@ -36,8 +36,8 @@
 
 	The German name is the longest, and it set the sizes (#127 PR C, measured
 	headless): at 360px "Treuhand" needs 89px beside the language, QR and
-	"Technisch" switches and got 73, so the phone gets a step smaller type and
-	tighter gaps; at 768px "Vertrauliche Treuhand" in text-3xl was 5px wider
+	"Technisch" switches and got 73, so the phone gets a step smaller, tighter
+	type and tighter gaps; at 768px "Vertrauliche Treuhand" in text-3xl was 5px wider
 	than its column, so text-3xl waits for lg.
 -->
 <header
@@ -52,7 +52,7 @@
 				<!-- Short below `md`, as the app's own name is: beside the switches on a
 				     phone, "Auditor view" lost its last letters. -->
 				<h1
-					class="truncate text-lg font-bold text-heading sm:text-xl md:text-2xl lg:text-3xl"
+					class="truncate text-lg font-bold tracking-tight text-heading sm:text-xl sm:tracking-normal md:text-2xl lg:text-3xl"
 					aria-label={$_('budget.auditor.title')}
 				>
 					<span class="md:hidden" aria-hidden="true">{$_('budget.auditor.titleShort')}</span>
@@ -70,7 +70,7 @@
 				     it leave room for one word (at 700px "Confidential esc…"). The
 				     heading's accessible name stays the full one. -->
 				<h1
-					class="truncate text-lg font-bold text-heading sm:text-xl md:text-2xl lg:text-3xl"
+					class="truncate text-lg font-bold tracking-tight text-heading sm:text-xl sm:tracking-normal md:text-2xl lg:text-3xl"
 					aria-label={$_('header.title')}
 				>
 					<span class="md:hidden" aria-hidden="true">{$_('header.titleShort')}</span>
