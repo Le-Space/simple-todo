@@ -78,6 +78,9 @@ function browser(/** @type {string} */ ownDid) {
 		events: emitter(),
 		log: {
 			heads: async () => heads,
+			// The whole log, which an answer carries when it is small (#127): here
+			// the one entry that is also its head.
+			values: async () => heads,
 			storage: {
 				get: async (/** @type {string} */ hash) => (hash === 'entry' ? entryBytes : undefined)
 			}

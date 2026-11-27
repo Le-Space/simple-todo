@@ -98,7 +98,10 @@ export function createAccountDirectory(getOrbitdb) {
 
 	// The owner's browser answers every newcomer to its directory, and a reader
 	// asks again while it waits (../newcomers.js, measured in #164).
-	const newcomers = createNewcomerAnswers(() => getOrbitdb()?.ipfs?.libp2p?.services?.pubsub);
+	const newcomers = createNewcomerAnswers(
+		() => getOrbitdb()?.ipfs?.libp2p?.services?.pubsub,
+		() => getOrbitdb()?.identities
+	);
 	const serve = newcomers.serve;
 	const askAgain = newcomers.askAgain;
 

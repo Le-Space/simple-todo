@@ -156,7 +156,10 @@ function listKeys({ orbitdb, store, ring, own, ownerDid, lookupPublicKey }) {
 	// no key yet asks again, a few times, while the list is open -- the owner
 	// too, on a device that never saw the list: her copy is with the relay,
 	// whose first heads exchange can be lost like anyone's.
-	const newcomers = createNewcomerAnswers(() => orbitdb?.ipfs?.libp2p?.services?.pubsub);
+	const newcomers = createNewcomerAnswers(
+		() => orbitdb?.ipfs?.libp2p?.services?.pubsub,
+		() => orbitdb?.identities
+	);
 	if (own.did === ownerDid) newcomers.answerThoseThere(store, newcomers.serve(store));
 	/** @type {ReturnType<typeof setTimeout>[]} */
 	const asks = ASK_AGAIN_AFTER_MS.map((ms) =>
