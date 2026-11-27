@@ -163,17 +163,18 @@ function createLazyZamaService({
 	let loading = null;
 	function load() {
 		loading ??= (async () => {
-			const [{ createZamaBudgetService }, { createSepoliaChain }, { createAccountDirectory }] =
+			const [{ createZamaBudgetService }, { createSepoliaChain }, { sessionDirectory }] =
 				await Promise.all([
 					import('./budget-service-zama.js'),
 					import('../chain/sepolia-chain.js'),
-					import('../chain/account-directory.js')
+					// The one directory sealed lists use too (session-directory.js).
+					import('../chain/session-directory.js')
 				]);
 			return createZamaBudgetService({
 				identity,
 				credential,
 				chain: createSepoliaChain({ endpoints }),
-				directory: createAccountDirectory(orbitdb),
+				directory: sessionDirectory(orbitdb),
 				prompt,
 				onAccount,
 				isNewPasskey

@@ -3,6 +3,8 @@ import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import { writable, get } from 'svelte/store';
 import { OrbitDBAccessController } from '@orbitdb/core';
 import { listNameFromDatabase } from './list-name.js';
+import { sealRegistryName, withOpenedNames } from './sealed/registry-names.js';
+import { currentReader } from './sealed/session-reader.js';
 
 /**
  * The list registry (acl01, issue #114).
@@ -31,7 +33,14 @@ import { listNameFromDatabase } from './list-name.js';
 
 const DOMAIN = 'simple-todo/list-registry/v1';
 
-/** @typedef {{ address: string, name: string, role: 'owner' | 'guest', createdAt: number }} ListEntry */
+/**
+ * `sealedName`: a sealed list's name, sealed to this identity's own X25519 key
+ * (#127, sealed/registry-names.js); `name` is then empty in the registry, and
+ * filled in the store when it opens. `nameSealed`: it did not open here.
+ *
+ * @typedef {{ address: string, name: string, role: 'owner' | 'guest', createdAt: number,
+ *   sealedName?: unknown, nameSealed?: boolean }} ListEntry
+ */
 
 /** Lists known to this identity, newest first. */
 export const listRegistryStore = writable(/** @type {ListEntry[]} */ ([]));
@@ -155,33 +164,60 @@ async function refreshRegistry() {
 			...entry,
 			name: listNameFromDatabase(entry.name)
 		}));
-	entries.sort(
+	/** @type {ListEntry[]} */
+	const shown = await withOpenedNames(
+		/** @type {ListEntry[]} */ (entries),
+		currentReader()?.agreementKey ?? null
+	);
+	shown.sort(
 		(/** @type {ListEntry} */ a, /** @type {ListEntry} */ b) =>
 			(b.createdAt ?? 0) - (a.createdAt ?? 0)
 	);
-	listRegistryStore.set(entries);
+	listRegistryStore.set(shown);
 }
 
 /**
  * Record a list. Keyed by address, so re-opening a list you already know
  * updates the entry instead of duplicating it.
  *
+ * A sealed list's name never goes into the registry in the clear (#127): the
+ * relay pins the registry like any database. It is sealed to this identity's
+ * own key instead, and an entry that already holds the same name is left as
+ * it is -- each seal is new bytes, and would grow the log on every visit.
+ *
  * @param {any} orbitdb
- * @param {{ address: string, name: string, role: 'owner' | 'guest' }} entry
+ * @param {{ address: string, name: string, role: 'owner' | 'guest', sealed?: boolean }} entry
  */
-export async function rememberList(orbitdb, { address, name, role }) {
+export async function rememberList(orbitdb, { address, name, role, sealed = false }) {
 	if (!address) return;
 	const db = await openListRegistry(orbitdb);
 	const known = get(listRegistryStore).find((e) => e.address === address);
+	// Keep the name we already had if the caller has none — a guest opening a
+	// list by address knows no name for it.
+	const listName = name || known?.name || '';
+	const nextRole = known?.role === 'owner' ? 'owner' : role;
+	const createdAt = known?.createdAt ?? Date.now();
+
+	if (sealed) {
+		const reader = currentReader();
+		const unchanged =
+			known && known.role === nextRole && known.name === listName && known.sealedName !== undefined;
+		if (unchanged || !reader) return;
+		/** @type {ListEntry} */
+		const value = { address, name: '', role: nextRole, createdAt };
+		if (listName) {
+			value.sealedName = await sealRegistryName(listName, {
+				address,
+				publicKey: reader.agreementKey.publicKey
+			});
+		}
+		await db.put(address, value);
+		await refreshRegistry();
+		return;
+	}
+
 	/** @type {ListEntry} */
-	const value = {
-		address,
-		// Keep the name we already had if the caller has none — a guest opening a
-		// list by address knows no name for it.
-		name: name || known?.name || '',
-		role: known?.role === 'owner' ? 'owner' : role,
-		createdAt: known?.createdAt ?? Date.now()
-	};
+	const value = { address, name: listName, role: nextRole, createdAt };
 	await db.put(address, value);
 	await refreshRegistry();
 }
@@ -197,6 +233,11 @@ export async function forgetList(orbitdb, address) {
 	const db = await openListRegistry(orbitdb);
 	await db.del(address);
 	await refreshRegistry();
+}
+
+/** The open registry, null before it opens -- for the E2E hook (#127). */
+export function openedListRegistry() {
+	return registryDB;
 }
 
 /** Drop the cached handle; used when the OrbitDB instance goes away. */

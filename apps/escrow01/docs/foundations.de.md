@@ -52,8 +52,9 @@ stehen weiter im Panel, und die Drei-Wort-Liste bleibt öffentlich.
   eine delegierte Person erledigt hat. (de2do hat jede Aktion für immer wieder angewendet; das ist
   die eine Stelle, an der die Übertragung abweicht.)
 - **Jeder delegierte Schreibvorgang fragt erneut nach dem Passkey.** Gewöhnliche Schreibvorgänge tun
-  das nie: Der Signierschlüssel der Identität liegt unverschlüsselt im Keystore (siehe
-  _Passkey-Identitäten_ unten). Dass eine delegierte Person die Aufgabe eines anderen ändert, ist das
+  das nie: Der Signierschlüssel der Identität, beim Start abgeleitet, liegt im Keystore dieses Tabs
+  (siehe _Passkey-Identitäten_ unten). Dass eine delegierte Person die Aufgabe eines anderen ändert,
+  ist das
   eine, was diese Identität auf einer fremden Liste darf, und es soll nicht aus Versehen passieren.
   Das Abzeichen in der Kopfzeile zeigt die Abfrage an (`src/lib/delegated-write-auth.js`).
 
@@ -170,12 +171,15 @@ durch eine wählbare **Identität mit Passkey**:
   [`@le-space/orbitdb-identity-provider-webauthn-did`](https://github.com/Le-Space/orbitdb-identity-provider-webauthn-did):
   Die DID ist der eigene P-256-Schlüssel des Passkeys, und OrbitDB signiert Einträge mit einem
   **secp256k1-Schlüssel, der aus dem Passkey abgeleitet ist** (PRF → HKDF-SHA256; ohne PRF erzeugt der
-  Keystore stattdessen einen). Dieser Schlüssel ist **nicht verschlüsselt**: Mit **In diesem Browser
-  behalten** liegt er im Keystore von OrbitDB in der IndexedDB dieses Browsers, wo ihn jeder lesen
-  kann, der den Speicher des Browsers lesen kann (ohne den Haken im Arbeitsspeicher dieses Tabs). Einen
-  Passkey anzulegen kostet drei WebAuthn-Abfragen (Registrieren, PRF, Identitätsnachweis); nach einem
-  Neuladen kostet ein behaltenes Credential eine (den Identitätsnachweis), und ein Gerät, das nichts
-  behalten hat, drei: zwei zum Wiederherstellen, eine zum Signieren. Auf Sepolia kommt in `escrow01`
+  Keystore stattdessen einen). Dieser Schlüssel wird **nie gespeichert**: Der Keystore lebt im
+  Arbeitsspeicher dieses Tabs, und jeder Start leitet den Schlüssel aus einer PRF-Abfrage neu ab,
+  auch mit **In diesem Browser behalten** (#127). Einen Passkey anzulegen kostet drei
+  WebAuthn-Abfragen (Registrieren, PRF, Identitätsnachweis); nach einem Neuladen kostet ein
+  behaltenes Credential eine (die PRF-Ausgabe; der behaltene Identitätsnachweis erspart eine neue
+  Signatur), und ein Gerät, das nichts behalten hat, vier: zwei zum Wiederherstellen, die
+  PRF-Ausgabe, eine zum Signieren (drei, sobald Provider #107 erschienen ist). Ohne PRF erzeugt der
+  Keystore bei jedem Start einen Schlüssel, und die Berührung nach einem Neuladen signiert ein neues
+  Identitätsdokument. Auf Sepolia kommt in `escrow01`
   eine hinzu ([wie oft der Passkey fragt](passkey-account.de.md#wie-oft-der-passkey-fragt)). Einträge
   zu signieren fragt nie. (Die strengere Variante _varsig_ — eine Passkey-Abfrage für jeden einzelnen
   Schreibvorgang — steckt im selben Paket und ist eine gute Übung für später, wird hier aber nicht

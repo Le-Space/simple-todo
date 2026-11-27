@@ -5,7 +5,7 @@
 	// pick up permission changes live.
 	import { onDestroy } from 'svelte';
 	import { _ } from '$lib/i18n/index.js';
-	import { todoDBStore } from './db-actions.js';
+	import { giveWriterKeys, rotateKeysWithout, todoDBStore } from './db-actions.js';
 	// From p2p-stores.js, not p2p.js: this panel loads with the page, and a
 	// static import of p2p.js pulls libp2p and gossipsub into the bundle the
 	// consent dialog waits for, even though the page loads p2p.js lazily.
@@ -17,6 +17,8 @@
 	let busy = false;
 	/** @type {string | null} */
 	let errorMessage = null;
+	/** A note after a grant or a removal in a sealed list (#127). @type {string | null} */
+	let keyNote = null;
 	/** @type {any} */
 	let currentDb = null;
 	/** @type {(() => void) | null} */
@@ -65,10 +67,15 @@
 		if (!did) return;
 		busy = true;
 		errorMessage = null;
+		keyNote = null;
 		try {
 			await currentDb.access.grant('write', did);
 			newDid = '';
 			await refresh();
+			// #127: in a sealed list, write access is no use without the keys.
+			if ((await giveWriterKeys(did)) === 'no-public-key') {
+				keyNote = $_('lists.permissions.keysLater');
+			}
 		} catch (error) {
 			errorMessage = $_('lists.permissions.grantFailed', {
 				values: { reason: error instanceof Error ? error.message : String(error) }
@@ -82,9 +89,13 @@
 	async function revoke(did) {
 		busy = true;
 		errorMessage = null;
+		keyNote = null;
 		try {
 			await currentDb.access.revoke('write', did);
 			await refresh();
+			// #127: new keys from here on, which the removed writer does not get.
+			const rotated = await rotateKeysWithout(did);
+			if (rotated !== 'not-sealed') keyNote = $_('lists.permissions.keysRenewed');
 		} catch (error) {
 			errorMessage = $_('lists.permissions.revokeFailed', {
 				values: { reason: error instanceof Error ? error.message : String(error) }
@@ -152,6 +163,9 @@
 
 		{#if errorMessage}
 			<p class="mt-2 text-xs text-red-600" data-testid="permission-error">{errorMessage}</p>
+		{/if}
+		{#if keyNote}
+			<p class="mt-2 text-xs text-faint" data-testid="permission-key-note">{keyNote}</p>
 		{/if}
 	</section>
 {/if}

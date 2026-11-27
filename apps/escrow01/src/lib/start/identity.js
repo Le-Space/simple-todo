@@ -34,18 +34,29 @@ export function lastStartWasAnonymous() {
 
 /**
  * How many passkey prompts a start takes, counted in
- * e2e/passkey-restore.spec.js: a new passkey three (the passkey, the PRF
- * output its signing key comes from, the identity signature), one found
- * on the authenticator three (two touches, then the signature), one this
- * device keeps one (the signature). Every prompt after the first gets a
- * word on what it is for.
+ * e2e/passkey-restore.spec.js. Every start reads the PRF output once, and the
+ * signing key and the key for sealed lists come from it; neither is written
+ * down (#127, user decision 26.11.2026: a reload asks for a touch).
+ *
+ * - a new passkey: three -- the passkey, the PRF output, the identity
+ *   signature;
+ * - one this device keeps: one -- the PRF output. The identity proof is kept,
+ *   so the document is not signed again;
+ * - one found on the authenticator: four -- two to restore, the PRF output,
+ *   the signature. Provider 0.14.0's restore reads the PRF output but does not
+ *   hand it out; once it does (orbitdb-identity-provider-webauthn-did#107)
+ *   this is three again.
+ *
+ * A passkey without PRF skips the PRF read and signs a new document instead,
+ * so a kept return is one touch there too. Every prompt after the first gets
+ * a word on what it is for.
  *
  * @param {'create' | 'existing' | 'anonymous'} mode
  * @returns {number | null} null without a passkey
  */
 export function passkeyPromptsFor(mode) {
 	if (mode === 'create') return 3;
-	if (mode === 'existing') return hasStoredPasskeyCredential() ? 1 : 3;
+	if (mode === 'existing') return hasStoredPasskeyCredential() ? 1 : 4;
 	return null;
 }
 

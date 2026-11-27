@@ -1,6 +1,6 @@
 import { writable, derived, get } from 'svelte/store';
 import { peerIdStore } from './p2p-stores.js';
-import { DelegatedListAccessController, supportsDelegation } from './delegated-access.js';
+import { supportsDelegation } from './delegated-access.js';
 import {
 	applyDelegationActions,
 	buildDelegationAction,
@@ -10,7 +10,7 @@ import {
 } from './delegation.js';
 import { confirmDelegatedWrite } from './delegated-write-auth.js';
 import { rememberList, listRegistryStore, openListRegistry } from './list-registry.js';
-import { listNameFromDatabase, privateListDatabaseName } from './list-name.js';
+import { listNameFromDatabase } from './list-name.js';
 import {
 	scheduleRelayReplicationProof,
 	todoReplicationStatusStore,
@@ -18,6 +18,20 @@ import {
 } from './relay-proof.js';
 import { createLogStorages } from '@simple-todo/todo/storage-mode.js';
 import { translate } from './i18n/index.js';
+import {
+	actionTextToWrite,
+	createSealedList,
+	keysAfterWriterLeft,
+	keysForList,
+	keysForNewWriter,
+	keysToWrite,
+	NoSealedReaderError,
+	recordsToShow,
+	valueToChange,
+	valueToWrite,
+	writersOf
+} from './sealed/list-session.js';
+import { NoListKeyError, NoTaskKeyError } from './sealed/sealed-list.js';
 
 /**
  * @typedef {{
@@ -121,6 +135,25 @@ export const activeListStore = writable(
 // Store for todos
 export const todosStore = writable(/** @type {TodoItem[]} */ ([]));
 
+/**
+ * #127: how many todos of the open list stay sealed to this session -- handed
+ * to someone else, or waiting for a key that has not arrived yet.
+ */
+export const hiddenTodosStore = writable(0);
+
+/**
+ * #127: whether the open list is sealed, and whether this session can write to
+ * it yet (it holds a list key).
+ */
+export const sealedListStore = writable(
+	/** @type {{ sealed: boolean, canSeal: boolean }} */ ({ sealed: false, canSeal: false })
+);
+
+/** #127: the open sealed list's key store, null otherwise -- for the E2E hook. */
+export function activeKeyStore() {
+	return activeKeys?.store ?? null;
+}
+
 // Derived store that updates when todos change
 export const todosCountStore = derived(todosStore, ($todos) => $todos.length);
 
@@ -158,11 +191,31 @@ function getDatabaseAddress(todoDB) {
 let activeListVersion = 0;
 
 /**
+ * #127: the keys of the open list when it is sealed, null otherwise.
+ * @type {import('./sealed/list-keys.js').ListKeys | null}
+ */
+let activeKeys = null;
+/** @type {(() => void) | null} */
+let stopListeningForKeys = null;
+
+/**
  * @param {TodoDatabase | null} todoDB
  * @param {{ kind: 'shared' | 'private' | 'guest', name?: string }} [meta]
+ * @param {import('./sealed/list-keys.js').ListKeys | null} [keys] its keys, when it is sealed (#127)
  */
-function setActiveTodoDatabase(todoDB, meta) {
+function setActiveTodoDatabase(todoDB, meta, keys = null) {
 	activeListVersion += 1;
+	stopListeningForKeys?.();
+	activeKeys = keys;
+	hiddenTodosStore.set(0);
+	sealedListStore.set({ sealed: Boolean(keys), canSeal: Boolean(keys?.canSeal()) });
+	// A grant that arrives while the list is open opens what was sealed to us.
+	stopListeningForKeys = keys
+		? keys.onChange(() => {
+				sealedListStore.set({ sealed: true, canSeal: keys.canSeal() });
+				void loadTodos();
+			})
+		: null;
 	// Whatever is opened now is where the next todo goes, not a home list still
 	// to be made.
 	homeListPendingStore.set(false);
@@ -254,6 +307,9 @@ export async function loadTodoDatabase(address, { unlessSwitchedSince } = {}) {
 			sync: true,
 			...(await createLogStorages())
 		});
+		// #127: a sealed list is opened with its keys, or not at all -- shown
+		// without them, it would be a list nobody can write to safely.
+		const keys = await keysForList(orbitdb, loadedTodoDB);
 
 		// Prefer what the registry already knows: a list you created is yours even
 		// when you reach it through the switcher, and its friendly name is not the
@@ -270,21 +326,34 @@ export async function loadTodoDatabase(address, { unlessSwitchedSince } = {}) {
 		if (unlessSwitchedSince !== undefined && activeListVersion !== unlessSwitchedSince) {
 			return { address: openedAddressForMeta, count: 0, superseded: true };
 		}
-		setActiveTodoDatabase(loadedTodoDB, {
-			kind: owned ? 'private' : 'guest',
-			name: known?.name || listNameFromDatabase(loadedTodoDB?.name)
-		});
+		setActiveTodoDatabase(
+			loadedTodoDB,
+			{
+				kind: owned ? 'private' : 'guest',
+				// A sealed list's database name is random: its name comes from
+				// `meta/name` once that opens (loadTodosSnapshot).
+				name: known?.name || (keys ? '' : listNameFromDatabase(loadedTodoDB?.name))
+			},
+			keys
+		);
 		setupDatabaseListeners(loadedTodoDB);
 		await loadTodos();
+		// #127: a writer granted before he had a key for sealed lists gets his
+		// copies the next time the owner opens the list.
+		if (keys && keys.ownerDid === orbitdb.identity?.id) void giveMissingKeys(loadedTodoDB, keys);
 
 		const openedAddress = getDatabaseAddress(loadedTodoDB) || normalizedAddress;
 		try {
 			await rememberList(orbitdb, {
 				address: openedAddress,
 				// The name the registry already has is the one a person gave the list;
-				// otherwise the database's own name, without its random suffix.
-				name: known?.name || listNameFromDatabase(loadedTodoDB?.name),
-				role: owned ? 'owner' : 'guest'
+				// otherwise the database's own name, without its random suffix -- or,
+				// for a sealed list, the one `meta/name` gave the list on screen.
+				name:
+					known?.name ||
+					(keys ? get(activeListStore).name : listNameFromDatabase(loadedTodoDB?.name)),
+				role: owned ? 'owner' : 'guest',
+				sealed: Boolean(keys)
 			});
 		} catch (error) {
 			console.warn('Could not record the opened list in the registry:', error);
@@ -295,6 +364,7 @@ export async function loadTodoDatabase(address, { unlessSwitchedSince } = {}) {
 			count: get(todosCountStore)
 		};
 	} catch (error) {
+		if (error instanceof NoSealedReaderError) throw new Error(translate('errors.noSealedReader'));
 		throw new Error(
 			translate('errors.loadFailed', {
 				reason: error instanceof Error ? error.message : String(error)
@@ -323,19 +393,23 @@ export async function createPrivateTodoList(name = 'private-todos', { unlessSwit
 	const orbitdb = get(orbitdbStore);
 	if (!orbitdb) throw new Error(translate('errors.orbitdbNotReady'));
 
-	const dbName = privateListDatabaseName(name);
-	const privateDB = await orbitdb.open(dbName, {
-		type: 'keyvalue',
-		create: true,
-		sync: true,
-		AccessController: DelegatedListAccessController({ write: [orbitdb.identity.id] }),
-		...(await createLogStorages())
-	});
-
 	const listName = name.trim() || 'private-todos';
+	// #127: always sealed (user decision 2). The database name is random, the
+	// readable name goes in sealed as `meta/name`, and the list key is made
+	// with it. Without a key for sealed lists in this session there is no
+	// private list: one in the clear would be the thing the decision rules out.
+	let created;
+	try {
+		created = await createSealedList(orbitdb, { name: listName });
+	} catch (error) {
+		if (error instanceof NoSealedReaderError) throw new Error(translate('errors.noSealedReader'));
+		throw error;
+	}
+	const { db: privateDB, keys } = created;
+
 	const superseded = unlessSwitchedSince !== undefined && activeListVersion !== unlessSwitchedSince;
 	if (!superseded) {
-		setActiveTodoDatabase(privateDB, { kind: 'private', name: listName });
+		setActiveTodoDatabase(privateDB, { kind: 'private', name: listName }, keys);
 		setupDatabaseListeners(privateDB);
 		await loadTodos();
 	}
@@ -343,7 +417,7 @@ export async function createPrivateTodoList(name = 'private-todos', { unlessSwit
 	// Record it, so the list survives a reload and shows up in the switcher.
 	// Best effort: a failing registry must not lose the list the user just made.
 	try {
-		await rememberList(orbitdb, { address, name: listName, role: 'owner' });
+		await rememberList(orbitdb, { address, name: listName, role: 'owner', sealed: true });
 	} catch (error) {
 		console.warn('Could not record the new list in the registry:', error);
 	}
@@ -415,8 +489,17 @@ async function loadTodosSnapshot() {
 
 	try {
 		const startedAt = performance.now();
-		const allTodos = await readRecentTodos(todoDB);
+		const keys = activeKeys;
+		const read = await recordsToShow(keys, await readRecentTodos(todoDB), {
+			isAction: isDelegationActionKey
+		});
 		if (get(todoDBStore) !== todoDB) return;
+		const allTodos = read.records;
+		hiddenTodosStore.set(read.hidden);
+		if (keys) sealedListStore.set({ sealed: true, canSeal: keys.canSeal() });
+		if (read.name !== null && read.name !== get(activeListStore).name) {
+			activeListStore.update((list) => ({ ...list, name: /** @type {string} */ (read.name) }));
+		}
 
 		/** @type {TodoItem[]} */
 		const todosArray = [];
@@ -527,6 +610,9 @@ async function annotateTodoAuthors() {
 function applyTodoEntry(entry, trackDuringLoad = true) {
 	const { op, key, value } = entry?.payload ?? {};
 	if (!key || (op !== 'PUT' && op !== 'DEL')) return false;
+	// #127: an entry of a sealed list is opened on the way in, with the rest;
+	// the caller re-reads.
+	if (activeKeys) return false;
 	// A delegation action changes a *different* key's todo. Rather than merge
 	// one action incrementally, let the caller re-read the log, where all of
 	// them are folded in together and in order.
@@ -610,6 +696,11 @@ function buildDelegation(request, grantedBy, previous = null) {
 
 /** @param {unknown} error */
 function describeWriteError(error) {
+	// #127: no key to seal with is not a refusal by the list, and must not
+	// read like one.
+	if (error instanceof NoListKeyError || error instanceof NoTaskKeyError) {
+		return { denied: false, message: translate('errors.sealedNoKey') };
+	}
 	const message = error instanceof Error ? error.message : String(error);
 	const denied = /not allowed to write|does not have write access|access denied/i.test(message);
 	return { denied, message };
@@ -673,7 +764,11 @@ export async function addTodo(text, assignee = null, delegation = null, extra = 
 		// the earlier chapters write.
 		if (extra.budget) todo.budget = extra.budget;
 
-		const entryHash = String(await todoDB.put(todoId, todo));
+		if (todo.delegation && activeKeys) {
+			const handed = await handOverKey(todoDB, todoId, todo.delegation.delegateDid);
+			if (handed) return { ok: false, error: handed };
+		}
+		const entryHash = await putTodo(todoDB, todoId, todo);
 		scheduleRelayReplicationProof(todoId, entryHash, getDatabaseAddress(todoDB), resubscribeIfOpen);
 		console.log('✅ Todo added:', todoId);
 		return { ok: true, key: todoId };
@@ -770,7 +865,23 @@ async function readTodoForWrite(todoKey) {
 	if (!todoDB) return { error: translate('errors.databaseNotReady') };
 	const existing = await todoDB.get(todoKey);
 	if (!existing) return { error: translate('errors.todoNotFound') };
-	return { todoDB, todoData: unwrapTodoValue(existing) };
+	const todoData = await valueToChange(activeKeys, todoKey, unwrapTodoValue(existing));
+	if (!todoData) return { error: translate('errors.sealedNoKey') };
+	return { todoDB, todoData };
+}
+
+/**
+ * Write a todo's value, sealed when the open list is (#127).
+ *
+ * @param {TodoDatabase} todoDB
+ * @param {string} todoKey
+ * @param {TodoValue} todo
+ */
+async function putTodo(todoDB, todoKey, todo) {
+	const keys = await keysToWrite(activeKeys, todoDB, get(ownIdentityIdStore));
+	return String(
+		await todoDB.put(todoKey, /** @type {any} */ (await valueToWrite(keys, todoKey, todo)))
+	);
 }
 
 /**
@@ -790,9 +901,20 @@ async function writeDelegationAction(todoDB, todoKey, todoData, delegateDid, cha
 		return { ok: false, error: translate('errors.passkeyCancelled') };
 	}
 	const key = buildDelegationActionKey(todoKey, delegateDid);
+	// #127: a rename travels sealed under the todo's task key; the controller
+	// only checks that `patch.text` is a string.
+	const sealedChange =
+		'patch' in change && typeof change.patch.text === 'string'
+			? {
+					patch: {
+						...change.patch,
+						text: await actionTextToWrite(activeKeys, todoKey, change.patch.text)
+					}
+				}
+			: change;
 	const action = buildDelegationAction(
 		{ taskKey: todoKey, delegateDid, expiresAt: todoData.delegation?.expiresAt ?? null },
-		change
+		sealedChange
 	);
 	const entryHash = String(await todoDB.put(key, /** @type {any} */ (action)));
 	scheduleRelayReplicationProof(key, entryHash, getDatabaseAddress(todoDB), resubscribeIfOpen);
@@ -835,7 +957,7 @@ export async function toggleTodoComplete(todoKey) {
 			completed: nextCompleted,
 			updatedAt: new Date().toISOString()
 		};
-		const entryHash = String(await todoDB.put(String(todoKey), updatedTodo));
+		const entryHash = await putTodo(todoDB, String(todoKey), updatedTodo);
 		todoReplicationStatusStore.update((statuses) => ({
 			...statuses,
 			[String(todoKey)]: 'pending'
@@ -884,7 +1006,7 @@ export async function updateTodoText(todoKey, text) {
 		}
 
 		const updatedTodo = { ...todoData, text: nextText, updatedAt: new Date().toISOString() };
-		const entryHash = String(await todoDB.put(todoKey, updatedTodo));
+		const entryHash = await putTodo(todoDB, todoKey, updatedTodo);
 		scheduleRelayReplicationProof(
 			todoKey,
 			entryHash,
@@ -934,7 +1056,14 @@ export async function delegateTodo(todoKey, request) {
 			delegation: buildDelegation(request, myIdentityId, todoData.delegation ?? null),
 			updatedAt: new Date().toISOString()
 		};
-		const entryHash = String(await todoDB.put(todoKey, updatedTodo));
+		// #127: a new epoch of the todo's own key, for the delegate, the writers
+		// and the owner. Without it nothing is written: the todo would go to a
+		// delegate who cannot read it, or under a key an earlier one still holds.
+		if (activeKeys) {
+			const handed = await handOverKey(todoDB, todoKey, request.delegateDid.trim());
+			if (handed) return { ok: false, error: handed };
+		}
+		const entryHash = await putTodo(todoDB, todoKey, updatedTodo);
 		scheduleRelayReplicationProof(
 			todoKey,
 			entryHash,
@@ -978,7 +1107,7 @@ export async function setTodoBudget(todoKey, budget, { acceptCompletion = false 
 	const updatedTodo = acceptCompletion
 		? { ...todoData, budget, completed: true, updatedAt: new Date().toISOString() }
 		: { ...todoData, budget };
-	const entryHash = String(await todoDB.put(todoKey, updatedTodo));
+	const entryHash = await putTodo(todoDB, todoKey, updatedTodo);
 	scheduleRelayReplicationProof(todoKey, entryHash, getDatabaseAddress(todoDB), resubscribeIfOpen);
 	await loadTodos();
 }
@@ -1009,7 +1138,9 @@ export async function revokeTodoDelegation(todoKey) {
 			delegation: { ...todoData.delegation, revokedAt: now, revokedBy: myIdentityId },
 			updatedAt: now
 		};
-		const entryHash = String(await todoDB.put(todoKey, updatedTodo));
+		// #127: taken back, the todo goes under the list key again, which the
+		// delegate never had (sealTodo): what follows is not his to read.
+		const entryHash = await putTodo(todoDB, todoKey, updatedTodo);
 		scheduleRelayReplicationProof(
 			todoKey,
 			entryHash,
@@ -1023,6 +1154,124 @@ export async function revokeTodoDelegation(todoKey) {
 		const { message } = describeWriteError(error);
 		return { ok: false, error: translate('errors.revokeFailed', { reason: message }) };
 	}
+}
+
+/**
+ * #127: the key a delegate needs for his todo in a sealed list, made before
+ * the todo names him. Only the list's owner holds the key store, so only she
+ * can hand a todo over there.
+ *
+ * @param {TodoDatabase} todoDB
+ * @param {string} todoKey
+ * @param {string} delegateDid
+ * @returns {Promise<string | null>} an error to show, or null when the key is there
+ */
+async function handOverKey(todoDB, todoKey, delegateDid) {
+	const keys = activeKeys;
+	if (!keys) return null;
+	if (keys.ownerDid !== get(ownIdentityIdStore)) {
+		return translate('errors.sealedDelegateNeedsOwner');
+	}
+	const { missing } = await keys.delegate(todoKey, delegateDid, await writersOf(todoDB));
+	// Whoever has no key in the directory yet -- a delegate who has not started
+	// the app since #127, or whose key has not reached this browser -- gets his
+	// copy later. Until then he reads nothing of it.
+	for (const did of missing) {
+		keepGranting(keys, () =>
+			did === delegateDid
+				? keys.ensureTaskGranted(todoKey, did, { timeoutMs: 20_000 })
+				: keys.ensureGranted(did, { timeoutMs: 20_000 })
+		);
+	}
+	return null;
+}
+
+/** When the owner's session tries again to hand out a copy that is missing. */
+const GRANT_AGAIN_AFTER_MS = [10_000, 30_000, 60_000, 120_000, 300_000];
+
+/**
+ * #127: try to write a missing copy again a few times while this session
+ * runs, until one attempt writes it. Best effort: the owner's next visit to
+ * the list tries as well (`giveMissingKeys`).
+ *
+ * @param {import('./sealed/list-keys.js').ListKeys} keys
+ * @param {() => Promise<string[]>} attempt the slots it wrote
+ */
+function keepGranting(keys, attempt) {
+	let tries = 0;
+	const next = () => {
+		const wait = GRANT_AGAIN_AFTER_MS[tries++];
+		if (wait === undefined) return;
+		setTimeout(async () => {
+			try {
+				if ((await attempt()).length === 0) next();
+			} catch (error) {
+				// The keys were closed (another list, a restart): nothing to do.
+				console.warn('Could not hand out a missing key yet:', error);
+			}
+		}, wait);
+	};
+	void attempt()
+		.then((written) => written.length === 0 && next())
+		.catch(() => next());
+}
+
+/**
+ * #127: the copies the writers of a sealed list are missing, written by its
+ * owner's session. Best effort, in the background.
+ *
+ * @param {TodoDatabase} todoDB
+ * @param {import('./sealed/list-keys.js').ListKeys} keys
+ */
+async function giveMissingKeys(todoDB, keys) {
+	try {
+		for (const did of await writersOf(todoDB)) await keys.ensureGranted(did);
+		for (const todo of get(todosStore)) {
+			const delegateDid = todo.delegation?.delegateDid;
+			if (delegateDid && !todo.delegation?.revokedAt) {
+				await keys.ensureTaskGranted(todo.key, delegateDid);
+			}
+		}
+	} catch (error) {
+		console.warn('Could not hand out the missing keys of a sealed list:', error);
+	}
+}
+
+/**
+ * #127: after the owner gave `did` write access to the open list, every key of
+ * it, when it is sealed.
+ *
+ * @param {string} did
+ * @returns {Promise<'granted' | 'no-public-key' | 'not-sealed'>}
+ */
+export async function giveWriterKeys(did) {
+	const keys = activeKeys;
+	if (!keys) return 'not-sealed';
+	const granted = await keysForNewWriter(keys, did);
+	if (granted === 'no-public-key') {
+		keepGranting(keys, () => keys.ensureGranted(did, { timeoutMs: 20_000 }));
+	}
+	return granted;
+}
+
+/**
+ * #127: after the owner took write access from `did`: new keys for the list
+ * and for every todo handed to someone, which `did` does not get.
+ *
+ * @param {string} did
+ * @returns {Promise<{ missing: string[] } | 'not-sealed'>}
+ */
+export async function rotateKeysWithout(did) {
+	const todoDB = get(todoDBStore);
+	if (!activeKeys || !todoDB) return 'not-sealed';
+	const writers = (await writersOf(todoDB)).filter((writer) => writer !== did);
+	const handedOver = get(todosStore)
+		.filter((todo) => todo.delegation?.delegateDid && !todo.delegation.revokedAt)
+		.map((todo) => ({
+			key: todo.key,
+			delegateDid: /** @type {string} */ (todo.delegation?.delegateDid)
+		}));
+	return keysAfterWriterLeft(activeKeys, { writers, handedOver });
 }
 
 // Delete the current database

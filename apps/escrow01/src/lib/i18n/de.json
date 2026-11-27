@@ -470,7 +470,9 @@
 			"placeholder": "did:key:… der Identität, die schreiben darf",
 			"add": "DID hinzufügen",
 			"grantFailed": "Die Schreibrechte ließen sich nicht erteilen: {reason}",
-			"revokeFailed": "Die Schreibrechte ließen sich nicht entziehen: {reason}"
+			"revokeFailed": "Die Schreibrechte ließen sich nicht entziehen: {reason}",
+			"keysLater": "Hinzugefügt. Die Person bekommt die Schlüssel dieser versiegelten Liste, sobald sie die App gestartet hat; bis dahin kann sie sie weder lesen noch beschreiben.",
+			"keysRenewed": "Entfernt. Die Liste hat ab jetzt neue Schlüssel. Was die Person bisher lesen konnte, bleibt für sie lesbar."
 		},
 		"peers": {
 			"direct": "{count, plural, one {Direkt P2P mit # Browser} other {Direkt P2P mit # Browsern}}",
@@ -499,7 +501,8 @@
 			"hint": "Die geteilte Liste dieses Browsers. Wer ihre drei Wörter hat, kann darin lesen und schreiben. Öffnen Sie sie, um ihre Wörter, ihren Link oder ihren QR-Code weiterzugeben; Ihre Aufgaben gehen dann dorthin.",
 			"open": "Diese Liste öffnen",
 			"openFailed": "Die geteilte Liste ließ sich nicht öffnen: {reason}"
-		}
+		},
+		"hiddenTodos": "{count, plural, one {# Aufgabe dieser Liste ist} other {# Aufgaben dieser Liste sind}} für Sie versiegelt: an jemand anderen abgegeben, oder sie warten auf einen Schlüssel."
 	},
 	"network": {
 		"navLabel": "P2P-Start und Verbindungsstatus",
@@ -640,7 +643,10 @@
 		"onlyOwnerBudget": "Das Budget einer Aufgabe kann nur ändern, wer sie angelegt hat.",
 		"notDelegated": "Diese Aufgabe ist nicht delegiert.",
 		"onlyOwnerRevokes": "Die Delegation zurücknehmen kann nur, wer die Aufgabe angelegt hat.",
-		"revokeFailed": "Die Delegation konnte nicht zurückgenommen werden: {reason}"
+		"revokeFailed": "Die Delegation konnte nicht zurückgenommen werden: {reason}",
+		"noSealedReader": "Diese Sitzung hat keinen Schlüssel für versiegelte Listen, deshalb lässt sich eine private Liste weder öffnen noch anlegen. Laden Sie die Seite neu und starten Sie noch einmal.",
+		"sealedNoKey": "Diese Liste ist versiegelt, und dieser Browser hat noch keinen Schlüssel dafür. Die Besitzerin gibt ihn aus; er kommt von selbst.",
+		"sealedDelegateNeedsOwner": "In einer versiegelten Liste kann nur ihre Besitzerin eine Aufgabe an jemanden geben: Nur sie hat die Schlüssel, die sie dafür ausgibt."
 	},
 	"welcome": {
 		"title": "Willkommen zurück",

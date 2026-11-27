@@ -470,7 +470,9 @@
 			"placeholder": "did:key:… of the identity to allow",
 			"add": "Add DID",
 			"grantFailed": "Grant failed: {reason}",
-			"revokeFailed": "Revoke failed: {reason}"
+			"revokeFailed": "Revoke failed: {reason}",
+			"keysLater": "Added. They get the keys of this sealed list once they have started the app; until then they can neither read nor write it.",
+			"keysRenewed": "Removed. The list has new keys from now on. What they could read until now stays readable to them."
 		},
 		"peers": {
 			"direct": "{count, plural, one {Direct P2P with # browser} other {Direct P2P with # browsers}}",
@@ -499,7 +501,8 @@
 			"hint": "This browser’s shared list. Anyone who has its three words can read it and write to it. Open it to pass on its words, link or QR code; your todos then go there.",
 			"open": "Open this list",
 			"openFailed": "The shared list could not be opened: {reason}"
-		}
+		},
+		"hiddenTodos": "{count, plural, one {# todo in this list is} other {# todos in this list are}} sealed to you: handed to someone else, or waiting for a key."
 	},
 	"network": {
 		"navLabel": "P2P initialization and connection status",
@@ -640,7 +643,10 @@
 		"onlyOwnerBudget": "Only the owner of a todo can change its budget.",
 		"notDelegated": "This todo is not delegated.",
 		"onlyOwnerRevokes": "Only the owner of a todo can revoke its delegation.",
-		"revokeFailed": "Failed to revoke delegation: {reason}"
+		"revokeFailed": "Failed to revoke delegation: {reason}",
+		"noSealedReader": "This session has no key for sealed lists, so a private list can neither be opened nor made. Reload the page and start again.",
+		"sealedNoKey": "This list is sealed, and this browser holds no key for it yet. The owner hands it out; it arrives on its own.",
+		"sealedDelegateNeedsOwner": "In a sealed list, only its owner can hand a todo to someone: only she holds the keys to hand out."
 	},
 	"welcome": {
 		"title": "Welcome back",

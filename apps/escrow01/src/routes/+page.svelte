@@ -54,6 +54,7 @@
 		loadTodoDatabase,
 		createPrivateTodoList,
 		homeListPendingStore,
+		hiddenTodosStore,
 		openSharedList
 	} from '$lib/db-actions.js';
 	import { openHomeList } from '$lib/home-list.js';
@@ -1015,6 +1016,12 @@
 			on:revokeDelegation={handleRevokeDelegation}
 			on:releaseBudget={handleReleaseBudget}
 		/>
+		{#if $hiddenTodosStore > 0 && !$homeListPendingStore}
+			<!-- #127: what a sealed list holds that this session cannot open. -->
+			<p class="mt-2 text-xs text-faint" data-testid="sealed-hidden-todos">
+				{$_('lists.hiddenTodos', { values: { count: $hiddenTodosStore } })}
+			</p>
+		{/if}
 	</section>
 
 	<section

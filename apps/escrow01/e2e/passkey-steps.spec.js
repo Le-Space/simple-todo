@@ -75,7 +75,9 @@ test('a new passkey: prompts 2 and 3 say what they are for, and start from "Cont
 	await expect(steps(page).locator('[part=count]')).toHaveText('Passkey prompt 2 of 3', {
 		timeout
 	});
-	await expect(steps(page).getByRole('heading')).toHaveText('Now the key that signs your entries');
+	// The app reads the PRF output itself, for the signing key and the key for
+	// sealed lists at once (#127), so the step is the provider's "prf" one.
+	await expect(steps(page).getByRole('heading')).toHaveText('Now the key for your data');
 	// Held: only the passkey itself has been asked for so far.
 	expect((await takeCeremonies(page)).map((ceremony) => ceremony.kind)).toEqual(['create']);
 
@@ -116,12 +118,14 @@ test('"Cancel" stops before the prompt, and the passkey just made is the one to 
 	expect((await takeCeremonies(page)).map((ceremony) => ceremony.kind)).toEqual(['create']);
 
 	// And it goes on with that passkey: found on the authenticator (nothing is
-	// kept in memory mode), then the identity signature. One press: there is no
-	// tick to set again.
+	// kept in memory mode), its PRF output, then the identity signature. One
+	// press: there is no tick to set again. Four until the provider's restore
+	// hands out the PRF output it reads (#127; provider #107).
 	await page.getByTestId('consent-proceed').click();
 	for (const [count, heading] of [
-		['Passkey prompt 2 of 3', 'Once more, the same passkey'],
-		['Passkey prompt 3 of 3', 'Now confirm your identity']
+		['Passkey prompt 2 of 4', 'Once more, the same passkey'],
+		['Passkey prompt 3 of 4', 'Now the key for your data'],
+		['Passkey prompt 4 of 4', 'Now confirm your identity']
 	]) {
 		await expect(steps(page).locator('[part=count]')).toHaveText(count, { timeout });
 		await expect(steps(page).getByRole('heading')).toHaveText(heading);

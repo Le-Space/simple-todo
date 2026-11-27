@@ -6,8 +6,9 @@
  * passkey, keys -- what a return needs. "Forget me on this browser" -- in the
  * footer, and on the welcome step -- takes all of it away, and the next start
  * is the one a new device gets: the full dialog, and
- * the identity back from the authenticator in three prompts
- * (`passkeyPromptsFor('existing')`), the same DID as before.
+ * the identity back from the authenticator in four prompts
+ * (`passkeyPromptsFor('existing')`; three once provider #107 hands out the
+ * restore's PRF output, #127), the same DID as before.
  *
  * The inventory before the forgetting is what makes the empty one after it
  * mean something: a session that had kept nothing would pass the second half
@@ -124,13 +125,20 @@ test('forgotten from the footer: nothing is left, and the passkey is asked as on
 	expect(new URL(page.url()).hash).toBe('');
 	await expectNothingLeft(page);
 
-	// The start asks the authenticator again: two to restore -- the first with
-	// PRF -- and one to sign the identity. Same passkey, same DID.
+	// The start asks the authenticator again, as passkey-restore.spec.js counts
+	// it: two to restore -- the first with PRF -- then the PRF output once
+	// more, for the key of sealed lists (#127), and one to sign the identity.
+	// Same passkey, same DID.
 	await passConsent(page, { persistent: true, identity: 'existing' });
 	await expect(todoInput(page)).toBeEnabled({ timeout: 120000 });
 	expect(await ownDid(page)).toBe(before);
 	const restore = await takeCeremonies(page);
-	expect(restore.map((c) => `${c.kind}${c.prf ? '+prf' : ''}`)).toEqual(['get+prf', 'get', 'get']);
+	expect(restore.map((c) => `${c.kind}${c.prf ? '+prf' : ''}`)).toEqual([
+		'get+prf',
+		'get',
+		'get+prf',
+		'get'
+	]);
 	expect(restore.every((c) => c.ok)).toBe(true);
 });
 

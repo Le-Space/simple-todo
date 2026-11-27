@@ -57,7 +57,7 @@ flowchart LR
     cred["Passkey-Credential<br/>P-256, nicht exportierbar"]
   end
   subgraph browser["Dieser Browser"]
-    sign["Signierschlüssel der Liste<br/>secp256k1, HKDF aus PRF<br/>Keystore: Speicher oder IndexedDB"]
+    sign["Signierschlüssel der Liste<br/>secp256k1, HKDF aus PRF<br/>Keystore: nur Speicher"]
     read["Leseschlüssel<br/>secp256k1, zufällig<br/>versiegelt, 24 h"]
   end
   setup["Einrichtungsschlüssel<br/>secp256k1, zufällig<br/>weggeworfen"]
@@ -77,10 +77,12 @@ flowchart LR
 2. **Der Signierschlüssel der Liste.** secp256k1, so wie OrbitDBs Keystore ihn verlangt, vom
    Provider abgeleitet: PRF-Antwort → HKDF-SHA256 mit einer Info-Zeichenkette, die die DID enthält.
    Mit PRF leitet derselbe Passkey auf jedem Gerät denselben Schlüssel ab; ohne PRF erzeugt der
-   Keystore stattdessen einen. Wo er liegt, folgt der Speicherwahl: im Arbeitsspeicher geht er mit
-   dem Tab; wollte man Daten behalten, liegt er unverschlüsselt in OrbitDBs Keystore in IndexedDB,
-   und spätere Sitzungen signieren, ohne den Passkey zu fragen
-   (`createOrbitDBInstance` in [`src/lib/p2p.js`](../src/lib/p2p.js)). Er signiert Datenbankeinträge, nie eine
+   Keystore stattdessen einen. Er wird nie gespeichert: Der Keystore lebt in beiden Speicherwahlen
+   im Arbeitsspeicher, und jeder Start leitet den Schlüssel aus seiner einen PRF-Abfrage ab, die
+   auch den Schlüssel für versiegelte Listen liefert
+   ([`sealed/start-prf.js`](../src/lib/sealed/start-prf.js), `createOrbitDBInstance` in
+   [`src/lib/p2p.js`](../src/lib/p2p.js)). Ein Neuladen fragt deshalb einmal. Er signiert
+   Datenbankeinträge, nie eine
    Transaktion.
 3. **Der Einrichtungsschlüssel.** secp256k1 aus `generatePrivateKey()`, erzeugt in
    `createCaliburPasskeySetup` des Wallet-Pakets (`src/setup.js:200`). Seine Adresse _wird_ die
