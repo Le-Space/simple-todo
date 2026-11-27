@@ -3,6 +3,7 @@ import { passConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import { openSection } from './sections.mjs';
 import { pinTechnicalView } from './technical-view.mjs';
 import { identityBlock } from './identity-block.mjs';
+import { explainPathOnFailure } from './path-between.mjs';
 
 // #127: a private list is sealed. Who reads what:
 //
@@ -48,7 +49,10 @@ test.describe('Sealed private lists (#127)', () => {
 			await openListByAddress(mallory.page, address, 3);
 
 			step('Bob reads his todo and not Alice’s');
-			await expectTodo(bob.page, delegated);
+			await explainPathOnFailure(expectTodo(bob.page, delegated), {
+				Alice: alice.page,
+				Bob: bob.page
+			});
 			await expect(rowFor(bob.page, delegated)).toHaveAttribute('data-role', 'delegate');
 			await expectHidden(bob.page, 1);
 			await expect(bob.page.getByText(kept, { exact: true })).toHaveCount(0);
@@ -116,7 +120,10 @@ test.describe('Sealed private lists (#127)', () => {
 
 			step('Carol opens it: she reads what was there, its name, and writes');
 			await openListByAddress(carol.page, address);
-			await expectTodo(carol.page, before);
+			await explainPathOnFailure(expectTodo(carol.page, before), {
+				Alice: alice.page,
+				Carol: carol.page
+			});
 			await expect(carol.page.getByTestId('active-list-name')).toHaveText(
 				(await alice.page.getByTestId('active-list-name').textContent())?.trim() ?? '',
 				{ timeout }

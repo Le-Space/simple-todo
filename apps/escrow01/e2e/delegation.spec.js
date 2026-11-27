@@ -3,6 +3,7 @@ import { passConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import { openSection } from './sections.mjs';
 import { pinTechnicalView } from './technical-view.mjs';
 import { identityBlock } from './identity-block.mjs';
+import { explainPathOnFailure } from './path-between.mjs';
 import { expectReadersMoment } from '@simple-todo/e2e-kit/moment.mjs';
 
 // Chapter (delegation01): a list stays owner-only, but the owner may hand ONE
@@ -53,7 +54,10 @@ test.describe('Per-todo delegation', () => {
 			step('Bob and Mallory open the list by address');
 			await openListByAddress(bob.page, address);
 			await openListByAddress(mallory.page, address, 3);
-			await expectTodo(bob.page, delegated);
+			await explainPathOnFailure(expectTodo(bob.page, delegated), {
+				Alice: alice.page,
+				Bob: bob.page
+			});
 			for (const page of [bob.page, mallory.page]) {
 				await expect(page.getByText(kept, { exact: true })).toHaveCount(0);
 				await addTodoExpectDenied(page, `intruder-${runId}`);
@@ -103,7 +107,7 @@ test.describe('Per-todo delegation', () => {
 			await addTodoOk(alice.page, todo, { delegateDid: bob.did });
 			const address = await getActiveDatabaseAddress(alice.page);
 			await openListByAddress(bob.page, address);
-			await expectTodo(bob.page, todo);
+			await explainPathOnFailure(expectTodo(bob.page, todo), { Alice: alice.page, Bob: bob.page });
 
 			// Bob completes it while delegated.
 			await checkbox(bob.page, todo).check();
