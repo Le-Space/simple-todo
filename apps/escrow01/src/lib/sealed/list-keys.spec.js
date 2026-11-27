@@ -118,6 +118,29 @@ describe('the keys of one sealed list', () => {
 		});
 	});
 
+	it('let a write wait for them: until a grant arrives, or until its time is up', async () => {
+		const orbitdb = await orbitdbInMemory();
+		const owner = { did: orbitdb.identity.id, agreementKey: await keyFor(1) };
+		const bob = { did: BOB, agreementKey: await keyFor(2) };
+		const ownersKeys = await createListKeys(orbitdb, {
+			listAddress: LIST,
+			own: owner,
+			lookupPublicKey: async (did) => (did === BOB ? bob.agreementKey.publicKey : null)
+		});
+		const bobsKeys = await openListKeys(orbitdb, {
+			listAddress: LIST,
+			ownerDid: owner.did,
+			own: bob,
+			lookupPublicKey: async () => null
+		});
+
+		await expect(bobsKeys.whenSealable(50)).resolves.toBe(false);
+		const waiting = bobsKeys.whenSealable(10_000);
+		await ownersKeys.grant(BOB);
+		await expect(waiting).resolves.toBe(true);
+		await expect(bobsKeys.whenSealable(0)).resolves.toBe(true);
+	});
+
 	it('are not handed to a reader who published no key', async () => {
 		const orbitdb = await orbitdbInMemory();
 		const owner = { did: orbitdb.identity.id, agreementKey: await keyFor(1) };

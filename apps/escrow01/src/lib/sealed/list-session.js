@@ -107,6 +107,34 @@ export async function keysForList(orbitdb, db) {
 	return keys;
 }
 
+/** How long a write waits for the list's key, when the list lets this session write (#127). */
+export const WAIT_FOR_LIST_KEY_MS = 20_000;
+
+/**
+ * Before a write: a session the list lets write but that holds no key of it
+ * yet -- its owner or a writer, on a device that has just opened the list --
+ * waits a moment for its copy instead of refusing the first todo. Anyone else
+ * is refused at once, as before.
+ *
+ * @param {import('./list-keys.js').ListKeys | null} keys
+ * @param {any} db the list
+ * @param {string | undefined} identityId this session's
+ * @param {{ timeoutMs?: number }} [options]
+ */
+export async function keysToWrite(keys, db, identityId, { timeoutMs = WAIT_FOR_LIST_KEY_MS } = {}) {
+	if (!keys || keys.canSeal() || !identityId) return keys;
+	try {
+		const capabilities = await db.access.capabilities();
+		const mayWrite = [...(capabilities?.admin ?? []), ...(capabilities?.write ?? [])].includes(
+			identityId
+		);
+		if (mayWrite) await keys.whenSealable(timeoutMs);
+	} catch {
+		// No answer from the controller: refuse as before.
+	}
+	return keys;
+}
+
 /**
  * A todo's value as it goes into the list: sealed under its key in a sealed
  * list, as it is otherwise.

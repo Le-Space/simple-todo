@@ -24,6 +24,7 @@ import {
 	keysAfterWriterLeft,
 	keysForList,
 	keysForNewWriter,
+	keysToWrite,
 	NoSealedReaderError,
 	recordsToShow,
 	valueToChange,
@@ -877,8 +878,9 @@ async function readTodoForWrite(todoKey) {
  * @param {TodoValue} todo
  */
 async function putTodo(todoDB, todoKey, todo) {
+	const keys = await keysToWrite(activeKeys, todoDB, get(ownIdentityIdStore));
 	return String(
-		await todoDB.put(todoKey, /** @type {any} */ (await valueToWrite(activeKeys, todoKey, todo)))
+		await todoDB.put(todoKey, /** @type {any} */ (await valueToWrite(keys, todoKey, todo)))
 	);
 }
 

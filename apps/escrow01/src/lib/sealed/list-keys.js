@@ -60,6 +60,8 @@ const LOOKUP_DURING_WRITE_MS = 5_000;
  * @property {any} store the key store database
  * @property {string} ownerDid
  * @property {() => boolean} canSeal true once this session holds a list key
+ * @property {(timeoutMs: number) => Promise<boolean>} whenSealable
+ *   resolves true once this session holds a list key, false after `timeoutMs`
  * @property {(did: string) => Promise<'granted' | 'no-public-key'>} grant
  *   a writer: every epoch of every key this ring holds; owner only
  * @property {(todoKey: string, delegateDid: string, readers: string[]) => Promise<Rotation>} delegate
@@ -150,22 +152,18 @@ function listKeys({ orbitdb, store, ring, own, ownerDid, lookupPublicKey }) {
 
 	// A copy the owner wrote before a reader opened the store does not reach
 	// him over the relay's circuit by itself (../newcomers.js). So the owner's
-	// browser answers every newcomer with the store's heads, and a reader who
-	// holds no key yet asks again, a few times, while the list is open.
+	// browser answers every newcomer with the store's heads, and whoever holds
+	// no key yet asks again, a few times, while the list is open -- the owner
+	// too, on a device that never saw the list: her copy is with the relay,
+	// whose first heads exchange can be lost like anyone's.
 	const newcomers = createNewcomerAnswers(() => orbitdb?.ipfs?.libp2p?.services?.pubsub);
+	if (own.did === ownerDid) newcomers.answerThoseThere(store, newcomers.serve(store));
 	/** @type {ReturnType<typeof setTimeout>[]} */
-	const asks = [];
-	if (own.did === ownerDid) {
-		newcomers.answerThoseThere(store, newcomers.serve(store));
-	} else {
-		for (const ms of ASK_AGAIN_AFTER_MS) {
-			asks.push(
-				setTimeout(() => {
-					if (ring.scopes().length === 0) newcomers.askAgain(store);
-				}, ms)
-			);
-		}
-	}
+	const asks = ASK_AGAIN_AFTER_MS.map((ms) =>
+		setTimeout(() => {
+			if (ring.scopes().length === 0) newcomers.askAgain(store);
+		}, ms)
+	);
 
 	const onUpdate = () => {
 		// One load at a time: two at once would race to add the same key.
@@ -230,6 +228,23 @@ function listKeys({ orbitdb, store, ring, own, ownerDid, lookupPublicKey }) {
 		store,
 		ownerDid,
 		canSeal: () => ring.current(LIST_SCOPE) !== null,
+
+		whenSealable(timeoutMs) {
+			if (ring.current(LIST_SCOPE) !== null) return Promise.resolve(true);
+			return new Promise((resolve) => {
+				/** @param {boolean} sealable */
+				const done = (sealable) => {
+					clearTimeout(timer);
+					listeners.delete(check);
+					resolve(sealable);
+				};
+				const check = () => {
+					if (ring.current(LIST_SCOPE) !== null) done(true);
+				};
+				const timer = setTimeout(() => done(false), timeoutMs);
+				listeners.add(check);
+			});
+		},
 
 		async grant(did) {
 			assertOwner();
