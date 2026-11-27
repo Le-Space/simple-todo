@@ -96,14 +96,17 @@ package, and a good follow-up exercise.
 This chapter was copied from `privacy01`, and with it came that chapter's
 per-entry sealing (`db-encryption.js`, `entry-encryption.js`,
 `database-keys.js`). Nothing here imported it, so it has been removed;
-`privacy01` and `invoice01` keep it. Lists here are as unencrypted as on
-`acl01`. In `escrow01` only budget amounts are encrypted, on the chain.
+`privacy01` and `invoice01` keep it. Since #127 `escrow01` seals its own
+lists by a design of its own: an envelope per entry, under keys whose
+copies are wrapped for each reader ([keys.md](keys.md)). The list behind
+three words stays as open as on `acl01`; budget amounts are encrypted on
+the chain.
 
 The same goes for the signing key. `privacy01` later moved its passkey
 identity to a key that lives in memory only; that change came after this
-chapter was copied, so the identity here is still `acl01`'s. Its key follows
-the storage choice: with **Keep in this browser** (preselected) it sits in
-IndexedDB, unencrypted; unticked, in this tab's memory.
+chapter was copied. Since #127 `escrow01` gets there by its own route:
+every start derives the signing key from one PRF read into this tab's
+memory, whichever storage choice was made.
 
 ### Alice ↔ Bob ↔ Mallory walkthrough
 

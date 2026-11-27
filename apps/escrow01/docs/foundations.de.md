@@ -88,15 +88,16 @@ _Adresse_ seinen Typ trägt — eine Änderung am Controller-Paket und eine gute
 
 Dieses Kapitel wurde aus `privacy01` kopiert, und mit ihm kam die Versiegelung einzelner Einträge
 aus jenem Kapitel (`db-encryption.js`, `entry-encryption.js`, `database-keys.js`). Nichts hier hat
-sie importiert, also ist sie entfernt; `privacy01` und `invoice01` behalten sie. Die Listen hier
-sind so unverschlüsselt wie in `acl01`. In `escrow01` sind nur die Budgetbeträge verschlüsselt, auf der
-Chain.
+sie importiert, also ist sie entfernt; `privacy01` und `invoice01` behalten sie. Seit #127
+versiegelt `escrow01` seine eigenen Listen nach einem eigenen Entwurf: ein Umschlag je Eintrag, unter
+Schlüsseln, deren Kopien für jede lesende Person verpackt werden ([keys.de.md](keys.de.md)). Die Liste
+hinter drei Wörtern bleibt so offen wie in `acl01`; die Budgetbeträge sind auf der Chain verschlüsselt.
 
 Dasselbe gilt für den Signierschlüssel. `privacy01` hat seine Passkey-Identität später auf einen
 Schlüssel umgestellt, der nur im Arbeitsspeicher liegt; diese Änderung kam, nachdem dieses Kapitel
-kopiert war, also ist die Identität hier noch die aus `acl01`. Ihr Schlüssel folgt der Speicherwahl:
-Mit **In diesem Browser behalten** (vorausgewählt) liegt er unverschlüsselt in IndexedDB, ohne den
-Haken im Arbeitsspeicher dieses Tabs.
+kopiert war. Seit #127 kommt `escrow01` auf eigenem Weg dorthin: Jeder Start leitet den
+Signierschlüssel aus einem PRF-Lesevorgang in den Arbeitsspeicher dieses Tabs ab, gleich welche
+Speicherwahl getroffen wurde.
 
 ### Durchgang Alice ↔ Bob ↔ Mallory
 

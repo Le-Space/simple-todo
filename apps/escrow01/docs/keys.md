@@ -30,20 +30,21 @@ Each section has a simple explanation and a technical one.
 
 ### Keys: simple
 
-| Key                          | Where it lives                                                       | What it may do                                    | When it ends                                                      |
-| ---------------------------- | -------------------------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------- |
-| the passkey itself           | the authenticator, and nowhere else                                  | everything the account does: lock, release, renew | never; losing it loses the account                                |
-| the signing key for the list | this browser, derived from the passkey; kept on disk if data is kept | sign todos, so others see who wrote them          | with the tab, or never if kept; the same passkey derives it again |
-| the setup key                | memory, for one minute                                               | put the account's code in place, once             | thrown away as soon as the passkey is registered                  |
-| the read key                 | this browser's storage, sealed; opened in memory once per visit      | ask Zama to decrypt amounts this account may see  | after 24 hours                                                    |
+| Key                          | Where it lives                                                  | What it may do                                    | When it ends                                     |
+| ---------------------------- | --------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------ |
+| the passkey itself           | the authenticator, and nowhere else                             | everything the account does: lock, release, renew | never; losing it loses the account               |
+| the signing key for the list | this tab's memory, derived from the passkey at every start      | sign todos, so others see who wrote them          | with the tab; the same passkey derives it again  |
+| the setup key                | memory, for one minute                                          | put the account's code in place, once             | thrown away as soon as the passkey is registered |
+| the read key                 | this browser's storage, sealed; opened in memory once per visit | ask Zama to decrypt amounts this account may see  | after 24 hours                                   |
 
 Only the first one can move money, and it never leaves the hardware. The third one is gone. The
 other two live in this browser, and that is what this page is about. The read key is stored sealed
 since 2026-10-02 ([#56](https://github.com/Le-Space/simple-todo/pull/56)): a copied browser profile
 holds nothing that reads, but once a visit has opened it, a compromised page could read amounts for
-up to 24 hours, and nothing else. The list signing key is written down in plain text when "Keep in
-this browser" is ticked, which the start dialog preselects; whoever copies it can write todos as
-that identity, and move nothing.
+up to 24 hours, and nothing else. Since #127 the list signing key is not written down at all: every
+start derives it from the passkey into memory, and the key for sealed lists with it. A copied browser
+profile holds neither; a page compromised while it is open could write todos as that identity and
+read its lists, and move nothing.
 
 ### Keys: technical
 
