@@ -34,7 +34,7 @@ test.describe('list registry (#114)', () => {
 		await expect(switcher).toContainText(second);
 
 		// The list created last is the one being written to.
-		await expect(page.getByTestId('active-list-label')).toHaveText(`· ${second}`);
+		await expect(page.getByTestId('active-list-label')).toHaveText(second);
 	});
 
 	// Reload durability is not a property this chapter has yet, for the registry
@@ -75,7 +75,7 @@ test.describe('list registry (#114)', () => {
 		const firstAddress = await currentAddress(page);
 		await createList(page, second);
 
-		await expect(page.getByTestId('active-list-label')).toHaveText(`· ${second}`);
+		await expect(page.getByTestId('active-list-label')).toHaveText(second);
 
 		// Switch back to the first list through the switcher, which is in the
 		// lists tab, where `createList` left the page.
@@ -83,7 +83,7 @@ test.describe('list registry (#114)', () => {
 			.locator(`[data-testid="list-switcher-open"][data-address="${firstAddress}"]`)
 			.click();
 
-		await expect(page.getByTestId('active-list-label')).toHaveText(`· ${first}`, { timeout });
+		await expect(page.getByTestId('active-list-label')).toHaveText(first, { timeout });
 		await expect(page.getByTestId('active-database-address')).toHaveText(firstAddress, {
 			timeout
 		});
@@ -119,6 +119,8 @@ test.describe('list registry (#114)', () => {
 		const address = await currentAddress(page);
 		await expect(page.getByTestId('list-switcher')).toContainText(name);
 
+		// Behind the row's menu since #127 PR C: no longer the loudest button on the tab.
+		await page.locator(`[data-testid="list-switcher-menu"][data-address="${address}"]`).click();
 		await page.locator(`[data-testid="list-switcher-forget"][data-address="${address}"]`).click();
 		// It was the only entry, so the whole switcher goes away rather than
 		// rendering an empty box.

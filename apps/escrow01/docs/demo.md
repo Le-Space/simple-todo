@@ -335,9 +335,11 @@ lock; this can be checked publicly. Beyond that:
 
 Sender, beneficiary, auditor, times, functions called, `todoRef`, deadline, gas, all handles and input
 proofs, all permissions and computation steps, the amounts at wrap and unwrap, and, on the Gateway
-chain, who has which handle decrypted and when. The unencrypted OrbitDB list holds the todo text, the
-delegate's DID and `todoRef`. Not public are the amounts in the escrow, the balances, and whether a lock
-was funded.
+chain, who has which handle decrypted and when. In a list of one's own, which is sealed (#127), the
+todo with its text, its delegation and its budget, `todoRef` included, is encrypted; readable without a
+key are who wrote an entry and when, and a delegate's actions. A list behind three words holds all of
+it in the clear. Not public are the amounts in the escrow, the balances, and whether a lock was
+funded.
 
 ### What happens if Zama's relayer is down?
 

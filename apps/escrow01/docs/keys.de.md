@@ -34,20 +34,22 @@ Jeder Abschnitt hat eine einfache Erklärung und eine technische.
 
 ### Schlüssel: einfach
 
-| Schlüssel                      | Wo er liegt                                                                               | Was er darf                                                        | Wann er endet                                                               |
-| ------------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------- |
-| der Passkey selbst             | im Authenticator, und nirgends sonst                                                      | alles, was das Konto tut: sperren, freigeben, verlängern           | nie; wer ihn verliert, verliert das Konto                                   |
-| der Signierschlüssel der Liste | in diesem Browser, aus dem Passkey abgeleitet; auf der Platte, wenn Daten behalten werden | Aufgaben signieren, damit andere sehen, wer sie geschrieben hat    | mit dem Tab, oder nie, wenn behalten; derselbe Passkey leitet ihn wieder ab |
-| der Einrichtungsschlüssel      | im Speicher, für eine Minute                                                              | den Code des Kontos einmalig an seinen Platz bringen               | sobald der Passkey registriert ist, weggeworfen                             |
-| der Leseschlüssel              | im Speicher dieses Browsers, versiegelt; einmal pro Besuch im Arbeitsspeicher geöffnet    | Zama bitten, Beträge zu entschlüsseln, die dieses Konto sehen darf | nach 24 Stunden                                                             |
+| Schlüssel                      | Wo er liegt                                                                            | Was er darf                                                        | Wann er endet                                      |
+| ------------------------------ | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------- |
+| der Passkey selbst             | im Authenticator, und nirgends sonst                                                   | alles, was das Konto tut: sperren, freigeben, verlängern           | nie; wer ihn verliert, verliert das Konto          |
+| der Signierschlüssel der Liste | im Arbeitsspeicher dieses Tabs, bei jedem Start aus dem Passkey abgeleitet             | Aufgaben signieren, damit andere sehen, wer sie geschrieben hat    | mit dem Tab; derselbe Passkey leitet ihn wieder ab |
+| der Einrichtungsschlüssel      | im Speicher, für eine Minute                                                           | den Code des Kontos einmalig an seinen Platz bringen               | sobald der Passkey registriert ist, weggeworfen    |
+| der Leseschlüssel              | im Speicher dieses Browsers, versiegelt; einmal pro Besuch im Arbeitsspeicher geöffnet | Zama bitten, Beträge zu entschlüsseln, die dieses Konto sehen darf | nach 24 Stunden                                    |
 
 Nur der erste kann Geld bewegen, und er verlässt die Hardware nie. Der dritte ist weg. Die beiden
 anderen leben in diesem Browser, und darum geht es auf dieser Seite. Der Leseschlüssel liegt seit
 2026-10-02 versiegelt ([#56](https://github.com/Le-Space/simple-todo/pull/56)): Ein kopiertes
 Browserprofil enthält nichts, womit sich lesen ließe; hat ein Besuch ihn aber geöffnet, könnte eine
-kompromittierte Seite bis zu 24 Stunden lang Beträge lesen, und sonst nichts. Der Signierschlüssel
-der Liste steht im Klartext auf der Platte, wenn „In diesem Browser behalten“ angehakt ist, was der
-Startdialog vorauswählt; wer ihn kopiert, kann im Namen dieser Identität Aufgaben schreiben und nichts bewegen.
+kompromittierte Seite bis zu 24 Stunden lang Beträge lesen, und sonst nichts. Seit #127 wird der
+Signierschlüssel der Liste gar nicht mehr abgelegt: Jeder Start leitet ihn aus dem Passkey in den
+Arbeitsspeicher ab, und mit ihm den Schlüssel für versiegelte Listen. Ein kopiertes Browserprofil
+enthält keinen von beiden; eine kompromittierte Seite könnte, solange sie offen ist, im Namen dieser
+Identität Aufgaben schreiben und ihre Listen lesen, aber nichts bewegen.
 
 ### Schlüssel: technisch
 

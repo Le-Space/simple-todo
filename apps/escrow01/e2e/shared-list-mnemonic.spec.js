@@ -55,12 +55,11 @@ test.describe('Spanish mnemonic shared todo lists', () => {
 			const [aliceDetails, bobDetails, isolatedDetails] = [alice, bob, isolated].map((page) =>
 				page.getByTestId('shared-list-details')
 			);
-			// escrow01: the open list's details are the lists tab's first card, and
-			// unfolded when the tab opens; the network details stay folded, in the
+			// escrow01: the open list's details are the lists tab's first part,
+			// "This list" (#127 PR C); the network details stay folded, in the
 			// network tab.
 			for (const page of [alice, bob, isolated]) await openSection(page, 'listen');
 			for (const details of [aliceDetails, bobDetails, isolatedDetails]) {
-				await expect(details).toHaveAttribute('open', '');
 				await expect(details).toBeVisible();
 				await expect(
 					details.locator('xpath=ancestor::section[@data-testid="section-listen"]')
@@ -69,13 +68,6 @@ test.describe('Spanish mnemonic shared todo lists', () => {
 			await expect(alice.getByTestId('network-details')).not.toHaveAttribute('open', '');
 			await expect(aliceDetails.getByTestId('active-shared-list-name')).toHaveText(copiedMnemonic);
 			await expect(bobDetails.getByTestId('active-shared-list-name')).toHaveText(copiedMnemonic);
-			// The summary still folds them away, by pointer and by keyboard.
-			await aliceDetails.getByText('Shared list', { exact: true }).click();
-			// The summary is what takes focus; the label inside it cannot.
-			await bobDetails.locator('summary').focus();
-			await bob.keyboard.press('Enter');
-			await expect(aliceDetails).not.toHaveAttribute('open', '');
-			await expect(bobDetails).not.toHaveAttribute('open', '');
 
 			const [aliceDatabase, bobDatabase, isolatedDatabase] = await Promise.all([
 				getDatabaseDiagnostics(alice),

@@ -321,9 +321,10 @@ lässt es nur vom Eigentümer der Aufgabe schreiben ([`setTodoBudget`](../src/li
 jeder Schritt einer Sperre oder Freigabe wird geschrieben, bevor der nächste beginnt
 ([`src/lib/budget/budget-flow.js`](../src/lib/budget/budget-flow.js)). Ein eingegebener Betrag bleibt im
 Arbeitsspeicher (`pendingAmounts` in [`src/lib/budget/budget-store.js`](../src/lib/budget/budget-store.js)), bis die
-Treuhand ihn hält; danach ist der angezeigte Betrag das Ergebnis von `decryptAmount`. Die Liste selbst
-ist nicht verschlüsselt: Wer ihre Adresse hat, kann Aufgabentext, DID des Delegierten und `budget`
-lesen.
+Treuhand ihn hält; danach ist der angezeigte Betrag das Ergebnis von `decryptAmount`. In einer eigenen
+Liste ist die ganze Aufgabe versiegelt, `budget` eingeschlossen (#127): Wer nur die Adresse der Liste
+hat, liest nichts davon. In einer Liste hinter drei Wörtern liest jeder, der ihre Wörter hat,
+Aufgabentext, DID des Delegierten und `budget`.
 
 Die Chain bleibt aus drei Gründen die maßgebliche Quelle:
 

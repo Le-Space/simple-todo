@@ -1,35 +1,38 @@
 <script>
 	/**
-	 * The open list, at the top of the lists tab: which one it is, and what to
-	 * pass on so that somebody else opens the same one.
+	 * "This list", the first of the lists tab's three parts (#127 PR C): the
+	 * open list's name, whether it is sealed, what this session is in it, what
+	 * to pass on so that somebody else opens it, and -- in the slot -- who can
+	 * write to it.
 	 *
-	 * escrow01: only what belongs to the open list can be copied here. The
-	 * browser's three-word list stays open underneath one's own list, and this
-	 * card used to offer its words whatever list was on screen -- so somebody
-	 * who handed them on sent the other person into a list their own todos
-	 * never reached. The words are copied here only while that shared list is
-	 * the open one; otherwise `ShareByThreeWords` names them, with the switch
-	 * to it.
+	 * Only what belongs to the open list can be copied here. The browser's
+	 * three-word list stays open underneath one's own list, and this card used
+	 * to offer its words whatever list was on screen -- so somebody who handed
+	 * them on sent the other person into a list their own todos never reached.
+	 * The words are copied here only while that list is the open one; otherwise
+	 * "Your lists" names them, with the switch to it.
+	 *
+	 * The note on where new todos go is information, so it is in the text's
+	 * colour: in amber it read as a warning.
 	 */
-	import { createEventDispatcher } from 'svelte';
 	import { _, SLOT, around } from '$lib/i18n/index.js';
+	import { qrSvg } from '@simple-todo/ui/qr-svg.js';
+	import { withoutFragmentKeys } from '@simple-todo/todo/list-link.js';
+	import { sealedListStore } from './db-actions.js';
+	import { listRoleStore } from './list-access.js';
+	import { TAB_SECTIONS } from './sections.js';
 
 	export let mnemonic = '';
 	export let databaseAddress = '';
-	export let embedded = false;
-	/** escrow01: in the lists tab the open list is what the tab is about, so it starts open. */
-	export let open = false;
 	/**
-	 * Which list is actually open. The summary used to be hard-wired to
-	 * "Shared list" and the shared mnemonic, so after creating a private list the
-	 * header kept advertising a list the user was no longer writing to (#114).
+	 * Which list is actually open (#114).
 	 * @type {{ kind: 'shared' | 'private' | 'guest', name: string }}
 	 */
 	export let activeList = { kind: 'shared', name: '' };
 	/**
-	 * escrow01: the name of the list of one's own that the first todo will make,
-	 * while there is none yet (`homeListPendingStore`). It has nothing to pass
-	 * on until then: no address, no link, no QR code.
+	 * The name of the list of one's own that the first todo will make, while
+	 * there is none yet (`homeListPendingStore`). It has nothing to pass on
+	 * until then: no address, no link, no QR code.
 	 * @type {string | null}
 	 */
 	export let pendingName = null;
@@ -37,121 +40,166 @@
 	const KINDS = ['shared', 'private', 'guest'];
 	$: kind = pendingName ? 'pending' : KINDS.includes(activeList?.kind) ? activeList.kind : 'shared';
 	$: heading = $_(`lists.active.${kind === 'pending' ? 'private' : kind}`);
-	$: subtitle = kind === 'pending' ? pendingName : kind === 'shared' ? mnemonic : activeList?.name;
-	$: writingTo = around($_('lists.active.writingTo', { values: { name: SLOT } }));
+	$: name =
+		kind === 'pending'
+			? pendingName
+			: kind === 'shared'
+				? mnemonic
+				: activeList?.name || $_('lists.switcher.unnamed');
+	$: newTodos = around($_('lists.thisList.newTodos', { values: { name: SLOT } }));
 	/** What the Copy button copies: the open list's words, or its address. */
 	$: shareable = kind === 'shared' ? mnemonic : kind === 'pending' ? '' : databaseAddress;
+	/** Sealed or open: said for a list that exists; a list still to be made has neither yet. */
+	$: sealing =
+		kind === 'pending'
+			? null
+			: kind === 'shared'
+				? 'open'
+				: $sealedListStore.sealed
+					? 'sealed'
+					: 'open';
+	$: role = kind === 'private' || kind === 'guest' ? $listRoleStore : null;
 
-	let copied = false;
-	const dispatch = createEventDispatcher();
+	/** @type {'' | 'value' | 'link'} */
+	let copied = '';
+	let qrOpen = false;
+	let qrMarkup = '';
 
-	async function copy() {
-		if (!shareable) return;
-		await navigator.clipboard.writeText(shareable);
-		copied = true;
-		setTimeout(() => (copied = false), 2000);
+	/** The page as it is, the open list in its fragment; not the tab, not an invite. */
+	const listLink = () => withoutFragmentKeys(location.href, ['invite', ...TAB_SECTIONS]);
+
+	/** @param {'value' | 'link'} what */
+	async function copy(what) {
+		const text = what === 'link' ? listLink() : shareable;
+		if (!text) return;
+		await navigator.clipboard.writeText(text);
+		copied = what;
+		setTimeout(() => (copied = ''), 2000);
 	}
+
+	function toggleQr() {
+		qrOpen = !qrOpen;
+		if (qrOpen) qrMarkup = qrSvg(listLink());
+	}
+
+	// Another list on screen: its code is not this one's.
+	$: if (shareable !== undefined) qrOpen = false;
 </script>
 
-<details
-	{open}
-	class="group"
-	class:mb-6={!embedded}
-	class:rounded-lg={!embedded}
-	class:border={!embedded}
-	class:border-border={true}
-	class:bg-surface={!embedded}
-	class:px-4={!embedded}
-	class:py-3={!embedded}
-	class:shadow-sm={!embedded}
-	class:border-t={embedded}
-	class:pt-2={embedded}
+<section
+	class="mb-6 rounded-lg border border-border bg-surface px-4 py-4 shadow-sm"
+	aria-labelledby="this-list-heading"
 	data-testid="shared-list-details"
 	data-kind={kind}
 >
-	<summary
-		class="flex cursor-pointer list-none items-center gap-2 rounded px-1 py-1 text-xs font-medium text-text outline-none hover:text-heading focus-visible:ring-2 focus-visible:ring-cyan-500 [&::-webkit-details-marker]:hidden"
-	>
-		<svg
-			class="h-3.5 w-3.5 transition-transform group-open:rotate-90"
-			viewBox="0 0 20 20"
-			fill="currentColor"
-			aria-hidden="true"
-		>
-			<path
-				fill-rule="evenodd"
-				d="M7.2 4.7a1 1 0 011.4 0l4.6 4.6a1 1 0 010 1.4l-4.6 4.6a1 1 0 11-1.4-1.4l3.9-3.9-3.9-3.9a1 1 0 010-1.4z"
-				clip-rule="evenodd"
-			/>
-		</svg>
+	<h2 id="this-list-heading" class="text-xs font-semibold tracking-wide text-faint uppercase">
+		{$_('lists.thisList.heading')}
+	</h2>
+	<p class="mt-1 truncate text-xl font-bold text-heading" data-testid="active-list-label">{name}</p>
+	<p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-faint">
 		<span data-testid="active-list-kind">{heading}</span>
-		{#if subtitle}
-			<code
-				class="hidden min-w-0 truncate font-mono font-normal text-faint sm:inline"
-				data-testid="active-list-label">· {subtitle}</code
+		{#if sealing}
+			<span
+				class="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-text"
+				title={$_(`lists.thisList.${sealing}Title`)}
+				data-testid="active-list-sealing"
+				data-sealing={sealing}
+			>
+				{#if sealing === 'sealed'}
+					<svg class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+						<path
+							fill-rule="evenodd"
+							d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z"
+							clip-rule="evenodd"
+						/>
+					</svg>
+				{/if}
+				{$_(`lists.thisList.${sealing}`)}
+			</span>
+		{/if}
+		{#if role}
+			<span
+				class="rounded-full border border-border px-2 py-0.5 text-text"
+				data-testid="active-list-role"
+				data-role={role}>{$_(`lists.thisList.role.${role}`)}</span
 			>
 		{/if}
-	</summary>
-	<div class="mt-3 border-t border-border pt-3">
-		{#if kind === 'pending'}
-			<p class="text-xs text-text" data-testid="active-list-pending-note">
-				{$_('lists.home.pendingNote')}
+	</p>
+
+	{#if kind === 'pending'}
+		<p class="mt-3 text-sm text-text" data-testid="active-list-pending-note">
+			{$_('lists.home.pendingNote')}
+		</p>
+	{:else}
+		{#if kind === 'shared'}
+			<p class="mt-3 text-sm text-text">{$_('lists.active.anyone')}</p>
+		{:else}
+			<p class="mt-3 text-sm text-text" data-testid="active-list-note">
+				{newTodos.before}<strong>{name}</strong>{newTodos.after}
 			</p>
-		{:else if kind === 'shared'}
-			<p class="text-xs text-faint">{$_('lists.active.mnemonicLabel')}</p>
-			<div class="mt-1 flex items-center gap-2 rounded-md bg-cyan-50 p-2 dark:bg-cyan/10">
+		{/if}
+
+		<div class="mt-3 flex items-center gap-2 rounded-md bg-surface-2 py-1 pr-1 pl-2">
+			{#if kind === 'shared'}
 				<code
-					class="min-w-0 flex-1 font-mono text-xs break-all"
+					class="min-w-0 flex-1 truncate font-mono text-xs text-text"
 					data-testid="active-shared-list-name">{mnemonic}</code
 				>
-				<button
-					type="button"
-					on:click={copy}
-					class="rounded border border-cyan-200 bg-surface px-2 py-1 text-xs dark:border-cyan/30"
-				>
-					{copied ? $_('lists.active.copied') : $_('lists.active.copy')}
-				</button>
-			</div>
-			{#if databaseAddress}
-				<p class="mt-2 text-xs text-faint">{$_('lists.active.addressLabel')}</p>
+			{:else if databaseAddress}
 				<code
-					class="mt-1 block font-mono text-[11px] break-all text-text"
+					class="min-w-0 flex-1 truncate font-mono text-xs text-text"
+					title={databaseAddress}
 					data-testid="active-database-address">{databaseAddress}</code
 				>
 			{/if}
-			<p class="mt-2 text-xs text-data-700">
-				{$_('lists.active.anyone')}
-			</p>
-			<p class="mt-1 text-xs text-faint">
-				{$_('lists.active.replication')}
-			</p>
 			<button
 				type="button"
-				on:click={() => dispatch('change')}
-				class="mt-3 text-xs font-medium text-cyan-700 underline"
+				on:click={() => copy('value')}
+				class="shrink-0 rounded-md border border-border bg-surface px-2 py-1 text-xs text-text hover:text-heading"
 			>
-				{$_('lists.active.openAnother')}
+				{copied === 'value' ? $_('lists.active.copied') : $_('lists.active.copy')}
 			</button>
-		{:else}
-			<p class="mb-2 text-xs text-data-700" data-testid="active-list-note">
-				{writingTo.before}<strong>{activeList.name}</strong>{writingTo.after}
-			</p>
-			{#if databaseAddress}
-				<p class="text-xs text-faint">{$_('lists.active.addressLabel')}</p>
-				<div class="mt-1 flex items-center gap-2 rounded-md bg-cyan-50 p-2 dark:bg-cyan/10">
-					<code
-						class="min-w-0 flex-1 font-mono text-[11px] break-all text-text"
-						data-testid="active-database-address">{databaseAddress}</code
-					>
-					<button
-						type="button"
-						on:click={copy}
-						class="rounded border border-cyan-200 bg-surface px-2 py-1 text-xs dark:border-cyan/30"
-					>
-						{copied ? $_('lists.active.copied') : $_('lists.active.copy')}
-					</button>
-				</div>
-			{/if}
+		</div>
+		{#if kind === 'shared' && databaseAddress}
+			<!-- The words are what to pass on; the address is there for whoever asks. -->
+			<code
+				class="mt-1 block truncate px-2 font-mono text-[11px] text-faint"
+				title={databaseAddress}
+				data-testid="active-database-address">{databaseAddress}</code
+			>
 		{/if}
-	</div>
-</details>
+
+		<div class="mt-2 flex flex-wrap gap-2">
+			<button
+				type="button"
+				on:click={() => copy('link')}
+				class="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-text hover:text-heading"
+				data-testid="active-list-copy-link"
+			>
+				{copied === 'link' ? $_('lists.thisList.linkCopied') : $_('lists.thisList.copyLink')}
+			</button>
+			<button
+				type="button"
+				on:click={toggleQr}
+				aria-expanded={qrOpen}
+				class="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-text hover:text-heading"
+				data-testid="active-list-show-qr"
+			>
+				{qrOpen ? $_('lists.thisList.hideQr') : $_('lists.thisList.showQr')}
+			</button>
+		</div>
+		{#if qrOpen}
+			<div class="mt-3 max-w-56" data-testid="active-list-qr">
+				<div
+					class="rounded-lg bg-white p-2 leading-none [&_svg]:block [&_svg]:h-auto [&_svg]:w-full"
+				>
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -- uqr's own SVG of our own URL -->
+					{@html qrMarkup}
+				</div>
+				<p class="mt-1.5 text-xs text-faint">{$_('lists.thisList.qrHint')}</p>
+			</div>
+		{/if}
+	{/if}
+
+	<slot />
+</section>

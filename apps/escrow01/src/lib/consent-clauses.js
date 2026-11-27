@@ -1,7 +1,6 @@
 import { get } from 'svelte/store';
 import { _ } from '$lib/i18n/index.js';
 import { budgetInfo } from '$lib/budget/budget-store.js';
-import { todosEncrypted } from '$lib/todo-encryption.js';
 
 /**
  * What this chapter does with your data, in plain words, as a function of the
@@ -12,16 +11,19 @@ import { todosEncrypted } from '$lib/todo-encryption.js';
  *
  * In groups, because two of them used to contradict each other in adjacent
  * bullets: "Nothing here is encrypted" beside "Budgets, encrypted". Both were
- * true of different things. The amounts are encrypted on the chain, the todos
- * and the lists are not, and each now stands under a heading that says which
- * is which.
+ * true of different things, and each now stands under a heading that says
+ * which is which. Since #127 there are three: the amounts, encrypted on the
+ * chain; one's own lists, sealed in the browser (sealed/); and the list behind
+ * three words, which stays open to anyone who has its words.
+ *
+ * What a sealed list does not hide is said beside it: who wrote when, how many
+ * entries, who may write. A removed reader keeps what they could read until
+ * then, and the sentence says so rather than promise more.
  *
  * The technical view names the machinery (IPFS, Kubo, Sepolia, DID); the plain
  * one says the same thing without it. No sentence is weaker in either.
  *
- * @typedef {{ identity?: string, storage?: string, technical?: boolean, todosEncrypted?: boolean }} ConsentState
- * `todosEncrypted` overrides the build's flag (`todo-encryption.js`), for a
- * test that reads both wordings.
+ * @typedef {{ identity?: string, storage?: string, technical?: boolean }} ConsentState
  * @param {ConsentState} state
  * @returns {Array<{ title: string, lines: string[] }>}
  */
@@ -30,7 +32,6 @@ export const clauses = (state) => {
 	const technical = state.technical === true;
 	const anonymous = state.identity === 'anonymous';
 	const kept = state.storage === 'indexeddb';
-	const encrypted = state.todosEncrypted ?? todosEncrypted;
 	const plainOr = (/** @type {string} */ key) => t(technical ? `${key}Technical` : key);
 
 	return [
@@ -46,16 +47,21 @@ export const clauses = (state) => {
 			]
 		},
 		{
-			title: t(encrypted ? 'consent.group.listsEncrypted' : 'consent.group.lists'),
+			title: t('consent.group.listsEncrypted'),
 			lines: [
-				t('consent.clause.readingIsOpen'),
-				t('consent.clause.sharedList'),
-				t('consent.clause.privateList'),
-				// This chapter's own sentence: a grant can be taken back, which is the
-				// whole difference between delegating write access and handing
-				// somebody a key.
-				t('consent.clause.delegation')
+				plainOr('consent.clause.ownListsSealed'),
+				t('consent.clause.whoReads'),
+				plainOr('consent.clause.listsMetadata'),
+				// Without a passkey there is nothing to derive the key from: a key of
+				// this browser seals the lists, and it goes where the browser goes.
+				...(anonymous
+					? [t(kept ? 'consent.clause.ownListsDeviceKeyKept' : 'consent.clause.ownListsDeviceKey')]
+					: [])
 			]
+		},
+		{
+			title: t('consent.group.sharedList'),
+			lines: [t('consent.clause.sharedList'), t('consent.clause.sharedListOpen')]
 		},
 		{
 			title: t('consent.group.network'),
@@ -80,8 +86,8 @@ export const clauses = (state) => {
 };
 
 /**
- * The statement in three sentences, for the dialog's first screen: the
- * amounts, the lists, and the browser it runs in. The full statement is on the
+ * The statement in three sentences, for the dialog's first screen: what is
+ * encrypted, the one list that is not, and the browser it runs in. The full statement is on the
  * dialog's second screen, unabridged; that relays may hold a copy of a list
  * stands there, where it has its context.
  *
@@ -94,17 +100,14 @@ export const clauses = (state) => {
 export const summary = (state) => {
 	const t = get(_);
 	const technical = state.technical === true;
-	const encrypted = state.todosEncrypted ?? todosEncrypted;
 	const amounts = budgetInfo.confidential
-		? encrypted
-			? 'consent.summary.amountsAndLists'
-			: technical
-				? 'consent.summary.amountsTechnical'
-				: 'consent.summary.amounts'
+		? technical
+			? 'consent.summary.amountsAndListsTechnical'
+			: 'consent.summary.amountsAndLists'
 		: 'consent.summary.amountsDemo';
 	return [
 		t(amounts),
-		t(encrypted ? 'consent.summary.listsEncrypted' : 'consent.summary.lists'),
+		t('consent.summary.listsEncrypted'),
 		t(technical ? 'consent.summary.extensionsTechnical' : 'consent.summary.extensions')
 	];
 };

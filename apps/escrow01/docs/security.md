@@ -1,8 +1,9 @@
 # Security of the confidential escrow
 
-For security and cryptography reviewers of the `escrow01` chapter. It states what the escrow
-protects, what it leaks, whom it trusts, and what is not solved. Facts are as of 2026-09-16, those on
-the passkey wallet as of 2026-09-17, and are sourced at the end; points that could not be verified say so. The mechanics are described in
+For security and cryptography reviewers of the `escrow01` chapter. It states what the escrow and the
+sealed lists protect, what they leak, whom they trust, and what is not solved. Facts are as of
+2026-09-16, those on the passkey wallet as of 2026-09-17, those on sealed lists as of 2026-11-27
+(#176), and are sourced at the end; points that could not be verified say so. The mechanics are described in
 [escrow.md](escrow.md) and [zama-confidential-transactions.md](zama-confidential-transactions.md);
 the traced run is in [smoke-test.md](smoke-test.md).
 
@@ -20,6 +21,7 @@ without that setting its budget screens run against an in-memory fake that encry
 - [Properties of the escrow itself](#escrow-properties-simple)
 - [Limits](#limits-simple)
 - [Passkey wallet](#passkey-wallet)
+- [Sealed lists](#sealed-lists)
 - [Open issues](#open-issues)
 
 ## Threat model
@@ -30,6 +32,11 @@ The escrow is meant to keep one thing secret: how much money is locked and paid 
 to hide who pays whom or when. It relies on Zama's key holders to keep the decryption key split and
 on Zama's services to be available.
 
+The app's lists are a second matter. Since #176 a private list is sealed: only the people it is
+shared with read its todos, and the relay that keeps a copy does not. Who wrote to it, when, and who
+holds which key stay visible. The shared list behind three Spanish words is not sealed: whoever
+knows the words reads and writes it.
+
 ### Threat model: technical
 
 Assets:
@@ -39,21 +46,25 @@ Assets:
    actually locked; nothing else moves a locked amount.
 3. Availability: a creator can release or refund, and allowed parties can read amounts.
 4. Metadata privacy: explicitly out of scope, see [What leaks](#leaks-technical).
+5. Confidentiality of a sealed list: every field of a todo, the list's name, a delegate's rename. Its
+   metadata is not protected ([What leaks](#leaks-technical), [Sealed lists](#sealed-lists-technical)).
 
 Adversaries and what they can do:
 
-| Adversary                         | Can                                                                                                      | Cannot                                                                                                        |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Chain observer                    | read every transaction, calldata, event and storage slot on Sepolia, and the events of the Gateway chain | decrypt a handle; tell a full lock from an underfunded one                                                    |
-| Front-runner                      | copy a pending `lock` (`todoRef`, handle, proof)                                                         | use the proof for another account or contract; occupy the creator's `todoRef` (escrows are keyed per creator) |
-| Reader of the OrbitDB list        | read todo text, delegate DID and `budget` (`todoRef`, transaction hashes, status)                        | read amounts, which are not in OrbitDB                                                                        |
-| Beneficiary                       | read the locked amount and its own balance; check before starting work that the lock is not empty        | force a release                                                                                               |
-| Creator                           | withhold a release and refund after the deadline                                                         | release to anyone but the recorded beneficiary; take funds before the deadline without releasing              |
-| Auditor                           | read every amount ever locked in this escrow                                                             | move funds                                                                                                    |
-| Token owner (Protocol DAO)        | upgrade cUSDTMock, add observers who can decrypt, block addresses, appoint a pauser                      | nothing is excluded by code; see [The token](#token-technical)                                                |
-| Zama operators                    | see section [Trust assumptions](#trust-technical)                                                        |                                                                                                               |
-| Compromised browser or key        | read whatever that key may decrypt; sign as that account                                                 | read amounts it has no ACL permission for                                                                     |
-| Holder of the page's Openfort key | have any Sepolia user operation sponsored under the project's rule                                       | sign for an account, move funds, read amounts                                                                 |
+| Adversary                                                  | Can                                                                                                                                         | Cannot                                                                                                        |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Chain observer                                             | read every transaction, calldata, event and storage slot on Sepolia, and the events of the Gateway chain                                    | decrypt a handle; tell a full lock from an underfunded one                                                    |
+| Front-runner                                               | copy a pending `lock` (`todoRef`, handle, proof)                                                                                            | use the proof for another account or contract; occupy the creator's `todoRef` (escrows are keyed per creator) |
+| Reader of an open list                                     | read everything in it: todo text; in a private list made before #176 also delegate DID and `budget` (`todoRef`, transaction hashes, status) | read amounts, which are not in OrbitDB                                                                        |
+| Holder of a sealed list's address, the relay included      | read its metadata: entry keys, signers, the write list, who holds which key ([What leaks](#leaks-technical))                                | read a todo, the list's name or a delegate's rename; plant a key in the key store (#120)                      |
+| Owner, writer, delegate or removed writer of a sealed list | see [Sealed lists](#sealed-lists-technical)                                                                                                 |                                                                                                               |
+| Beneficiary                                                | read the locked amount and its own balance; check before starting work that the lock is not empty                                           | force a release                                                                                               |
+| Creator                                                    | withhold a release and refund after the deadline                                                                                            | release to anyone but the recorded beneficiary; take funds before the deadline without releasing              |
+| Auditor                                                    | read every amount ever locked in this escrow                                                                                                | move funds                                                                                                    |
+| Token owner (Protocol DAO)                                 | upgrade cUSDTMock, add observers who can decrypt, block addresses, appoint a pauser                                                         | nothing is excluded by code; see [The token](#token-technical)                                                |
+| Zama operators                                             | see section [Trust assumptions](#trust-technical)                                                                                           |                                                                                                               |
+| Compromised browser or key                                 | read whatever that key may decrypt; sign as that account                                                                                    | read amounts it has no ACL permission for                                                                     |
+| Holder of the page's Openfort key                          | have any Sepolia user operation sponsored under the project's rule                                                                          | sign for an account, move funds, read amounts                                                                 |
 
 Creator, beneficiary and auditor can each also make a locked amount public through the token (see
 [The token](#token-technical)).
@@ -66,6 +77,12 @@ Everyone can see who locked money for whom, when, until when, which escrow refer
 when it was paid out. Everyone can see how much was converted between USDT and confidential USDT.
 Nobody can see how much was locked or paid out. Zama's systems also record who asked to decrypt
 which value, and when.
+
+In the app's lists it depends on the list. The list behind three Spanish words is open: whoever
+knows the words reads and writes all of it. A private list made since #176 is sealed: the relay and
+anyone with its address get locked entries only, not the todos, not the list's name, not the escrow
+reference. They still see who wrote to it and when, who may write to it, and who was given a key to
+which todo. Private lists made before #176 stay open.
 
 ### Leaks: technical
 
@@ -107,11 +124,38 @@ publicKey, extraData)`, followed by one `UserDecryptionResponse` per KMS share. 
   the requester's ML-KEM-512 key. Public decryption results are published there in clear.
 - **Relayer.** Sees every request with addresses, handles and transport public keys, and the client's
   IP address.
-- **OrbitDB.** The shared list is unencrypted: anyone with its address reads todo text, delegate DID,
-  `todoRef` and status, and can thus link a todo to its escrow on chain.
+- **OrbitDB, open lists.** The three-word list is open (`IPFSAccessController({ write: ['*'] })`):
+  anyone with its words reads and writes every todo. It cannot delegate, so it never holds a budget.
+  A private list made before #176 stays unsealed: anyone with its address reads todo text, delegate
+  DID, `todoRef` and status, and can thus link a todo to its escrow on chain.
+- **OrbitDB, sealed lists.** A private list made since #176 holds envelopes
+  ([Sealed lists](#sealed-lists-technical)). Sealed are every field of a todo, `delegation` and
+  `budget` (`todoRef`, transaction hashes, status) included, the list's name and a delegate's rename.
 
 Not public: amounts inside the token (locked, released, refunded, balances), and whether a transfer
 moved the requested amount or 0.
+
+In a sealed list, the relay and anyone with the list's address read without a key:
+
+| Readable                                                                 | Where                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Entry keys, and with them a todo's creation time                         | `key` of every entry (`todo_<milliseconds>_…`); `op` too, so a deletion shows                                                                                                                                            |
+| Who wrote each entry, and in which order                                 | the entry's `identity` and its logical clock                                                                                                                                                                             |
+| Which todos are handed to someone, and how often a key changed           | `scope` and `epoch` of each envelope                                                                                                                                                                                     |
+| The size of each todo                                                    | the ciphertext; envelopes are not padded                                                                                                                                                                                 |
+| A delegate's actions: which todo, by whom, when, done or not, until when | key `delegation-action/<todoKey>/<delegateDid>/…`; `taskKey`, `delegateDid`, `performedBy`, `performedAt`, `setCompleted`, `expiresAt`. Only `patch.text` is sealed: the access controller checks the rest without a key |
+| Who may write                                                            | the access controller's write list (DIDs)                                                                                                                                                                                |
+| Who holds a copy of which key, and so who was handed which todo          | slot names in the key store: `list/<epoch>/<did>`, `task/<todoKey>/<epoch>/<did>`                                                                                                                                        |
+| The number of entries                                                    | the log                                                                                                                                                                                                                  |
+| The signers' identity documents                                          | public by design: every entry names its signer's                                                                                                                                                                         |
+| The list in its owner's registry: address, role, creation date           | the owner's list registry, which the relay holds and whose address only the owner can derive; the name there is sealed to the owner's own key                                                                            |
+| Each identity's public key for sealed lists                              | the account directory, under the DID                                                                                                                                                                                     |
+
+`todoRef` is SHA-256 over the todo's key and 32 random bytes (`createTodoRef` in
+[`budget-service-zama.js`](../src/lib/budget/budget-service-zama.js)), so the readable entry key does
+not lead to the escrow. The link can still be guessed: the key store names a delegate's DID beside
+the todo's key, which carries its creation time; on Sepolia the account directory maps that DID to an
+account; and `Locked` names creator and beneficiary, with its block time.
 
 ## Trust assumptions
 
@@ -121,6 +165,9 @@ The secrecy of amounts depends on Zama's key holders not colluding; Zama's white
 collusion of up to 4 of the 13. Being able to read amounts at all depends on Zama's relayer, Gateway
 and key holders being online. The rules of the whole system can be
 changed by Zama's protocol governance.
+
+Sealed lists add nobody to trust for secrecy beyond the people a list is shared with. The relay
+keeps them without reading them: it is trusted to be there, not to keep a secret.
 
 ### Trust: technical
 
@@ -138,6 +185,21 @@ No service level agreement for the Sepolia relayer, Gateway or KMS is mentioned 
 cited here. The incidents of 2026-08-31 to 2026-09-01 and of 2026-09-03 made user decryption fail on
 Sepolia while the chain was correct (see
 [zama-confidential-transactions.md](zama-confidential-transactions.md#incidents-technical)).
+
+Sealed lists add no party to this table. What they rest on:
+
+- **Who may hand out a key.** The key store's controller lets only the owner write
+  (`IPFSAccessController({ write: [owner] })`), and OrbitDB refuses an entry her identity did not
+  sign. The wrap itself authenticates no sender: its sender key is ephemeral.
+- **Whose key a copy is wrapped for.** The public key in the reader's account directory, which only
+  the reader's DID can write. Nobody can slip the owner a key of their own to wrap for.
+- **Identity documents carried over gossipsub** ([`identity-blocks.js`](../src/lib/identity-blocks.js)).
+  An answer to a newcomer carries its writers' identity documents. A session files each one only
+  under the CID of its own bytes, computed on arrival, and OrbitDB verifies identity and entry as
+  before. They add no trust: a bitswap fetch by that CID would have returned the same bytes. Identity
+  documents are public.
+- **The relay** holds envelopes, wrapped copies and metadata. It is trusted for availability only.
+- **The page.** A page compromised while it runs reads every list this session holds a key for.
 
 ## The token: cUSDTMock
 
@@ -345,7 +407,9 @@ cost more than a fixed limit, and the account's steps go one at a time.
   sealed (AES-GCM under a key HKDF derives from the passkey's PRF output), in the browser's
   `localStorage` with "Keep in this browser" and in the tab's memory without it, and opened in memory
   once per visit; a page compromised while it is open can use it
-  ([The read key](passkey-account.md#read-key-technical)). The `DelegatedForUserDecryption` event makes the link between
+  ([The read key](passkey-account.md#read-key-technical)). That PRF read is a touch of its own; the
+  one PRF read of every start gives the OrbitDB signing key and the key for sealed lists
+  ([Sealed lists](#sealed-lists-technical)). The `DelegatedForUserDecryption` event makes the link between
   account and session key public, and the session key can read everything the account may read in
   those contracts until the expiry or a revocation.
 - **v0.14** adds ERC-1271 verification in the KMS connector for its new unified request (`ecrecover`
@@ -372,13 +436,120 @@ cost more than a fixed limit, and the account's steps go one at a time.
   ([`config.js`](../src/lib/chain/config.js)).
 - **No recovery for a lost passkey.** Besides the discarded root key the passkey is the account's
   only key. A synced passkey reaches further devices and, since provider 0.8.0, gives back the
-  identity and the account there in three touches with nothing stored
-  ([how often the passkey asks](passkey-account.md#how-often-the-passkey-asks)); a lost one takes the
-  account with it.
+  identity and the account there with nothing stored, in four touches since #176 (three once
+  provider #107 is released;
+  [how often the passkey asks](passkey-account.md#how-often-the-passkey-asks)). A lost one takes the
+  account with it, and every copy of a list key sealed for it.
 - **Calibur v1.1.0.** Uniswap released v1.1.0 on 2026-07-02 at a new address and lists only that
   version since. Among other hardening it allows only admin keys to call the EntryPoint. The app uses
   v1.0.0, where its only non-root key is an admin
   ([What Calibur is](passkey-account.md#calibur-technical)).
+
+## Sealed lists
+
+Since #176 (issue #127) a private list is sealed in the browser before anything leaves it
+([`src/lib/sealed/`](../src/lib/sealed)). The shared list behind three Spanish words, and private
+lists made before #176, stay as they were. How the keys relate to the passkey is in
+[keys.md](keys.md#keys-technical), how often the passkey asks in
+[passkey-account.md](passkey-account.md#how-often-the-passkey-asks), and what stays readable in
+[What leaks](#leaks-technical).
+
+### Sealed lists: simple
+
+Every todo in a private list is locked before it leaves the browser. The owner holds the key, and so
+does everyone she lets write. Someone she hands a single todo to gets a key for that todo only. The
+relay keeps the list without being able to read it, and so does anyone else who has its address.
+
+Removing a writer gives everyone else new keys, and what is written after that is closed to the
+removed writer. What they could read until then, they keep. The same holds for a delegate whose todo
+was taken back.
+
+The keys come from the passkey at every start and are never stored. A passkey without the PRF
+extension gets a key that exists only in this browser: lists sealed for it open nowhere else, and
+without "Keep in this browser" they close with the tab.
+
+### Sealed lists: technical
+
+Who reads what:
+
+| Who                       | Reads                                                                                                                           | Does not read                                                                                                                                                                   |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Owner                     | every todo, the list's name, every delegate's rename                                                                            |                                                                                                                                                                                 |
+| Writer                    | from the grant on, every epoch of every key the owner holds (`grant`): earlier todos too, delegated ones included, and the name | after removal, see the row below                                                                                                                                                |
+| Delegate                  | the todo handed to them, as written from that delegation on, and their own renames                                              | the rest of the list; the name; what came before the delegation, since each delegation is a new epoch of the todo's key; the todo once taken back, which goes under `K_L` again |
+| Removed writer            | what they could read until the removal                                                                                          | what is sealed under a later epoch of the list key or of a delegated todo's key (`keysAfterWriterLeft`)                                                                         |
+| Stranger with the address | the metadata in [What leaks](#leaks-technical)                                                                                  | a todo, the name, a rename                                                                                                                                                      |
+| Relay                     | the same as a stranger; it holds envelopes and wrapped copies                                                                   | the same as a stranger                                                                                                                                                          |
+
+How it works:
+
+- **Envelopes.** A todo's value becomes `{ sealed: 1, scope, epoch, nonce, ct }`: AES-GCM-256
+  through WebCrypto with a fresh 12-byte nonce, and associated data that binds scope, epoch and entry
+  key ([`sealed/envelope.js`](../src/lib/sealed/envelope.js)). A sealed todo therefore does not open
+  under another entry key or scope. Sealing happens in the app, not in OrbitDB's `encryption.data`:
+  `@orbitdb/core` 4.0.0 throws on a payload it cannot decrypt, and a reader who lacks one key would
+  lose the history behind that entry. OrbitDB never sees a key. An envelope this session cannot open
+  is hidden and counted; nothing throws.
+- **Keys.** `K_L` is 32 random bytes per list and epoch, `K_T` the same per delegated todo and epoch
+  ([`sealed/key-ring.js`](../src/lib/sealed/key-ring.js)). New entries go under the highest epoch a
+  session holds. The keys live in the tab's memory only.
+- **Copies.** Each copy of a key is wrapped for one reader: an ephemeral X25519 pair, ECDH with the
+  reader's public key, HKDF-SHA-256 whose info names both public keys, AES-GCM-256 with the copy's
+  slot as associated data ([`sealed/key-agreement.js`](../src/lib/sealed/key-agreement.js)). A copy
+  moved to another slot or reader does not open.
+- **The key store.** One `keyvalue` per list that only the owner writes
+  ([`sealed/key-store.js`](../src/lib/sealed/key-store.js)), so nobody can plant a key (#120). Slots
+  are `list/<epoch>/<did>` and `task/<todoKey>/<epoch>/<did>`. Its name follows from the list's
+  address, so anyone with the address finds it. The owner wraps a copy for herself too. Only the
+  owner delegates in a sealed list, because only she writes the store.
+- **Epochs** ([`sealed/list-keys.js`](../src/lib/sealed/list-keys.js),
+  [`sealed/list-session.js`](../src/lib/sealed/list-session.js)). A grant hands a writer every epoch
+  of every key. Every delegation starts a new epoch of that todo's key, for the owner, the writers and
+  the delegate. Taking a todo back starts no key: the todo goes back under `K_L`, which the delegate
+  never had. Removing a writer starts a new epoch of the list key and of each delegated todo's key,
+  for everyone but them.
+- **Recognised by name.** A sealed list's database name is `sealed-v1-` and 32 random hex characters
+  ([`sealed/sealed-list.js`](../src/lib/sealed/sealed-list.js)). Every peer knows a list is sealed
+  before any entry arrives, so nobody writes a todo into it in the clear because a key is late. A
+  session without a copy waits for one; it never makes a key of its own.
+- **The list's name** is sealed under `K_L` in the key store (`meta/name`), not in the list. In the
+  list registry a sealed list keeps `name` empty and carries the name sealed to the owner's own
+  X25519 key, bound to the list's address
+  ([`sealed/registry-names.js`](../src/lib/sealed/registry-names.js)). Addresses, roles and dates in
+  the registry stay readable.
+- **The personal key** is `deriveSubkey(prf, 'simple-todo/escrow01/list-key-agreement/v1')`:
+  HKDF-SHA-256 over the passkey's PRF output, imported as an X25519 private key that cannot be
+  exported. The same passkey gives the same key on every device. Its public half is in the account
+  directory under the DID, which only that DID writes. That entry is published in every build, not
+  only on Sepolia ([`chain/account-directory.js`](../src/lib/chain/account-directory.js)).
+- **Without PRF**, and for an identity without a passkey, the key is random and generated
+  non-extractable: kept in IndexedDB with "Keep in this browser", in the tab's memory without it
+  ([`sealed/own-agreement-key.js`](../src/lib/sealed/own-agreement-key.js)). Lists sealed for it open
+  in that browser only; without "Keep in this browser" they close with the tab.
+- **Nothing the passkey can derive is stored.** Every passkey start reads PRF once
+  ([`sealed/start-prf.js`](../src/lib/sealed/start-prf.js)). The OrbitDB signing key is derived from
+  that output into a keystore in memory, in both storage modes ([keys.md](keys.md#keys-technical)),
+  and the X25519 key from the same output, held for the tab. The output itself stays in the tab's
+  memory, by credential, so that a restart in the same tab does not ask again. The unencrypted
+  keystore an earlier build kept in IndexedDB is deleted at the next start, best effort
+  ([`kept-signing-keys.js`](../src/lib/kept-signing-keys.js)).
+- **Delivery.** The owner's browser answers every newcomer to a key store over gossipsub with the
+  writers' identity documents and, for a small log, every entry; a session without a key asks again
+  ([`newcomers.js`](../src/lib/newcomers.js)). This only delivers.
+  [Trust assumptions](#trust-technical) says why it adds no trust.
+
+Limits:
+
+- A removed writer keeps what they could read until then: the log is append-only and is not
+  re-encrypted. A session that has not yet received the new epoch seals under the highest one it
+  holds, which the removed writer has. That the next list key does not reach them is unit-tested
+  (`list-keys.spec.js`); the end-to-end check is `test.fixme`, for a delivery bug that predates #176.
+- A delegate keeps the versions of their todo written while it was theirs.
+- Two devices of one owner at once: see [Open issues](#open-issues), item 10.
+
+Tests: `src/lib/sealed/*.spec.js`, and [`e2e/sealed-lists.spec.js`](../e2e/sealed-lists.spec.js)
+with owner, delegate, writer and stranger, including that the stranger's copy of the log holds no
+todo text in the clear.
 
 ## Open issues
 
@@ -389,8 +560,11 @@ cost more than a fixed limit, and the account's steps go one at a time.
    On 2026-09-16 mainnet cUSDT `0xAe0207C757Aa2B4019Ad96edD0092ddc63EF0c50` was still owned by the
    Protocol DAO `0xB6D69D5F334d8B97B194617B53c6aB62f8681Ef3`, had no observers and no pauser, and
    consulted USDT's own blacklist (`getBlackListStatus`) as its underlying deny list.
-3. Metadata: `todoRef`, delegate DID and budget status are readable in the unencrypted OrbitDB list,
-   and decryption requests are public on the Gateway chain.
+3. Metadata: the three-word list is readable in full, and a private list made before #176 shows
+   `todoRef`, delegate DID and budget status. A sealed list keeps those sealed, but its entry keys,
+   signers, a delegate's action fields, the write list and the key store's slot names stay readable,
+   and with them who was handed which todo ([What leaks](#leaks-technical)). Decryption requests are
+   public on the Gateway chain.
 4. The app has no refund button.
 5. Passkey wallet: permanent root key, no on-chain user verification, public link between account and
    session key, an opened session key in the page's memory for the visit, no recovery for a lost passkey,
@@ -402,6 +576,10 @@ cost more than a fixed limit, and the account's steps go one at a time.
 8. No audit of the escrow; the tests run against a mock whose host contracts are older than Sepolia's.
 9. Sponsorship: the Openfort rule sponsors any Sepolia user operation for whoever holds the page's
    publishable key; restrict it to the demo's contracts and cap it.
+10. Sealed lists: two devices of one owner that hand out a todo or remove a writer at the same
+    moment can each make a key for the same epoch. The key store keeps one copy per slot, a ring
+    refuses a second key for an epoch it holds, and nothing resolves the conflict: what one device
+    sealed may stay closed to readers who hold the other key.
 
 ## Sources
 
@@ -422,6 +600,17 @@ Repository (`apps/escrow01`, line numbers as of 2026-10-02):
   (`readChainEndpoints`), [`src/lib/chain/account-store.js`](../src/lib/chain/account-store.js); the
   passkey wallet with its sources in [passkey-account.md](passkey-account.md#sources). Openfort rule
   `ply_1b76dd29-2f48-4835-ad5f-4cd8aa2db3d8`, read through the Openfort CLI on 2026-09-17.
+- Sealed lists, as of 2026-11-27 (#176, merge `83bb2e7`): [`src/lib/sealed/`](../src/lib/sealed)
+  (`envelope.js`, `key-ring.js`, `key-agreement.js`, `key-store.js`, `list-keys.js`,
+  `list-session.js`, `sealed-list.js`, `registry-names.js`, `own-agreement-key.js`, `start-prf.js`),
+  [`src/lib/identity-blocks.js`](../src/lib/identity-blocks.js),
+  [`src/lib/newcomers.js`](../src/lib/newcomers.js),
+  [`src/lib/kept-signing-keys.js`](../src/lib/kept-signing-keys.js),
+  [`src/lib/delegation.js`](../src/lib/delegation.js) (`buildDelegationAction`),
+  [`src/lib/list-registry.js`](../src/lib/list-registry.js),
+  [`src/lib/chain/account-directory.js`](../src/lib/chain/account-directory.js)
+  (`publishAgreementKey`), `createTodoKey` in [`src/lib/db-actions.js`](../src/lib/db-actions.js),
+  `createTodoRef` in [`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js).
 
 cUSDTMock implementation on Sourcify
 (<https://sourcify.dev/server/v2/contract/11155111/0xAe37b998d453E1FaBE85DD46cf04295ca4A3af04?fields=sources>):

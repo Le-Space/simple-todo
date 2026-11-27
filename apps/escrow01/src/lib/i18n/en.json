@@ -290,28 +290,33 @@
 		"clause": {
 			"noServer": "We run no server, and no copy of your lists exists anywhere we control.",
 			"gateway": "The app itself is delivered by a public web service (a gateway), which sees that you loaded it.",
-			"relay": "Relay nodes introduce devices to each other and may keep a copy of a list so another device can collect it later.",
+			"relay": "Relay nodes introduce devices to each other and keep a copy of a list so another device can collect it later. Of your own lists they keep sealed entries only.",
 			"sharedList": "The list behind the share code is open: anyone who has its three Spanish words can read it and write to it. Treat the words as a way to meet, not as a password.",
-			"privateList": "A list you create yourself decides who may write to it - you, and anyone you let in. It does not decide who may read it.",
-			"readingIsOpen": "Todos and lists are not encrypted. Anyone who has a list’s address can read everything in it, including the relay that stores it. Do not put anything private in a todo.",
+			"sharedListOpen": "Whatever you write there, the relay that keeps it can read too. Put nothing private in it.",
+			"ownListsSealed": "A list of your own is encrypted in your browser before anything leaves it. The relay that keeps a copy, and anyone who has its address, get sealed entries: not your todos, not the list’s name.",
+			"ownListsSealedTechnical": "Every entry of a list of your own is sealed in your browser: AES-GCM-256 under the list’s key, or under a todo’s own key once you hand that todo to someone. The relay and anyone with the list’s OrbitDB address hold envelopes; the list’s name is sealed too.",
+			"whoReads": "You decide who reads it: you, the people you let write, and a delegate only the todo you hand them. Take someone off and the list gets new keys; what they could read until then stays readable to them.",
+			"listsMetadata": "Not hidden: who wrote an entry and when, how many there are, and who may write.",
+			"listsMetadataTechnical": "Readable without a key: entry keys, each entry’s signer and time, a delegate’s action fields (completed, expiry), the write list, and whose copy of which key the key store holds.",
+			"ownListsDeviceKey": "Without a passkey, your lists are sealed to a key that lives only in this tab: once it is closed, nobody can open them again, you included.",
+			"ownListsDeviceKeyKept": "Without a passkey, your lists are sealed to a key this browser keeps and never hands out: on another device, or once the site data is cleared, nobody can open them again, you included.",
 			"identityPasskey": "Your passkey identifies you to the other devices. Nobody else can write as you.",
 			"identityAnonymous": "You are using a random identity that exists only in this browser. Close it and it is gone.",
-			"delegation": "You decide who may write to a list, and you can take a grant back later — unlike a key you handed out, because lists are not encrypted.",
 			"storageMemory": "“Keep in this browser” is unticked: nothing is written to this device, and this browser starts over when the page reloads.",
-			"storagePersistent": "“Keep in this browser” is ticked: your todos survive a reload. They sit unencrypted in this browser’s storage, and clearing it loses them.",
+			"storagePersistent": "“Keep in this browser” is ticked: your todos survive a reload. Your own lists lie in this browser’s storage sealed, as on the relay, and clearing it loses them.",
 			"identityAnonymousKept": "You are using a random identity that exists only in this browser. It keeps it until you clear the site data; nothing links it to you.",
 			"amountsChain": "An amount is encrypted on your device before it is sent, and it stays encrypted on a blockchain test network. Only you, the other party and the demo’s auditor can read it.",
 			"amountsChainTechnical": "An amount is encrypted in your browser (Zama TFHE) before it is sent, and it stays encrypted on the Sepolia testnet as a cUSDT balance under ERC-7984. Only you, the other party and the auditor named in the escrow contract can decrypt it.",
 			"amountsPublic": "Public on the blockchain are the sender, the recipient and the time of every payment — not the amount.",
-			"amountsDemo": "In this preview, budgets live only in this browser’s memory: nothing is encrypted and nothing reaches a blockchain.",
+			"amountsDemo": "In this preview, budgets live only in this browser’s memory: they are not encrypted and reach no blockchain.",
 			"noBudgetWithoutPasskey": "Without a passkey you cannot lock a budget: the passkey is what confirms a payment.",
 			"gatewayTechnical": "The app itself is delivered through a public IPFS gateway, which sees that you loaded it. Your own Kubo node, or the IPFS Companion extension, fetches it from the network instead.",
-			"keys": "This browser keeps the link to your passkey and the keys for signing and for reading amounts. The passkey itself never leaves your device.",
-			"keysTechnical": "This browser keeps your passkey’s public key and DID, and the keys for signing entries and for reading amounts. The passkey itself never leaves your authenticator.",
-			"keysMemory": "The keys for signing and for reading amounts live in this browser’s memory and are gone on reload. The passkey itself never leaves your device.",
-			"keysMemoryTechnical": "Your passkey’s public key and DID, the signing key and the read key live in this tab’s memory and are gone on reload. The passkey itself never leaves your authenticator.",
-			"extensions": "A browser extension with access to this page can read what it shows and what it keeps in this browser, keys included, and can change the page. Safest is a browser or browser profile of your own, without extensions. The passkey itself stays in your authenticator.",
-			"extensionsTechnical": "An extension with access to this page reads what it shows and keeps in the browser (DOM, localStorage, IndexedDB, the OrbitDB signing key included) and can inject code into it. The passkey’s private key stays in the authenticator.",
+			"keys": "This browser keeps the link to your passkey and, sealed, the key for reading amounts. The keys for signing and for your lists come from the passkey at every start and are never stored. The passkey itself never leaves your device.",
+			"keysTechnical": "This browser keeps your passkey’s public key and DID, its signed identity document, and the read key, sealed under a key from the passkey’s PRF output. The signing key and the X25519 key for your lists are derived from the PRF output at every start and kept in this tab’s memory only. The passkey itself never leaves your authenticator.",
+			"keysMemory": "The keys for signing, for your lists and for reading amounts live in this tab’s memory and are gone on reload. The passkey itself never leaves your device.",
+			"keysMemoryTechnical": "Your passkey’s public key and DID, the signing key, the X25519 key for your lists and the read key live in this tab’s memory and are gone on reload. The passkey itself never leaves your authenticator.",
+			"extensions": "A browser extension with access to this page can read what it shows and what it holds, in memory or in this browser’s storage, keys included, and can change the page. Safest is a browser or browser profile of your own, without extensions. The passkey itself stays in your authenticator.",
+			"extensionsTechnical": "An extension with access to this page reads what it shows and holds (DOM, memory, localStorage, IndexedDB; the signing key and your lists’ keys included) and can inject code into it. The passkey’s private key stays in the authenticator.",
 			"cookiesKept": "No tracking cookies are used. Because this browser keeps things, it also keeps that you started here: next time the app opens without this dialog (with a passkey, after one tap).",
 			"cookiesMemory": "No tracking cookies are used, and not even your decision to start is saved: after a reload this dialog asks again."
 		},
@@ -363,7 +368,8 @@
 			"technical": [
 				"Passkey: a WebAuthn key with ES256 (P-256), stored discoverable and with the PRF extension. Your DID is a did:key of its public key (uncompressed, 0x04‖x‖y). The private key never leaves the authenticator.",
 				"OrbitDB signs your entries not with the passkey but with a secp256k1 key derived from the passkey's PRF output (HKDF-SHA256, separated by DID). So one passkey yields one identity on every device; the passkey signs only the identity document.",
-				"Keystore: OrbitDB's KeyStore. With \"in memory only\" the signing key lives in this tab's memory and is gone on reload. With \"keep in this browser\" it lives in IndexedDB (the Level database ./orbitdb/identities) under private_<DID>, as the raw 32 bytes, unencrypted.",
+				"Keystore: OrbitDB’s KeyStore, in this tab’s memory either way. The signing key is derived from the PRF output at every start and never written to the browser; a keystore an earlier build kept is deleted.",
+				"Your own lists: every entry is an AES-GCM-256 envelope (WebCrypto) under the list’s key, or under a todo’s own key once it is delegated. Each reader gets a copy wrapped with X25519-ECDH and HKDF, in a key store only the list’s owner can write. Your X25519 key comes from the same PRF output (deriveSubkey); its public half is in the account directory, where an owner finds it to share a list.",
 				"Account: EIP-7702. The address of a setup key (secp256k1, in memory only during setup) gets the code of Uniswap's Calibur v1.0.0 (0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00); the passkey is registered there as an admin key of type WebAuthnP256. The setup key is then discarded, but stays the account's root key for good.",
 				"Payments are ERC-4337 user operations to EntryPoint v0.8. The passkey signs their EIP-712 hash; Calibur checks the signature on chain with webauthn-sol, through the P-256 precompile (RIP-7212, address 0x100), otherwise in Solidity. On chain user verification is not required; only the app requires it.",
 				"Gas is paid by a paymaster: Openfort runs bundler and paymaster for Sepolia and sponsors under a rule for that chain, asked through ERC-7677 (pm_getPaymasterStubData, pm_getPaymasterData). Your account holds no ETH; the browser holds only Openfort's public key pk_test_….",
@@ -377,21 +383,19 @@
 		"relayDiscovered": "{count} relays found in the directory - the ones shipped with this app stayed silent.",
 		"title": "Confidential escrow payments with a passkey",
 		"summary": {
-			"amountsDemo": "In this preview, amounts stay in this browser’s memory: nothing is encrypted and nothing reaches a blockchain.",
-			"lists": "Todos and lists are not encrypted: anyone who has a list’s address can read it. Put nothing confidential in a todo.",
-			"amounts": "Amounts are encrypted. Test network: no real money moves.",
-			"amountsTechnical": "Amounts are encrypted with Zama FHE (ERC-7984) on the Sepolia testnet: no real money moves.",
+			"amountsDemo": "In this preview, amounts stay in this browser’s memory and reach no blockchain. Your own lists are encrypted.",
 			"amountsAndLists": "Amounts and your own lists are encrypted. Test network: no real money moves.",
+			"amountsAndListsTechnical": "Amounts are encrypted with Zama FHE (ERC-7984) on the Sepolia testnet, your own lists with AES-GCM in your browser. No real money moves.",
 			"listsEncrypted": "Only a list behind three words stays open: anyone who has its words can read it.",
 			"extensions": "Safest in a browser or browser profile of your own, without extensions: an extension can read along, keys included.",
-			"extensionsTechnical": "An extension with access to this page reads what it shows and keeps in the browser (DOM, localStorage, IndexedDB, the OrbitDB signing key included) and can inject code into it. The passkey’s private key stays in the authenticator."
+			"extensionsTechnical": "An extension with access to this page reads what it shows and holds (DOM, memory, localStorage, IndexedDB; the signing key and your lists’ keys included) and can inject code into it. The passkey’s private key stays in the authenticator."
 		},
 		"group": {
 			"amounts": "Amounts — encrypted",
 			"amountsDemo": "Amounts — preview only",
-			"lists": "Todos and lists — not encrypted",
 			"network": "Network, storage and identity",
-			"listsEncrypted": "Your lists — encrypted"
+			"listsEncrypted": "Your lists — encrypted",
+			"sharedList": "The list behind three words — open"
 		},
 		"identityLabelDefault": "Escrow demo",
 		"mnemonicHelpTechnical": "Share these three Spanish words to join the same public writable OrbitDB list. This is a share code, not a password or encryption key.",
@@ -420,12 +424,33 @@
 		"technicalRowHint": "Shows the technical terms, versions and what happens under the hood.",
 		"keep": "Keep in this browser",
 		"keepHint": "Your todos and your list survive a reload, and next time one tap on your passkey is enough. Untick it on someone else’s or a shared computer: a reload then clears everything.",
-		"keepHintTechnical": "Ticked, this browser keeps the OrbitDB log and its blocks, the share code, your passkey’s public key and DID, and the OrbitDB signing key in IndexedDB and localStorage — the todos and the signing key unencrypted. Unticked, all of it lives in this tab’s memory and is gone on reload.",
+		"keepHintTechnical": "Ticked, this browser keeps the OrbitDB logs and their blocks, the share code, and your passkey’s public key and DID in IndexedDB and localStorage. Your own lists lie there sealed, the list behind three words open. With a passkey, the signing key and your lists’ key come from it at every start and are never stored. Unticked, all of it lives in this tab’s memory and is gone on reload.",
 		"join": "Join a shared list",
 		"joinHint": "With the three-word share code somebody gave you.",
 		"identityLabelTitle": "Name of the new passkey"
 	},
 	"lists": {
+		"thisList": {
+			"heading": "This list",
+			"sealed": "sealed",
+			"open": "open",
+			"sealedTitle": "Its entries are encrypted: whoever has only its address reads nothing.",
+			"openTitle": "Not encrypted: whoever has its words or address reads it.",
+			"role": {
+				"owner": "yours",
+				"writer": "you can write",
+				"guest": "guest"
+			},
+			"newTodos": "New todos go into {name}.",
+			"copyLink": "Copy link",
+			"linkCopied": "Link copied",
+			"showQr": "QR code",
+			"hideQr": "Hide QR code",
+			"qrHint": "Scan it with a phone: it opens this list."
+		},
+		"add": {
+			"heading": "Add a list"
+		},
 		"home": {
 			"name": "My todos",
 			"pending": "Made with your first todo",
@@ -434,45 +459,50 @@
 			"openFailed": "Your own list could not be opened, so you are in the shared one: {reason}"
 		},
 		"create": {
-			"heading": "Create a private list",
-			"hint": "Only your identity can write to it. Share its address and grant other DIDs below.",
+			"heading": "New private list",
+			"hint": "Sealed from the start: only you read and write it until you let someone in.",
 			"namePlaceholder": "list name (optional)",
-			"submit": "Create private list",
+			"submit": "Create",
 			"busy": "Creating…",
 			"created": "Created {name} — you are now writing to it.",
-			"share": "Share this address so others can open the list. They can read it right away; writing needs a grant below.",
+			"share": "Its address, for the people you let in. Without your grant they read nothing.",
 			"copy": "Copy",
 			"copied": "Copied"
 		},
 		"switcher": {
 			"heading": "Your lists",
-			"hint": "Kept in your own OrbitDB registry, so they come back after a reload and follow your passkey to another device.",
+			"hint": "They follow your passkey to your other devices.",
 			"unnamed": "unnamed list",
 			"role": {
 				"owner": "owner",
 				"guest": "guest"
 			},
-			"open": "open",
+			"open": "open now",
 			"forget": "Forget",
-			"forgetTitle": "Remove from this list of lists; the database itself is untouched"
+			"forgetTitle": "Remove from this list of lists; the database itself is untouched",
+			"more": "More for {name}"
 		},
 		"open": {
-			"heading": "Open a shared list by address",
-			"hint": "Paste the full OrbitDB address someone shared with you. You can read it right away — writing needs a permission grant from the owner.",
-			"submit": "Open list",
-			"busy": "Opening…"
+			"heading": "Open a list",
+			"hint": "Three words, a link or an address someone gave you.",
+			"submit": "Open",
+			"busy": "Opening…",
+			"placeholder": "luna-camino-verde, a link or /orbitdb/…",
+			"unknown": "That is neither three words, a link to a list nor a list address."
 		},
 		"permissions": {
-			"heading": "Write permissions",
-			"hint": "DIDs allowed to write to this list. Only list admins (the creator) can grant or revoke.",
+			"heading": "Who can write ({count})",
+			"hint": "Let someone in by their DID. In a sealed list they then read it too.",
 			"you": "(you)",
 			"remove": "Remove",
 			"placeholder": "did:key:… of the identity to allow",
-			"add": "Add DID",
+			"add": "Add",
 			"grantFailed": "Grant failed: {reason}",
 			"revokeFailed": "Revoke failed: {reason}",
 			"keysLater": "Added. They get the keys of this sealed list once they have started the app; until then they can neither read nor write it.",
-			"keysRenewed": "Removed. The list has new keys from now on. What they could read until now stays readable to them."
+			"keysRenewed": "Removed. The list has new keys from now on. What they could read until now stays readable to them.",
+			"hintOthers": "Only the owner lets someone in.",
+			"owner": "owner"
 		},
 		"peers": {
 			"direct": "{count, plural, one {Direct P2P with # browser} other {Direct P2P with # browsers}}",
@@ -487,19 +517,15 @@
 			"shared": "Shared list",
 			"private": "Private list",
 			"guest": "Opened list",
-			"writingTo": "You are writing to {name}. The address below, the link in the address bar and the page QR code open this list.",
-			"mnemonicLabel": "Public mnemonic / OrbitDB database name",
 			"copy": "Copy",
 			"copied": "Copied!",
 			"addressLabel": "OrbitDB address",
-			"anyone": "Anyone who knows this share code can open the same public database and edit it once connected.",
-			"replication": "The mnemonic selects the same database. Live replication also requires a connection to another browser peer.",
-			"openAnother": "Open another shared list"
+			"anyone": "Anyone who has these three words reads this list and writes to it."
 		},
 		"threeWords": {
-			"heading": "Share by three words",
-			"hint": "This browser’s shared list. Anyone who has its three words can read it and write to it. Open it to pass on its words, link or QR code; your todos then go there.",
-			"open": "Open this list",
+			"heading": "This browser’s three-word list",
+			"hint": "Open to anyone who has its words.",
+			"open": "Open",
 			"openFailed": "The shared list could not be opened: {reason}"
 		},
 		"hiddenTodos": "{count, plural, one {# todo in this list is} other {# todos in this list are}} sealed to you: handed to someone else, or waiting for a key."

@@ -35,8 +35,10 @@ for (const [locale, heading, first] of [
 
 			const caveats = await introCaveats(page, 'consent-modal');
 			expect(caveats.heading).toBe(heading);
-			expect(caveats.lines).toHaveLength(10);
+			expect(caveats.lines).toHaveLength(11);
 			expect(caveats.lines[0].startsWith(first)).toBe(true);
+			// #127: one line on how one's own lists are sealed.
+			expect(caveats.lines.some((line) => line.includes('AES-GCM-256'))).toBe(true);
 			// Nothing of the element's own WebRTC notes is left.
 			expect(caveats.lines.join(' ')).not.toMatch(/Carrier|DuckDuckGo|VPN/);
 		});

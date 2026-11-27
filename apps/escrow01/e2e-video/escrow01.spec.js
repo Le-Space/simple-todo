@@ -45,8 +45,8 @@ const EN = {
 	bob: 'Bob does the same in his own browser.',
 	account:
 		'Behind each passkey is an account on Sepolia: Uniswap’s Calibur smart account, through EIP-7702. Openfort pays the gas.',
-	home: 'Alice starts in a private list of her own. Only she can write to it.',
-	newList: 'Alice creates a private list. Only she can write to it.',
+	home: 'Alice starts in a private list of her own. It is sealed: only she can read it and write to it.',
+	newList: 'Alice creates a private list. It is sealed: only she can read it and write to it.',
 	todo: 'She adds a task and delegates it to Bob.',
 	budget:
 		'And a budget: 500 cUSDT, Zama’s confidential token. The amount is encrypted in her browser before it leaves.',
@@ -54,10 +54,10 @@ const EN = {
 	chain:
 		'Zama’s encryption hides the amount, not the parties. The chain shows who locked something for whom, and when. Never how much.',
 	plain:
-		'The task itself is not encrypted: anyone with the list’s address can read it. Only the amount is.',
+		'The task is sealed too. The relay that keeps the list, and anyone with its address, see only an envelope. Bob gets the key to this one task, and to nothing else.',
 	share: 'Alice shares the list’s address with Bob.',
 	join: 'Bob opens it. The light under the list name turns green: their two browsers are now connected directly, peer to peer.',
-	read: 'The task is delegated to Bob, and he reads the budget on his own device.',
+	read: 'The task is delegated to Bob: he reads it, and the budget, on his own device.',
 	done: 'He ticks it off and signs the change with his passkey.',
 	seen: 'Alice sees it at once. The budget waits for her release.',
 	release: 'Alice releases the budget. Only she can, and only once.',
@@ -67,7 +67,7 @@ const EN = {
 		'The escrow contract names one auditor. The auditor can read every amount, but cannot move any money.',
 	auditorView:
 		'This view lists the escrows on the chain. Their amounts open only with the auditor’s own key, so here they stay hidden.',
-	end: 'One passkey for identity, data and payment. The amount stays confidential.'
+	end: 'One passkey for identity, data and payment. The task and the amount stay confidential.'
 };
 
 /** @type {typeof EN} */
@@ -82,8 +82,9 @@ const DE = {
 	bob: 'Bob macht dasselbe in seinem eigenen Browser.',
 	account:
 		'Hinter jedem Passkey steht ein Konto auf Sepolia: Calibur von Uniswap, über EIP-7702. Die Gebühren zahlt Openfort.',
-	home: 'Alice startet in ihrer eigenen privaten Liste. Schreiben darf darin nur sie.',
-	newList: 'Alice legt eine private Liste an. Schreiben darf darin nur sie.',
+	home: 'Alice startet in ihrer eigenen privaten Liste. Sie ist versiegelt: Lesen und schreiben kann darin nur sie.',
+	newList:
+		'Alice legt eine private Liste an. Sie ist versiegelt: Lesen und schreiben kann darin nur sie.',
 	todo: 'Sie legt eine Aufgabe an und delegiert sie an Bob.',
 	budget:
 		'Dazu ein Budget: 500 cUSDT, Zamas vertraulicher Token. Der Betrag wird in ihrem Browser verschlüsselt, bevor er ihn verlässt.',
@@ -91,10 +92,10 @@ const DE = {
 	chain:
 		'Zamas Verschlüsselung verbirgt den Betrag, nicht die Beteiligten. Die Chain zeigt, wer für wen etwas gesperrt hat, und wann. Aber nie, wie viel.',
 	plain:
-		'Die Aufgabe selbst ist nicht verschlüsselt: Wer die Adresse der Liste kennt, kann sie lesen. Verschlüsselt ist nur der Betrag.',
+		'Auch die Aufgabe ist versiegelt. Der Relay, der die Liste aufbewahrt, und alle mit ihrer Adresse sehen nur einen Umschlag. Bob bekommt den Schlüssel zu dieser einen Aufgabe, und zu nichts sonst.',
 	share: 'Alice gibt Bob die Adresse der Liste.',
 	join: 'Bob öffnet sie. Das Licht unter dem Listennamen wird grün: Die beiden Browser sind jetzt direkt verbunden, Peer-to-Peer.',
-	read: 'Die Aufgabe ist an Bob delegiert, und er liest das Budget auf seinem eigenen Gerät.',
+	read: 'Die Aufgabe ist an Bob delegiert: Er liest sie und das Budget auf seinem eigenen Gerät.',
 	done: 'Er hakt sie ab und unterschreibt die Änderung mit seinem Passkey.',
 	seen: 'Alice sieht es sofort. Das Budget wartet auf ihre Freigabe.',
 	release: 'Alice gibt das Budget frei. Nur sie kann das, und nur einmal.',
@@ -104,7 +105,7 @@ const DE = {
 		'Der Treuhandvertrag nennt eine Prüfstelle. Sie kann jeden Betrag lesen, aber kein Geld bewegen.',
 	auditorView:
 		'Diese Ansicht listet die Sperren auf der Chain. Die Beträge öffnen sich nur mit dem Schlüssel der Prüfstelle, hier bleiben sie verborgen.',
-	end: 'Ein Passkey für Identität, Daten und Zahlung. Der Betrag bleibt vertraulich.'
+	end: 'Ein Passkey für Identität, Daten und Zahlung. Aufgabe und Betrag bleiben vertraulich.'
 };
 
 const LINES = LANG === 'de' ? DE : EN;

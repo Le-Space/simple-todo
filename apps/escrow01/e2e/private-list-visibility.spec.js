@@ -81,7 +81,7 @@ test.describe('private list visibility (#114)', () => {
 		await openSection(page, 'listen');
 		await expect(page.getByTestId('active-list-kind')).toHaveText('Shared list');
 		const mnemonic = (await page.getByTestId('active-list-label').textContent())?.trim();
-		expect(mnemonic).toMatch(/^·\s+\S+-\S+-\S+$/);
+		expect(mnemonic).toMatch(/^\S+-\S+-\S+$/);
 
 		expect(await page.getByTestId('active-list-name').textContent()).toContain(
 			mnemonic?.replace(/^·\s+/, '')
@@ -95,7 +95,7 @@ test.describe('private list visibility (#114)', () => {
 		// After: the page must name the list actually being written to. This is
 		// the assertion that failed before the fix — it read "Shared list" here.
 		await expect(page.getByTestId('active-list-kind')).toHaveText('Private list');
-		await expect(page.getByTestId('active-list-label')).toHaveText(`· ${listName}`);
+		await expect(page.getByTestId('active-list-label')).toHaveText(listName);
 		await expect(page.getByTestId('active-list-note')).toContainText(listName);
 
 		// And above the todos, where the next todo will go.

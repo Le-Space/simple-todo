@@ -33,11 +33,17 @@
 	the auditor view and to "Confidential esc…" beside "Release confirmed" --
 	at every desktop width, since the page is never wider than 56rem. The
 	state's column keeps at least its widest badge, so nothing in it overlaps.
+
+	The German name is the longest, and it set the sizes (#127 PR C, measured
+	headless): at 360px "Treuhand" needs 89px beside the language, QR and
+	"Technisch" switches and got 73, so the phone gets a step smaller, tighter
+	type and tighter gaps; at 768px "Vertrauliche Treuhand" in text-3xl was 5px wider
+	than its column, so text-3xl waits for lg.
 -->
 <header
-	class="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 sm:mb-6 sm:grid-cols-[minmax(0,max-content)_minmax(min-content,1fr)_auto]"
+	class="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 sm:mb-6 sm:grid-cols-[minmax(0,max-content)_minmax(min-content,1fr)_auto] sm:gap-x-3"
 >
-	<div class="col-start-1 row-start-1 flex min-w-0 items-center gap-3">
+	<div class="col-start-1 row-start-1 flex min-w-0 items-center gap-2 sm:gap-3">
 		<LocalFirstLink size={44} />
 		<!-- `flex-1`: as wide as the title's column, so the line under the title
 		     wraps there, not at the width of a short title. -->
@@ -46,7 +52,7 @@
 				<!-- Short below `md`, as the app's own name is: beside the switches on a
 				     phone, "Auditor view" lost its last letters. -->
 				<h1
-					class="truncate text-xl font-bold text-heading md:text-3xl"
+					class="truncate text-lg font-bold tracking-tight text-heading sm:text-xl sm:tracking-normal md:text-2xl lg:text-3xl"
 					aria-label={$_('budget.auditor.title')}
 				>
 					<span class="md:hidden" aria-hidden="true">{$_('budget.auditor.titleShort')}</span>
@@ -64,7 +70,7 @@
 				     it leave room for one word (at 700px "Confidential esc…"). The
 				     heading's accessible name stays the full one. -->
 				<h1
-					class="truncate text-xl font-bold text-heading md:text-3xl"
+					class="truncate text-lg font-bold tracking-tight text-heading sm:text-xl sm:tracking-normal md:text-2xl lg:text-3xl"
 					aria-label={$_('header.title')}
 				>
 					<span class="md:hidden" aria-hidden="true">{$_('header.titleShort')}</span>

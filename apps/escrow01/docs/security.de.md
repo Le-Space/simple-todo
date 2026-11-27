@@ -1,8 +1,9 @@
 # Sicherheit der vertraulichen Treuhand
 
 Für Sicherheits- und Kryptographie-Gutachter des Kapitels `escrow01`. Das Dokument legt dar, was die
-Treuhand schützt, was sie offenlegt, wem sie vertraut und was nicht gelöst ist. Die Fakten haben den
-Stand 2026-09-16, die zur Passkey-Wallet den Stand 2026-09-17, und sind am Ende belegt; Punkte, die sich nicht verifizieren ließen, sind als solche
+Treuhand und die versiegelten Listen schützen, was sie offenlegen, wem sie vertrauen und was nicht
+gelöst ist. Die Fakten haben den Stand 2026-09-16, die zur Passkey-Wallet den Stand 2026-09-17, die
+zu versiegelten Listen den Stand 2026-11-27 (#176), und sind am Ende belegt; Punkte, die sich nicht verifizieren ließen, sind als solche
 gekennzeichnet. Die Mechanik beschreiben [escrow.de.md](escrow.de.md) und
 [zama-confidential-transactions.de.md](zama-confidential-transactions.de.md); der nachverfolgte Lauf
 steht in [smoke-test.de.md](smoke-test.de.md).
@@ -22,6 +23,7 @@ gegen eine Attrappe im Arbeitsspeicher, die nichts verschlüsselt.
 - [Eigenschaften der Treuhand selbst](#eigenschaften-der-treuhand-einfach)
 - [Grenzen](#grenzen-einfach)
 - [Passkey-Wallet](#passkey-wallet)
+- [Versiegelte Listen](#versiegelte-listen)
 - [Offene Punkte](#offene-punkte)
 
 ## Bedrohungsmodell
@@ -31,6 +33,11 @@ gegen eine Attrappe im Arbeitsspeicher, die nichts verschlüsselt.
 Die Treuhand soll eine Sache geheim halten: wie viel Geld gesperrt und ausgezahlt wird. Sie soll nicht
 verbergen, wer wem zahlt oder wann. Sie verlässt sich darauf, dass Zamas Schlüsselverwalter den
 Entschlüsselungsschlüssel aufgeteilt halten und dass Zamas Dienste verfügbar sind.
+
+Die Listen der App sind eine zweite Sache. Seit #176 ist eine private Liste versiegelt: Ihre Todos
+lesen nur die Personen, mit denen sie geteilt ist; der Relay, der eine Kopie behält, liest sie nicht.
+Wer wann hineingeschrieben hat und wer welchen Schlüssel hat, bleibt sichtbar. Die geteilte Liste hinter
+drei spanischen Wörtern ist nicht versiegelt: Wer die Wörter kennt, liest und beschreibt sie.
 
 ### Bedrohungsmodell: technisch
 
@@ -43,21 +50,26 @@ Schutzgüter:
    Beträge lesen.
 4. Schutz der Metadaten: ausdrücklich außerhalb des Umfangs, siehe
    [Was sichtbar wird](#was-sichtbar-wird-technisch).
+5. Vertraulichkeit einer versiegelten Liste: jedes Feld eines Todos, der Name der Liste, die
+   Umbenennung durch eine delegierte Person. Ihre Metadaten sind nicht geschützt
+   ([Was sichtbar wird](#was-sichtbar-wird-technisch), [Versiegelte Listen](#versiegelte-listen-technisch)).
 
 Angreifer und was sie können:
 
-| Angreifer                                    | Kann                                                                                                                             | Kann nicht                                                                                                                                                  |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Beobachter der Chain                         | jede Transaktion, alle Calldata, jedes Event und jeden Storage-Slot auf Sepolia sowie die Events der Gateway-Chain lesen         | ein Handle entschlüsseln; eine vollständige Sperre von einer ungedeckten unterscheiden                                                                      |
-| Front-Runner                                 | einen ausstehenden `lock`-Aufruf kopieren (`todoRef`, Handle, Proof)                                                             | den Proof für ein anderes Konto oder einen anderen Vertrag verwenden; die `todoRef` des Erstellers belegen (Treuhand-Vorgänge sind pro Ersteller indiziert) |
-| Leser der OrbitDB-Liste                      | Todo-Text, DID des Delegierten und `budget` (`todoRef`, Transaktions-Hashes, Status) lesen                                       | Beträge lesen; sie stehen nicht in OrbitDB                                                                                                                  |
-| Begünstigter                                 | den gesperrten Betrag und das eigene Guthaben lesen; vor Arbeitsbeginn prüfen, dass die Sperre nicht leer ist                    | eine Freigabe erzwingen                                                                                                                                     |
-| Ersteller                                    | eine Freigabe zurückhalten und nach der Frist zurückzahlen                                                                       | an jemand anderen als den eingetragenen Begünstigten freigeben; vor der Frist Mittel entnehmen, ohne freizugeben                                            |
-| Prüfstelle                                   | jeden jemals in dieser Treuhand gesperrten Betrag lesen                                                                          | Mittel bewegen                                                                                                                                              |
-| Owner (Eigentümer) des Tokens (Protocol DAO) | ein Upgrade von cUSDTMock durchführen, Observer hinzufügen, die entschlüsseln können, Adressen blockieren, einen Pauser ernennen | durch Code ist nichts ausgeschlossen; siehe [Der Token](#token-technisch)                                                                                   |
-| Zama-Betreiber                               | siehe Abschnitt [Vertrauensannahmen](#vertrauen-technisch)                                                                       |                                                                                                                                                             |
-| Kompromittierter Browser oder Schlüssel      | alles lesen, was dieser Schlüssel entschlüsseln darf; als dieses Konto signieren                                                 | Beträge lesen, für die er keine ACL-Berechtigung hat                                                                                                        |
-| Wer den Openfort-Schlüssel der Seite hat     | jede UserOperation auf Sepolia nach der Regel des Projekts sponsern lassen                                                       | für ein Konto signieren, Mittel bewegen, Beträge lesen                                                                                                      |
+| Angreifer                                                                                                    | Kann                                                                                                                                                | Kann nicht                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Beobachter der Chain                                                                                         | jede Transaktion, alle Calldata, jedes Event und jeden Storage-Slot auf Sepolia sowie die Events der Gateway-Chain lesen                            | ein Handle entschlüsseln; eine vollständige Sperre von einer ungedeckten unterscheiden                                                                      |
+| Front-Runner                                                                                                 | einen ausstehenden `lock`-Aufruf kopieren (`todoRef`, Handle, Proof)                                                                                | den Proof für ein anderes Konto oder einen anderen Vertrag verwenden; die `todoRef` des Erstellers belegen (Treuhand-Vorgänge sind pro Ersteller indiziert) |
+| Leser einer offenen Liste                                                                                    | alles darin lesen: Todo-Text; in einer privaten Liste von vor #176 auch DID des Delegierten und `budget` (`todoRef`, Transaktions-Hashes, Status)   | Beträge lesen; sie stehen nicht in OrbitDB                                                                                                                  |
+| Wer die Adresse einer versiegelten Liste hat, der Relay eingeschlossen                                       | ihre Metadaten lesen: Eintragsschlüssel, Signierer, die Schreibliste, wer welchen Schlüssel hat ([Was sichtbar wird](#was-sichtbar-wird-technisch)) | ein Todo, den Namen der Liste oder eine Umbenennung durch eine delegierte Person lesen; einen Schlüssel in der Schlüsselablage unterschieben (#120)         |
+| Eigentümer, schreibberechtigte, delegierte oder entfernte schreibberechtigte Person einer versiegelten Liste | siehe [Versiegelte Listen](#versiegelte-listen-technisch)                                                                                           |                                                                                                                                                             |
+| Begünstigter                                                                                                 | den gesperrten Betrag und das eigene Guthaben lesen; vor Arbeitsbeginn prüfen, dass die Sperre nicht leer ist                                       | eine Freigabe erzwingen                                                                                                                                     |
+| Ersteller                                                                                                    | eine Freigabe zurückhalten und nach der Frist zurückzahlen                                                                                          | an jemand anderen als den eingetragenen Begünstigten freigeben; vor der Frist Mittel entnehmen, ohne freizugeben                                            |
+| Prüfstelle                                                                                                   | jeden jemals in dieser Treuhand gesperrten Betrag lesen                                                                                             | Mittel bewegen                                                                                                                                              |
+| Owner (Eigentümer) des Tokens (Protocol DAO)                                                                 | ein Upgrade von cUSDTMock durchführen, Observer hinzufügen, die entschlüsseln können, Adressen blockieren, einen Pauser ernennen                    | durch Code ist nichts ausgeschlossen; siehe [Der Token](#token-technisch)                                                                                   |
+| Zama-Betreiber                                                                                               | siehe Abschnitt [Vertrauensannahmen](#vertrauen-technisch)                                                                                          |                                                                                                                                                             |
+| Kompromittierter Browser oder Schlüssel                                                                      | alles lesen, was dieser Schlüssel entschlüsseln darf; als dieses Konto signieren                                                                    | Beträge lesen, für die er keine ACL-Berechtigung hat                                                                                                        |
+| Wer den Openfort-Schlüssel der Seite hat                                                                     | jede UserOperation auf Sepolia nach der Regel des Projekts sponsern lassen                                                                          | für ein Konto signieren, Mittel bewegen, Beträge lesen                                                                                                      |
 
 Ersteller, Begünstigter und Prüfstelle können einen gesperrten Betrag außerdem jeweils über den Token
 öffentlich machen (siehe [Der Token](#token-technisch)).
@@ -70,6 +82,13 @@ Alle können sehen, wer für wen Geld gesperrt hat, wann, bis wann, welche Treuh
 wurde und wann es ausgezahlt wurde. Alle können sehen, wie viel zwischen USDT und vertraulichem USDT
 umgewandelt wurde. Niemand kann sehen, wie viel gesperrt oder ausgezahlt wurde. Zamas Systeme
 erfassen außerdem, wer die Entschlüsselung welches Werts angefordert hat, und wann.
+
+In den Listen der App hängt es von der Liste ab. Die Liste hinter drei spanischen Wörtern ist offen:
+Wer die Wörter kennt, liest und beschreibt sie ganz. Eine private Liste, die seit #176 angelegt
+wurde, ist versiegelt: Der Relay und alle mit ihrer Adresse bekommen nur verschlossene Einträge,
+nicht die Todos, nicht den Namen der Liste, nicht die Treuhand-Referenz. Sie sehen weiterhin, wer
+wann hineingeschrieben hat, wer hineinschreiben darf und wer einen Schlüssel zu welchem Todo bekommen
+hat. Private Listen von vor #176 bleiben offen.
 
 ### Was sichtbar wird: technisch
 
@@ -114,11 +133,41 @@ publicKey, extraData)` emittiert, gefolgt von einem `UserDecryptionResponse` pro
   Ergebnisse öffentlicher Entschlüsselungen werden dort im Klartext veröffentlicht.
 - **Relayer.** Sieht jede Anfrage mit Adressen, Handles und öffentlichen Transportschlüsseln sowie die
   IP-Adresse des Clients.
-- **OrbitDB.** Die geteilte Liste ist unverschlüsselt: Wer ihre Adresse hat, liest Todo-Text, DID des
-  Delegierten, `todoRef` und Status und kann so ein Todo mit seinem Treuhand-Vorgang on-chain verknüpfen.
+- **OrbitDB, offene Listen.** Die Liste hinter drei Wörtern ist offen
+  (`IPFSAccessController({ write: ['*'] })`): Wer ihre Wörter kennt, liest und beschreibt jedes Todo.
+  Sie kann nicht delegieren und enthält daher nie ein Budget. Eine private Liste von vor #176 bleibt
+  unversiegelt: Wer ihre Adresse hat, liest Todo-Text, DID des Delegierten, `todoRef` und Status und
+  kann so ein Todo mit seinem Treuhand-Vorgang on-chain verknüpfen.
+- **OrbitDB, versiegelte Listen.** Eine private Liste, die seit #176 angelegt wurde, enthält
+  Umschläge ([Versiegelte Listen](#versiegelte-listen-technisch)). Versiegelt sind jedes Feld eines
+  Todos, `delegation` und `budget` (`todoRef`, Transaktions-Hashes, Status) eingeschlossen, der Name
+  der Liste und die Umbenennung durch eine delegierte Person.
 
 Nicht öffentlich: Beträge innerhalb des Tokens (gesperrt, freigegeben, zurückgezahlt, Guthaben) und ob
 ein Transfer den angeforderten Betrag oder 0 bewegt hat.
+
+In einer versiegelten Liste lesen der Relay und alle mit der Adresse der Liste ohne Schlüssel:
+
+| Lesbar                                                                                        | Wo                                                                                                                                                                                                                                 |
+| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Eintragsschlüssel und damit der Zeitpunkt, an dem ein Todo angelegt wurde                     | `key` jedes Eintrags (`todo_<Millisekunden>_…`); auch `op`, sodass eine Löschung sichtbar ist                                                                                                                                      |
+| Wer jeden Eintrag geschrieben hat, und in welcher Reihenfolge                                 | `identity` des Eintrags und seine logische Uhr                                                                                                                                                                                     |
+| Welche Todos jemandem übergeben sind, und wie oft ein Schlüssel wechselte                     | `scope` und `epoch` jedes Umschlags                                                                                                                                                                                                |
+| Die Größe jedes Todos                                                                         | das Chiffrat; Umschläge werden nicht aufgefüllt                                                                                                                                                                                    |
+| Die Aktionen einer delegierten Person: welches Todo, wer, wann, erledigt oder nicht, bis wann | Schlüssel `delegation-action/<todoKey>/<delegateDid>/…`; `taskKey`, `delegateDid`, `performedBy`, `performedAt`, `setCompleted`, `expiresAt`. Versiegelt ist nur `patch.text`: Den Rest prüft der Access Controller ohne Schlüssel |
+| Wer schreiben darf                                                                            | die Schreibliste des Access Controllers (DIDs)                                                                                                                                                                                     |
+| Wer eine Kopie welches Schlüssels hat, und damit, wem welches Todo übergeben wurde            | Slot-Namen in der Schlüsselablage: `list/<epoch>/<did>`, `task/<todoKey>/<epoch>/<did>`                                                                                                                                            |
+| Die Anzahl der Einträge                                                                       | das Log                                                                                                                                                                                                                            |
+| Die Identitätsdokumente der Signierer                                                         | öffentlich von Bauart: Jeder Eintrag nennt das seines Signierers                                                                                                                                                                   |
+| Die Liste im Listenregister ihres Eigentümers: Adresse, Rolle, Anlagedatum                    | das Listenregister des Eigentümers, das der Relay hält und dessen Adresse nur der Eigentümer ableiten kann; der Name ist dort für den eigenen Schlüssel des Eigentümers versiegelt                                                 |
+| Der öffentliche Schlüssel jeder Identität für versiegelte Listen                              | das Kontoverzeichnis, unter der DID                                                                                                                                                                                                |
+
+`todoRef` ist SHA-256 über den Schlüssel des Todos und 32 Zufallsbytes (`createTodoRef` in
+[`budget-service-zama.js`](../src/lib/budget/budget-service-zama.js)), der lesbare Eintragsschlüssel
+führt also nicht zur Treuhand. Erraten lässt sich die Verknüpfung trotzdem: Die Schlüsselablage nennt
+die DID einer delegierten Person neben dem Schlüssel des Todos, der den Zeitpunkt seiner Anlage
+trägt; auf Sepolia ordnet das Kontoverzeichnis dieser DID ein Konto zu; und `Locked` nennt Ersteller
+und Begünstigten, mit dem Zeitstempel seines Blocks.
 
 ## Vertrauensannahmen
 
@@ -127,6 +176,10 @@ ein Transfer den angeforderten Betrag oder 0 bewegt hat.
 Die Geheimhaltung der Beträge hängt davon ab, dass Zamas Schlüsselverwalter sich nicht absprechen;
 Zamas Whitepaper toleriert Absprachen von bis zu 4 der 13. Ob sich Beträge überhaupt lesen lassen,
 hängt davon ab, dass Zamas Relayer, Gateway und Schlüsselverwalter online sind. Die Regeln des gesamten Systems können von Zamas Protokoll-Governance geändert werden.
+
+Versiegelte Listen verlangen für die Geheimhaltung kein Vertrauen über die Personen hinaus, mit denen
+eine Liste geteilt ist. Der Relay behält sie, ohne sie zu lesen: Ihm wird vertraut, dass er da ist,
+nicht, dass er ein Geheimnis wahrt.
 
 ### Vertrauen: technisch
 
@@ -144,6 +197,26 @@ Kein Service Level Agreement für den Relayer, das Gateway oder das KMS von Sepo
 zitierten Dokumentation erwähnt. Die Vorfälle vom 2026-08-31 bis 2026-09-01 und vom 2026-09-03 ließen
 die Nutzer-Entschlüsselung auf Sepolia fehlschlagen, während die Chain korrekt war (siehe
 [zama-confidential-transactions.de.md](zama-confidential-transactions.de.md#vorfälle-technisch)).
+
+Versiegelte Listen fügen dieser Tabelle keine Partei hinzu. Worauf sie beruhen:
+
+- **Wer einen Schlüssel ausgeben darf.** Der Controller der Schlüsselablage lässt nur den Eigentümer
+  schreiben (`IPFSAccessController({ write: [owner] })`), und OrbitDB weist jeden Eintrag zurück, den
+  seine Identität nicht signiert hat. Die Verpackung selbst authentifiziert keinen Absender: Ihr
+  Absenderschlüssel ist ephemer.
+- **Für wessen Schlüssel eine Kopie verpackt wird.** Für den öffentlichen Schlüssel im
+  Kontoverzeichnis der lesenden Person, in das nur deren DID schreiben kann. Niemand kann dem
+  Eigentümer einen eigenen Schlüssel zum Verpacken unterschieben.
+- **Identitätsdokumente, die über Gossipsub mitreisen**
+  ([`identity-blocks.js`](../src/lib/identity-blocks.js)). Eine Antwort an einen Neuankömmling trägt
+  die Identitätsdokumente der Schreibenden. Eine Sitzung legt jedes nur unter der CID seiner eigenen
+  Bytes ab, beim Eintreffen berechnet, und OrbitDB prüft Identität und Eintrag wie zuvor. Sie fügen
+  kein Vertrauen hinzu: Ein Bitswap-Abruf über diese CID hätte dieselben Bytes geliefert.
+  Identitätsdokumente sind öffentlich.
+- **Der Relay** hält Umschläge, verpackte Kopien und Metadaten. Ihm wird nur für die Verfügbarkeit
+  vertraut.
+- **Die Seite.** Eine Seite, die kompromittiert ist, während sie läuft, liest jede Liste, für die
+  diese Sitzung einen Schlüssel hat.
 
 ## Der Token: cUSDTMock
 
@@ -378,7 +451,9 @@ darf mehr als eine feste Grenze kosten, und die Schritte des Kontos laufen einer
   Schlüssel, den HKDF aus dem PRF-Wert des Passkeys ableitet), mit „In diesem Browser behalten“ in
   `localStorage` des Browsers und ohne es im Arbeitsspeicher des Tabs, und wird einmal pro Besuch im
   Speicher geöffnet; eine Seite, die währenddessen kompromittiert ist, kann ihn
-  benutzen ([Der Leseschlüssel](passkey-account.de.md#leseschlüssel-technisch)). Das Event `DelegatedForUserDecryption` macht die Verknüpfung zwischen Konto und
+  benutzen ([Der Leseschlüssel](passkey-account.de.md#leseschlüssel-technisch)). Dieser PRF-Abruf
+  ist eine eigene Berührung; der eine PRF-Abruf jedes Starts liefert den OrbitDB-Signaturschlüssel
+  und den Schlüssel für versiegelte Listen ([Versiegelte Listen](#versiegelte-listen-technisch)). Das Event `DelegatedForUserDecryption` macht die Verknüpfung zwischen Konto und
   Sitzungsschlüssel öffentlich, und der Sitzungsschlüssel kann bis zum Ablauf oder zu einem Widerruf
   alles lesen, was das Konto in diesen Verträgen lesen darf.
 - **v0.14** ergänzt für seine neue, vereinheitlichte Anfrage eine ERC-1271-Verifikation im
@@ -409,13 +484,133 @@ darf mehr als eine feste Grenze kosten, und die Schritte des Kontos laufen einer
   Sepolia gesendet hat ([`config.js`](../src/lib/chain/config.js)).
 - **Keine Wiederherstellung ohne den Passkey.** Außer dem verworfenen Root-Key ist der Passkey der
   einzige Schlüssel des Kontos. Ein synchronisierter Passkey erreicht weitere Geräte und gibt dort
-  seit Provider 0.8.0 Identität und Konto in drei Berührungen zurück, ohne gespeicherte Daten
-  ([wie oft der Passkey fragt](passkey-account.de.md#wie-oft-der-passkey-fragt)); ein verlorener
-  nimmt das Konto mit.
+  seit Provider 0.8.0 Identität und Konto zurück, ohne gespeicherte Daten, seit #176 in vier
+  Berührungen (in dreien, sobald Provider #107 veröffentlicht ist;
+  [wie oft der Passkey fragt](passkey-account.de.md#wie-oft-der-passkey-fragt)). Ein verlorener
+  nimmt das Konto mit, und jede Kopie eines Listenschlüssels, die für ihn versiegelt ist.
 - **Calibur v1.1.0.** Uniswap hat am 2026-07-02 v1.1.0 unter einer neuen Adresse veröffentlicht und
   führt seitdem nur diese Version. Unter anderem dürfen dort nur Admin-Schlüssel den EntryPoint
   aufrufen. Die App nutzt v1.0.0, in der ihr einziger Schlüssel außer dem Root-Key ein Admin ist
   ([Was Calibur ist](passkey-account.de.md#calibur-technisch)).
+
+## Versiegelte Listen
+
+Seit #176 (Issue #127) wird eine private Liste im Browser versiegelt, bevor etwas ihn verlässt
+([`src/lib/sealed/`](../src/lib/sealed)). Die geteilte Liste hinter drei spanischen Wörtern und
+private Listen von vor #176 bleiben, wie sie waren. Wie die Schlüssel mit dem Passkey
+zusammenhängen, steht in [keys.de.md](keys.de.md#schlüssel-technisch), wie oft der Passkey fragt, in
+[passkey-account.de.md](passkey-account.de.md#wie-oft-der-passkey-fragt), und was lesbar bleibt,
+unter [Was sichtbar wird](#was-sichtbar-wird-technisch).
+
+### Versiegelte Listen: einfach
+
+Jedes Todo einer privaten Liste wird verschlossen, bevor es den Browser verlässt. Der Eigentümer hat
+den Schlüssel, ebenso alle, denen er das Schreiben erlaubt. Wem er ein einzelnes Todo übergibt, der
+bekommt einen Schlüssel nur für dieses Todo. Der Relay behält die Liste, ohne sie lesen zu können,
+und ebenso alle anderen, die ihre Adresse haben.
+
+Wird eine schreibberechtigte Person entfernt, bekommen alle anderen neue Schlüssel, und was danach
+geschrieben wird, bleibt ihr verschlossen. Was sie bis dahin lesen konnte, behält sie. Dasselbe gilt
+für eine delegierte Person, der ihr Todo wieder entzogen wurde.
+
+Die Schlüssel kommen bei jedem Start aus dem Passkey und werden nie gespeichert. Ein Passkey ohne die
+PRF-Erweiterung bekommt einen Schlüssel, den es nur in diesem Browser gibt: Listen, die für ihn
+versiegelt sind, öffnen sich nirgends sonst, und ohne „In diesem Browser behalten“ schließen sie sich
+mit dem Tab.
+
+### Versiegelte Listen: technisch
+
+Wer was liest:
+
+| Wer                                 | Liest                                                                                                                                        | Liest nicht                                                                                                                                                                                  |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Eigentümer                          | jedes Todo, den Namen der Liste, jede Umbenennung durch eine delegierte Person                                                               |                                                                                                                                                                                              |
+| Schreibberechtigte Person           | ab der Freigabe jede Epoche jedes Schlüssels, den der Eigentümer hat (`grant`): auch frühere Todos, delegierte eingeschlossen, und den Namen | nach dem Entfernen siehe die Zeile darunter                                                                                                                                                  |
+| Delegierte Person                   | das ihr übergebene Todo, so wie es ab dieser Delegation geschrieben wird, und ihre eigenen Umbenennungen                                     | den Rest der Liste; den Namen; was vor der Delegation kam, denn jede Delegation ist eine neue Epoche des Todo-Schlüssels; das Todo, sobald es entzogen ist, denn es kommt wieder unter `K_L` |
+| Entfernte schreibberechtigte Person | was sie bis zum Entfernen lesen konnte                                                                                                       | was unter einer späteren Epoche des Listenschlüssels oder des Schlüssels eines delegierten Todos versiegelt ist (`keysAfterWriterLeft`)                                                      |
+| Fremde Person mit der Adresse       | die Metadaten unter [Was sichtbar wird](#was-sichtbar-wird-technisch)                                                                        | ein Todo, den Namen, eine Umbenennung                                                                                                                                                        |
+| Relay                               | dasselbe wie eine fremde Person; er hält Umschläge und verpackte Kopien                                                                      | dasselbe wie eine fremde Person                                                                                                                                                              |
+
+So funktioniert es:
+
+- **Umschläge.** Der Wert eines Todos wird zu `{ sealed: 1, scope, epoch, nonce, ct }`: AES-GCM-256
+  über WebCrypto mit einer frischen 12-Byte-Nonce und Associated Data, die Scope, Epoche und
+  Eintragsschlüssel binden ([`sealed/envelope.js`](../src/lib/sealed/envelope.js)). Ein versiegeltes
+  Todo öffnet sich daher nicht unter einem anderen Eintragsschlüssel oder Scope. Versiegelt wird in
+  der App, nicht in OrbitDBs `encryption.data`: `@orbitdb/core` 4.0.0 wirft bei einem Payload, den es
+  nicht entschlüsseln kann, und wem ein Schlüssel fehlt, dem ginge die Historie hinter diesem Eintrag
+  verloren. OrbitDB sieht nie einen Schlüssel. Einen Umschlag, den diese Sitzung nicht öffnen kann,
+  blendet sie aus und zählt ihn; nichts wirft.
+- **Schlüssel.** `K_L` sind 32 Zufallsbytes pro Liste und Epoche, `K_T` dasselbe pro delegiertem
+  Todo und Epoche ([`sealed/key-ring.js`](../src/lib/sealed/key-ring.js)). Neue Einträge kommen unter
+  die höchste Epoche, die eine Sitzung hat. Die Schlüssel liegen nur im Arbeitsspeicher des Tabs.
+- **Kopien.** Jede Kopie eines Schlüssels wird für eine lesende Person verpackt: ein ephemeres
+  X25519-Schlüsselpaar, ECDH mit dem öffentlichen Schlüssel der Person, HKDF-SHA-256, dessen Info
+  beide öffentlichen Schlüssel nennt, AES-GCM-256 mit dem Slot der Kopie als Associated Data
+  ([`sealed/key-agreement.js`](../src/lib/sealed/key-agreement.js)). Eine Kopie, die in einen anderen
+  Slot oder zu einer anderen Person verschoben wird, öffnet sich nicht.
+- **Die Schlüsselablage.** Ein `keyvalue` pro Liste, in das nur der Eigentümer schreibt
+  ([`sealed/key-store.js`](../src/lib/sealed/key-store.js)), sodass niemand einen Schlüssel
+  unterschieben kann (#120). Die Slots heißen `list/<epoch>/<did>` und `task/<todoKey>/<epoch>/<did>`.
+  Ihr Name folgt aus der Adresse der Liste; wer die Adresse hat, findet sie also. Der Eigentümer
+  verpackt auch für sich selbst eine Kopie. In einer versiegelten Liste delegiert nur der Eigentümer,
+  weil nur er in die Ablage schreibt.
+- **Epochen** ([`sealed/list-keys.js`](../src/lib/sealed/list-keys.js),
+  [`sealed/list-session.js`](../src/lib/sealed/list-session.js)). Eine Freigabe gibt einer
+  schreibberechtigten Person jede Epoche jedes Schlüssels. Jede Delegation beginnt eine neue Epoche
+  des Schlüssels dieses Todos, für den Eigentümer, die Schreibberechtigten und die delegierte Person.
+  Ein entzogenes Todo bekommt keinen neuen Schlüssel: Es kommt wieder unter `K_L`, den die delegierte
+  Person nie hatte. Das Entfernen einer schreibberechtigten Person beginnt eine neue Epoche des
+  Listenschlüssels und des Schlüssels jedes delegierten Todos, für alle außer ihr.
+- **Am Namen erkannt.** Der Datenbankname einer versiegelten Liste ist `sealed-v1-` und 32 zufällige
+  Hex-Zeichen ([`sealed/sealed-list.js`](../src/lib/sealed/sealed-list.js)). Jeder Peer weiß, dass
+  eine Liste versiegelt ist, bevor ein Eintrag ankommt; niemand schreibt also ein Todo im Klartext
+  hinein, weil ein Schlüssel spät kommt. Eine Sitzung ohne Kopie wartet auf eine; sie macht nie einen
+  eigenen Schlüssel.
+- **Der Name der Liste** ist unter `K_L` in der Schlüsselablage versiegelt (`meta/name`), nicht in der
+  Liste. Im Listenregister lässt eine versiegelte Liste `name` leer und trägt den Namen, versiegelt
+  für den eigenen X25519-Schlüssel des Eigentümers und an die Adresse der Liste gebunden
+  ([`sealed/registry-names.js`](../src/lib/sealed/registry-names.js)). Adressen, Rollen und Daten im
+  Register bleiben lesbar.
+- **Der persönliche Schlüssel** ist `deriveSubkey(prf, 'simple-todo/escrow01/list-key-agreement/v1')`:
+  HKDF-SHA-256 über den PRF-Wert des Passkeys, importiert als privater X25519-Schlüssel, der sich
+  nicht exportieren lässt. Derselbe Passkey ergibt auf jedem Gerät denselben Schlüssel. Seine
+  öffentliche Hälfte steht im Kontoverzeichnis unter der DID, in das nur diese DID schreibt. Dieser
+  Eintrag wird in jedem Build veröffentlicht, nicht nur auf Sepolia
+  ([`chain/account-directory.js`](../src/lib/chain/account-directory.js)).
+- **Ohne PRF**, und für eine Identität ohne Passkey, ist der Schlüssel zufällig und wird als nicht
+  exportierbar erzeugt: mit „In diesem Browser behalten“ in IndexedDB, ohne es im Arbeitsspeicher des
+  Tabs ([`sealed/own-agreement-key.js`](../src/lib/sealed/own-agreement-key.js)). Listen, die für ihn
+  versiegelt sind, öffnen sich nur in diesem Browser; ohne „In diesem Browser behalten“ schließen sie
+  sich mit dem Tab.
+- **Nichts, was der Passkey ableiten kann, wird gespeichert.** Jeder Start mit Passkey liest PRF
+  einmal ([`sealed/start-prf.js`](../src/lib/sealed/start-prf.js)). Der OrbitDB-Signaturschlüssel wird
+  daraus in einen Keystore im Arbeitsspeicher abgeleitet, in beiden Speichermodi
+  ([keys.de.md](keys.de.md#schlüssel-technisch)), und der X25519-Schlüssel aus demselben Wert, für den
+  Tab gehalten. Der Wert selbst bleibt im Arbeitsspeicher des Tabs, je Credential, damit ein Neustart
+  im selben Tab nicht noch einmal fragt. Den unverschlüsselten Keystore, den ein früherer Build in
+  IndexedDB hielt, löscht der nächste Start, soweit möglich
+  ([`kept-signing-keys.js`](../src/lib/kept-signing-keys.js)).
+- **Zustellung.** Der Browser des Eigentümers antwortet jedem Neuankömmling an einer Schlüsselablage
+  über Gossipsub mit den Identitätsdokumenten der Schreibenden und, bei einem kleinen Log, mit jedem
+  Eintrag; eine Sitzung ohne Schlüssel fragt erneut ([`newcomers.js`](../src/lib/newcomers.js)). Das
+  stellt nur zu. Warum es kein Vertrauen hinzufügt, steht unter
+  [Vertrauensannahmen](#vertrauen-technisch).
+
+Grenzen:
+
+- Eine entfernte schreibberechtigte Person behält, was sie bis dahin lesen konnte: Das Log wird nur
+  fortgeschrieben und nicht neu verschlüsselt. Eine Sitzung, die die neue Epoche noch nicht erhalten
+  hat, versiegelt unter der höchsten, die sie hat, und die hat auch die entfernte Person. Dass der
+  nächste Listenschlüssel sie nicht erreicht, prüft ein Unit-Test (`list-keys.spec.js`); die
+  End-to-End-Prüfung ist `test.fixme`, wegen eines Zustellungsfehlers, der älter ist als #176.
+- Eine delegierte Person behält die Fassungen ihres Todos, die geschrieben wurden, solange es ihres
+  war.
+- Zwei Geräte eines Eigentümers gleichzeitig: siehe [Offene Punkte](#offene-punkte), Punkt 10.
+
+Tests: `src/lib/sealed/*.spec.js` und [`e2e/sealed-lists.spec.js`](../e2e/sealed-lists.spec.js) mit
+Eigentümer, delegierter, schreibberechtigter und fremder Person, einschließlich der Prüfung, dass die
+Kopie des Logs bei der fremden Person keinen Todo-Text im Klartext enthält.
 
 ## Offene Punkte
 
@@ -428,8 +623,12 @@ darf mehr als eine feste Grenze kosten, und die Schritte des Kontos laufen einer
    (`0xAe0207C757Aa2B4019Ad96edD0092ddc63EF0c50`) noch der Protocol DAO
    (`0xB6D69D5F334d8B97B194617B53c6aB62f8681Ef3`), hatte keine Observer und keinen Pauser und fragte als
    Blockliste des zugrunde liegenden Tokens die Blacklist von USDT ab (`getBlackListStatus`).
-3. Metadaten: `todoRef`, DID des Delegierten und Budget-Status sind in der unverschlüsselten
-   OrbitDB-Liste lesbar, und Entschlüsselungsanfragen sind auf der Gateway-Chain öffentlich.
+3. Metadaten: Die Liste hinter drei Wörtern ist vollständig lesbar, und eine private Liste von vor
+   #176 zeigt `todoRef`, DID des Delegierten und Budget-Status. Eine versiegelte Liste hält diese
+   versiegelt, aber ihre Eintragsschlüssel, Signierer, die Aktionsfelder einer delegierten Person, die
+   Schreibliste und die Slot-Namen der Schlüsselablage bleiben lesbar, und mit ihnen, wem welches
+   Todo übergeben wurde ([Was sichtbar wird](#was-sichtbar-wird-technisch)).
+   Entschlüsselungsanfragen sind auf der Gateway-Chain öffentlich.
 4. Die App hat keine Schaltfläche für die Rückzahlung.
 5. Passkey-Wallet: dauerhafter Root-Key, keine Nutzerverifikation on-chain, öffentliche Verknüpfung
    zwischen Konto und Sitzungsschlüssel, ein geöffneter Sitzungsschlüssel im Speicher der Seite für den Besuch, keine
@@ -442,6 +641,11 @@ darf mehr als eine feste Grenze kosten, und die Schritte des Kontos laufen einer
    von Sepolia.
 9. Sponsoring: Die Openfort-Regel sponsert jede UserOperation auf Sepolia für jeden, der den
    publishable Schlüssel der Seite hat; sie gehört auf die Verträge der Demo beschränkt und gedeckelt.
+10. Versiegelte Listen: Zwei Geräte eines Eigentümers, die im selben Moment ein Todo übergeben oder
+    eine schreibberechtigte Person entfernen, können jeweils einen Schlüssel für dieselbe Epoche
+    erzeugen. Die Schlüsselablage behält eine Kopie pro Slot, ein Schlüsselring weist einen zweiten
+    Schlüssel für eine Epoche ab, die er schon hat, und nichts löst den Konflikt auf: Was ein Gerät
+    versiegelt hat, kann für Lesende, die den anderen Schlüssel haben, verschlossen bleiben.
 
 ## Quellen
 
@@ -464,6 +668,17 @@ Repository (`apps/escrow01`, Zeilennummern vom 2026-10-02):
   Passkey-Wallet mit ihren Belegen in [passkey-account.de.md](passkey-account.de.md#quellen).
   Openfort-Regel `ply_1b76dd29-2f48-4835-ad5f-4cd8aa2db3d8`, am 2026-09-17 über die Openfort-CLI
   gelesen.
+- Versiegelte Listen, Stand 2026-11-27 (#176, Merge `83bb2e7`): [`src/lib/sealed/`](../src/lib/sealed)
+  (`envelope.js`, `key-ring.js`, `key-agreement.js`, `key-store.js`, `list-keys.js`,
+  `list-session.js`, `sealed-list.js`, `registry-names.js`, `own-agreement-key.js`, `start-prf.js`),
+  [`src/lib/identity-blocks.js`](../src/lib/identity-blocks.js),
+  [`src/lib/newcomers.js`](../src/lib/newcomers.js),
+  [`src/lib/kept-signing-keys.js`](../src/lib/kept-signing-keys.js),
+  [`src/lib/delegation.js`](../src/lib/delegation.js) (`buildDelegationAction`),
+  [`src/lib/list-registry.js`](../src/lib/list-registry.js),
+  [`src/lib/chain/account-directory.js`](../src/lib/chain/account-directory.js)
+  (`publishAgreementKey`), `createTodoKey` in [`src/lib/db-actions.js`](../src/lib/db-actions.js),
+  `createTodoRef` in [`src/lib/budget/budget-service-zama.js`](../src/lib/budget/budget-service-zama.js).
 
 cUSDTMock-Implementierung auf Sourcify
 (<https://sourcify.dev/server/v2/contract/11155111/0xAe37b998d453E1FaBE85DD46cf04295ca4A3af04?fields=sources>):

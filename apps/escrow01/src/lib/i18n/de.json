@@ -290,28 +290,33 @@
 		"clause": {
 			"noServer": "Wir betreiben keinen Server, und nirgends bei uns liegt eine Kopie Ihrer Listen.",
 			"gateway": "Die App selbst kommt über einen öffentlichen Webdienst (ein Gateway), der sieht, dass Sie sie geladen haben.",
-			"relay": "Relay-Knoten machen Geräte miteinander bekannt und behalten unter Umständen eine Kopie einer Liste, damit ein anderes Gerät sie später abholen kann.",
+			"relay": "Relay-Knoten machen Geräte miteinander bekannt und behalten eine Kopie einer Liste, damit ein anderes Gerät sie später abholen kann. Von Ihren eigenen Listen behalten sie nur versiegelte Einträge.",
 			"sharedList": "Die Liste hinter dem Teilen-Code ist offen: Wer ihre drei spanischen Wörter hat, kann sie lesen und beschreiben. Die Wörter sind ein Treffpunkt, kein Passwort.",
-			"privateList": "Eine Liste, die Sie selbst anlegen, bestimmt, wer hineinschreiben darf - Sie und wen Sie hineinlassen. Sie bestimmt nicht, wer sie lesen darf.",
-			"readingIsOpen": "Todos und Listen sind nicht verschlüsselt. Wer die Adresse einer Liste hat, kann alles darin lesen, auch der Relay, der sie aufbewahrt. Schreiben Sie nichts Privates in ein Todo.",
+			"sharedListOpen": "Was Sie dort schreiben, kann auch der Relay lesen, der sie aufbewahrt. Schreiben Sie nichts Privates hinein.",
+			"ownListsSealed": "Eine eigene Liste wird in Ihrem Browser verschlüsselt, bevor etwas ihn verlässt. Der Relay, der eine Kopie behält, und alle, die ihre Adresse haben, bekommen versiegelte Einträge: nicht Ihre Todos, nicht den Namen der Liste.",
+			"ownListsSealedTechnical": "Jeder Eintrag einer eigenen Liste wird in Ihrem Browser versiegelt: AES-GCM-256 unter dem Schlüssel der Liste, oder unter dem eigenen Schlüssel eines Todos, sobald Sie es jemandem übergeben. Der Relay und alle mit der OrbitDB-Adresse der Liste halten Umschläge; auch der Name der Liste ist versiegelt.",
+			"whoReads": "Wer sie liest, entscheiden Sie: Sie selbst, wen Sie schreiben lassen, und eine delegierte Person nur das Todo, das Sie ihr übergeben. Nehmen Sie jemanden heraus, bekommt die Liste neue Schlüssel; was die Person bis dahin lesen konnte, bleibt für sie lesbar.",
+			"listsMetadata": "Nicht verborgen ist, wer wann einen Eintrag geschrieben hat, wie viele es sind und wer schreiben darf.",
+			"listsMetadataTechnical": "Ohne Schlüssel lesbar: die Schlüssel der Einträge, Unterzeichner und Zeit jedes Eintrags, die Aktionsfelder einer Delegation (erledigt, Ablauf), die Schreibliste und wessen Kopie welches Schlüssels die Schlüsselablage hält.",
+			"ownListsDeviceKey": "Ohne Passkey werden Ihre Listen mit einem Schlüssel versiegelt, den es nur in diesem Tab gibt: Ist er geschlossen, kann sie niemand mehr öffnen, auch Sie nicht.",
+			"ownListsDeviceKeyKept": "Ohne Passkey werden Ihre Listen mit einem Schlüssel versiegelt, den dieser Browser behält und nie herausgibt: Auf einem anderen Gerät oder nach dem Löschen der Website-Daten kann sie niemand mehr öffnen, auch Sie nicht.",
 			"identityPasskey": "Ihr Passkey weist Sie gegenüber den anderen Geräten aus. Niemand sonst kann in Ihrem Namen schreiben.",
 			"identityAnonymous": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Schließen Sie ihn, ist sie weg.",
-			"delegation": "Wer in eine Liste schreiben darf, entscheiden Sie. Eine Freigabe können Sie später wieder zurücknehmen — anders als ein herausgegebener Schlüssel, denn Listen werden nicht verschlüsselt.",
 			"storageMemory": "„In diesem Browser behalten“ ist abgewählt: Auf diesem Gerät wird nichts abgelegt, und beim Neuladen fängt dieser Browser von vorn an.",
-			"storagePersistent": "„In diesem Browser behalten“ ist ausgewählt: Ihre Todos bleiben nach dem Neuladen da. Sie liegen unverschlüsselt im Speicher dieses Browsers, und wer ihn löscht, verliert sie.",
+			"storagePersistent": "„In diesem Browser behalten“ ist ausgewählt: Ihre Todos bleiben nach dem Neuladen da. Ihre eigenen Listen liegen im Speicher dieses Browsers versiegelt, wie auf dem Relay, und wer ihn löscht, verliert sie.",
 			"identityAnonymousKept": "Sie verwenden eine zufällige Identität, die es nur in diesem Browser gibt. Er behält sie, bis Sie die Website-Daten löschen; nichts verbindet sie mit Ihnen.",
 			"amountsChain": "Ein Betrag wird auf Ihrem Gerät verschlüsselt, bevor er gesendet wird, und bleibt auf einer Blockchain im Testnetz verschlüsselt. Lesen können ihn nur Sie, die andere Seite und die Prüfstelle der Demo.",
 			"amountsChainTechnical": "Ein Betrag wird in Ihrem Browser verschlüsselt (Zama TFHE), bevor er gesendet wird, und bleibt im Sepolia-Testnetz als cUSDT-Guthaben nach ERC-7984 verschlüsselt. Entschlüsseln können ihn nur Sie, die andere Seite und die im Treuhandvertrag benannte Prüfstelle.",
 			"amountsPublic": "Öffentlich auf der Blockchain sind Absender, Empfänger und Zeitpunkt jeder Zahlung – nicht der Betrag.",
-			"amountsDemo": "In dieser Vorschau liegen Budgets nur im Arbeitsspeicher dieses Browsers: Nichts wird verschlüsselt, nichts erreicht eine Blockchain.",
+			"amountsDemo": "In dieser Vorschau liegen Budgets nur im Arbeitsspeicher dieses Browsers: Sie werden nicht verschlüsselt und erreichen keine Blockchain.",
 			"noBudgetWithoutPasskey": "Ohne Passkey können Sie kein Budget sperren: Der Passkey ist es, der eine Zahlung bestätigt.",
 			"gatewayTechnical": "Die App selbst kommt über ein öffentliches IPFS-Gateway, das sieht, dass Sie sie geladen haben. Mit einem eigenen Kubo-Knoten oder der IPFS-Companion-Erweiterung holen Sie sie stattdessen direkt aus dem Netz.",
-			"keys": "Dieser Browser behält die Verknüpfung zu Ihrem Passkey und die Schlüssel zum Unterschreiben und zum Lesen der Beträge. Der Passkey selbst verlässt Ihr Gerät nie.",
-			"keysTechnical": "Dieser Browser behält den öffentlichen Schlüssel und die DID Ihres Passkeys sowie die Schlüssel zum Signieren der Einträge und zum Lesen der Beträge. Der Passkey selbst verlässt Ihren Authenticator nie.",
-			"keysMemory": "Die Schlüssel zum Unterschreiben und zum Lesen der Beträge liegen im Arbeitsspeicher dieses Browsers und sind beim Neuladen weg. Der Passkey selbst verlässt Ihr Gerät nie.",
-			"keysMemoryTechnical": "Öffentlicher Schlüssel und DID Ihres Passkeys, der Signaturschlüssel und der Leseschlüssel liegen im Arbeitsspeicher dieses Tabs und sind beim Neuladen weg. Der Passkey selbst verlässt Ihren Authenticator nie.",
-			"extensions": "Eine Browser-Erweiterung mit Zugriff auf diese Seite kann lesen, was sie anzeigt und in diesem Browser ablegt, auch Schlüssel, und kann die Seite verändern. Am sichersten ist ein eigener Browser oder ein eigenes Browserprofil ohne Erweiterungen. Der Passkey selbst bleibt in Ihrem Authenticator.",
-			"extensionsTechnical": "Eine Erweiterung mit Zugriff auf diese Seite liest, was sie anzeigt und im Browser ablegt (DOM, localStorage, IndexedDB, also auch den OrbitDB-Signaturschlüssel), und kann eigenen Code in die Seite bringen. Der private Schlüssel des Passkeys bleibt im Authenticator.",
+			"keys": "Dieser Browser behält die Verknüpfung zu Ihrem Passkey und, versiegelt, den Schlüssel zum Lesen der Beträge. Die Schlüssel zum Unterschreiben und für Ihre Listen kommen bei jedem Start aus dem Passkey und werden nie gespeichert. Der Passkey selbst verlässt Ihr Gerät nie.",
+			"keysTechnical": "Dieser Browser behält den öffentlichen Schlüssel und die DID Ihres Passkeys, sein signiertes Identitätsdokument und den Leseschlüssel, versiegelt unter einem Schlüssel aus dem PRF-Wert des Passkeys. Signaturschlüssel und X25519-Schlüssel Ihrer Listen werden bei jedem Start aus dem PRF-Wert abgeleitet und liegen nur im Arbeitsspeicher dieses Tabs. Der Passkey selbst verlässt Ihren Authenticator nie.",
+			"keysMemory": "Die Schlüssel zum Unterschreiben, für Ihre Listen und zum Lesen der Beträge liegen im Arbeitsspeicher dieses Tabs und sind beim Neuladen weg. Der Passkey selbst verlässt Ihr Gerät nie.",
+			"keysMemoryTechnical": "Öffentlicher Schlüssel und DID Ihres Passkeys, der Signaturschlüssel, der X25519-Schlüssel Ihrer Listen und der Leseschlüssel liegen im Arbeitsspeicher dieses Tabs und sind beim Neuladen weg. Der Passkey selbst verlässt Ihren Authenticator nie.",
+			"extensions": "Eine Browser-Erweiterung mit Zugriff auf diese Seite kann lesen, was sie anzeigt und was sie im Arbeitsspeicher oder in diesem Browser hält, auch Schlüssel, und kann die Seite verändern. Am sichersten ist ein eigener Browser oder ein eigenes Browserprofil ohne Erweiterungen. Der Passkey selbst bleibt in Ihrem Authenticator.",
+			"extensionsTechnical": "Eine Erweiterung mit Zugriff auf diese Seite liest, was sie anzeigt und hält (DOM, Arbeitsspeicher, localStorage, IndexedDB, also auch den Signaturschlüssel und die Schlüssel Ihrer Listen), und kann eigenen Code in die Seite bringen. Der private Schlüssel des Passkeys bleibt im Authenticator.",
 			"cookiesKept": "Es werden keine Tracking-Cookies verwendet. Weil dieser Browser Dinge behält, behält er auch, dass Sie hier gestartet sind: Beim nächsten Mal öffnet die App ohne diesen Dialog (mit Passkey nach einem Tipp).",
 			"cookiesMemory": "Es werden keine Tracking-Cookies verwendet, und nicht einmal Ihre Entscheidung zu starten wird gespeichert: Nach dem Neuladen fragt dieser Dialog erneut."
 		},
@@ -363,7 +368,8 @@
 			"technical": [
 				"Passkey: ein WebAuthn-Schlüssel mit ES256 (P-256), auffindbar gespeichert und mit der PRF-Erweiterung. Ihre DID ist ein did:key aus seinem öffentlichen Schlüssel (unkomprimiert, 0x04‖x‖y). Der private Schlüssel verlässt den Authenticator nie.",
 				"OrbitDB signiert Ihre Einträge nicht mit dem Passkey, sondern mit einem secp256k1-Schlüssel, abgeleitet aus dem PRF-Wert des Passkeys (HKDF-SHA256, getrennt nach DID). Derselbe Passkey ergibt so auf jedem Gerät dieselbe Identität; der Passkey signiert nur das Identitätsdokument.",
-				"Keystore: OrbitDBs KeyStore. Bei „Nur im Arbeitsspeicher“ liegt der Signaturschlüssel im Speicher dieses Tabs und ist beim Neuladen weg. Bei „In diesem Browser behalten“ liegt er in IndexedDB (Level-Datenbank ./orbitdb/identities) unter private_<DID>, als rohe 32 Byte, unverschlüsselt.",
+				"Keystore: OrbitDBs KeyStore, in beiden Fällen im Arbeitsspeicher dieses Tabs. Der Signaturschlüssel wird bei jedem Start aus dem PRF-Wert abgeleitet und nie im Browser abgelegt; einen Keystore, den ein früherer Build behalten hat, löscht die App.",
+				"Eigene Listen: Jeder Eintrag ist ein AES-GCM-256-Umschlag (WebCrypto) unter dem Schlüssel der Liste, oder unter dem eigenen Schlüssel eines Todos, sobald es delegiert ist. Wer lesen darf, bekommt eine Kopie, verpackt mit X25519-ECDH und HKDF, in einer Schlüsselablage, in die nur schreiben kann, wem die Liste gehört. Ihr X25519-Schlüssel kommt aus demselben PRF-Wert (deriveSubkey); seine öffentliche Hälfte steht im Kontoverzeichnis, wo man ihn findet, um eine Liste zu teilen.",
 				"Konto: EIP-7702. Die Adresse eines Einrichtungsschlüssels (secp256k1, nur während der Einrichtung im Speicher) erhält den Code von Uniswaps Calibur v1.0.0 (0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00); der Passkey wird dort als Admin-Schlüssel vom Typ WebAuthnP256 eingetragen. Der Einrichtungsschlüssel wird danach verworfen, bleibt aber für immer Root-Schlüssel des Kontos.",
 				"Zahlungen sind ERC-4337-User-Operations an den EntryPoint v0.8. Der Passkey signiert deren EIP-712-Hash; Calibur prüft die Signatur on-chain mit webauthn-sol, über den P-256-Precompile (RIP-7212, Adresse 0x100), sonst in Solidity. On-chain wird Nutzerverifikation nicht verlangt, nur die App verlangt sie.",
 				"Gas zahlt ein Paymaster: Openfort betreibt Bundler und Paymaster für Sepolia und sponsert nach einer Regel für diese Chain, abgefragt per ERC-7677 (pm_getPaymasterStubData, pm_getPaymasterData). Ihr Konto hält kein ETH; im Browser liegt nur Openforts öffentlicher Schlüssel pk_test_….",
@@ -377,21 +383,19 @@
 		"relayDiscovered": "{count} Relays im Verzeichnis gefunden — die mit dieser App ausgelieferten blieben stumm.",
 		"title": "Vertrauliche Treuhand-Zahlungen per Passkey",
 		"summary": {
-			"amountsDemo": "In dieser Vorschau bleiben Beträge im Arbeitsspeicher dieses Browsers: Nichts wird verschlüsselt, nichts erreicht eine Blockchain.",
-			"lists": "Todos und Listen sind nicht verschlüsselt: Wer die Adresse einer Liste kennt, kann sie lesen. Schreiben Sie nichts Vertrauliches in ein Todo.",
-			"amounts": "Beträge sind verschlüsselt. Testnetz: Es fließt kein echtes Geld.",
-			"amountsTechnical": "Beträge sind mit Zama FHE (ERC-7984) im Sepolia-Testnetz verschlüsselt: Es fließt kein echtes Geld.",
+			"amountsDemo": "In dieser Vorschau bleiben Beträge im Arbeitsspeicher dieses Browsers und erreichen keine Blockchain. Ihre eigenen Listen sind verschlüsselt.",
 			"amountsAndLists": "Beträge und Ihre eigenen Listen sind verschlüsselt. Testnetz: Es fließt kein echtes Geld.",
+			"amountsAndListsTechnical": "Beträge sind mit Zama FHE (ERC-7984) im Sepolia-Testnetz verschlüsselt, Ihre eigenen Listen mit AES-GCM in Ihrem Browser. Es fließt kein echtes Geld.",
 			"listsEncrypted": "Offen bleibt nur eine Liste hinter drei Wörtern: Wer ihre Wörter hat, kann sie lesen.",
 			"extensions": "Am sichersten in einem eigenen Browser oder Browserprofil ohne Erweiterungen: Erweiterungen können mitlesen, auch Schlüssel.",
-			"extensionsTechnical": "Eine Erweiterung mit Zugriff auf diese Seite liest, was sie anzeigt und im Browser ablegt (DOM, localStorage, IndexedDB, also auch den OrbitDB-Signaturschlüssel), und kann eigenen Code in die Seite bringen. Der private Schlüssel des Passkeys bleibt im Authenticator."
+			"extensionsTechnical": "Eine Erweiterung mit Zugriff auf diese Seite liest, was sie anzeigt und hält (DOM, Arbeitsspeicher, localStorage, IndexedDB, also auch den Signaturschlüssel und die Schlüssel Ihrer Listen), und kann eigenen Code in die Seite bringen. Der private Schlüssel des Passkeys bleibt im Authenticator."
 		},
 		"group": {
 			"amounts": "Beträge – verschlüsselt",
 			"amountsDemo": "Beträge – nur Vorschau",
-			"lists": "Todos und Listen – nicht verschlüsselt",
 			"network": "Netz, Speicher und Identität",
-			"listsEncrypted": "Ihre Listen – verschlüsselt"
+			"listsEncrypted": "Ihre Listen – verschlüsselt",
+			"sharedList": "Die Liste hinter drei Wörtern – offen"
 		},
 		"identityLabelDefault": "Treuhand-Demo",
 		"mnemonicHelpTechnical": "Geben Sie diese drei spanischen Wörter weiter, um dieselbe öffentlich beschreibbare OrbitDB-Liste zu öffnen. Das ist ein Zugangscode, kein Passwort und kein Schlüssel.",
@@ -420,12 +424,33 @@
 		"technicalRowHint": "Zeigt Fachbegriffe, Versionen und was unter der Haube passiert.",
 		"keep": "In diesem Browser behalten",
 		"keepHint": "Ihre Todos und Ihre Liste überstehen das Neuladen, beim nächsten Besuch genügt ein Tipp auf den Passkey. An einem fremden oder geteilten Rechner abwählen: Dann ist beim Neuladen alles weg.",
-		"keepHintTechnical": "Ausgewählt, behält dieser Browser das OrbitDB-Log mit seinen Blöcken, den Teilen-Code, öffentlichen Schlüssel und DID Ihres Passkeys sowie den OrbitDB-Signaturschlüssel in IndexedDB und localStorage – die Todos und den Signaturschlüssel unverschlüsselt. Abgewählt, liegt all das im Arbeitsspeicher dieses Tabs und ist beim Neuladen weg.",
+		"keepHintTechnical": "Ausgewählt, behält dieser Browser die OrbitDB-Logs mit ihren Blöcken, den Teilen-Code sowie öffentlichen Schlüssel und DID Ihres Passkeys in IndexedDB und localStorage. Ihre eigenen Listen liegen dort versiegelt, die Liste hinter drei Wörtern offen. Mit Passkey kommen Signaturschlüssel und Listenschlüssel bei jedem Start aus ihm und werden nie gespeichert. Abgewählt, liegt all das im Arbeitsspeicher dieses Tabs und ist beim Neuladen weg.",
 		"join": "Einer geteilten Liste beitreten",
 		"joinHint": "Mit dem Teilen-Code aus drei Wörtern, den Ihnen jemand gegeben hat.",
 		"identityLabelTitle": "Name des neuen Passkeys"
 	},
 	"lists": {
+		"thisList": {
+			"heading": "Diese Liste",
+			"sealed": "versiegelt",
+			"open": "offen",
+			"sealedTitle": "Ihre Einträge sind verschlüsselt: Wer nur ihre Adresse hat, liest nichts.",
+			"openTitle": "Nicht verschlüsselt: Wer ihre Wörter oder ihre Adresse hat, liest sie.",
+			"role": {
+				"owner": "gehört Ihnen",
+				"writer": "Sie schreiben mit",
+				"guest": "Gast"
+			},
+			"newTodos": "Neue Todos kommen in {name}.",
+			"copyLink": "Link kopieren",
+			"linkCopied": "Link kopiert",
+			"showQr": "QR-Code",
+			"hideQr": "QR-Code ausblenden",
+			"qrHint": "Mit dem Handy scannen: Er öffnet diese Liste."
+		},
+		"add": {
+			"heading": "Liste hinzufügen"
+		},
 		"home": {
 			"name": "Meine Aufgaben",
 			"pending": "Entsteht mit Ihrer ersten Aufgabe",
@@ -434,45 +459,50 @@
 			"openFailed": "Ihre eigene Liste ließ sich nicht öffnen, Sie sind in der geteilten: {reason}"
 		},
 		"create": {
-			"heading": "Private Liste anlegen",
-			"hint": "In die neue Liste darf nur Ihre Identität schreiben. Geben Sie deren Adresse weiter und erteilen Sie anderen DIDs weiter unten Schreibrechte.",
+			"heading": "Neue private Liste",
+			"hint": "Von Anfang an versiegelt: Nur Sie lesen und schreiben darin, bis Sie jemanden hineinlassen.",
 			"namePlaceholder": "Name der Liste (optional)",
-			"submit": "Private Liste anlegen",
+			"submit": "Anlegen",
 			"busy": "Wird angelegt …",
 			"created": "Die Liste {name} ist angelegt, und Sie schreiben jetzt hinein.",
-			"share": "Geben Sie diese Adresse weiter, damit andere die Liste öffnen können. Lesen können sie sofort, schreiben erst mit Schreibrechten, die Sie weiter unten erteilen.",
+			"share": "Ihre Adresse, für die Personen, die Sie hineinlassen. Ohne Ihre Freigabe lesen sie nichts.",
 			"copy": "Kopieren",
 			"copied": "Kopiert"
 		},
 		"switcher": {
 			"heading": "Ihre Listen",
-			"hint": "Sie liegen in Ihrer eigenen OrbitDB-Registry. Deshalb sind sie nach dem Neuladen wieder da und folgen Ihrem Passkey auf ein anderes Gerät.",
+			"hint": "Sie folgen Ihrem Passkey auf Ihre anderen Geräte.",
 			"unnamed": "Liste ohne Namen",
 			"role": {
 				"owner": "Eigentümer",
 				"guest": "Gast"
 			},
-			"open": "geöffnet",
+			"open": "jetzt offen",
 			"forget": "Vergessen",
-			"forgetTitle": "Nur aus dieser Übersicht entfernen; die Datenbank selbst bleibt unverändert"
+			"forgetTitle": "Nur aus dieser Übersicht entfernen; die Datenbank selbst bleibt unverändert",
+			"more": "Mehr zu {name}"
 		},
 		"open": {
-			"heading": "Geteilte Liste über ihre Adresse öffnen",
-			"hint": "Fügen Sie die vollständige OrbitDB-Adresse ein, die Ihnen jemand geschickt hat. Lesen können Sie die Liste sofort. Schreiben können Sie erst, wenn die Person, die sie angelegt hat, Ihnen Schreibrechte erteilt.",
-			"submit": "Liste öffnen",
-			"busy": "Wird geöffnet …"
+			"heading": "Liste öffnen",
+			"hint": "Drei Wörter, ein Link oder eine Adresse, die Ihnen jemand gegeben hat.",
+			"submit": "Öffnen",
+			"busy": "Wird geöffnet …",
+			"placeholder": "luna-camino-verde, Link oder /orbitdb/…",
+			"unknown": "Das sind weder drei Wörter noch ein Link zu einer Liste noch eine Listenadresse."
 		},
 		"permissions": {
-			"heading": "Schreibrechte",
-			"hint": "Diese DIDs dürfen in die Liste schreiben. Schreibrechte erteilen oder entziehen kann nur, wer die Liste verwaltet, also wer sie angelegt hat.",
+			"heading": "Wer schreiben darf ({count})",
+			"hint": "Lassen Sie jemanden über seine DID hinein. In einer versiegelten Liste liest die Person sie dann auch.",
 			"you": "(Sie)",
 			"remove": "Entfernen",
 			"placeholder": "did:key:… der Identität, die schreiben darf",
-			"add": "DID hinzufügen",
+			"add": "Hinzufügen",
 			"grantFailed": "Die Schreibrechte ließen sich nicht erteilen: {reason}",
 			"revokeFailed": "Die Schreibrechte ließen sich nicht entziehen: {reason}",
 			"keysLater": "Hinzugefügt. Die Person bekommt die Schlüssel dieser versiegelten Liste, sobald sie die App gestartet hat; bis dahin kann sie sie weder lesen noch beschreiben.",
-			"keysRenewed": "Entfernt. Die Liste hat ab jetzt neue Schlüssel. Was die Person bisher lesen konnte, bleibt für sie lesbar."
+			"keysRenewed": "Entfernt. Die Liste hat ab jetzt neue Schlüssel. Was die Person bisher lesen konnte, bleibt für sie lesbar.",
+			"hintOthers": "Hineinlassen kann nur, wem die Liste gehört.",
+			"owner": "Eigentümer"
 		},
 		"peers": {
 			"direct": "{count, plural, one {Direkt P2P mit # Browser} other {Direkt P2P mit # Browsern}}",
@@ -487,19 +517,15 @@
 			"shared": "Geteilte Liste",
 			"private": "Private Liste",
 			"guest": "Geöffnete Liste",
-			"writingTo": "Sie schreiben in die Liste {name}. Die Adresse unten, der Link in der Adresszeile und der QR-Code der Seite öffnen diese Liste.",
-			"mnemonicLabel": "Öffentliche Merkwörter / Name der OrbitDB-Datenbank",
 			"copy": "Kopieren",
 			"copied": "Kopiert!",
 			"addressLabel": "OrbitDB-Adresse",
-			"anyone": "Wer diese Merkwörter kennt, kann dieselbe öffentliche Datenbank öffnen und darin schreiben, sobald eine Verbindung besteht.",
-			"replication": "Die Merkwörter wählen dieselbe Datenbank aus. Damit Änderungen sofort ankommen, braucht es außerdem eine Verbindung zu einem anderen Browser.",
-			"openAnother": "Andere geteilte Liste öffnen"
+			"anyone": "Wer diese drei Wörter hat, liest diese Liste und schreibt hinein."
 		},
 		"threeWords": {
-			"heading": "Mit drei Wörtern teilen",
-			"hint": "Die geteilte Liste dieses Browsers. Wer ihre drei Wörter hat, kann darin lesen und schreiben. Öffnen Sie sie, um ihre Wörter, ihren Link oder ihren QR-Code weiterzugeben; Ihre Aufgaben gehen dann dorthin.",
-			"open": "Diese Liste öffnen",
+			"heading": "Drei-Wort-Liste dieses Browsers",
+			"hint": "Offen für alle, die ihre Wörter haben.",
+			"open": "Öffnen",
 			"openFailed": "Die geteilte Liste ließ sich nicht öffnen: {reason}"
 		},
 		"hiddenTodos": "{count, plural, one {# Aufgabe dieser Liste ist} other {# Aufgaben dieser Liste sind}} für Sie versiegelt: an jemand anderen abgegeben, oder sie warten auf einen Schlüssel."

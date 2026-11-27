@@ -341,8 +341,10 @@ ACL-Berechtigung gibt; das ist öffentlich nachprüfbar. Darüber hinaus:
 
 Absender, Begünstigter, Prüfstelle, Zeitpunkte, aufgerufene Funktionen, `todoRef`, Frist, Gas, alle
 Handles und Input-Proofs, alle Berechtigungen und Rechenschritte, die Beträge beim Verpacken und
-Entpacken, und auf der Gateway-Chain, wer wann welchen Handle entschlüsseln lässt. In der
-unverschlüsselten OrbitDB-Liste stehen Aufgabentext, DID des Delegierten und `todoRef`. Nicht
+Entpacken, und auf der Gateway-Chain, wer wann welchen Handle entschlüsseln lässt. In einer eigenen
+Liste, die versiegelt ist (#127), ist die Aufgabe mit Text, Delegation und Budget verschlüsselt,
+`todoRef` eingeschlossen; ohne Schlüssel lesbar bleibt, wer wann einen Eintrag geschrieben hat, und
+was eine delegierte Person tut. Eine Liste hinter drei Wörtern enthält all das im Klartext. Nicht
 öffentlich sind die Beträge in der Treuhand, die Guthaben und die Frage, ob eine Sperre gedeckt war.
 
 ### Was passiert, wenn Zamas Relayer ausfällt?

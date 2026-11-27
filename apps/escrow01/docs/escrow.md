@@ -300,8 +300,9 @@ the todo's owner write it ([`setTodoBudget`](../src/lib/db-actions.js)), and eac
 is written before the next one starts ([`src/lib/budget/budget-flow.js`](../src/lib/budget/budget-flow.js)). A
 typed amount stays in memory (`pendingAmounts` in
 [`src/lib/budget/budget-store.js`](../src/lib/budget/budget-store.js)) until the escrow holds it; afterwards the
-displayed amount is the result of `decryptAmount`. The list itself is not encrypted: anyone with its
-address can read todo text, delegate DID and `budget`.
+displayed amount is the result of `decryptAmount`. In a list of one's own the whole todo is sealed,
+`budget` included (#127): whoever has only the list's address reads none of it. In a list behind three
+words anyone with its words reads todo text, delegate DID and `budget`.
 
 The chain stays the source of truth for three reasons:
 
