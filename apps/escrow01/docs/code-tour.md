@@ -107,10 +107,10 @@ the escrow half of [de2do](https://github.com/NiKrause/de2do).
 - **A light says how the other browser is connected.** Under the list name: white, no other browser;
   green, a direct WebRTC connection; yellow, only through the relay. It reads `connection.limits`,
   not the address ([`list-peers.js`](../src/lib/list-peers.js)).
-- **A demo video, once there is one.** A teaser left in the dialog's top row and a "Video" link in
-  the header open one player over the page; it plays a file of this site, with a plain link to
-  YouTube beside it. Both stay hidden until [`src/lib/demo-video.js`](../src/lib/demo-video.js) has an
-  entry for the language on screen.
+- **A demo video.** A teaser left in the dialog's top row and a "Video" link in the header open one
+  player over the page; it plays a file of this site, with a plain link to YouTube beside it. Each
+  language has its own film; [`src/lib/demo-video.js`](../src/lib/demo-video.js) imports the files
+  from `src/lib/demo-video/`, and a language without an entry shows neither.
 - **The page opens on the todos.** Lists, account and network are tabs, at the foot of a phone's
   screen and under the header elsewhere. The URL fragment names the tab, so `#listen`, `#konto`,
   `#netzwerk` and the auditor view's `#pruefstelle` link straight to one.

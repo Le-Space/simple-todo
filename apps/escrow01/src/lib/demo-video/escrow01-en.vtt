@@ -1,0 +1,76 @@
+WEBVTT
+
+00:01.680 --> 00:06.480
+Le Space escrow01. Confidential payments by passkey.
+
+00:07.610 --> 00:16.410
+Alice hands a task to Bob and locks its budget in escrow. A demo on Ethereum’s Sepolia testnet: no real money.
+
+00:16.626 --> 00:23.906
+Alice wants to hand a task to Bob and pay him once it is done. How much she pays should stay between them.
+
+00:24.439 --> 00:30.759
+The start dialog says what this is: confidential payments by passkey. One button.
+
+00:31.316 --> 00:35.716
+Alice creates a passkey. No password, no seed phrase.
+
+00:36.322 --> 00:43.602
+A first passkey takes three confirmations. Before the second and the third, the app says what each one is for.
+
+00:44.077 --> 00:46.557
+Bob does the same in his own browser.
+
+00:58.948 --> 01:09.348
+Behind each passkey is an account on Sepolia: Uniswap’s Calibur smart account, through EIP-7702. Openfort pays the gas.
+
+01:12.517 --> 01:21.237
+Alice starts in a private list of her own, made with her first task. It is sealed: only she can read it and write to it.
+
+01:21.615 --> 01:24.575
+She adds a task and delegates it to Bob.
+
+01:27.601 --> 01:36.561
+And a budget: 500 cUSDT, Zama’s confidential token. The amount is encrypted in her browser before it leaves.
+
+01:36.932 --> 01:40.132
+One passkey confirmation locks it in escrow.
+
+01:42.520 --> 01:51.400
+Zama’s encryption hides the amount, not the parties. The chain shows who locked something for whom, and when. Never how much.
+
+01:51.881 --> 02:03.321
+The task is sealed too. The relay that keeps the list, and anyone with its address, see only an envelope. Bob gets the key to this one task, and to nothing else.
+
+02:04.211 --> 02:06.851
+Alice shares the list’s address with Bob.
+
+02:15.646 --> 02:23.886
+Bob opens it. The light under the list name turns green: their two browsers are now connected directly, peer to peer.
+
+02:24.365 --> 02:30.045
+The task is delegated to Bob: he reads it, and the budget, on his own device.
+
+02:30.423 --> 02:33.783
+He ticks it off and signs the change with his passkey.
+
+02:34.270 --> 02:38.350
+Alice sees it at once. The budget waits for her release.
+
+02:39.405 --> 02:44.205
+Alice releases the budget. Only she can, and only once.
+
+02:50.739 --> 02:59.059
+Bob’s confidential balance now holds the 500. It is decrypted on his device; on the chain it stays encrypted.
+
+03:02.818 --> 03:10.178
+The escrow contract names one auditor. The auditor can read every amount, but cannot move any money.
+
+03:12.566 --> 03:20.486
+This view lists the escrows on the chain. Their amounts open only with the auditor’s own key, so here they stay hidden.
+
+03:21.466 --> 03:28.026
+One passkey for identity, data and payment. The task and the amount stay confidential.
+
+03:31.208 --> 03:43.768
+escrow01 by Le Space. Try it at escrow01 dot le-space dot de. Building passkey wallets, confidential payments or local-first apps? Let’s talk.

@@ -1,0 +1,76 @@
+WEBVTT
+
+00:01.743 --> 00:06.303
+Le Space escrow01. Vertrauliche Zahlungen per Passkey.
+
+00:07.448 --> 00:16.888
+Alice gibt Bob eine Aufgabe und hinterlegt das Budget treuhänderisch. Eine Demo im Sepolia-Testnetz von Ethereum, ohne echtes Geld.
+
+00:17.148 --> 00:25.068
+Alice will Bob eine Aufgabe geben und ihn bezahlen, sobald sie erledigt ist. Wie viel sie zahlt, soll unter ihnen bleiben.
+
+00:25.629 --> 00:32.189
+Der Startdialog sagt, worum es geht: vertrauliche Zahlungen per Passkey. Ein einziger Knopf.
+
+00:32.726 --> 00:37.366
+Alice legt einen Passkey an. Kein Passwort, keine Seed-Phrase.
+
+00:37.862 --> 00:44.102
+Ein neuer Passkey braucht drei Bestätigungen. Vor der zweiten und dritten sagt die App, wofür sie ist.
+
+00:44.624 --> 00:47.424
+Bob macht dasselbe in seinem eigenen Browser.
+
+00:58.926 --> 01:08.606
+Hinter jedem Passkey steht ein Konto auf Sepolia: Calibur von Uniswap, über EIP-7702. Die Gebühren zahlt Openfort.
+
+01:11.218 --> 01:20.818
+Alice startet in einer eigenen privaten Liste, die mit ihrer ersten Aufgabe entsteht. Sie ist versiegelt: Lesen und schreiben kann darin nur sie.
+
+01:21.186 --> 01:24.626
+Sie legt eine Aufgabe an und delegiert sie an Bob.
+
+01:26.221 --> 01:35.421
+Dazu ein Budget: 500 cUSDT, Zamas vertraulicher Token. Der Betrag wird in ihrem Browser verschlüsselt, bevor er ihn verlässt.
+
+01:35.785 --> 01:39.625
+Eine Bestätigung mit dem Passkey sperrt ihn treuhänderisch.
+
+01:41.595 --> 01:51.995
+Zamas Verschlüsselung verbirgt den Betrag, nicht die Beteiligten. Die Chain zeigt, wer für wen etwas gesperrt hat, und wann. Aber nie, wie viel.
+
+01:52.472 --> 02:04.632
+Auch die Aufgabe ist versiegelt. Der Relay, der die Liste aufbewahrt, und alle mit ihrer Adresse sehen nur einen Umschlag. Bob bekommt den Schlüssel zu dieser einen Aufgabe, und zu nichts sonst.
+
+02:05.610 --> 02:08.250
+Alice gibt Bob die Adresse der Liste.
+
+02:17.355 --> 02:25.515
+Bob öffnet sie. Das Licht unter dem Listennamen wird grün: Die beiden Browser sind jetzt direkt verbunden, Peer-to-Peer.
+
+02:26.006 --> 02:31.926
+Die Aufgabe ist an Bob delegiert: Er liest sie und das Budget auf seinem eigenen Gerät.
+
+02:35.973 --> 02:39.653
+Er hakt sie ab und unterschreibt die Änderung mit seinem Passkey.
+
+02:40.137 --> 02:44.217
+Alice sieht es sofort. Das Budget wartet auf ihre Freigabe.
+
+02:45.211 --> 02:49.851
+Alice gibt das Budget frei. Nur sie kann das, und nur einmal.
+
+02:56.202 --> 03:04.362
+Bobs vertrauliches Guthaben zeigt jetzt die 500. Entschlüsselt wird es auf seinem Gerät; auf der Chain bleibt es verschlüsselt.
+
+03:07.569 --> 03:14.049
+Der Treuhandvertrag nennt eine Prüfstelle. Sie kann jeden Betrag lesen, aber kein Geld bewegen.
+
+03:16.506 --> 03:24.986
+Diese Ansicht listet die Sperren auf der Chain. Die Beträge öffnen sich nur mit dem Schlüssel der Prüfstelle, hier bleiben sie verborgen.
+
+03:26.031 --> 03:32.271
+Ein Passkey für Identität, Daten und Zahlung. Aufgabe und Betrag bleiben vertraulich.
+
+03:35.532 --> 03:49.932
+escrow01 von Le Space. Zum Ausprobieren unter escrow01 Punkt le-space Punkt de. Sie brauchen Passkey-Wallets, vertrauliche Zahlungen oder Local-first-Apps? Sprechen wir darüber.
