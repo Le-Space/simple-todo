@@ -86,7 +86,7 @@
 		data-role={$listRoleStore ?? ''}
 	>
 		<summary
-			class="flex cursor-pointer list-none items-center gap-2 rounded text-sm font-medium text-heading outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 [&::-webkit-details-marker]:hidden"
+			class="flex min-h-9 cursor-pointer list-none items-center gap-2 rounded text-sm font-medium text-heading outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 [&::-webkit-details-marker]:hidden"
 		>
 			<svg
 				class="h-3.5 w-3.5 text-faint transition-transform group-open:rotate-90"
