@@ -1,12 +1,20 @@
 import { writable } from 'svelte/store';
+import deCaptions from './demo-video/escrow01-de.vtt?url&no-inline';
+import dePoster from './demo-video/escrow01-de-poster.jpg?url&no-inline';
+import deVideo from './demo-video/escrow01-de.mp4?url&no-inline';
+import enCaptions from './demo-video/escrow01-en.vtt?url&no-inline';
+import enPoster from './demo-video/escrow01-en-poster.jpg?url&no-inline';
+import enVideo from './demo-video/escrow01-en.mp4?url&no-inline';
+// One teaser picture for both languages: a ▶ on coral, no text in it.
+import thumb from './demo-video/escrow01-thumb.png?url&no-inline';
 
 /**
  * The demo video, per language, in one place (escrow01).
  *
- * Empty until the video exists. While a language has no entry, nothing about
- * the video is on screen in that language: no teaser in the start dialog, no
- * link in the page header. A missing language does not fall back to the
- * other one: a German reader gets no English video they did not ask for.
+ * While a language has no entry, nothing about the video is on screen in that
+ * language: no teaser in the start dialog, no link in the page header. A
+ * missing language does not fall back to the other one: a German reader gets
+ * no English video they did not ask for.
  *
  * The file plays from this site (`<video preload="none">`, so before a click
  * only the teaser's picture is fetched), and YouTube is a plain link beside
@@ -15,8 +23,12 @@ import { writable } from 'svelte/store';
  * The file is 1080p H.264, at most 15 MB per language (decided 24.11.): it
  * ships with the build, and the build is what goes to IPFS and Aleph.
  *
- * Paths are relative to the page, as everything in this static build is:
- * `video/escrow01-de.mp4` is served from `static/video/escrow01-de.mp4`.
+ * The files sit beside this module in `demo-video/` and are imported, so Vite
+ * puts them into escrow01's build alone, under hashed names and with paths
+ * relative to the page. `static/` would not do: this chapter's assets folder
+ * is `packages/brand/static`, which every chapter ships, so a film there
+ * would be 13 MB in all of them. `no-inline` keeps the small thumb and the
+ * captions files as files, not data URLs.
  *
  * @typedef {{
  *   src: string,
@@ -36,8 +48,22 @@ import { writable } from 'svelte/store';
  * @type {Record<'de' | 'en', DemoVideo | null>}
  */
 export const videos = {
-	de: null,
-	en: null
+	de: {
+		src: deVideo,
+		poster: dePoster,
+		thumb,
+		captions: deCaptions,
+		youtubeId: 'VGXKbYh02Eg',
+		duration: '3:50'
+	},
+	en: {
+		src: enVideo,
+		poster: enPoster,
+		thumb,
+		captions: enCaptions,
+		youtubeId: 'cnYjurOTO3M',
+		duration: '3:44'
+	}
 };
 
 /**

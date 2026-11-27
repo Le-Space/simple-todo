@@ -115,10 +115,11 @@ Treuhand-Hälfte von [de2do](https://github.com/NiKrause/de2do).
 - **Ein Licht sagt, wie der andere Browser verbunden ist.** Unter dem Listennamen: weiß, kein anderer
   Browser; grün, eine direkte WebRTC-Verbindung; gelb, nur über den Relay. Es liest
   `connection.limits`, nicht die Adresse ([`list-peers.js`](../src/lib/list-peers.js)).
-- **Ein Demo-Video, sobald es eins gibt.** Ein Vorschaubild links in der obersten Zeile des Dialogs
-  und ein Link „Video“ in der Kopfzeile öffnen einen Player über der Seite; er spielt eine Datei
-  dieser Seite ab, mit einem einfachen Link zu YouTube daneben. Beides bleibt verborgen, bis
-  [`src/lib/demo-video.js`](../src/lib/demo-video.js) einen Eintrag für die angezeigte Sprache hat.
+- **Ein Demo-Video.** Ein Vorschaubild links in der obersten Zeile des Dialogs und ein Link „Video“
+  in der Kopfzeile öffnen einen Player über der Seite; er spielt eine Datei dieser Seite ab, mit
+  einem einfachen Link zu YouTube daneben. Jede Sprache hat ihren eigenen Film;
+  [`src/lib/demo-video.js`](../src/lib/demo-video.js) importiert die Dateien aus
+  `src/lib/demo-video/`, und eine Sprache ohne Eintrag zeigt keins von beidem.
 - **Die Seite öffnet mit den Aufgaben.** Listen, Konto und Netzwerk sind Tabs, auf dem Handy am
   unteren Rand, sonst unter der Kopfzeile. Das Fragment der Adresse nennt den Tab, also führen
   `#listen`, `#konto`, `#netzwerk` und `#pruefstelle` der Prüfansicht direkt dorthin.

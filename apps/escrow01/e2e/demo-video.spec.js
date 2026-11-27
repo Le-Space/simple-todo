@@ -5,9 +5,10 @@ import { isConsentOpen, passConsent, waitForConsent } from '@simple-todo/e2e-kit
  * The demo video: a teaser in the start dialog's top row, a link in the page
  * header, and one player over either.
  *
- * Until the video exists there is nothing to see, so these tests hand the
- * page entries of their own before it loads (`__escrow01DemoVideos`, read by
- * E2E builds only) and answer the files themselves. What they guard:
+ * Every test hands the page entries of its own before it loads
+ * (`__escrow01DemoVideos`, read by E2E builds only) and answers the files
+ * itself, so none of them depends on the real films in `src/lib/demo-video/`.
+ * What they guard:
  *
  * - no entry, nothing on screen;
  * - before a click only the poster is fetched: no video, no captions, and
@@ -74,6 +75,9 @@ const playerOpen = (/** @type {import('@playwright/test').Page} */ page) =>
 
 test.describe('Demo video', () => {
 	test('without an entry for the language, there is no teaser and no link', async ({ page }) => {
+		await page.addInitScript(() => {
+			/** @type {any} */ (globalThis).__escrow01DemoVideos = { en: null, de: null };
+		});
 		await page.goto('/');
 		await waitForConsent(page);
 		await expect(page.getByTestId('demo-video-teaser')).toHaveCount(0);
