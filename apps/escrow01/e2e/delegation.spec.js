@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { passConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import { openSection } from './sections.mjs';
 import { pinTechnicalView } from './technical-view.mjs';
+import { identityBlock } from './identity-block.mjs';
 import { expectReadersMoment } from '@simple-todo/e2e-kit/moment.mjs';
 
 // Chapter (delegation01): a list stays owner-only, but the owner may hand ONE
@@ -411,7 +412,7 @@ async function newIdentity(browser, label, { webrtc = true } = {}) {
 		peerId = await page.evaluate(() => window.__simpleTodoE2E.getPeerId());
 	}
 	const did = await getOwnDid(page);
-	step(`${label} is ${did.slice(0, 20)}…`);
+	step(`${label} is ${did.slice(0, 20)}…, identity block ${await identityBlock(page)}`);
 	return { page, did, peerId, close: () => context.close() };
 }
 

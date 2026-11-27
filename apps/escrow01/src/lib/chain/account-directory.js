@@ -238,11 +238,20 @@ export function createAccountDirectory(getOrbitdb) {
 		 */
 		async lookupAgreementKey(did, { timeoutMs = 20_000 } = {}) {
 			const database = await open(did);
-			return waitForEntry(
+			const found = await waitForEntry(
 				database,
 				async () => parsePublishedAgreementKey(await database.get(AGREEMENT_KEY_ENTRY)),
 				timeoutMs
 			);
+			if (!found && timeoutMs > 0) {
+				// Tells "nothing arrived" from "arrived and could not be joined",
+				// which is a LoadBlockFailedError beside it (#127).
+				const held = (await database.log.values().catch(() => [])).length;
+				console.warn(
+					`No key agreement key for ${did.slice(0, 20)}… after ${timeoutMs} ms; entries of that directory here: ${held}`
+				);
+			}
+			return found;
 		}
 	};
 }

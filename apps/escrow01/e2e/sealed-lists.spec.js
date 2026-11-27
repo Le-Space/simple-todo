@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { passConsent } from '@simple-todo/e2e-kit/consent.mjs';
 import { openSection } from './sections.mjs';
 import { pinTechnicalView } from './technical-view.mjs';
+import { identityBlock } from './identity-block.mjs';
 
 // #127: a private list is sealed. Who reads what:
 //
@@ -205,7 +206,7 @@ async function newIdentity(browser, label) {
 	await passConsent(page, { identity: 'create', label });
 	await expect(todoInput(page)).toBeEnabled({ timeout });
 	const did = await getOwnDid(page);
-	step(`${label} is ${did.slice(0, 20)}…`);
+	step(`${label} is ${did.slice(0, 20)}…, identity block ${await identityBlock(page)}`);
 	return { page, did, close: () => context.close() };
 }
 
