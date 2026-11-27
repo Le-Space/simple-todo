@@ -430,6 +430,27 @@
 		"identityLabelTitle": "Name des neuen Passkeys"
 	},
 	"lists": {
+		"thisList": {
+			"heading": "Diese Liste",
+			"sealed": "versiegelt",
+			"open": "offen",
+			"sealedTitle": "Ihre Einträge sind verschlüsselt: Wer nur ihre Adresse hat, liest nichts.",
+			"openTitle": "Nicht verschlüsselt: Wer ihre Wörter oder ihre Adresse hat, liest sie.",
+			"role": {
+				"owner": "gehört Ihnen",
+				"writer": "Sie schreiben mit",
+				"guest": "Gast"
+			},
+			"newTodos": "Neue Todos kommen in {name}.",
+			"copyLink": "Link kopieren",
+			"linkCopied": "Link kopiert",
+			"showQr": "QR-Code",
+			"hideQr": "QR-Code ausblenden",
+			"qrHint": "Mit dem Handy scannen: Er öffnet diese Liste."
+		},
+		"add": {
+			"heading": "Liste hinzufügen"
+		},
 		"home": {
 			"name": "Meine Aufgaben",
 			"pending": "Entsteht mit Ihrer ersten Aufgabe",
@@ -438,45 +459,50 @@
 			"openFailed": "Ihre eigene Liste ließ sich nicht öffnen, Sie sind in der geteilten: {reason}"
 		},
 		"create": {
-			"heading": "Private Liste anlegen",
-			"hint": "In die neue Liste darf nur Ihre Identität schreiben. Geben Sie deren Adresse weiter und erteilen Sie anderen DIDs weiter unten Schreibrechte.",
+			"heading": "Neue private Liste",
+			"hint": "Von Anfang an versiegelt: Nur Sie lesen und schreiben darin, bis Sie jemanden hineinlassen.",
 			"namePlaceholder": "Name der Liste (optional)",
-			"submit": "Private Liste anlegen",
+			"submit": "Anlegen",
 			"busy": "Wird angelegt …",
 			"created": "Die Liste {name} ist angelegt, und Sie schreiben jetzt hinein.",
-			"share": "Geben Sie diese Adresse weiter, damit andere die Liste öffnen können. Lesen können sie sofort, schreiben erst mit Schreibrechten, die Sie weiter unten erteilen.",
+			"share": "Ihre Adresse, für die Personen, die Sie hineinlassen. Ohne Ihre Freigabe lesen sie nichts.",
 			"copy": "Kopieren",
 			"copied": "Kopiert"
 		},
 		"switcher": {
 			"heading": "Ihre Listen",
-			"hint": "Sie liegen in Ihrer eigenen OrbitDB-Registry. Deshalb sind sie nach dem Neuladen wieder da und folgen Ihrem Passkey auf ein anderes Gerät.",
+			"hint": "Sie folgen Ihrem Passkey auf Ihre anderen Geräte.",
 			"unnamed": "Liste ohne Namen",
 			"role": {
 				"owner": "Eigentümer",
 				"guest": "Gast"
 			},
-			"open": "geöffnet",
+			"open": "jetzt offen",
 			"forget": "Vergessen",
-			"forgetTitle": "Nur aus dieser Übersicht entfernen; die Datenbank selbst bleibt unverändert"
+			"forgetTitle": "Nur aus dieser Übersicht entfernen; die Datenbank selbst bleibt unverändert",
+			"more": "Mehr zu {name}"
 		},
 		"open": {
-			"heading": "Geteilte Liste über ihre Adresse öffnen",
-			"hint": "Fügen Sie die vollständige OrbitDB-Adresse ein, die Ihnen jemand geschickt hat. Lesen können Sie die Liste sofort. Schreiben können Sie erst, wenn die Person, die sie angelegt hat, Ihnen Schreibrechte erteilt.",
-			"submit": "Liste öffnen",
-			"busy": "Wird geöffnet …"
+			"heading": "Liste öffnen",
+			"hint": "Drei Wörter, ein Link oder eine Adresse, die Ihnen jemand gegeben hat.",
+			"submit": "Öffnen",
+			"busy": "Wird geöffnet …",
+			"placeholder": "luna-camino-verde, Link oder /orbitdb/…",
+			"unknown": "Das sind weder drei Wörter noch ein Link zu einer Liste noch eine Listenadresse."
 		},
 		"permissions": {
-			"heading": "Schreibrechte",
-			"hint": "Diese DIDs dürfen in die Liste schreiben. Schreibrechte erteilen oder entziehen kann nur, wer die Liste verwaltet, also wer sie angelegt hat.",
+			"heading": "Wer schreiben darf ({count})",
+			"hint": "Lassen Sie jemanden über seine DID hinein. In einer versiegelten Liste liest die Person sie dann auch.",
 			"you": "(Sie)",
 			"remove": "Entfernen",
 			"placeholder": "did:key:… der Identität, die schreiben darf",
-			"add": "DID hinzufügen",
+			"add": "Hinzufügen",
 			"grantFailed": "Die Schreibrechte ließen sich nicht erteilen: {reason}",
 			"revokeFailed": "Die Schreibrechte ließen sich nicht entziehen: {reason}",
 			"keysLater": "Hinzugefügt. Die Person bekommt die Schlüssel dieser versiegelten Liste, sobald sie die App gestartet hat; bis dahin kann sie sie weder lesen noch beschreiben.",
-			"keysRenewed": "Entfernt. Die Liste hat ab jetzt neue Schlüssel. Was die Person bisher lesen konnte, bleibt für sie lesbar."
+			"keysRenewed": "Entfernt. Die Liste hat ab jetzt neue Schlüssel. Was die Person bisher lesen konnte, bleibt für sie lesbar.",
+			"hintOthers": "Hineinlassen kann nur, wem die Liste gehört.",
+			"owner": "Eigentümer"
 		},
 		"peers": {
 			"direct": "{count, plural, one {Direkt P2P mit # Browser} other {Direkt P2P mit # Browsern}}",
@@ -491,19 +517,15 @@
 			"shared": "Geteilte Liste",
 			"private": "Private Liste",
 			"guest": "Geöffnete Liste",
-			"writingTo": "Sie schreiben in die Liste {name}. Die Adresse unten, der Link in der Adresszeile und der QR-Code der Seite öffnen diese Liste.",
-			"mnemonicLabel": "Öffentliche Merkwörter / Name der OrbitDB-Datenbank",
 			"copy": "Kopieren",
 			"copied": "Kopiert!",
 			"addressLabel": "OrbitDB-Adresse",
-			"anyone": "Wer diese Merkwörter kennt, kann dieselbe öffentliche Datenbank öffnen und darin schreiben, sobald eine Verbindung besteht.",
-			"replication": "Die Merkwörter wählen dieselbe Datenbank aus. Damit Änderungen sofort ankommen, braucht es außerdem eine Verbindung zu einem anderen Browser.",
-			"openAnother": "Andere geteilte Liste öffnen"
+			"anyone": "Wer diese drei Wörter hat, liest diese Liste und schreibt hinein."
 		},
 		"threeWords": {
-			"heading": "Mit drei Wörtern teilen",
-			"hint": "Die geteilte Liste dieses Browsers. Wer ihre drei Wörter hat, kann darin lesen und schreiben. Öffnen Sie sie, um ihre Wörter, ihren Link oder ihren QR-Code weiterzugeben; Ihre Aufgaben gehen dann dorthin.",
-			"open": "Diese Liste öffnen",
+			"heading": "Drei-Wort-Liste dieses Browsers",
+			"hint": "Offen für alle, die ihre Wörter haben.",
+			"open": "Öffnen",
 			"openFailed": "Die geteilte Liste ließ sich nicht öffnen: {reason}"
 		},
 		"hiddenTodos": "{count, plural, one {# Aufgabe dieser Liste ist} other {# Aufgaben dieser Liste sind}} für Sie versiegelt: an jemand anderen abgegeben, oder sie warten auf einen Schlüssel."

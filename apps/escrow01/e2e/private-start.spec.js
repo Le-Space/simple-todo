@@ -125,7 +125,7 @@ test('the shared list underneath is offered only once it is on screen', async ({
 	await openSection(page, 'listen');
 	const details = page.getByTestId('shared-list-details');
 	await expect(details).toHaveAttribute('data-kind', 'pending');
-	await expect(details.getByTestId('active-list-label')).toHaveText('· My todos');
+	await expect(details.getByTestId('active-list-label')).toHaveText('My todos');
 	await expect(details.getByTestId('active-list-pending-note')).toBeVisible();
 	await expect(details.getByRole('button', { name: 'Copy', exact: true })).toHaveCount(0);
 	await expect(page.getByTestId('active-shared-list-name')).toHaveCount(0);
@@ -137,7 +137,8 @@ test('the shared list underneath is offered only once it is on screen', async ({
 	await expect(details).toHaveAttribute('data-kind', 'shared', { timeout });
 	await expect(details.getByTestId('active-shared-list-name')).toHaveText(words);
 	await expect(details.getByRole('button', { name: 'Copy', exact: true })).toBeVisible();
-	await expect(page.getByTestId('share-by-three-words')).toHaveCount(0);
+	// Its row in "Your lists" says it is open now, and offers no switch to it.
+	await expect(page.getByTestId('three-word-list-open')).toHaveCount(0);
 	expect(await isConsentOpen(page)).toBe(false);
 	await expect.poll(() => readListLink(page.url()).words).toBe(words);
 	expect(readListLink(await expectPageQr(page, expect)).words).toBe(words);

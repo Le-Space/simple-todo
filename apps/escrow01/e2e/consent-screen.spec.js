@@ -563,7 +563,7 @@ test.describe('Consent screen', () => {
 			await expect(page.getByTestId('active-list-pending-note')).toHaveText(
 				'Diese Liste entsteht mit Ihrer ersten Aufgabe. Bis dahin hat sie keine Adresse, keinen Link und keinen QR-Code zum Weitergeben.'
 			);
-			await expect(page.getByTestId('three-word-list-open')).toHaveText('Diese Liste öffnen');
+			await expect(page.getByTestId('three-word-list-open')).toHaveText('Öffnen');
 			await page.getByTestId('new-list-name').fill('Prüfbericht');
 			await page.getByTestId('new-list-create').click();
 			await expect(page.getByTestId('permissions-panel')).toBeVisible({ timeout });
@@ -628,13 +628,12 @@ test.describe('Consent screen', () => {
 		expect(await isConsentOpen(page)).toBe(false);
 		await expect(page.getByPlaceholder('What needs to be done?')).toBeEnabled({ timeout });
 
-		// The lists tab opens with the open list's details already unfolded. That
-		// is the list of one's own, still to be made; the kept words are the
-		// browser's shared list beside it.
+		// The lists tab opens on "This list": the list of one's own, still to be
+		// made; the kept words are the browser's shared list, a row of "Your
+		// lists".
 		await openSection(page, 'listen');
 		const sharedListDetails = page.getByTestId('shared-list-details');
 		await expect(sharedListDetails).toBeVisible({ timeout });
-		await expect(sharedListDetails).toHaveAttribute('open', '');
 		await expect(sharedListDetails).toHaveAttribute('data-kind', 'pending');
 		await expect(page.getByTestId('three-word-list-name')).toHaveText(savedMnemonic ?? '');
 	});

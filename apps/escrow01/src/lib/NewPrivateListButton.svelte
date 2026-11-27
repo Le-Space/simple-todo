@@ -1,7 +1,9 @@
 <script>
 	// Create a new access-controlled private list (acl01). The public mnemonic
 	// list stays available; this opens a fresh owner-only list and switches to
-	// it, after which the permissions panel appears for granting DIDs.
+	// it, after which "This list" offers the field for letting someone in.
+	// escrow01 (#127): the list is sealed from its first entry. Its button is
+	// the lists tab's one primary action (#127 PR C).
 	import { _, SLOT, around } from '$lib/i18n/index.js';
 	import { createPrivateTodoList } from './db-actions.js';
 
@@ -37,28 +39,25 @@
 	}
 </script>
 
-<section
-	class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
-	data-testid="new-private-list"
->
-	<h2 class="text-lg font-semibold text-heading">{$_('lists.create.heading')}</h2>
+<form class="min-w-0" data-testid="new-private-list" on:submit|preventDefault={create}>
+	<h3 class="text-sm font-semibold text-heading">{$_('lists.create.heading')}</h3>
 	<p class="mt-1 text-xs text-faint">
 		{$_('lists.create.hint')}
 	</p>
-	<div class="mt-3 flex gap-2">
+	<div class="mt-2 flex gap-2">
 		<input
 			type="text"
 			bind:value={name}
 			placeholder={$_('lists.create.namePlaceholder')}
+			aria-label={$_('lists.create.namePlaceholder')}
 			data-testid="new-list-name"
-			class="min-w-0 flex-1 rounded-md border border-gray-300 px-2 py-1.5 text-xs"
+			class="min-w-0 flex-1 rounded-md border border-border bg-surface px-2 py-1.5 text-xs"
 		/>
 		<button
-			type="button"
-			on:click={create}
+			type="submit"
 			disabled={busy}
 			data-testid="new-list-create"
-			class="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+			class="shrink-0 rounded-md bg-coral-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-coral-600 disabled:bg-faint"
 		>
 			{busy ? $_('lists.create.busy') : $_('lists.create.submit')}
 		</button>
@@ -70,10 +69,7 @@
 	{#if created}
 		<!-- The name sits in the sentence where each language puts it. -->
 		{@const sentence = around($_('lists.create.created', { values: { name: SLOT } }))}
-		<div
-			class="mt-3 rounded-md border border-emerald-300 bg-emerald-50 p-2 dark:border-emerald-800 dark:bg-emerald-950"
-			data-testid="new-list-created"
-		>
+		<div class="mt-3 rounded-md bg-surface-2 p-2" data-testid="new-list-created">
 			<p class="text-xs text-heading">
 				{sentence.before}<strong data-testid="new-list-created-name">{created.name}</strong
 				>{sentence.after}
@@ -83,18 +79,19 @@
 			</p>
 			<div class="mt-1 flex items-center gap-2">
 				<code
-					class="min-w-0 flex-1 font-mono text-xs break-all"
+					class="min-w-0 flex-1 truncate font-mono text-xs text-text"
+					title={created.address}
 					data-testid="new-list-created-address">{created.address}</code
 				>
 				<button
 					type="button"
 					on:click={copyAddress}
 					data-testid="new-list-copy-address"
-					class="shrink-0 rounded-md border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800"
+					class="shrink-0 rounded-md border border-border bg-surface px-2 py-1 text-xs text-text hover:text-heading"
 				>
 					{copied ? $_('lists.create.copied') : $_('lists.create.copy')}
 				</button>
 			</div>
 		</div>
 	{/if}
-</section>
+</form>

@@ -430,6 +430,27 @@
 		"identityLabelTitle": "Name of the new passkey"
 	},
 	"lists": {
+		"thisList": {
+			"heading": "This list",
+			"sealed": "sealed",
+			"open": "open",
+			"sealedTitle": "Its entries are encrypted: whoever has only its address reads nothing.",
+			"openTitle": "Not encrypted: whoever has its words or address reads it.",
+			"role": {
+				"owner": "yours",
+				"writer": "you can write",
+				"guest": "guest"
+			},
+			"newTodos": "New todos go into {name}.",
+			"copyLink": "Copy link",
+			"linkCopied": "Link copied",
+			"showQr": "QR code",
+			"hideQr": "Hide QR code",
+			"qrHint": "Scan it with a phone: it opens this list."
+		},
+		"add": {
+			"heading": "Add a list"
+		},
 		"home": {
 			"name": "My todos",
 			"pending": "Made with your first todo",
@@ -438,45 +459,50 @@
 			"openFailed": "Your own list could not be opened, so you are in the shared one: {reason}"
 		},
 		"create": {
-			"heading": "Create a private list",
-			"hint": "Only your identity can write to it. Share its address and grant other DIDs below.",
+			"heading": "New private list",
+			"hint": "Sealed from the start: only you read and write it until you let someone in.",
 			"namePlaceholder": "list name (optional)",
-			"submit": "Create private list",
+			"submit": "Create",
 			"busy": "Creating…",
 			"created": "Created {name} — you are now writing to it.",
-			"share": "Share this address so others can open the list. They can read it right away; writing needs a grant below.",
+			"share": "Its address, for the people you let in. Without your grant they read nothing.",
 			"copy": "Copy",
 			"copied": "Copied"
 		},
 		"switcher": {
 			"heading": "Your lists",
-			"hint": "Kept in your own OrbitDB registry, so they come back after a reload and follow your passkey to another device.",
+			"hint": "They follow your passkey to your other devices.",
 			"unnamed": "unnamed list",
 			"role": {
 				"owner": "owner",
 				"guest": "guest"
 			},
-			"open": "open",
+			"open": "open now",
 			"forget": "Forget",
-			"forgetTitle": "Remove from this list of lists; the database itself is untouched"
+			"forgetTitle": "Remove from this list of lists; the database itself is untouched",
+			"more": "More for {name}"
 		},
 		"open": {
-			"heading": "Open a shared list by address",
-			"hint": "Paste the full OrbitDB address someone shared with you. You can read it right away — writing needs a permission grant from the owner.",
-			"submit": "Open list",
-			"busy": "Opening…"
+			"heading": "Open a list",
+			"hint": "Three words, a link or an address someone gave you.",
+			"submit": "Open",
+			"busy": "Opening…",
+			"placeholder": "luna-camino-verde, a link or /orbitdb/…",
+			"unknown": "That is neither three words, a link to a list nor a list address."
 		},
 		"permissions": {
-			"heading": "Write permissions",
-			"hint": "DIDs allowed to write to this list. Only list admins (the creator) can grant or revoke.",
+			"heading": "Who can write ({count})",
+			"hint": "Let someone in by their DID. In a sealed list they then read it too.",
 			"you": "(you)",
 			"remove": "Remove",
 			"placeholder": "did:key:… of the identity to allow",
-			"add": "Add DID",
+			"add": "Add",
 			"grantFailed": "Grant failed: {reason}",
 			"revokeFailed": "Revoke failed: {reason}",
 			"keysLater": "Added. They get the keys of this sealed list once they have started the app; until then they can neither read nor write it.",
-			"keysRenewed": "Removed. The list has new keys from now on. What they could read until now stays readable to them."
+			"keysRenewed": "Removed. The list has new keys from now on. What they could read until now stays readable to them.",
+			"hintOthers": "Only the owner lets someone in.",
+			"owner": "owner"
 		},
 		"peers": {
 			"direct": "{count, plural, one {Direct P2P with # browser} other {Direct P2P with # browsers}}",
@@ -491,19 +517,15 @@
 			"shared": "Shared list",
 			"private": "Private list",
 			"guest": "Opened list",
-			"writingTo": "You are writing to {name}. The address below, the link in the address bar and the page QR code open this list.",
-			"mnemonicLabel": "Public mnemonic / OrbitDB database name",
 			"copy": "Copy",
 			"copied": "Copied!",
 			"addressLabel": "OrbitDB address",
-			"anyone": "Anyone who knows this share code can open the same public database and edit it once connected.",
-			"replication": "The mnemonic selects the same database. Live replication also requires a connection to another browser peer.",
-			"openAnother": "Open another shared list"
+			"anyone": "Anyone who has these three words reads this list and writes to it."
 		},
 		"threeWords": {
-			"heading": "Share by three words",
-			"hint": "This browser’s shared list. Anyone who has its three words can read it and write to it. Open it to pass on its words, link or QR code; your todos then go there.",
-			"open": "Open this list",
+			"heading": "This browser’s three-word list",
+			"hint": "Open to anyone who has its words.",
+			"open": "Open",
 			"openFailed": "The shared list could not be opened: {reason}"
 		},
 		"hiddenTodos": "{count, plural, one {# todo in this list is} other {# todos in this list are}} sealed to you: handed to someone else, or waiting for a key."

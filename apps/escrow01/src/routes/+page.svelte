@@ -86,11 +86,10 @@
 	// before anything renders.
 	honourStorageChoice();
 	import SharedListDetails from '$lib/SharedListDetails.svelte';
-	import ShareByThreeWords from '$lib/ShareByThreeWords.svelte';
+	import YourLists from '$lib/YourLists.svelte';
 	import PermissionsPanel from '$lib/PermissionsPanel.svelte';
 	import OpenDatabaseForm from '$lib/OpenDatabaseForm.svelte';
 	import NewPrivateListButton from '$lib/NewPrivateListButton.svelte';
-	import ListSwitcher from '$lib/ListSwitcher.svelte';
 	import {
 		IDENTITY_MODE_KEY,
 		identityTravelWarning,
@@ -616,9 +615,20 @@
 		}
 	}
 
-	/** "Open another shared list": the start dialog, on its settings, with the words to change. */
-	function openAnotherSharedList() {
-		joinWords = activeMnemonic;
+	/**
+	 * Words typed or pasted into "Open a list". This browser's own are its
+	 * three-word list, put on screen at once. Other words go through the start
+	 * dialog, on its settings, as words from a link do: joining another
+	 * three-word list is a new start, and the dialog says which list it is.
+	 *
+	 * @param {string} words
+	 */
+	function openListByWords(words) {
+		if (words === activeMnemonic) {
+			void handleOpenSharedList();
+			return;
+		}
+		joinWords = words;
 		joinList = true;
 		consentOpensAdvanced = true;
 		showModal = true;
@@ -1031,6 +1041,10 @@
 	>
 		{#if $initializationStore.isInitialized}
 			<!--
+				Three parts (#127 PR C), each about one thing: this list, your lists,
+				adding a list. They used to be six cards with three topics
+				interleaved and three ways to open a list in three places.
+
 				The open list first: what to pass on, and who may write to it. While
 				one's own list is still being looked for, nothing is offered: the
 				shared list underneath is not the one the next todo goes to.
@@ -1044,27 +1058,33 @@
 				</p>
 			{:else if activeMnemonic}
 				<SharedListDetails
-					open
 					mnemonic={activeMnemonic}
 					databaseAddress={$todoDBAddressStore}
 					activeList={$activeListStore}
 					pendingName={$homeListPendingStore ? $_('lists.home.name') : null}
-					on:change={openAnotherSharedList}
-				/>
+				>
+					<PermissionsPanel />
+				</SharedListDetails>
 			{/if}
-			<PermissionsPanel />
-			<!-- The browser's three words, when another list is on screen, with the switch to theirs. -->
-			{#if activeMnemonic && !homeListOpening && ($homeListPendingStore || $activeListStore.kind !== 'shared')}
-				<ShareByThreeWords
-					mnemonic={activeMnemonic}
-					busy={sharedListBusy}
-					on:open={handleOpenSharedList}
-					on:change={openAnotherSharedList}
-				/>
-			{/if}
-			<ListSwitcher />
-			<NewPrivateListButton />
-			<OpenDatabaseForm />
+			<YourLists
+				mnemonic={homeListOpening ? '' : activeMnemonic}
+				sharedOpen={!$homeListPendingStore && $activeListStore.kind === 'shared'}
+				busy={sharedListBusy}
+				on:open={handleOpenSharedList}
+			/>
+			<section
+				class="mb-6 rounded-lg border border-border bg-surface px-4 py-4 shadow-sm"
+				aria-labelledby="add-list-heading"
+				data-testid="add-list"
+			>
+				<h2 id="add-list-heading" class="text-xs font-semibold tracking-wide text-faint uppercase">
+					{$_('lists.add.heading')}
+				</h2>
+				<div class="mt-2 grid gap-5 sm:grid-cols-2 sm:gap-6">
+					<NewPrivateListButton />
+					<OpenDatabaseForm on:openWords={(event) => openListByWords(event.detail)} />
+				</div>
+			</section>
 		{:else}
 			<p class="rounded-lg border border-border bg-surface px-4 py-3 text-sm text-text shadow-sm">
 				{$_('sections.lists.waiting')}
