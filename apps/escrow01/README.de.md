@@ -6,8 +6,9 @@
 Eine Aufgaben-App, die im Browser läuft, ohne Server, der die Daten hält. Wer eine Aufgabe besitzt,
 gibt sie an jemand anderen ab und sperrt dafür ein Budget; ist sie erledigt, wird das Geld
 freigegeben. Der Betrag ist mit Zamas FHEVM verschlüsselt: Die Chain zeigt, wer für wen wann Geld
-gesperrt hat, aber nie, wie viel. Ein Passkey meldet an, unterschreibt die Einträge der Liste und
-bezahlt. [English](README.md)
+gesperrt hat, aber nie, wie viel. Die Aufgaben werden im Browser versiegelt: Der Relay, der eine
+Liste aufbewahrt, und alle, die ihre Adresse haben, halten nur Umschläge. Ein Passkey meldet an,
+unterschreibt die Einträge der Liste und bezahlt. [English](README.md)
 
 Das ist das Kapitel `escrow01` des [Simple-Todo-Tutorials](../../README.md). Es baut auf
 [`delegation01`](../delegation01) auf und ergänzt die Treuhand: einen Smart Contract, ein Konto pro
@@ -24,23 +25,23 @@ kein echtes Geld.
 2. Eine Aufgabe eintragen, **An eine andere DID delegieren** anhaken, die **Passkey-DID** der anderen
    Person einfügen (ihr Tab **Konto**) und ein Budget eintragen.
 3. Der anderen Person den Link der Liste schicken: Die Adresszeile trägt ihn, ebenso der QR-Code in
-   der Kopfzeile. Sie hakt die Aufgabe als erledigt ab, und das Budget wird freigegeben. Der Tab **Konto** öffnet die
-   Prüfansicht.
+   der Kopfzeile. Sie liest nur die Aufgabe, die ihr übergeben wurde, hakt sie als erledigt ab, und
+   das Budget wird freigegeben. Der Tab **Konto** öffnet die Prüfansicht.
 
 Ein Ablauf für Vorführungen, mit den Fragen, die Fachleute stellen, steht in
 [docs/demo.de.md](docs/demo.de.md) ([English](docs/demo.md)).
 
 ## Was echt ist und was Vorführung
 
-| Teil                | Heute                                                                                                                                                                                                                                                                                                   |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Beträge             | im Browser und auf der Chain verschlüsselt; lesen können sie, wer die Aufgabe besitzt, die delegierte Person und eine Prüfstelle                                                                                                                                                                        |
-| Aufgaben und Listen | **nicht** verschlüsselt: Wer die Adresse einer Liste hat, kann sie lesen, auch der Relay. Eine private Liste beschränkt nur, wer _schreiben_ darf                                                                                                                                                       |
-| Der Vertrag         | [`ConfidentialTodoEscrow`](contracts/src/ConfidentialTodoEscrow.sol) auf Sepolia unter [`0x6Ee3…3429`](https://sepolia.etherscan.io/address/0x6Ee3Fa9d3aEdaAD189F5DeA9d859605c9D743429#code), verifiziert auf Etherscan, Sourcify und Blockscout                                                        |
-| Das Geld            | Zamas Test-Token cUSDTMock; die erste Sperre eines Kontos prägt ihm 1.000,00. Das Gas zahlt Openfort                                                                                                                                                                                                    |
-| Die Prüfstelle      | eine im Vertrag festgelegte Adresse, die jeden Betrag lesen kann. Für eine Vorführung in Ordnung, für ein Produkt nicht ([Sicherheit](docs/security.de.md))                                                                                                                                             |
-| Der Passkey         | DID, Signierschlüssel der Liste und Konto hängen an ihm. Ein erster Start fragt dreimal, auf Sepolia einmal mehr, um den Schlüssel zu versiegeln, der Beträge liest; ein Wiederkommen fragt einmal ([wie oft](docs/passkey-account.de.md#wie-oft-der-passkey-fragt), [vier Schlüssel](docs/keys.de.md)) |
-| Ohne Sepolia        | ein Build ohne die Sepolia-Einstellungen nutzt eine Attrappe im Arbeitsspeicher: nichts wird verschlüsselt oder gesendet, ein Betrag ist nur in dem Tab lesbar, der ihn gesperrt hat, und der Tab **Konto** sagt „Demo ohne Chain“. Die Tests laufen gegen sie                                          |
+| Teil                | Heute                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Beträge             | im Browser und auf der Chain verschlüsselt; lesen können sie, wer die Aufgabe besitzt, die delegierte Person und eine Prüfstelle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Aufgaben und Listen | eine eigene Liste ist im Browser **versiegelt**: Der Relay und alle mit ihrer Adresse halten Umschläge und sehen nur, wer wann geschrieben hat und wer schreiben darf. Lesen können sie, wem die Liste gehört, und die Personen, die dort schreiben dürfen; eine delegierte Person liest nur die Aufgabe, die ihr übergeben wurde. Ein herausgegebener Schlüssel lässt sich nicht zurückholen: Wird jemand entfernt, beginnt eine neue Epoche, und was die Person bis dahin lesen konnte, behält sie. Die Liste hinter drei Wörtern bleibt offen ([versiegelte Listen](docs/security.de.md#versiegelte-listen)) |
+| Der Vertrag         | [`ConfidentialTodoEscrow`](contracts/src/ConfidentialTodoEscrow.sol) auf Sepolia unter [`0x6Ee3…3429`](https://sepolia.etherscan.io/address/0x6Ee3Fa9d3aEdaAD189F5DeA9d859605c9D743429#code), verifiziert auf Etherscan, Sourcify und Blockscout                                                                                                                                                                                                                                                                                                                                                                |
+| Das Geld            | Zamas Test-Token cUSDTMock; die erste Sperre eines Kontos prägt ihm 1.000,00. Das Gas zahlt Openfort                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Die Prüfstelle      | eine im Vertrag festgelegte Adresse, die jeden Betrag lesen kann. Für eine Vorführung in Ordnung, für ein Produkt nicht ([Sicherheit](docs/security.de.md))                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Der Passkey         | DID, Signierschlüssel der Liste, Schlüssel für versiegelte Listen und Konto hängen an ihm; die beiden Schlüssel für die Liste werden bei jedem Start abgeleitet, nie gespeichert. Ein erster Start fragt dreimal, auf Sepolia einmal mehr, um den Schlüssel zu versiegeln, der Beträge liest; ein Wiederkommen fragt einmal, ein Gerät, das nichts behalten hat, viermal ([wie oft](docs/passkey-account.de.md#wie-oft-der-passkey-fragt), [vier Schlüssel](docs/keys.de.md))                                                                                                                                   |
+| Ohne Sepolia        | ein Build ohne die Sepolia-Einstellungen nutzt eine Attrappe im Arbeitsspeicher: nichts wird verschlüsselt oder gesendet, ein Betrag ist nur in dem Tab lesbar, der ihn gesperrt hat, und der Tab **Konto** sagt „Demo ohne Chain“. Die Tests laufen gegen sie                                                                                                                                                                                                                                                                                                                                                  |
 
 Es ist eine Vorführung im Testnetz, gebaut zum Lernen und Zeigen. Für den Produktivbetrieb ist es
 nicht bereit; was fehlt, steht unter den offenen Punkten in [docs/security.de.md](docs/security.de.md).
@@ -75,6 +76,7 @@ pnpm dev
 | Sperren und Freigeben, Schritt für Schritt                         | [`budget-flow.js`](src/lib/budget/budget-flow.js), [`budget-store.js`](src/lib/budget/budget-store.js)                                                            |
 | Sepolia, Calibur, Zamas SDK                                        | [`src/lib/chain/`](src/lib/chain)                                                                                                                                 |
 | Der Start: ein Passkey, eine eigene private Liste                  | [`src/routes/+page.svelte`](src/routes/+page.svelte), [`src/lib/start/`](src/lib/start), [`home-list.js`](src/lib/home-list.js)                                   |
+| Versiegelte Listen: Umschläge, Schlüssel, Epochen                  | [`src/lib/sealed/`](src/lib/sealed), [`identity-blocks.js`](src/lib/identity-blocks.js), [`newcomers.js`](src/lib/newcomers.js)                                   |
 
 In welcher Reihenfolge man sie liest, zeigt der [Rundgang durch den Code](docs/code-tour.de.md); er
 verfolgt auch eine Sperre vom Formular bis zur Chain.
@@ -103,8 +105,8 @@ Svelte, alles im Browser.
   gehören und was an einer Sperre und einer Freigabe öffentlich ist
 - [docs/smoke-test.de.md](docs/smoke-test.de.md): der Lauf auf Sepolia vom 2026-09-16, Schritt für
   Schritt
-- [docs/security.de.md](docs/security.de.md): Bedrohungsmodell, Lecks, Vertrauensannahmen, offene
-  Punkte
+- [docs/security.de.md](docs/security.de.md): Bedrohungsmodell, Lecks, Vertrauensannahmen,
+  versiegelte Listen, offene Punkte
 - [docs/demo.de.md](docs/demo.de.md): der Ablauf für Vorführungen
 - [docs/foundations.de.md](docs/foundations.de.md): was das Kapitel von den vorigen erbt
 - [docs/TESTING.md](docs/TESTING.md) (Englisch): Unit-, Browser- und Vertragstests, und ein Relay
