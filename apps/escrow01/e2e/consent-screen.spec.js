@@ -141,7 +141,7 @@ test.describe('Consent screen', () => {
 		await expect(page.getByTestId('one-passkey-pay')).toBeVisible();
 		const summary = page.getByTestId('consent-summary').locator('li');
 		await expect(summary).toHaveCount(3);
-		await expect(summary.nth(1)).toContainText('Todos and lists are not encrypted');
+		await expect(summary.nth(1)).toContainText('Only a list behind three words stays open');
 		await expect(summary.nth(2)).toContainText('without extensions');
 		await expect(page.getByTestId('consent-settings')).toBeHidden();
 		// The words that belong to the technical view are not on the first screen.
@@ -295,11 +295,13 @@ test.describe('Consent screen', () => {
 		expect(statement).toContain('three Spanish words');
 		expect(statement).toContain('who may write');
 
-		// And the sentence this chapter exists to make people read: write access
-		// is not read access. Todos and lists are not encrypted, so an address is
-		// enough to read everything — including for the relay that stores it.
-		expect(statement).toContain('does not decide who may read');
-		expect(statement).toContain('Todos and lists are not encrypted');
+		// And the sentences this chapter exists to make people read (#127): one's
+		// own lists are sealed before they leave the browser, the relay included,
+		// and what sealing does not hide is said beside it. The list behind three
+		// words stays open, and the relay reads it too.
+		expect(statement).toContain('encrypted in your browser before anything leaves it');
+		expect(statement).toContain('Not hidden: who wrote an entry and when');
+		expect(statement).toContain('the relay that keeps it can read too');
 
 		// What a browser extension can see, which no setting here changes.
 		expect(statement).toContain('A browser extension with access to this page');
@@ -309,14 +311,16 @@ test.describe('Consent screen', () => {
 		page
 	}) => {
 		// "Nothing here is encrypted" used to stand beside "Budgets, encrypted".
-		// Both were true of different things; the headings now say which.
+		// Both were true of different things; the headings now say which. Since
+		// #127 one's own lists and the list behind three words differ too.
 		await page.goto('/');
 		await waitForConsent(page);
 
 		const headings = await page.$$eval('[data-testid="consent-clauses"] h4', (items) =>
 			items.map((item) => item.textContent?.trim() ?? '')
 		);
-		expect(headings).toContain('Todos and lists — not encrypted');
+		expect(headings).toContain('Your lists — encrypted');
+		expect(headings).toContain('The list behind three words — open');
 		expect(headings.some((heading) => heading.startsWith('Amounts'))).toBe(true);
 		expect((await clauses(page)).join(' ')).not.toContain('Nothing here is encrypted');
 	});
@@ -517,7 +521,7 @@ test.describe('Consent screen', () => {
 
 			const statement = (await clauses(page)).join(' ');
 			expect(statement).toContain('Wir betreiben keinen Server');
-			expect(statement).toContain('nicht verschlüsselt');
+			expect(statement).toContain('Eine eigene Liste wird in Ihrem Browser verschlüsselt');
 			// Not a single English clause left behind: a half-translated statement
 			// reads as a decision rather than an omission.
 			expect(statement).not.toContain('We run no server');
