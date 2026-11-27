@@ -30,6 +30,7 @@ pgrep -fl "^[^ ]*(node|npm|pnpm)[^ ]* .*(playwright|vitest)"
 pnpm video:link
 DEMO_VOICE=say DEMO_URL=local pnpm video:film      # dry run: this checkout's E2E build, macOS voice
 DEMO_RES=2160 pnpm video:cards                     # the real thing, English
+pnpm video:compose e2e-video/out                   # the cards into out/, before the film run wipes results/
 DEMO_RES=2160 pnpm video:film
 pnpm video:compose e2e-video/out --film e2e-video/films/en/escrow01-en.json
 pnpm video:posters e2e-video/out
