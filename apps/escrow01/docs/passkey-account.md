@@ -70,7 +70,7 @@ flowchart LR
   end
   subgraph Central["Central services (companies, replaceable)"]
     Openfort["Openfort<br/>bundler + paymaster"]
-    RPC["Public RPC<br/>(publicnode, dRPC, 1RPC)"]
+    RPC["Public RPC<br/>(Tenderly, publicnode, 1RPC)"]
     Relayer["Zama relayer"]
     Relay["Relay<br/>(Le Space)"]
   end
@@ -160,7 +160,7 @@ Zama's rule contracts on the chain.
 | Read key                                        | secp256k1 key in the browser                                                                                                        | the person, through the browser profile ([The read key](#read-key-simple))                                                        | local                              |
 | OrbitDB lists and account directory             | databases the browsers sync directly with each other                                                                                | the participating peers                                                                                                           | peer-to-peer                       |
 | Relay                                           | `orbitdb-relay`: connects browsers and keeps copies of the lists                                                                    | Le Space                                                                                                                          | central, replaceable               |
-| Public RPC                                      | read and send access to Sepolia                                                                                                     | providers such as publicnode, dRPC and 1RPC; replaceable through `VITE_SEPOLIA_RPC_URL`                                           | central, replaceable               |
+| Public RPC                                      | read and send access to Sepolia                                                                                                     | providers such as Tenderly, publicnode and 1RPC; replaceable through `VITE_SEPOLIA_RPC_URL`                                       | central, replaceable               |
 | Block explorer (Blockscout)                     | the list of the escrow's locks in the auditor view, from its indexed events; amounts and status are still read from the escrow      | Blockscout's public instance for Sepolia (open source, can run elsewhere); replaceable or off through `VITE_SEPOLIA_EXPLORER_API` | central, replaceable               |
 | Openfort                                        | service that submits user operations, and a paymaster that pays the gas                                                             | Openfort, a company, under the rule in the Openfort project                                                                       | central                            |
 | EntryPoint v0.8                                 | smart contract, reference implementation of ERC-4337 (eth-infinitism)                                                               | nobody; the contract has no upgrade mechanism                                                                                     | blockchain                         |
