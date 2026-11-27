@@ -21,10 +21,10 @@
  * connected at 4.8 s and held the list at 37 s. The relay's proof is no
  * substitute; it says "unavailable" at once and is not asked again.
  *
- * Timings are logged. On main the home list of a fresh device stays "to come"
- * and opens only at the first todo (measured by the provider 0.14.0 session,
- * 26.11.2026); this spec writes that todo and asks that it lands in the old
- * list, under its old name, beside its old todo.
+ * Timings are logged. Since #173 the home list of a fresh device opens once
+ * the registry names it; before, it stayed "to come" until the first todo.
+ * Either way this spec writes a todo and asks that it lands in the old list,
+ * under its old name, beside its old todo.
  */
 import { test, expect } from '@playwright/test';
 import { passConsent, waitForConsent } from '@simple-todo/e2e-kit/consent.mjs';
@@ -105,9 +105,9 @@ test('a device that never saw this passkey finds its sealed home list, by name, 
 	await expect(todoInput(page)).toBeEnabled({ timeout: 120_000 });
 	step(`started again after ${Date.now() - started} ms`);
 
-	// On main the home list of a fresh device stays "to come" until the first
-	// todo, which then goes into the list the registry names -- or, when the
-	// registry has not arrived by then, into a new one. Logged, not asserted.
+	// Since #173 the home list opens once the registry names it; until then
+	// the first todo goes into the list the registry names, or into a new one
+	// when the registry has not arrived. Logged, not asserted.
 	const openedAlone = await page
 		.getByTestId('active-database-address')
 		.waitFor({ timeout: 60_000 })
@@ -118,7 +118,7 @@ test('a device that never saw this passkey finds its sealed home list, by name, 
 	step(
 		openedAlone
 			? `home list open by itself after ${Date.now() - started} ms`
-			: 'home list still to come after 60 s, as on main; the first todo finds it'
+			: 'home list still to come after 60 s; the first todo finds it'
 	);
 
 	step('the first todo here goes into the same list, which shows its name and old todo');
