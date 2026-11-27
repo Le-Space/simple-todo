@@ -2,12 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { Identities, KeyStore, MemoryStorage } from '@orbitdb/core';
 import * as dagCbor from '@ipld/dag-cbor';
 import { base58btc } from 'multiformats/bases/base58';
+import { CID } from 'multiformats/cid';
 import {
+	createCarriedDocuments,
 	fileIdentityBlock,
 	IDENTITY_BLOCKS_TOPIC,
 	MAX_IDENTITY_BLOCK_BYTES,
 	offerIdentityBlocks,
-	receiveIdentityBlocks
+	receiveIdentityBlocks,
+	withCarriedIdentityDocuments
 } from './identity-blocks.js';
 
 /** A blockstore in memory, keyed by CID string. */
@@ -60,6 +63,44 @@ describe('identity documents that travel with an answer', () => {
 		expect(blockstore.blocks.size).toBe(0);
 	});
 
+	it('let a fetch that waits take one carried in meanwhile, which it then finds locally', async () => {
+		const identity = await identityOf('carol');
+		const blockstore = memoryBlockstore();
+		const carried = createCarriedDocuments();
+		let fetches = 0;
+		const identities = withCarriedIdentityDocuments(
+			{
+				// As OrbitDB's: the local block if there is one, else a network
+				// fetch that here never ends.
+				getIdentity: async (/** @type {string} */ hash) => {
+					fetches += 1;
+					const local = [...blockstore.blocks.entries()].find(
+						([cid]) => CID.parse(cid).toString(base58btc) === hash
+					);
+					if (local) return { hash, bytes: local[1] };
+					return new Promise(() => {});
+				}
+			},
+			carried
+		);
+
+		const asked = identities.getIdentity(identity.hash);
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		await fileIdentityBlock(blockstore, identity.bytes, carried);
+
+		await expect(asked).resolves.toEqual({ hash: identity.hash, bytes: identity.bytes });
+		expect(fetches).toBe(2);
+	});
+
+	it('do not hold up a fetch that finds the document first', async () => {
+		const carried = createCarriedDocuments();
+		const identities = withCarriedIdentityDocuments(
+			{ getIdentity: async (/** @type {string} */ hash) => ({ hash }) },
+			carried
+		);
+		await expect(identities.getIdentity('zdpuFound')).resolves.toEqual({ hash: 'zdpuFound' });
+	});
+
 	it('are heard on their own topic only, and no longer once the session stops', async () => {
 		const identity = await identityOf('bob');
 		const blockstore = memoryBlockstore();
@@ -91,6 +132,39 @@ describe('identity documents that travel with an answer', () => {
 		await new Promise((resolve) => setTimeout(resolve, 20));
 		expect(blockstore.blocks.size).toBe(0);
 		expect(pubsub.subscribed).toEqual([]);
+	});
+
+	it('are offered, this session’s own, to a peer that joins their topic', async () => {
+		const own = new Uint8Array([7, 7, 7]);
+		/** @type {Array<[string, Uint8Array]>} */
+		const published = [];
+		const pubsub = Object.assign(new EventTarget(), {
+			subscribe: () => {},
+			unsubscribe: () => {},
+			getSubscribers: () => [],
+			publish: async (/** @type {string} */ topic, /** @type {Uint8Array} */ bytes) => {
+				published.push([topic, bytes]);
+			}
+		});
+		const join = (/** @type {string} */ topic) =>
+			pubsub.dispatchEvent(
+				new CustomEvent('subscription-change', {
+					detail: { subscriptions: [{ topic, subscribe: true }] }
+				})
+			);
+		const stop = receiveIdentityBlocks({
+			pubsub,
+			blockstore: memoryBlockstore(),
+			ownDocument: () => own
+		});
+
+		join('/orbitdb/zdpuSomeDatabase');
+		join(IDENTITY_BLOCKS_TOPIC);
+		join(IDENTITY_BLOCKS_TOPIC); // within a second: one offer
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		stop();
+
+		expect(published).toEqual([[IDENTITY_BLOCKS_TOPIC, own]]);
 	});
 
 	it('are offered on their topic, and nobody listening is not an error', async () => {

@@ -33,7 +33,11 @@ import { sealedReaderStore } from './sealed/session-reader.js';
 import { closeSealedLists } from './sealed/list-session.js';
 import { directoryFor } from './chain/session-directory.js';
 import { dropKeptSigningKeys } from './kept-signing-keys.js';
-import { receiveIdentityBlocks } from './identity-blocks.js';
+import {
+	createCarriedDocuments,
+	receiveIdentityBlocks,
+	withCarriedIdentityDocuments
+} from './identity-blocks.js';
 import { forgetByPrefix, recall, remember } from '@simple-todo/todo/browser-memory.js';
 import {
 	createLogStorages,
@@ -111,6 +115,8 @@ let orbitdb = /** @type {any} */ (null);
 let peerId = /** @type {string | null} */ (null);
 /** Stops filing the identity documents answers carry (#127). @type {(() => void) | null} */
 let stopReceivingIdentityBlocks = null;
+/** Who waits for a carried identity document; OrbitDB's getIdentity does (#127). */
+const carriedDocuments = createCarriedDocuments();
 /**
  * The WebAuthn credential backing the current session identity. Kept at
  * module level so restartP2P (e.g. when switching the shared list) reuses
@@ -252,10 +258,15 @@ export async function initializeP2P(
 		console.log('🛬 Creating OrbitDB instance...');
 		orbitdb = await createOrbitDBInstance(helia);
 		// Before any database opens: an answer may bring its writers' identity
-		// documents first (identity-blocks.js, #127).
+		// documents, and OrbitDB's getIdentity takes one that arrives while it
+		// fetches (identity-blocks.js, #127). In place: every database and
+		// access controller of this instance asks this object.
+		withCarriedIdentityDocuments(orbitdb.identities, carriedDocuments);
 		stopReceivingIdentityBlocks = receiveIdentityBlocks({
 			pubsub: libp2p.services.pubsub,
-			blockstore: helia.blockstore
+			blockstore: helia.blockstore,
+			carried: carriedDocuments,
+			ownDocument: () => orbitdb?.identity?.bytes
 		});
 		await setUpSealedReader(orbitdb);
 		setInitializationProgress(4);
