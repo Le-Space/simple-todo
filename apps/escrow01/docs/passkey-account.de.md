@@ -72,7 +72,7 @@ flowchart LR
   end
   subgraph Central["Zentrale Dienste (Firmen, austauschbar)"]
     Openfort["Openfort<br/>Bundler + Paymaster"]
-    RPC["Öffentlicher RPC<br/>(publicnode, dRPC, 1RPC)"]
+    RPC["Öffentlicher RPC<br/>(Tenderly, publicnode, 1RPC)"]
     Relayer["Zama Relayer"]
     Relay["Relay<br/>(Le Space)"]
   end
@@ -161,7 +161,7 @@ Regelverträge auf der Chain kann Zamas Protocol DAO ändern.
 | Leseschlüssel                                   | secp256k1-Schlüssel im Browser                                                                                                          | die Person, über das Browserprofil ([Der Leseschlüssel](#leseschlüssel-einfach))                                                               | lokal                          |
 | OrbitDB-Listen und Kontoverzeichnis             | Datenbanken, die die Browser direkt miteinander abgleichen                                                                              | die beteiligten Peers                                                                                                                          | Peer-to-Peer                   |
 | Relay                                           | `orbitdb-relay`: vermittelt Verbindungen zwischen Browsern und hält Kopien der Listen                                                   | Le Space                                                                                                                                       | zentral, austauschbar          |
-| Öffentlicher RPC                                | Lese- und Sendezugang zu Sepolia                                                                                                        | Anbieter wie publicnode, dRPC und 1RPC; ersetzbar über `VITE_SEPOLIA_RPC_URL`                                                                  | zentral, austauschbar          |
+| Öffentlicher RPC                                | Lese- und Sendezugang zu Sepolia                                                                                                        | Anbieter wie Tenderly, publicnode und 1RPC; ersetzbar über `VITE_SEPOLIA_RPC_URL`                                                              | zentral, austauschbar          |
 | Block-Explorer (Blockscout)                     | die Liste der Sperren in der Prüfansicht, aus seinen indizierten Events; Beträge und Status liest die App weiter von der Treuhand       | Blockscouts öffentliche Instanz für Sepolia (Open Source, auch selbst betreibbar); ersetzbar oder abschaltbar über `VITE_SEPOLIA_EXPLORER_API` | zentral, austauschbar          |
 | Openfort                                        | Dienst, der UserOperations einreicht, und Paymaster, der das Gas bezahlt                                                                | Openfort, eine Firma, nach der Regel im Openfort-Projekt                                                                                       | zentral                        |
 | EntryPoint v0.8                                 | Smart Contract, Referenzimplementierung von ERC-4337 (eth-infinitism)                                                                   | niemand; der Vertrag hat keinen Upgrade-Mechanismus                                                                                            | Blockchain                     |

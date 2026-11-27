@@ -63,9 +63,20 @@ export const MAX_USER_OPERATION_COST = 2n * 10n ** 16n;
  */
 export const SETUP_GAS_CEILINGS = Object.freeze({ preVerificationGas: 500_000n });
 
+/**
+ * Sepolia's free public RPCs, tried in this order. The first one matters most:
+ * the Zama client is handed `rpcUrls[0]` alone, with no fallback behind it, so
+ * every encryption, and with it every lock, stands or falls with that one.
+ * Tenderly comes first because it answered every call on 2026-11-27 and takes
+ * an `eth_getLogs` over 50,000 blocks, which the auditor view's fallback asks
+ * for. dRPC dropped Sepolia from its free plan that day ("chain is not
+ * available on free plan"), 1rpc answers the same now and then, and thirdweb
+ * caps a log response by its size.
+ */
 export const PUBLIC_RPC_URLS = [
+	'https://sepolia.gateway.tenderly.co',
 	'https://ethereum-sepolia-rpc.publicnode.com',
-	'https://sepolia.drpc.org',
+	'https://sepolia.rpc.thirdweb.com',
 	'https://1rpc.io/sepolia'
 ];
 

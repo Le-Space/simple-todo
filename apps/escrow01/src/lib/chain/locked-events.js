@@ -3,8 +3,8 @@
  *
  * One `eth_getLogs` from the deployment block to the latest one stopped
  * working once the escrow was a few weeks old: Sepolia's free public RPCs
- * answer only small ranges (dRPC 100 blocks, 1rpc 50, publicnode 50,000;
- * measured 2026-11-25). So the list comes from a block explorer first, which
+ * answer only small ranges (1rpc 50 blocks, publicnode 50,000, measured
+ * 2026-11-25; Tenderly 50,000 on 2026-11-27). So the list comes from a block explorer first, which
  * has the events indexed already, and only when that fails from the RPC, in
  * windows walking back from the latest block.
  *
@@ -28,7 +28,7 @@ import { decodeEventLog, getAddress, isAddressEqual, toEventSelector } from 'vie
  * }} LockedEvent
  */
 
-/** What publicnode, the widest of the public RPCs, answers in one call. */
+/** What publicnode and Tenderly, the widest of the public RPCs, answer in one call. */
 export const RPC_WINDOW = 50_000n;
 /** The explorer's page size (Etherscan-compatible APIs cap it at 1,000). */
 const PAGE = 1000;
